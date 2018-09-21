@@ -16,6 +16,7 @@ import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.quorum.Quorum;
 import org.web3j.quorum.methods.request.PrivateTransaction;
 import rx.Observable;
+import rx.schedulers.Schedulers;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -43,91 +44,100 @@ public class TransactionService extends AbstractService {
 
     public Observable<EthSendTransaction> sendPublicTransaction(int value, QuorumNode from, QuorumNode to) {
         Web3j client = connectionFactory.getWeb3jConnection(from);
-        String fromAddress = accountService.getDefaultAccountAddress(from);
-        String toAddress = accountService.getDefaultAccountAddress(to);
-        return client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST)
-                .observable()
-                .flatMap(ethGetTransactionCount -> {
-                    Transaction tx = Transaction.createEtherTransaction(fromAddress,
-                            ethGetTransactionCount.getTransactionCount(),
-                            BigInteger.valueOf(0),
-                            DEFAULT_GAS_LIMIT,
-                            toAddress,
-                            BigInteger.valueOf(value));
-                    return client.ethSendTransaction(tx).observable();
+        return Observable.zip(
+                accountService.getDefaultAccountAddress(from).subscribeOn(Schedulers.io()),
+                accountService.getDefaultAccountAddress(to).subscribeOn(Schedulers.io()),
+                (fromAddress, toAddress) -> Arrays.asList(fromAddress, toAddress))
+                .flatMap(l -> {
+                    String fromAddress = l.get(0);
+                    String toAddress = l.get(1);
+                    return client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST)
+                            .observable()
+                            .flatMap(ethGetTransactionCount -> {
+                                Transaction tx = Transaction.createEtherTransaction(fromAddress,
+                                        ethGetTransactionCount.getTransactionCount(),
+                                        BigInteger.valueOf(0),
+                                        DEFAULT_GAS_LIMIT,
+                                        toAddress,
+                                        BigInteger.valueOf(value));
+                                return client.ethSendTransaction(tx).observable();
+                            });
                 });
     }
 
     public Observable<EthSendTransaction> sendSignedPublicTransaction(int value, QuorumNode from, QuorumNode to) {
         Web3j client = connectionFactory.getWeb3jConnection(from);
-        String fromAddress = accountService.getDefaultAccountAddress(from);
-        String toAddress = accountService.getDefaultAccountAddress(to);
-        try {
-            Transaction tx = Transaction.createEtherTransaction(fromAddress,
-                    null,
-                    null,
-                    DEFAULT_GAS_LIMIT,
-                    toAddress,
-                    BigInteger.valueOf(value));
-            Request<?, EthSignTransaction> request = new Request<>(
-                    "eth_signTransaction",
-                    Arrays.asList(tx),
-                    connectionFactory.getWeb3jService(from),
-                    EthSignTransaction.class
-            );
-            Map<String, Object> response = request.send().getResult();
-            logger.debug("{}", response);
-            String rawHexString = (String) response.get("raw");
-            return client.ethSendRawTransaction(rawHexString).observable();
-        } catch (Exception e) {
-            logger.error("sendSignedPublicTransaction()", e);
-            throw new RuntimeException(e);
-        }
+        return Observable.zip(
+                accountService.getDefaultAccountAddress(from).subscribeOn(Schedulers.io()),
+                accountService.getDefaultAccountAddress(to).subscribeOn(Schedulers.io()),
+                (fromAddress, toAddress) -> Transaction.createEtherTransaction(fromAddress,
+                        null,
+                        null,
+                        DEFAULT_GAS_LIMIT,
+                        toAddress,
+                        BigInteger.valueOf(value)))
+                .flatMap(tx -> {
+                    Request<?, EthSignTransaction> request = new Request<>(
+                            "eth_signTransaction",
+                            Arrays.asList(tx),
+                            connectionFactory.getWeb3jService(from),
+                            EthSignTransaction.class
+                    );
+                    return request.observable();
+                })
+                .flatMap(ethSignTransaction -> {
+                    Map<String, Object> response = ethSignTransaction.getResult();
+                    logger.debug("{}", response);
+                    String rawHexString = (String) response.get("raw");
+                    return client.ethSendRawTransaction(rawHexString).observable();
+                });
     }
 
     public Observable<EthSendTransaction> sendPrivateTransaction(int value, QuorumNode from, QuorumNode to) {
         Quorum client = connectionFactory.getConnection(from);
-        String fromAddress = accountService.getDefaultAccountAddress(from);
-        String toAddress = accountService.getDefaultAccountAddress(to);
-        PrivateTransaction tx = new PrivateTransaction(
-                fromAddress,
-                null,
-                DEFAULT_GAS_LIMIT,
-                toAddress,
-                BigInteger.valueOf(value),
-                null,
-                Arrays.asList(privacyService.id(to))
-        );
-        return client.ethSendTransaction(tx).observable();
+        return Observable.zip(
+                accountService.getDefaultAccountAddress(from).subscribeOn(Schedulers.io()),
+                accountService.getDefaultAccountAddress(to).subscribeOn(Schedulers.io()),
+                (fromAddress, toAddress) -> new PrivateTransaction(
+                        fromAddress,
+                        null,
+                        DEFAULT_GAS_LIMIT,
+                        toAddress,
+                        BigInteger.valueOf(value),
+                        null,
+                        Arrays.asList(privacyService.id(to))
+                ))
+                .flatMap(tx -> client.ethSendTransaction(tx).observable());
     }
 
     public Observable<EthSendTransaction> sendSignedPrivateTransaction(int value, QuorumNode from, QuorumNode to) {
         Web3j client = connectionFactory.getWeb3jConnection(from);
-        String fromAddress = accountService.getDefaultAccountAddress(from);
-        String toAddress = accountService.getDefaultAccountAddress(to);
-        try {
-            PrivateTransaction tx = new PrivateTransaction(
-                    fromAddress,
-                    null,
-                    DEFAULT_GAS_LIMIT,
-                    toAddress,
-                    BigInteger.valueOf(value),
-                    null,
-                    Arrays.asList(privacyService.id(to))
-            );
-            Request<?, EthSignTransaction> request = new Request<>(
-                    "eth_signTransaction",
-                    Arrays.asList(tx),
-                    connectionFactory.getWeb3jService(from),
-                    EthSignTransaction.class
-            );
-            Map<String, Object> response = request.send().getResult();
-            logger.debug("{}", response);
-            String rawHexString = (String) response.get("raw");
-            return client.ethSendRawTransaction(rawHexString).observable();
-        } catch (Exception e) {
-            logger.error("sendSignedPrivateTransaction()", e);
-            throw new RuntimeException(e);
-        }
+        return Observable.zip(
+                accountService.getDefaultAccountAddress(from).subscribeOn(Schedulers.io()),
+                accountService.getDefaultAccountAddress(to).subscribeOn(Schedulers.io()),
+                (fromAddress, toAddress) -> new PrivateTransaction(
+                        fromAddress,
+                        null,
+                        DEFAULT_GAS_LIMIT,
+                        toAddress,
+                        BigInteger.valueOf(value),
+                        null,
+                        Arrays.asList(privacyService.id(to))
+                ))
+                .flatMap(tx -> {
+                    Request<?, EthSignTransaction> request = new Request<>(
+                            "eth_signTransaction",
+                            Arrays.asList(tx),
+                            connectionFactory.getWeb3jService(from),
+                            EthSignTransaction.class
+                    );
+                    return request.observable();
+                })
+                .flatMap(ethSignTransaction -> {
+                    Map<String, Object> response = ethSignTransaction.getResult();
+                    logger.debug("{}", response);
+                    String rawHexString = (String) response.get("raw");
+                    return client.ethSendRawTransaction(rawHexString).observable();
+                });
     }
 }

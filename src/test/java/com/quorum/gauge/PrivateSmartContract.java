@@ -37,7 +37,7 @@ public class PrivateSmartContract {
     @Step("Deploy a simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target>.")
     public void setupContract(int initialValue, QuorumNode source, QuorumNode target) {
         logger.debug("Setting up contract from {} to {}", source, target);
-        Contract contract = contractService.createSimpleContract(initialValue, source, target);
+        Contract contract = contractService.createSimpleContract(initialValue, source, target).toBlocking().first();
 
         DataStoreFactory.getScenarioDataStore().put("contract", contract);
     }
@@ -65,19 +65,21 @@ public class PrivateSmartContract {
     @Step("Contracts stored in <source> and <target> must have the same storage root.")
     public void verifyStorageRoot(QuorumNode source, QuorumNode target) {
         Contract c = (Contract) DataStoreFactory.getScenarioDataStore().get("contract");
-        String sourceStorageRoot = contractService.getStorageRoot(source, c.getContractAddress());
-        String targetStorageRoot = contractService.getStorageRoot(target, c.getContractAddress());
-
-        assertThat(sourceStorageRoot).isEqualTo(targetStorageRoot);
+        Observable.zip(
+                contractService.getStorageRoot(source, c.getContractAddress()).subscribeOn(Schedulers.io()),
+                contractService.getStorageRoot(target, c.getContractAddress()).subscribeOn(Schedulers.io()),
+                (s, t) -> assertThat(s).isEqualTo(t)
+        );
     }
 
     @Step("Contracts stored in <source> and <stranger> must not have the same storage root.")
     public void verifyStorageRootForNonParticipatedNode(QuorumNode source, QuorumNode stranger) {
         Contract c = (Contract) DataStoreFactory.getScenarioDataStore().get("contract");
-        String sourceStorageRoot = contractService.getStorageRoot(source, c.getContractAddress());
-        String targetStorageRoot = contractService.getStorageRoot(stranger, c.getContractAddress());
-
-        assertThat(sourceStorageRoot).isNotEqualTo(targetStorageRoot);
+        Observable.zip(
+                contractService.getStorageRoot(source, c.getContractAddress()).subscribeOn(Schedulers.io()),
+                contractService.getStorageRoot(stranger, c.getContractAddress()).subscribeOn(Schedulers.io()),
+                (s, t) -> assertThat(s).isNotEqualTo(t)
+        );
     }
 
     @Step("Smart contract's `get()` function execution in <node> returns <expectedValue>.")
@@ -91,7 +93,7 @@ public class PrivateSmartContract {
     @Step("Execute smart contract's `set()` function with new value <newValue> in <source> and it's private for <target>.\n")
     public void updateNewValue(int newValue, QuorumNode source, QuorumNode target) {
         Contract c = (Contract) DataStoreFactory.getScenarioDataStore().get("contract");
-        TransactionReceipt receipt = contractService.updateSimpleContract(source, target, c.getContractAddress(), newValue);
+        TransactionReceipt receipt = contractService.updateSimpleContract(source, target, c.getContractAddress(), newValue).toBlocking().first();
 
         assertThat(receipt.getTransactionHash()).isNotBlank();
         assertThat(receipt.getBlockNumber()).isNotEqualTo(BigInteger.valueOf(0));
@@ -103,7 +105,7 @@ public class PrivateSmartContract {
         int arbitraryValue = 10;
         List<Observable<? extends Contract>> allObservableContracts = new ArrayList<>();
         for (int i = 0; i < count; i++) {
-            allObservableContracts.add(contractService.createSimpleContractObservable(arbitraryValue, source, target).subscribeOn(Schedulers.io()));
+            allObservableContracts.add(contractService.createSimpleContract(arbitraryValue, source, target).subscribeOn(Schedulers.io()));
         }
         List<Contract> contracts = Observable.zip(allObservableContracts, args -> {
             List<Contract> tmp = new ArrayList<>();

@@ -16,7 +16,6 @@ import org.web3j.tx.ReadonlyTransactionManager;
 import org.web3j.tx.exceptions.ContractCallException;
 import rx.Observable;
 
-import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 
@@ -30,21 +29,19 @@ public class ContractService extends AbstractService {
     @Autowired
     AccountService accountService;
 
-    public Contract createSimpleContract(int initialValue, QuorumNode source, QuorumNode target) {
-        return createSimpleContractObservable(initialValue, source, target).toBlocking().first();
-    }
-
-    public Observable<? extends Contract> createSimpleContractObservable(int initialValue, QuorumNode source, QuorumNode target) {
+    public Observable<? extends Contract> createSimpleContract(int initialValue, QuorumNode source, QuorumNode target) {
         Quorum client = connectionFactory.getConnection(source);
-        ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
-                client,
-                accountService.getDefaultAccountAddress(source),
-                Arrays.asList(privacyService.id(target)));
-        return SimpleStorage.deploy(client,
-                clientTransactionManager,
-                BigInteger.valueOf(0),
-                DEFAULT_GAS_LIMIT,
-                BigInteger.valueOf(initialValue)).observable();
+        return accountService.getDefaultAccountAddress(source).flatMap(address -> {
+            ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
+                    client,
+                    address,
+                    Arrays.asList(privacyService.id(target)));
+            return SimpleStorage.deploy(client,
+                    clientTransactionManager,
+                    BigInteger.valueOf(0),
+                    DEFAULT_GAS_LIMIT,
+                    BigInteger.valueOf(initialValue)).observable();
+        });
     }
 
     // Read-only contract
@@ -69,37 +66,25 @@ public class ContractService extends AbstractService {
         }
     }
 
-    public TransactionReceipt updateSimpleContract(QuorumNode source, QuorumNode target, String contractAddress, int newValue) {
+    public Observable<TransactionReceipt> updateSimpleContract(QuorumNode source, QuorumNode target, String contractAddress, int newValue) {
         Quorum client = connectionFactory.getConnection(source);
-        String address;
-        try {
-            address = accountService.getDefaultAccountAddress(source);
+        return accountService.getDefaultAccountAddress(source).flatMap(address -> {
             ClientTransactionManager txManager = new ClientTransactionManager(
                     client,
                     address,
                     Arrays.asList(privacyService.id(target)));
             return SimpleStorage.load(contractAddress, client, txManager,
                     BigInteger.valueOf(0),
-                    new BigInteger("47b760", 16)).set(BigInteger.valueOf(newValue)).send();
-        } catch (Exception e) {
-            logger.error("updateSimpleContract()", e);
-            throw new RuntimeException(e);
-        }
+                    new BigInteger("47b760", 16)).set(BigInteger.valueOf(newValue)).observable();
+        });
     }
 
-    public String getStorageRoot(QuorumNode node, String contractAddress) {
-        try {
-            Request<String, EthStorageRoot> request = new Request<>(
-                    "eth_storageRoot",
-                    Arrays.asList(contractAddress),
-                    connectionFactory.getWeb3jService(node),
-                    EthStorageRoot.class);
-            String storageRoot = request.send().getData();
-            logger.debug("Storage Root for {} in {} is {}", contractAddress, node, storageRoot);
-            return storageRoot;
-        } catch (IOException e) {
-            logger.error("getStorageRoot()", e);
-            throw new RuntimeException(e);
-        }
+    public Observable<EthStorageRoot> getStorageRoot(QuorumNode node, String contractAddress) {
+        Request<String, EthStorageRoot> request = new Request<>(
+                "eth_storageRoot",
+                Arrays.asList(contractAddress),
+                connectionFactory.getWeb3jService(node),
+                EthStorageRoot.class);
+        return request.observable();
     }
 }

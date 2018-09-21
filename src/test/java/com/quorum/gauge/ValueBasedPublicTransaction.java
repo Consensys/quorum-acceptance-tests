@@ -30,8 +30,8 @@ public class ValueBasedPublicTransaction {
     public void sendTransaction(int value, QuorumNode from, QuorumNode to) {
         // backup the current balance
         String txHash = Observable.zip(
-                accountService.getDefaultAccountBalanceObservable(from).subscribeOn(Schedulers.io()),
-                accountService.getDefaultAccountBalanceObservable(to).subscribeOn(Schedulers.io()),
+                accountService.getDefaultAccountBalance(from).subscribeOn(Schedulers.io()),
+                accountService.getDefaultAccountBalance(to).subscribeOn(Schedulers.io()),
                 (fromBalance, toBalance) -> {
                     DataStoreFactory.getScenarioDataStore().put(String.format("%s_balance", from), fromBalance.getBalance());
                     DataStoreFactory.getScenarioDataStore().put(String.format("%s_balance", to), toBalance.getBalance());
@@ -60,7 +60,7 @@ public class ValueBasedPublicTransaction {
     @Step("In <node>, the default account's balance is now less than its previous balance.")
     public void verifyLesserBalance(QuorumNode node) {
         BigInteger prevBalance = (BigInteger) DataStoreFactory.getScenarioDataStore().get(String.format("%s_balance", node));
-        BigInteger actualBalance = accountService.getDefaultAccountBalanceObservable(node).toBlocking().first().getBalance();
+        BigInteger actualBalance = accountService.getDefaultAccountBalance(node).toBlocking().first().getBalance();
 
         assertThat(actualBalance).isLessThan(prevBalance);
     }
@@ -68,7 +68,7 @@ public class ValueBasedPublicTransaction {
     @Step("In <node>, the default account's balance is now greater than its previous balance.")
     public void verifyMoreBalance(QuorumNode node) {
         BigInteger prevBalance = (BigInteger) DataStoreFactory.getScenarioDataStore().get(String.format("%s_balance", node));
-        BigInteger actualBalance = accountService.getDefaultAccountBalanceObservable(node).toBlocking().first().getBalance();
+        BigInteger actualBalance = accountService.getDefaultAccountBalance(node).toBlocking().first().getBalance();
 
         assertThat(actualBalance).isGreaterThan(prevBalance);
     }
@@ -77,8 +77,8 @@ public class ValueBasedPublicTransaction {
     public void sendSignedTransaction(int value, QuorumNode from, QuorumNode to) {
         // backup the current balance
         String txHash = Observable.zip(
-                accountService.getDefaultAccountBalanceObservable(from).subscribeOn(Schedulers.io()),
-                accountService.getDefaultAccountBalanceObservable(to).subscribeOn(Schedulers.io()),
+                accountService.getDefaultAccountBalance(from).subscribeOn(Schedulers.io()),
+                accountService.getDefaultAccountBalance(to).subscribeOn(Schedulers.io()),
                 (fromBalance, toBalance) -> {
                     DataStoreFactory.getScenarioDataStore().put(String.format("%s_balance", from), fromBalance.getBalance());
                     DataStoreFactory.getScenarioDataStore().put(String.format("%s_balance", to), toBalance.getBalance());
