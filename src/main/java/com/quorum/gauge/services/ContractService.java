@@ -38,7 +38,7 @@ public class ContractService extends AbstractService {
         Quorum client = connectionFactory.getConnection(source);
         ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
                 client,
-                accountService.getFirstAccountAddress(source),
+                accountService.getDefaultAccountAddress(source),
                 Arrays.asList(privacyService.id(target)));
         return SimpleStorage.deploy(client,
                 clientTransactionManager,
@@ -73,7 +73,7 @@ public class ContractService extends AbstractService {
         Quorum client = connectionFactory.getConnection(source);
         String address;
         try {
-            address = accountService.getFirstAccountAddress(source);
+            address = accountService.getDefaultAccountAddress(source);
             ClientTransactionManager txManager = new ClientTransactionManager(
                     client,
                     address,
