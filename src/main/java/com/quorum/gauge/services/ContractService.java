@@ -43,7 +43,7 @@ public class ContractService extends AbstractService {
         return SimpleStorage.deploy(client,
                 clientTransactionManager,
                 BigInteger.valueOf(0),
-                new BigInteger("47b760", 16),
+                DEFAULT_GAS_LIMIT,
                 BigInteger.valueOf(42)).observable();
     }
 
@@ -56,13 +56,15 @@ public class ContractService extends AbstractService {
             ReadonlyTransactionManager txManager = new ReadonlyTransactionManager(client, address);
             return SimpleStorage.load(contractAddress, client, txManager,
                     BigInteger.valueOf(0),
-                    new BigInteger("47b760", 16)).get().send().intValue();
+                    DEFAULT_GAS_LIMIT).get().send().intValue();
         } catch (ContractCallException cce) {
             if (cce.getMessage().contains("Empty value (0x)")) {
                 return 0;
             }
+            logger.error("readSimpleContractValue()", cce);
             throw new RuntimeException(cce);
         } catch (Exception e) {
+            logger.error("readSimpleContractValue()", e);
             throw new RuntimeException(e);
         }
     }
@@ -80,6 +82,7 @@ public class ContractService extends AbstractService {
                     BigInteger.valueOf(0),
                     new BigInteger("47b760", 16)).set(BigInteger.valueOf(newValue)).send();
         } catch (Exception e) {
+            logger.error("updateSimpleContract()", e);
             throw new RuntimeException(e);
         }
     }
@@ -95,6 +98,7 @@ public class ContractService extends AbstractService {
             logger.debug("Storage Root for {} in {} is {}", contractAddress, node, storageRoot);
             return storageRoot;
         } catch (IOException e) {
+            logger.error("getStorageRoot()", e);
             throw new RuntimeException(e);
         }
     }

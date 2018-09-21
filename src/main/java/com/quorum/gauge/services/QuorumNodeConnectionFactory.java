@@ -5,6 +5,7 @@ import com.quorum.gauge.common.QuorumNode;
 import okhttp3.OkHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.web3j.protocol.Web3j;
 import org.web3j.protocol.Web3jService;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.quorum.Quorum;
@@ -19,6 +20,10 @@ public class QuorumNodeConnectionFactory {
 
     public Quorum getConnection(QuorumNode node) {
         return Quorum.build(getWeb3jService(node));
+    }
+
+    public Web3j getWeb3jConnection(QuorumNode node) {
+        return Web3j.build(getWeb3jService(node));
     }
 
     public Web3jService getWeb3jService(QuorumNode node) {

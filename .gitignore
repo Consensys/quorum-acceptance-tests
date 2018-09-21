@@ -13,3 +13,5 @@ gauge_bin
 # Gauge - java class target dir
 target
 
+# this is env specific file
+config/application-local.yml
