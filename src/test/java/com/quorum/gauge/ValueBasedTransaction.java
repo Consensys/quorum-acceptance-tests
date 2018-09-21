@@ -9,12 +9,12 @@ import org.springframework.stereotype.Service;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @Service
-public class PrivateSignedTransaction {
+public class ValueBasedTransaction {
 
     @Autowired
     TransactionService transactionService;
 
-    @Step("From <from> to <to>.")
+    @Step("Sending a public transaction from <source> to <target>.")
     public void sendSignedTransaction(QuorumNode from, QuorumNode to) {
         String txHash = transactionService.sendSignedTransaction(from, to);
 

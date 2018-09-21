@@ -30,11 +30,11 @@ public class ContractService extends AbstractService {
     @Autowired
     AccountService accountService;
 
-    public Contract createSimpleContract(QuorumNode source, QuorumNode target) {
-        return createSimpleContractObservable(source, target).toBlocking().first();
+    public Contract createSimpleContract(int initialValue, QuorumNode source, QuorumNode target) {
+        return createSimpleContractObservable(initialValue, source, target).toBlocking().first();
     }
 
-    public Observable<? extends Contract> createSimpleContractObservable(QuorumNode source, QuorumNode target) {
+    public Observable<? extends Contract> createSimpleContractObservable(int initialValue, QuorumNode source, QuorumNode target) {
         Quorum client = connectionFactory.getConnection(source);
         ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
                 client,
@@ -44,7 +44,7 @@ public class ContractService extends AbstractService {
                 clientTransactionManager,
                 BigInteger.valueOf(0),
                 DEFAULT_GAS_LIMIT,
-                BigInteger.valueOf(42)).observable();
+                BigInteger.valueOf(initialValue)).observable();
     }
 
     // Read-only contract
