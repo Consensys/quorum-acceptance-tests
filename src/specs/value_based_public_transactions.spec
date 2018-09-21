@@ -1,7 +1,6 @@
-# Value-based Transactions
+# Value-based Public Transactions
 
 Value-based public transactions are supported by default in Etherum and Quorum keeps this feature.
-However, Quorum does not support value-based private transactions.
 
 ## Successful public transaction submission
 tags: public
@@ -20,17 +19,3 @@ Signing the transaction before submitting it to the node
 * Transaction is accepted in the blockchain.
 * In "Node3", the default account's balance is now "10" lesser than its previous balance.
 * In "Node4", the default account's balance is now "10" more than its previous balance.
-
-## Unsuccessful private transaction submission
-tags: privacy, nosupport
-
-* Send "10" ETH from a default account in "Node1" to a default account in "Node2" in a private transaction.
-* An error is returned.
-
-## Unsuccessful signed private transaction submission
-tags: privacy, nosupport
-
-Signing the transaction before submitting it to the node
-
-* Send "10" ETH from a default account in "Node3" to a default account in "Node4" in a signed private transaction.
-* An error is returned.

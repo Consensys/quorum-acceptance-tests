@@ -28,4 +28,6 @@
 
 * Set environment variable: `LOGGING_LEVEL_COM_QUORUM_GAUGE=DEBUG`
 
+------
+
 [![Gauge Badge](https://gauge.org/Gauge_Badge.svg)](https://gauge.org)
