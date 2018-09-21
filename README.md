@@ -19,6 +19,8 @@
     ```
   * Obtain the nodes metadata from Bastion Node (`/qdata/quorum_metadata`) and create a file `config/application-local.yml` with content similar to a sample file in [`config`](config) folder.
 
+* Run `mvn clean test`
+
 ### Logging
 
 * Set environment variable: `LOGGING_LEVEL_COM_QUORUM_GAUGE=DEBUG`
