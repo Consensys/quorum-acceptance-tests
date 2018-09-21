@@ -14,6 +14,7 @@ import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.quorum.Quorum;
+import org.web3j.quorum.methods.request.PrivateTransaction;
 import rx.Observable;
 
 import java.math.BigInteger;
@@ -57,7 +58,7 @@ public class TransactionService extends AbstractService {
                 });
     }
 
-    public Observable<EthSendTransaction> sendSignedTransaction(int value, QuorumNode from, QuorumNode to) {
+    public Observable<EthSendTransaction> sendSignedPublicTransaction(int value, QuorumNode from, QuorumNode to) {
         Web3j client = connectionFactory.getWeb3jConnection(from);
         String fromAddress = accountService.getDefaultAccountAddress(from);
         String toAddress = accountService.getDefaultAccountAddress(to);
@@ -79,7 +80,53 @@ public class TransactionService extends AbstractService {
             String rawHexString = (String) response.get("raw");
             return client.ethSendRawTransaction(rawHexString).observable();
         } catch (Exception e) {
-            logger.error("sendSignedTransaction()", e);
+            logger.error("sendSignedPublicTransaction()", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Observable<EthSendTransaction> sendPrivateTransaction(int value, QuorumNode from, QuorumNode to) {
+        Quorum client = connectionFactory.getConnection(from);
+        String fromAddress = accountService.getDefaultAccountAddress(from);
+        String toAddress = accountService.getDefaultAccountAddress(to);
+        PrivateTransaction tx = new PrivateTransaction(
+                fromAddress,
+                null,
+                DEFAULT_GAS_LIMIT,
+                toAddress,
+                BigInteger.valueOf(value),
+                null,
+                Arrays.asList(privacyService.id(to))
+        );
+        return client.ethSendTransaction(tx).observable();
+    }
+
+    public Observable<EthSendTransaction> sendSignedPrivateTransaction(int value, QuorumNode from, QuorumNode to) {
+        Web3j client = connectionFactory.getWeb3jConnection(from);
+        String fromAddress = accountService.getDefaultAccountAddress(from);
+        String toAddress = accountService.getDefaultAccountAddress(to);
+        try {
+            PrivateTransaction tx = new PrivateTransaction(
+                    fromAddress,
+                    null,
+                    DEFAULT_GAS_LIMIT,
+                    toAddress,
+                    BigInteger.valueOf(value),
+                    null,
+                    Arrays.asList(privacyService.id(to))
+            );
+            Request<?, EthSignTransaction> request = new Request<>(
+                    "eth_signTransaction",
+                    Arrays.asList(tx),
+                    connectionFactory.getWeb3jService(from),
+                    EthSignTransaction.class
+            );
+            Map<String, Object> response = request.send().getResult();
+            logger.debug("{}", response);
+            String rawHexString = (String) response.get("raw");
+            return client.ethSendRawTransaction(rawHexString).observable();
+        } catch (Exception e) {
+            logger.error("sendSignedPrivateTransaction()", e);
             throw new RuntimeException(e);
         }
     }

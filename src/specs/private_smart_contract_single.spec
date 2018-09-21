@@ -6,14 +6,14 @@ A simple smart contract is to store a int value and to provide `get()` and `set(
 * Deploy a simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node7".
 
 ## Contract is mined
-tags: private, mining
+tags: privacy, mining
 
 * Transaction Hash is returned.
 * Transaction Receipt is present in "Node1".
 * Transaction Receipt is present in "Node7".
 
 ## Storage Root storing private smart contract must be the same
-tags: private, storage
+tags: privacy, storage
 
 * Contracts stored in "Node1" and "Node7" must have the same storage root.
 * Contracts stored in "Node1" and "Node3" must not have the same storage root.

@@ -84,7 +84,7 @@ public class ValueBasedPublicTransaction {
                     DataStoreFactory.getScenarioDataStore().put(String.format("%s_balance", to), toBalance.getBalance());
                     return true;
                 })
-                .flatMap( r -> transactionService.sendSignedTransaction(value, from, to))
+                .flatMap( r -> transactionService.sendSignedPublicTransaction(value, from, to))
                 .toBlocking().first().getTransactionHash();
 
         DataStoreFactory.getScenarioDataStore().put("tx_hash", txHash);
