@@ -44,8 +44,8 @@ script:
 - set -e
 - echo "Provisioning Quorum Network"
 - pushd quorum-cloud/aws/templates/_terraform_init
-- $TERRAFORM_CMD init -no-color -var network_name=travis-$CONSENSUS-$TRAVIS_COMMIT
-- $TERRAFORM_CMD apply -no-color -auto-approve
+- $TERRAFORM_CMD init -no-color
+- $TERRAFORM_CMD apply -no-color -var network_name=travis-$CONSENSUS-$TRAVIS_COMMIT -auto-approve
 - popd
 - pushd quorum-cloud/aws/templates
 - $TERRAFORM_CMD init -no-color -backend-config=terraform.auto.backend_config
