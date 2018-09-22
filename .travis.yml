@@ -7,9 +7,9 @@ sudo: true
 install:
   - sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net --recv-keys 023EDB0B
   - echo deb https://dl.bintray.com/gauge/gauge-deb stable main | sudo tee -a /etc/apt/sources.list
-  - sudo add-apt-repository ppa:ethereum/ethereum
+  - sudo add-apt-repository -y ppa:ethereum/ethereum
   - sudo apt-get update
-  - sudo apt-get install gauge solc
+  - sudo apt-get -y install gauge solc
   - gauge install java
   - gauge install html-report
 script:
