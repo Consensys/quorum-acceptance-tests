@@ -19,6 +19,7 @@ popd
 
 pushd quorum-cloud/aws/templates
 ${TERRAFORM_CMD} init -no-color -backend-config=terraform.auto.backend_config
+ls -lha
 TF_LOG=debug ${TERRAFORM_CMD} apply -var consensus_mechanism=${CONSENSUS} -auto-approve
 popd
 
