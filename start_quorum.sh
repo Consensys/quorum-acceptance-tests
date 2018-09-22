@@ -9,26 +9,16 @@ ${TERRAFORM_CMD} apply -var network_name=ci-${CONSENSUS}-${TRAVIS_COMMIT::6} -au
 popd
 
 pushd quorum-cloud/aws/templates
-cat <<EOF > terraform.tfvars
-is_igw_subnets = "false"
-
-# private subnets routable to Internet via NAT Gateway
-subnet_ids = ["subnet-4c30c605","subnet-4c30c605","subnet-09263334","subnet-5236300a"]
-
-bastion_public_subnet_id = "subnet-3a8d8707"
-EOF
-popd
-
-pushd quorum-cloud/aws/templates
 ${TERRAFORM_CMD} init -no-color -backend-config=terraform.auto.backend_config
 ${TERRAFORM_CMD} apply -var consensus_mechanism=${CONSENSUS} -auto-approve
 popd
 
-echo "Wait for the Quorum Network being ready"
 pushd quorum-cloud/aws/templates
 export private_key_file=$(${TERRAFORM_CMD} output -json | jq .private_key_file.value)
 export bastion_host_ip=$(${TERRAFORM_CMD} output -json | jq .bastion_host_ip.value)
 popd
+
+echo "Wait for the Quorum Network being ready"
 
 while [ ! -f "config/application-local.yml" ]; do
    scp -o ServerAliveInterval=30 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet \
