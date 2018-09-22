@@ -60,6 +60,7 @@ script:
   consensus_mechanism = "$CONSENSUS"
   EOF
 - echo "Provisioning Quorum Network"
+- $TERRAFORM_CMD validate
 - $TERRAFORM_CMD apply -auto-approve
 - private_key_file=$($TERRAFORM_CMD output -json | jq .private_key_file.value)
 - bastion_host_ip=$($TERRAFORM_CMD output -json | jq .bastion_host_ip.value)
