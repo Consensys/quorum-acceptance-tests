@@ -6,7 +6,7 @@ os:
 sudo: true
 env:
   global:
-  - TERRAFORM_CMD='docker run --rm -v `pwd`:/terraform -w /terraform -it hashicorp/terraform:light'
+  - TERRAFORM_CMD=(docker run --rm -v `pwd`:/terraform -w /terraform -it hashicorp/terraform:light)
   - secure: "Z2X6n7bM3CSHgeXbUCQCBAu2C61PqJOj4Z+VSUztEY5UKch8AzoP8jK6tg2bjU1FEmpoO13b1ZJO1E4TYv5DymWtCIEZC1P81ojrbB6otFZOBeTcU9KFTsk4FmM9Ps+ieAiNSfD/KCTdNSJM245kO7+CtgKx5o1jONnUqRJCGmXAJRouYcoRVoFgUTde2EtPkmwP7rgqQwVJNETSb0rEq4KwXokU7Dr954iKMx0EhznjB83sxCT/myndeKGUsErI6U5E/cEMvLru9EMgwsLFEhI3ECshlUtzvAzr61q/5nSl+hyb604vj+b6ymr2dHeSXn8Y+xYorNPnQKtr1hIFIUhGzoy5T/0+zXqKKvO8rFkWlpHdFySuXDcPW2gLBCI0TwJf0G3dthzarf2xWrm4oo6k9PVIYpd1KEBtJ6N4ncUMHTrFvLlpQnRz24/TWzr8kiHU6DqRxz/raEJjmXEkdMgWRve6WOEMp6bZjAjP/NdCGaU8SzGr4whbD9Bq60OEGhLDlSyJSLO5/fldQaWNb2PYsK4TDQrzpP37ZouNPMkrjnZgrbp4hO3Uma6XL8towJpyXvkSiS8YLVbSbiMcHH1uop0yC4nLoTUn2UV55+sjk51zbYP2xXwtDBsqmVNBPUZbgq82kBbFiZDJ7suPXtHcR4G+j1u6Y+TijQCYYrE="
   - secure: "xNNqJZHDPLXS3ptmD/ayui29WNufGFhYsQYAik45SMS0gIx0aALt3wMaT9apurQuOBGMWO7Ik791/VbV+xOxWNbDj+8ASVQ4n6PGaoEb/Rh7eFkr01xQiVgL5U+uhXzNRdnTsWb3tljzuu5OqyvmL27l/Ms7xAkb/s1Y2sJOELpwiPf2D+Hw6g+62h48lqJKl+4Ycz707ShDNjBGJ77UxVH1/3lcq3DhRZJDgJRyf8IqtkDFQy2wwhVgM8YDO/LcgYTHP6Y+nm280FZ6qtcAxl01KCqLeM/wGF7a3EvRE/zSVr8G3mh/MZFfde0oKInc1of3XN0bURQsJ+X6E+EfIUSIHlXONZD/s3OWZnV5fRMw98XIB3p45pFs/Z7oTrjCWvPe765P5RaUOgk7m4JskDYMTkPgSGFuhZXcD3MU+YcUZdrtaBwJq0ZcaZToLikRYMgd52m8pqEZ4V2jnAJJghyncwaQGkJG2d4529ef1uony91/Qoa8AuGD2zld0ItW8jYzjapAGD3tlllR7+C21AJp4/YBXq8LYQIoXG4uTkNxi4IxH8Afs5YkRJj9pQ9RfWtj4Lhi71kWZJ1PJj/oOHX25c754kosof9CoxbItCHMplm13VrDzOJ05UQvRfJn2j8GQkBI/JcLN193hl0bqDQQRZDByD65Rmob31jsbWY="
   - secure: "cnHFg4wHhEWJAnEdKckMGrUV7EvqTRHhHaDG3kLppaWdqlTKu2yfciaoeYG+WnWqPf4p3LKEw/7cfroGfOqvFr31BTySBMTb98Rjp0qFdW2ZlAa7EVn1Ou3vmpDdMXEbpHNHIC+YxUOpNaati4FeKzNvICThnTchnRFXAM1+oQONGi9AAsrv+xCdnyWBeZZxqA7bIzb3QQosh+0kig+ciCWV/MQu+Waiuog8P1STfV56pC4O+H2qhKuLHI0f3LNueZSdxnFZdbtFptAoCpEWGU6JWPT7weMVShwpzLyg9ZvEjVN9ixkPvHSq27f3i5FyH4965QMuRnfNLA3auR1zDAuaSxwUd51nkSSPWIfV2YdYWZ73y+v6nsaaIywMjX9kxRCTMP6Oskkl5K+QNYafaz/D1x0so14erP3QwJWcSjl+UuN9teAEWJrRzTzX+u8yq/3T8zB9khs3009pqyazTHB0MVjNzJ1dO6dYINMq6UApBcEKLZm8yQxJisQsElJaCROC2Z/EaSuaHEXa6arKKwd9oIeO9B7/zOcS76Llb1GXIjYoGvuug54g477sWhgfKaqy2ykKdSjUtvx6vYi4s/s9WisIxdnqpN+1RFABXbSlIVhxD524UNAQJlav16h8Z6isv16llik3Ya7XbQbJR2K7qzUTuvP9F6Dx+wfFx84="
@@ -44,11 +44,11 @@ script:
 - set -e
 - echo "Provisioning Quorum Network"
 - pushd quorum-cloud/aws/templates/_terraform_init
-- $TERRAFORM_CMD init -no-color -var network_name=travis-$CONSENSUS-$TRAVIS_COMMIT
-- $TERRAFORM_CMD apply -no-color -auto-approve
+- ${TERRAFORM_CMD[@]} init -no-color -var network_name=travis-$CONSENSUS-$TRAVIS_COMMIT
+- ${TERRAFORM_CMD[@]} apply -no-color -auto-approve
 - popd
 - pushd quorum-cloud/aws/templates
-- $TERRAFORM_CMD init -no-color -backend-config=terraform.auto.backend_config
+- ${TERRAFORM_CMD[@]} init -no-color -backend-config=terraform.auto.backend_config
 - |
   cat <<EOF > terraform.tfvars
   is_igw_subnets = "false"
@@ -57,9 +57,9 @@ script:
   consensus_mechanism = "$CONSENSUS"
   EOF
 - popd
-- $TERRAFORM_CMD apply -no-color -auto-approve
-- private_key_file=$($TERRAFORM_CMD output -no-color -json | jq .private_key_file.value)
-- bastion_host_ip=$($TERRAFORM_CMD output -no-color -json | jq .bastion_host_ip.value)
+- ${TERRAFORM_CMD[@]} apply -no-color -auto-approve
+- private_key_file=$(${TERRAFORM_CMD[@]} output -no-color -json | jq .private_key_file.value)
+- bastion_host_ip=$(${TERRAFORM_CMD[@]} output -no-color -json | jq .bastion_host_ip.value)
 - echo "Wait for the Quorum Network being ready"
 - |
   while [ ! -f "config/application-local.yml" ]; do
@@ -76,5 +76,5 @@ script:
 after_script:
 - echo "Destroying Quorum Network"
 - pushd quorum-cloud/aws/templates
-- $TERRAFORM_CMD destroy -no-color -auto-approve
+- ${TERRAFORM_CMD[@]} destroy -no-color -auto-approve
 - popd
