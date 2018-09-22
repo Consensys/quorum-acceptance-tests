@@ -26,6 +26,7 @@ addons:
 services:
 - docker
 before_install:
+- shopt -s expand_aliases
 - docker pull hashicorp/terraform:light
 - alias terraform="docker run --rm -v `pwd`:/terraform -w /terraform -it hashicorp/terraform:light"
 - git clone https://github.com/trung/quorum-cloud.git
