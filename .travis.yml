@@ -56,7 +56,7 @@ script:
   bastion_public_subnet_id = "$PUBLIC_SUBNET"
   consensus_mechanism = "$CONSENSUS"
   EOF
-- ls
+- cat terraform.tfvars
 - $TERRAFORM_CMD apply -no-color -auto-approve
 - private_key_file=$($TERRAFORM_CMD output -no-color -json | jq .private_key_file.value)
 - bastion_host_ip=$($TERRAFORM_CMD output -no-color -json | jq .bastion_host_ip.value)
