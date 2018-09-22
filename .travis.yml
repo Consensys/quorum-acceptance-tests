@@ -44,8 +44,8 @@ script:
 - set -e
 - echo "Provisioning Quorum Network"
 - pushd quorum-cloud/aws/templates/_terraform_init
-- $TERRAFORM_CMD init -no-color
-- $TERRAFORM_CMD apply -no-color -var network_name=ci-$CONSENSUS-${TRAVIS_COMMIT::6} -auto-approve
+- $TERRAFORM_CMD init
+- $TERRAFORM_CMD apply -var network_name=ci-$CONSENSUS-${TRAVIS_COMMIT::6} -auto-approve
 - popd
 - pushd quorum-cloud/aws/templates
 - $TERRAFORM_CMD init -no-color -backend-config=terraform.auto.backend_config
@@ -56,9 +56,9 @@ script:
   bastion_public_subnet_id = "$PUBLIC_SUBNET"
   consensus_mechanism = "$CONSENSUS"
   EOF
-- TF_LOG=debug $TERRAFORM_CMD apply
-- private_key_file=$($TERRAFORM_CMD output -no-color -json | jq .private_key_file.value)
-- bastion_host_ip=$($TERRAFORM_CMD output -no-color -json | jq .bastion_host_ip.value)
+- $TERRAFORM_CMD apply -auto-approve
+- private_key_file=$($TERRAFORM_CMD output -json | jq .private_key_file.value)
+- bastion_host_ip=$($TERRAFORM_CMD output -json | jq .bastion_host_ip.value)
 - popd
 - echo "Wait for the Quorum Network being ready"
 - |
@@ -76,5 +76,5 @@ script:
 after_script:
 - echo "Destroying Quorum Network"
 - pushd quorum-cloud/aws/templates
-- $TERRAFORM_CMD destroy -no-color -auto-approve
+- $TERRAFORM_CMD destroy -auto-approve
 - popd
