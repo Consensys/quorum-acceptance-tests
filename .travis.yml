@@ -20,4 +20,4 @@ install:
   - gauge telemetry off
 script:
   - gauge install
-  - mvn clean test
+  - mvn clean test -q
