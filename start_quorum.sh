@@ -18,7 +18,7 @@ popd
 
 echo "Provisioning Quorum Network"
 pushd quorum-cloud/aws/templates
-${TERRAFORM_CMD} apply -auto-approve
+${TERRAFORM_CMD} apply -var consensus_mechanism=${CONSENSUS} -auto-approve
 private_key_file=$(${TERRAFORM_CMD} output -json | jq .private_key_file.value)
 bastion_host_ip=$(${TERRAFORM_CMD} output -json | jq .bastion_host_ip.value)
 popd
