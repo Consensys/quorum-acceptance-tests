@@ -44,8 +44,7 @@ matrix:
   - name: istanbul
     env:
     - CONSENSUS='istanbul'
-script:
-- set -e
+before_script:
 - pushd quorum-cloud/aws/templates/_terraform_init
 - $TERRAFORM_CMD init
 - $TERRAFORM_CMD apply -var network_name=ci-$CONSENSUS-${TRAVIS_COMMIT::6} -auto-approve
@@ -59,7 +58,11 @@ script:
   bastion_public_subnet_id = "$PUBLIC_SUBNET"
   consensus_mechanism = "$CONSENSUS"
   EOF
+- popd
+script:
+- set -e
 - echo "Provisioning Quorum Network"
+- pushd quorum-cloud/aws/templates
 - $TERRAFORM_CMD validate
 - $TERRAFORM_CMD apply -auto-approve
 - private_key_file=$($TERRAFORM_CMD output -json | jq .private_key_file.value)
