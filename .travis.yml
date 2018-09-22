@@ -17,7 +17,7 @@ addons:
     sources:
     - sourceline: ppa:ethereum/ethereum
     - sourceline: 'deb https://dl.bintray.com/gauge/gauge-deb stable main'
-      key_url: 'http://pool.sks-keyservers.net/pks/lookup?search=0x023EDB0B&exact=on&options=mr&op=get'
+      key_url: http://pool.sks-keyservers.net/pks/lookup\?search\=0x023EDB0B\&exact\=on\&options\=mr\&op\=get
     packages:
     - maven
     - gauge
