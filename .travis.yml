@@ -27,7 +27,7 @@ services:
 - docker
 before_install:
 - docker pull hashicorp/terraform:light
-- git clone https://github.com/trung/quorum-cloud.git ~/quorum-cloud
+- git clone https://github.com/trung/quorum-cloud.git
 install:
 - gauge telemetry off
 - gauge install
@@ -42,11 +42,11 @@ matrix:
 script:
 - set -e
 - echo "Provisioning Quorum Network"
-- pushd ~/quorum-cloud/aws/templates/_terraform_init
+- pushd quorum-cloud/aws/templates/_terraform_init
 - $TERRAFORM_CMD init -no-color -var network_name=travis-$CONSENSUS-$TRAVIS_COMMIT
 - $TERRAFORM_CMD apply -no-color -auto-approve
 - popd
-- pushd ~/quorum-cloud/aws/templates
+- pushd quorum-cloud/aws/templates
 - $TERRAFORM_CMD init -no-color -backend-config=terraform.auto.backend_config
 - |
   cat <<EOF > terraform.tfvars
@@ -74,6 +74,6 @@ script:
 - mvn clean test -q
 after_script:
 - echo "Destroying Quorum Network"
-- pushd ~/quorum-cloud/aws/templates
+- pushd quorum-cloud/aws/templates
 - $TERRAFORM_CMD destroy -no-color -auto-approve
 - popd
