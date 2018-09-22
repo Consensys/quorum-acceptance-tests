@@ -17,11 +17,11 @@ addons:
     update: true
     sources:
     - sourceline: ppa:ethereum/ethereum
-    - sourceline: "deb https://dl.bintray.com/gauge/gauge-deb stable main"
-      key_url: "http://pool.sks-keyservers.net/pks/lookup?search=0x023EDB0B&exact=on&options=mr&op=get"
+#    - sourceline: "deb https://dl.bintray.com/gauge/gauge-deb stable main"
+#      key_url: "http://pool.sks-keyservers.net/pks/lookup?search=0x023EDB0B&exact=on&options=mr&op=get"
     packages:
     - maven
-    - gauge
+#    - gauge
     - solc
     - jq
 before_install:
@@ -30,6 +30,10 @@ before_install:
 - $TERRAFORM_CMD version
 - git clone https://github.com/trung/quorum-cloud.git
 install:
+- sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net --recv-keys 023EDB0B
+- echo deb https://dl.bintray.com/gauge/gauge-deb stable main | sudo tee -a /etc/apt/sources.list
+- sudo apt-get -y update
+- sudo apt-get -y install gauge
 - gauge telemetry off
 - gauge install
 matrix:
@@ -42,7 +46,6 @@ matrix:
     - CONSENSUS='istanbul'
 script:
 - set -e
-- echo "Provisioning Quorum Network"
 - pushd quorum-cloud/aws/templates/_terraform_init
 - $TERRAFORM_CMD init
 - $TERRAFORM_CMD apply -var network_name=ci-$CONSENSUS-${TRAVIS_COMMIT::6} -auto-approve
@@ -56,6 +59,7 @@ script:
   bastion_public_subnet_id = "$PUBLIC_SUBNET"
   consensus_mechanism = "$CONSENSUS"
   EOF
+- echo "Provisioning Quorum Network"
 - $TERRAFORM_CMD apply -auto-approve
 - private_key_file=$($TERRAFORM_CMD output -json | jq .private_key_file.value)
 - bastion_host_ip=$($TERRAFORM_CMD output -json | jq .bastion_host_ip.value)
