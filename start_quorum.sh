@@ -11,15 +11,16 @@ popd
 pushd quorum-cloud/aws/templates
 cat <<EOF > terraform.tfvars
 is_igw_subnets = "false"
-subnet_ids = [${PRIVATE_SUBNETS}]
-bastion_public_subnet_id = "${PUBLIC_SUBNET}"
-consensus_mechanism = "${CONSENSUS}"
+
+# private subnets routable to Internet via NAT Gateway
+subnet_ids = ["subnet-4c30c605","subnet-4c30c605","subnet-09263334","subnet-5236300a"]
+
+bastion_public_subnet_id = "subnet-3a8d8707"
 EOF
 popd
 
 pushd quorum-cloud/aws/templates
 ${TERRAFORM_CMD} init -no-color -backend-config=terraform.auto.backend_config
-ls -lha
 TF_LOG=debug ${TERRAFORM_CMD} apply -var consensus_mechanism=${CONSENSUS} -auto-approve
 popd
 
