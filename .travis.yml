@@ -4,13 +4,20 @@ jdk:
 os:
   - linux
 sudo: true
+addons:
+  apt:
+    update: true
+    sources:
+      - sourceline: 'ppa:ethereum/ethereum'
+      - sourceline: 'deb https://dl.bintray.com/gauge/gauge-deb stable main'
+        key_url: 'http://pool.sks-keyservers.net/pks/lookup?search=0x023EDB0B&exact=on&options=mr&op=get'
+    packages:
+      - maven
+      - gauge
+      - solc
+      - jq
 install:
-  - sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net --recv-keys 023EDB0B
-  - echo deb https://dl.bintray.com/gauge/gauge-deb stable main | sudo tee -a /etc/apt/sources.list
-  - sudo add-apt-repository -y ppa:ethereum/ethereum
-  - sudo apt-get update
-  - sudo apt-get -y install gauge solc
-  - gauge install java
-  - gauge install html-report
+  - gauge telemetry off
 script:
+  - gauge install
   - mvn clean test
