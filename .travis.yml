@@ -45,12 +45,7 @@ matrix:
     env:
     - CONSENSUS='istanbul'
 script:
-- set -e
-- ./start_quorum.sh
-- export QUORUM_SOCKS_PROXY_HOST=localhost
-- export QUORUM_SOCKS_PROXY_PORT=5000
-- echo "Running tests"
-- mvn clean test -q
+- ./start_quorum.sh && ./run_tests.sh
 after_script:
 - echo "Destroying Quorum Network"
 - pushd quorum-cloud/aws/templates
