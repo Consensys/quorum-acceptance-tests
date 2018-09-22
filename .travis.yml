@@ -1,23 +1,76 @@
 language: java
 jdk:
-  - oraclejdk8
+- oraclejdk8
 os:
-  - linux
+- linux
 sudo: true
+env:
+  global:
+  - TERRAFORM_CMD='docker run --rm -it hashicorp/terraform:light'
+  - secure: "Z2X6n7bM3CSHgeXbUCQCBAu2C61PqJOj4Z+VSUztEY5UKch8AzoP8jK6tg2bjU1FEmpoO13b1ZJO1E4TYv5DymWtCIEZC1P81ojrbB6otFZOBeTcU9KFTsk4FmM9Ps+ieAiNSfD/KCTdNSJM245kO7+CtgKx5o1jONnUqRJCGmXAJRouYcoRVoFgUTde2EtPkmwP7rgqQwVJNETSb0rEq4KwXokU7Dr954iKMx0EhznjB83sxCT/myndeKGUsErI6U5E/cEMvLru9EMgwsLFEhI3ECshlUtzvAzr61q/5nSl+hyb604vj+b6ymr2dHeSXn8Y+xYorNPnQKtr1hIFIUhGzoy5T/0+zXqKKvO8rFkWlpHdFySuXDcPW2gLBCI0TwJf0G3dthzarf2xWrm4oo6k9PVIYpd1KEBtJ6N4ncUMHTrFvLlpQnRz24/TWzr8kiHU6DqRxz/raEJjmXEkdMgWRve6WOEMp6bZjAjP/NdCGaU8SzGr4whbD9Bq60OEGhLDlSyJSLO5/fldQaWNb2PYsK4TDQrzpP37ZouNPMkrjnZgrbp4hO3Uma6XL8towJpyXvkSiS8YLVbSbiMcHH1uop0yC4nLoTUn2UV55+sjk51zbYP2xXwtDBsqmVNBPUZbgq82kBbFiZDJ7suPXtHcR4G+j1u6Y+TijQCYYrE="
+  - secure: "xNNqJZHDPLXS3ptmD/ayui29WNufGFhYsQYAik45SMS0gIx0aALt3wMaT9apurQuOBGMWO7Ik791/VbV+xOxWNbDj+8ASVQ4n6PGaoEb/Rh7eFkr01xQiVgL5U+uhXzNRdnTsWb3tljzuu5OqyvmL27l/Ms7xAkb/s1Y2sJOELpwiPf2D+Hw6g+62h48lqJKl+4Ycz707ShDNjBGJ77UxVH1/3lcq3DhRZJDgJRyf8IqtkDFQy2wwhVgM8YDO/LcgYTHP6Y+nm280FZ6qtcAxl01KCqLeM/wGF7a3EvRE/zSVr8G3mh/MZFfde0oKInc1of3XN0bURQsJ+X6E+EfIUSIHlXONZD/s3OWZnV5fRMw98XIB3p45pFs/Z7oTrjCWvPe765P5RaUOgk7m4JskDYMTkPgSGFuhZXcD3MU+YcUZdrtaBwJq0ZcaZToLikRYMgd52m8pqEZ4V2jnAJJghyncwaQGkJG2d4529ef1uony91/Qoa8AuGD2zld0ItW8jYzjapAGD3tlllR7+C21AJp4/YBXq8LYQIoXG4uTkNxi4IxH8Afs5YkRJj9pQ9RfWtj4Lhi71kWZJ1PJj/oOHX25c754kosof9CoxbItCHMplm13VrDzOJ05UQvRfJn2j8GQkBI/JcLN193hl0bqDQQRZDByD65Rmob31jsbWY="
+  - secure: "cnHFg4wHhEWJAnEdKckMGrUV7EvqTRHhHaDG3kLppaWdqlTKu2yfciaoeYG+WnWqPf4p3LKEw/7cfroGfOqvFr31BTySBMTb98Rjp0qFdW2ZlAa7EVn1Ou3vmpDdMXEbpHNHIC+YxUOpNaati4FeKzNvICThnTchnRFXAM1+oQONGi9AAsrv+xCdnyWBeZZxqA7bIzb3QQosh+0kig+ciCWV/MQu+Waiuog8P1STfV56pC4O+H2qhKuLHI0f3LNueZSdxnFZdbtFptAoCpEWGU6JWPT7weMVShwpzLyg9ZvEjVN9ixkPvHSq27f3i5FyH4965QMuRnfNLA3auR1zDAuaSxwUd51nkSSPWIfV2YdYWZ73y+v6nsaaIywMjX9kxRCTMP6Oskkl5K+QNYafaz/D1x0so14erP3QwJWcSjl+UuN9teAEWJrRzTzX+u8yq/3T8zB9khs3009pqyazTHB0MVjNzJ1dO6dYINMq6UApBcEKLZm8yQxJisQsElJaCROC2Z/EaSuaHEXa6arKKwd9oIeO9B7/zOcS76Llb1GXIjYoGvuug54g477sWhgfKaqy2ykKdSjUtvx6vYi4s/s9WisIxdnqpN+1RFABXbSlIVhxD524UNAQJlav16h8Z6isv16llik3Ya7XbQbJR2K7qzUTuvP9F6Dx+wfFx84="
+  - secure: "f1mXiAlFxnmXhLn+cNbjwwaAzfZBlMkEzYo1HMjcp+H9Co9PcPsyV8TXQRXLAbcV8j/xSKv1X0Fqex62jchr3g+MEvRj9Ls55cGyNdyESugYJBxUsVucILZC85Mkl8FB1qLcgfF86WdMWeE3oMseT3h7jYzr3jlZJtpCjdQtZWrUhWvfT9Sd/97kpRvAv81xXd7Wgp6LX+xHrdxA3iMj/3487kQIlO6uA4KzIdqIdIQ/Nv1czV4hMcBV0OTp+PiyLSK3nFHnPEpMM4cxMQta6zk+XbB0yFB3fqXv7n1E6kIioo4/egylS21PVouT165L/0tTehfxAY4o1UPbSvA0FnOQnHWT815vVu2T0MBcYOyQxCiYzQVP702x9QgMfvWH7P4SVIt3LY18h92H2YHK1W79fmkFPj3LBe8vKDFReLewDK46Blm2Ewo3G7gS7HTTTZmp35+c3Y9zzIP4Rs+/6CAVCPL/oXRvu5o+p/bE6KmPkZAGLn7MinHKv8WsS2ZB26Db142bmz+Bqi2Zp40uMHMJx75xkM+8Jx4+kuJDdbMU+YNFwUKinPR1m3MOOthhNDPd0Xf3D4NY1T0F8inG4PSr0xCj9WpPwPCz7swwN5v3phoi3Vjlgs/vClksXPQU4OnKqzyHNAEBpV7x/uylbP5n75mN8/m2TTsiQpWeIzk="
 addons:
   apt:
     update: true
     sources:
-      - sourceline: 'ppa:ethereum/ethereum'
-      - sourceline: 'deb https://dl.bintray.com/gauge/gauge-deb stable main'
-        key_url: 'http://pool.sks-keyservers.net/pks/lookup?search=0x023EDB0B&exact=on&options=mr&op=get'
+    - sourceline: ppa:ethereum/ethereum
+    - sourceline: deb https://dl.bintray.com/gauge/gauge-deb stable main
+      key_url: http://pool.sks-keyservers.net/pks/lookup?search=0x023EDB0B&exact=on&options=mr&op=get
     packages:
-      - maven
-      - gauge
-      - solc
-      - jq
+    - maven
+    - gauge
+    - solc
+    - jq
+services:
+- docker
+before_install:
+- docker pull hashicorp/terraform:light
+- git clone https://github.com/trung/quorum-cloud.git ~/quorum-cloud
 install:
-  - gauge telemetry off
+- gauge telemetry off
+- gauge install
+matrix:
+  include:
+  - name: raft
+    env:
+    - CONSENSUS='raft'
+  - name: istanbul
+    env:
+    - CONSENSUS='istanbul'
 script:
-  - gauge install
-  - mvn clean test -q
+- echo "Provisioning Quorum Network"
+- pushd ~/quorum-cloud/templates/_terraform_init
+- "$TERRAFORM_CMD init -no-color -var network_name=travis-$CONSENSUS-$TRAVIS_COMMIT"
+- "$TERRAFORM_CMD apply -no-color -auto-approve"
+- popd
+- pushd ~/quorum-cloud/templates
+- "$TERRAFORM_CMD init -no-color -backend-config=terraform.auto.backend_config"
+- |
+  cat <<EOF > terraform.tfvars
+  is_igw_subnets = "false"
+  subnet_ids = [$PRIVATE_SUBNETS]
+  bastion_public_subnet_id = "$PUBLIC_SUBNET"
+  consensus_mechanism = "$CONSENSUS"
+  EOF
+- popd
+- "$TERRAFORM_CMD apply -no-color -auto-approve"
+- private_key_file=$($TERRAFORM_CMD output -no-color -json | jq .private_key_file.value)
+- bastion_host_ip=$($TERRAFORM_CMD output -no-color -json | jq .bastion_host_ip.value)
+- echo "Wait for the Quorum Network being ready"
+- while [ ! -f "config/application-local.yml" ]; do
+-   scp -o ServerAliveInterval=30 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet \
+-       -i $private_key_file ec2-user@$bastion_host_ip:/qdata/quorum_metadata config/application.yml > /dev/null 2>&1
+- done
+- ssh -D 5000 -N -o ServerAliveInterval=30 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet \
+-     -i $private_key_file ec2-user@$bastion_host_ip &
+- export QUORUM_SOCKS_PROXY_HOST=localhost
+- export QUORUM_SOCKS_PROXY_PORT=5000
+- echo "Running tests"
+- mvn clean test -q
+after_script:
+- echo "Destroying Quorum Network"
+- pushd ~/quorum-cloud/templates
+- "$TERRAFORM_CMD destroy -no-color -auto-approve"
+- popd
