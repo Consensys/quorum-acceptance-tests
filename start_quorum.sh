@@ -23,7 +23,7 @@ f="config/application-local.yml"
 count=1
 while [ "$count" -le 40 ] && [ ! -f ${f} ]; do
     sleep 3
-    scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet \
+    scp -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet \
         -i ${private_key_file} ec2-user@${bastion_host_ip}:/qdata/quorum_metadata ${f} || echo "Reading metadata...${count}"
     count=$((count+1))
 done
