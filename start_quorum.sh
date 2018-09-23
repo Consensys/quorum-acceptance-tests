@@ -23,7 +23,7 @@ echo "Wait for the Quorum Network being ready"
 while [ ! -f "config/application-local.yml" ]; do
     sleep 3
     scp -o ServerAliveInterval=30 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet \
-        -i ${private_key_file} ec2-user@${bastion_host_ip}:/qdata/quorum_metadata config/application-local.yml > /dev/null 2>&1
+        -i ${private_key_file} ec2-user@${bastion_host_ip}:/qdata/quorum_metadata config/application-local.yml || echo "Reading metadata..."
 done
 
 echo "Start SOCKS proxy for SSH tunnelling"
