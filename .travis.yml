@@ -55,8 +55,10 @@ matrix:
     - TF_VAR_network_name=ci-${TF_VAR_consensus_mechanism}-${TRAVIS_COMMIT::6}
 before_script:
 - ./start_quorum.sh
+- set +e
 script:
 - ./run_tests.sh
+- set +e
 after_script:
 - ./stop_quorum.sh
 deploy:
