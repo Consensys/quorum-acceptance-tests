@@ -13,6 +13,7 @@ env:
   - TF_VAR_is_igw_subnets=false
   - TF_VAR_subnet_ids="[\"subnet-4c30c605\",\"subnet-4c30c605\",\"subnet-09263334\",\"subnet-5236300a\"]"
   - TF_VAR_bastion_public_subnet_id="subnet-3a8d8707"
+  - TF_VAR_access_bastion_cidr_blocks="[$(dig +short nat.travisci.net | sed -e 's/$/\/32\\"/g' | sed -e 's/^/\\"/g' | paste -s -d"," -)]"
   # AWS Configuration
   - secure: "cnHFg4wHhEWJAnEdKckMGrUV7EvqTRHhHaDG3kLppaWdqlTKu2yfciaoeYG+WnWqPf4p3LKEw/7cfroGfOqvFr31BTySBMTb98Rjp0qFdW2ZlAa7EVn1Ou3vmpDdMXEbpHNHIC+YxUOpNaati4FeKzNvICThnTchnRFXAM1+oQONGi9AAsrv+xCdnyWBeZZxqA7bIzb3QQosh+0kig+ciCWV/MQu+Waiuog8P1STfV56pC4O+H2qhKuLHI0f3LNueZSdxnFZdbtFptAoCpEWGU6JWPT7weMVShwpzLyg9ZvEjVN9ixkPvHSq27f3i5FyH4965QMuRnfNLA3auR1zDAuaSxwUd51nkSSPWIfV2YdYWZ73y+v6nsaaIywMjX9kxRCTMP6Oskkl5K+QNYafaz/D1x0so14erP3QwJWcSjl+UuN9teAEWJrRzTzX+u8yq/3T8zB9khs3009pqyazTHB0MVjNzJ1dO6dYINMq6UApBcEKLZm8yQxJisQsElJaCROC2Z/EaSuaHEXa6arKKwd9oIeO9B7/zOcS76Llb1GXIjYoGvuug54g477sWhgfKaqy2ykKdSjUtvx6vYi4s/s9WisIxdnqpN+1RFABXbSlIVhxD524UNAQJlav16h8Z6isv16llik3Ya7XbQbJR2K7qzUTuvP9F6Dx+wfFx84="
   - secure: "f1mXiAlFxnmXhLn+cNbjwwaAzfZBlMkEzYo1HMjcp+H9Co9PcPsyV8TXQRXLAbcV8j/xSKv1X0Fqex62jchr3g+MEvRj9Ls55cGyNdyESugYJBxUsVucILZC85Mkl8FB1qLcgfF86WdMWeE3oMseT3h7jYzr3jlZJtpCjdQtZWrUhWvfT9Sd/97kpRvAv81xXd7Wgp6LX+xHrdxA3iMj/3487kQIlO6uA4KzIdqIdIQ/Nv1czV4hMcBV0OTp+PiyLSK3nFHnPEpMM4cxMQta6zk+XbB0yFB3fqXv7n1E6kIioo4/egylS21PVouT165L/0tTehfxAY4o1UPbSvA0FnOQnHWT815vVu2T0MBcYOyQxCiYzQVP702x9QgMfvWH7P4SVIt3LY18h92H2YHK1W79fmkFPj3LBe8vKDFReLewDK46Blm2Ewo3G7gS7HTTTZmp35+c3Y9zzIP4Rs+/6CAVCPL/oXRvu5o+p/bE6KmPkZAGLn7MinHKv8WsS2ZB26Db142bmz+Bqi2Zp40uMHMJx75xkM+8Jx4+kuJDdbMU+YNFwUKinPR1m3MOOthhNDPd0Xf3D4NY1T0F8inG4PSr0xCj9WpPwPCz7swwN5v3phoi3Vjlgs/vClksXPQU4OnKqzyHNAEBpV7x/uylbP5n75mN8/m2TTsiQpWeIzk="
@@ -25,6 +26,7 @@ addons:
       key_url: "http://pool.sks-keyservers.net/pks/lookup?search=0x023EDB0B&exact=on&options=mr&op=get"
     packages:
     - openssh-client
+    - dnsutils
     - maven
     - gauge
     - solc
@@ -34,6 +36,7 @@ before_install:
 - unzip terraform.zip
 - $TERRAFORM_CMD version
 - git clone https://github.com/trung/quorum-cloud.git
+-
 install:
 - gauge telemetry off
 - gauge install
