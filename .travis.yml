@@ -40,7 +40,6 @@ before_install:
 - unzip terraform.zip
 - $TERRAFORM_CMD version
 - git clone https://github.com/trung/quorum-cloud.git
--
 install:
 - gauge telemetry off
 - gauge install
@@ -61,7 +60,7 @@ script:
 after_script:
 - ./stop_quorum.sh
 deploy:
-- provider: pages
+  provider: pages
   skip_cleanup: true
   github_token: $GITHUB_TOKEN
   keep_history: true
