@@ -1,8 +1,11 @@
+[![Build Status](https://travis-ci.org/trung/quorum-acceptance-test.svg?branch=master)](https://travis-ci.org/trung/quorum-acceptance-test)
+
 ### Prerequisites
 
 * Java 8
 * Maven 3.5.x
-* Solidity Compiler
+* [Solidity Compiler](https://solidity.readthedocs.io/en/latest/installing-solidity.html)
+* [Gauge](https://gauge.org/get_started)
 
 ### Writing Tests
 
