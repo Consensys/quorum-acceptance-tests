@@ -45,9 +45,11 @@ matrix:
   - name: raft
     env:
     - TF_VAR_consensus_mechanism=raft
+    - TF_VAR_network_name=ci-${TF_VAR_consensus_mechanism}-${TRAVIS_COMMIT::6}
   - name: istanbul
     env:
     - TF_VAR_consensus_mechanism=istanbul
+    - TF_VAR_network_name=ci-${TF_VAR_consensus_mechanism}-${TRAVIS_COMMIT::6}
 script:
 - ./start_quorum.sh && ./run_tests.sh
 after_script:

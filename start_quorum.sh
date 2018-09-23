@@ -7,7 +7,7 @@ TERRAFORM_CMD=${TERRAFORM_CMD:-terraform}
 echo "Provisioning Quorum Network"
 pushd ${QUORUM_CLOUD_TEMPLATES_DIR}/_terraform_init > /dev/null
 ${TERRAFORM_CMD} init > /dev/null
-${TERRAFORM_CMD} apply -var network_name=ci-${TF_VAR_consensus_mechanism}-${TRAVIS_COMMIT::6} -auto-approve > /dev/null
+${TERRAFORM_CMD} apply -auto-approve > /dev/null
 popd > /dev/null
 
 pushd ${QUORUM_CLOUD_TEMPLATES_DIR} > /dev/null
