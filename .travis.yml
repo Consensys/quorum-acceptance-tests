@@ -7,26 +7,23 @@ sudo: true
 env:
   global:
   - TERRAFORM_CMD="$TRAVIS_BUILD_DIR/terraform"
-  - secure: "Z2X6n7bM3CSHgeXbUCQCBAu2C61PqJOj4Z+VSUztEY5UKch8AzoP8jK6tg2bjU1FEmpoO13b1ZJO1E4TYv5DymWtCIEZC1P81ojrbB6otFZOBeTcU9KFTsk4FmM9Ps+ieAiNSfD/KCTdNSJM245kO7+CtgKx5o1jONnUqRJCGmXAJRouYcoRVoFgUTde2EtPkmwP7rgqQwVJNETSb0rEq4KwXokU7Dr954iKMx0EhznjB83sxCT/myndeKGUsErI6U5E/cEMvLru9EMgwsLFEhI3ECshlUtzvAzr61q/5nSl+hyb604vj+b6ymr2dHeSXn8Y+xYorNPnQKtr1hIFIUhGzoy5T/0+zXqKKvO8rFkWlpHdFySuXDcPW2gLBCI0TwJf0G3dthzarf2xWrm4oo6k9PVIYpd1KEBtJ6N4ncUMHTrFvLlpQnRz24/TWzr8kiHU6DqRxz/raEJjmXEkdMgWRve6WOEMp6bZjAjP/NdCGaU8SzGr4whbD9Bq60OEGhLDlSyJSLO5/fldQaWNb2PYsK4TDQrzpP37ZouNPMkrjnZgrbp4hO3Uma6XL8towJpyXvkSiS8YLVbSbiMcHH1uop0yC4nLoTUn2UV55+sjk51zbYP2xXwtDBsqmVNBPUZbgq82kBbFiZDJ7suPXtHcR4G+j1u6Y+TijQCYYrE="
-  - secure: "xNNqJZHDPLXS3ptmD/ayui29WNufGFhYsQYAik45SMS0gIx0aALt3wMaT9apurQuOBGMWO7Ik791/VbV+xOxWNbDj+8ASVQ4n6PGaoEb/Rh7eFkr01xQiVgL5U+uhXzNRdnTsWb3tljzuu5OqyvmL27l/Ms7xAkb/s1Y2sJOELpwiPf2D+Hw6g+62h48lqJKl+4Ycz707ShDNjBGJ77UxVH1/3lcq3DhRZJDgJRyf8IqtkDFQy2wwhVgM8YDO/LcgYTHP6Y+nm280FZ6qtcAxl01KCqLeM/wGF7a3EvRE/zSVr8G3mh/MZFfde0oKInc1of3XN0bURQsJ+X6E+EfIUSIHlXONZD/s3OWZnV5fRMw98XIB3p45pFs/Z7oTrjCWvPe765P5RaUOgk7m4JskDYMTkPgSGFuhZXcD3MU+YcUZdrtaBwJq0ZcaZToLikRYMgd52m8pqEZ4V2jnAJJghyncwaQGkJG2d4529ef1uony91/Qoa8AuGD2zld0ItW8jYzjapAGD3tlllR7+C21AJp4/YBXq8LYQIoXG4uTkNxi4IxH8Afs5YkRJj9pQ9RfWtj4Lhi71kWZJ1PJj/oOHX25c754kosof9CoxbItCHMplm13VrDzOJ05UQvRfJn2j8GQkBI/JcLN193hl0bqDQQRZDByD65Rmob31jsbWY="
+  - TF_VAR_is_igw_subnets=false
+  - TF_VAR_bastion_public_subnet_id="subnet-3a8d8707"
+  - TF_VAR_subnet_ids=["subnet-4c30c605","subnet-4c30c605","subnet-09263334","subnet-5236300a"]
+  - QUORUM_CLOUD_TEMPLATES_DIR=quorum-cloud/aws/templates
   - secure: "cnHFg4wHhEWJAnEdKckMGrUV7EvqTRHhHaDG3kLppaWdqlTKu2yfciaoeYG+WnWqPf4p3LKEw/7cfroGfOqvFr31BTySBMTb98Rjp0qFdW2ZlAa7EVn1Ou3vmpDdMXEbpHNHIC+YxUOpNaati4FeKzNvICThnTchnRFXAM1+oQONGi9AAsrv+xCdnyWBeZZxqA7bIzb3QQosh+0kig+ciCWV/MQu+Waiuog8P1STfV56pC4O+H2qhKuLHI0f3LNueZSdxnFZdbtFptAoCpEWGU6JWPT7weMVShwpzLyg9ZvEjVN9ixkPvHSq27f3i5FyH4965QMuRnfNLA3auR1zDAuaSxwUd51nkSSPWIfV2YdYWZ73y+v6nsaaIywMjX9kxRCTMP6Oskkl5K+QNYafaz/D1x0so14erP3QwJWcSjl+UuN9teAEWJrRzTzX+u8yq/3T8zB9khs3009pqyazTHB0MVjNzJ1dO6dYINMq6UApBcEKLZm8yQxJisQsElJaCROC2Z/EaSuaHEXa6arKKwd9oIeO9B7/zOcS76Llb1GXIjYoGvuug54g477sWhgfKaqy2ykKdSjUtvx6vYi4s/s9WisIxdnqpN+1RFABXbSlIVhxD524UNAQJlav16h8Z6isv16llik3Ya7XbQbJR2K7qzUTuvP9F6Dx+wfFx84="
   - secure: "f1mXiAlFxnmXhLn+cNbjwwaAzfZBlMkEzYo1HMjcp+H9Co9PcPsyV8TXQRXLAbcV8j/xSKv1X0Fqex62jchr3g+MEvRj9Ls55cGyNdyESugYJBxUsVucILZC85Mkl8FB1qLcgfF86WdMWeE3oMseT3h7jYzr3jlZJtpCjdQtZWrUhWvfT9Sd/97kpRvAv81xXd7Wgp6LX+xHrdxA3iMj/3487kQIlO6uA4KzIdqIdIQ/Nv1czV4hMcBV0OTp+PiyLSK3nFHnPEpMM4cxMQta6zk+XbB0yFB3fqXv7n1E6kIioo4/egylS21PVouT165L/0tTehfxAY4o1UPbSvA0FnOQnHWT815vVu2T0MBcYOyQxCiYzQVP702x9QgMfvWH7P4SVIt3LY18h92H2YHK1W79fmkFPj3LBe8vKDFReLewDK46Blm2Ewo3G7gS7HTTTZmp35+c3Y9zzIP4Rs+/6CAVCPL/oXRvu5o+p/bE6KmPkZAGLn7MinHKv8WsS2ZB26Db142bmz+Bqi2Zp40uMHMJx75xkM+8Jx4+kuJDdbMU+YNFwUKinPR1m3MOOthhNDPd0Xf3D4NY1T0F8inG4PSr0xCj9WpPwPCz7swwN5v3phoi3Vjlgs/vClksXPQU4OnKqzyHNAEBpV7x/uylbP5n75mN8/m2TTsiQpWeIzk="
   - secure: "Z/UN30mRM0oYJLK/eq/29fxy1Rjf3tW386aheNarbvyijK6VsbKn5KTVDvJHzl4Kc41cm5c00qf9+10am2jeSNJYU/qsrEp8CuTznPoJ9dGq0DyL2No62EufsEfE2eaPIikBUP2tnqcnn1o3LSG73UzZex2yTtDtDCg7AfQ7dTkxbKc37/gMbSSopN9rWtXJYTmOqGM5NPXEmkKR6FeyYFF/Yy49Q8Nzr943RxzD1bjY3beg+ec47uKoOuRInuDyTfjWMNChdcq+dg8CH3+dNzm+qF1td8YFkr4yDSPtvLAHRbFxGJFL0s3YXX0SJIvVBJ2RzI9LmI9B9BJiG9IPnLgopXyvFMCbzJC2WnSRc8htd7MsScFMTy7YxDE5a8T799d6iJKDrSrjhlHtzndtyxqYTd9kPNEeEjm1a0y6hAJO1lUJlMsVcXSoAdCXSrK7VPVR1g0rPXfgautGptNlDV9gPOn8SFqsKuPBcxqKQC7MzGXII3fkZ4v4GaEVzdlmiCCRu/O8YBrlRce8rLAZV6+uFKtsUzsp9aTk7VsEmLoof1KdoK8kep7zQrhvCacxGr1VUJBtxyBumUWZuHMuIZ6ni8b2TcYJAFB+Hl5ScGIYK0lYXc1WFxtou+JoB+3oQ5cPFeoWPKyVvSM9u+F341O1vS5qfQIwIaDkOkKMqa8="
-    # private subnets
-  - secure: "tpl1QBcQLoRb6Y2q6Df4PFc/pxik2p/rryn8+kyPDXNV4vJbkOIAuUEp//MddaKffElVBImd/tJwy5EGkVhhn5Z23Ztzts/mWHEpQMLIdpk3iaSJT9hlom8Ilad5+hWAw6DGGYoRA+zSdXKAzq/faNN5IeKdMxyBM7ITC4FbgYA09KR37vGTfg7WVq1eC18BauFq5VNvNDO+ZTIFZ3Y5RaBVjhP5EelBDJ9d6EVfizJijEVbv2ZUhRvBUuB+8kGuMWzDvzbrpjkIvOlmrntwQiX8nX5KGtZOVw8tFTDFeOSddXzWxp1MqiMuWi56d/NXpHPO+zWnZ8IAoCPytF1y4cyVeC5UZ87c0YrJgV9XFAAiCbTDmq2DrHDZyLQvNleJ4veJIy2Nfm6+lRxksrO1kxIvg8U7mZ/ryXC7GS2BtbpzIFqiQG6Rso5HQVk0vctVVljG/8WmwzMADd54eBDLCk1FaH/7xhbuqS5+CibNXBYeHUpgRYKKMJCCPX0/ySaBOCmsHh8HghIFkskuB9m+asDg22ZVrDkDGWsyQ7XpW4yeGP/2t4rJHHkQRXrEkcw1P2TbvR7p0CEp6Oe9bsIrQzhH2aGEljo/8PyxRu7ppZhCxD15rcdl42cPYIe4IbHyKgv5TOZ+22Hv1FWc/QA1ytGXhJEoYAXQFqTrBwiJRtU="
-    # public subnets
-  - secure: "Cj8Ro9AXGWDZUhiYal5HIStRyYEcyPRNOBgjNgirAb7683XHwvRfw4FdF8oHdTsILNw2XC5zcVQcm9a9fXh/BNvy5CvPNRrfh8ipS3RTJrQaUXGsScb1nYDKeqaJ4YWj5DuREe101+Uh0vuDgW7oTRyKSwazfeN362W/SjPEPyXz6E6kMzy5OvfahMbNtGKfJIR1XWWmOoIbdBzO4K6dlGLQCKrA/NcfqhjXBN1LkkGL0n45SI7xJz2vnxskoBNSMA6DpJeiWB4pubHHSKhFHlz6Kq95pxG+O8s+iP8azRXMeTjuF9Y+FInM8UKNGfFKaV5Dzxn8prgyQhEdBUqgHwZywVi1BkqaSnatSsqE1cR+ZYvcHYMLygAyIYebMMlpOrI30mAgp75oRHBrNMtuLEomCh8QwO3f41DHhpjpbUopAWHrzzu9Q2Uu6HJu1dQm2WHmwNkttZNnWtTIrno3Dkw16eqEP4VXWKES1FPZoaZPF1gWZjTph6yGiCQcFqq99oqWrjlAOlninMKDuyjrvlsTsCHa1NrgUNVR9mG2hirTTNtP01k7gpUDr7UDgRevkB92mlJvBXozKr2Tp+EpYbGI/Wr/0txydP6x1gIi9SUba4fzYOV0onbO9DNYlCNDQfbyLsJX97qt1urmYf4EMEpItq2C02Qa6d7Vt5qiols="
-  - TF_VAR_is_igw_subnets=false
 addons:
   apt:
     update: true
     sources:
     - sourceline: ppa:ethereum/ethereum
-#    - sourceline: "deb https://dl.bintray.com/gauge/gauge-deb stable main"
-#      key_url: "http://pool.sks-keyservers.net/pks/lookup?search=0x023EDB0B&exact=on&options=mr&op=get"
+    - sourceline: "deb https://dl.bintray.com/gauge/gauge-deb stable main"
+      key_url: "http://pool.sks-keyservers.net/pks/lookup?search=0x023EDB0B&exact=on&options=mr&op=get"
     packages:
     - maven
-#    - gauge
+    - gauge
     - solc
     - jq
 before_install:
@@ -35,24 +32,17 @@ before_install:
 - $TERRAFORM_CMD version
 - git clone https://github.com/trung/quorum-cloud.git
 install:
-- sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net --recv-keys 023EDB0B
-- echo deb https://dl.bintray.com/gauge/gauge-deb stable main | sudo tee -a /etc/apt/sources.list
-- sudo apt-get -y update
-- sudo apt-get -y install gauge
 - gauge telemetry off
 - gauge install
 matrix:
   include:
   - name: raft
     env:
-    - CONSENSUS='raft'
+    - TF_VAR_consensus_mechanism='raft'
   - name: istanbul
     env:
-    - CONSENSUS='istanbul'
+    - TF_VAR_consensus_mechanism='istanbul'
 script:
 - ./start_quorum.sh && ./run_tests.sh
 after_script:
-- echo "Destroying Quorum Network"
-- pushd quorum-cloud/aws/templates
-- $TERRAFORM_CMD destroy -auto-approve
-- popd
+- ./stop_quorum.sh
