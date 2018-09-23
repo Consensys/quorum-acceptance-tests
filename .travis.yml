@@ -8,6 +8,8 @@ env:
   global:
   - TERRAFORM_CMD="$TRAVIS_BUILD_DIR/terraform"
   - QUORUM_CLOUD_TEMPLATES_DIR=quorum-cloud/aws/templates
+  - QUORUM_SOCKSPROXY_HOST=localhost
+  - QUORUM_SOCKSPROXY_PORT=5000
   # Terraform Variables
   - TF_VAR_region=us-east-1
   - TF_VAR_is_igw_subnets=false
@@ -50,7 +52,9 @@ matrix:
     env:
     - TF_VAR_consensus_mechanism=istanbul
     - TF_VAR_network_name=ci-${TF_VAR_consensus_mechanism}-${TRAVIS_COMMIT::6}
+before_script:
+- ./start_quorum.sh
 script:
-- ./start_quorum.sh && ./run_tests.sh
+- ./run_tests.sh
 after_script:
 - ./stop_quorum.sh

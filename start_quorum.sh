@@ -35,5 +35,6 @@ if [ ! -f ${f} ]; then
 fi
 
 echo "Start SOCKS proxy for SSH tunnelling"
-ssh -D 5000 -N -o ServerAliveInterval=30 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet \
-      -i ${private_key_file} ec2-user@${bastion_host_ip} &
+ssh -D ${QUORUM_SOCKSPROXY_PORT} -N \
+    -o ServerAliveInterval=30 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet \
+    -i ${private_key_file} ec2-user@${bastion_host_ip} &

@@ -29,7 +29,7 @@ public class Configuration {
         }
         QuorumNetworkProperty.SocksProxy socksProxyConfig = networkProperty.getSocksProxy();
         if (socksProxyConfig != null) {
-            logger.debug("Configured SOCKS Proxy ({}:{}) for HTTPClient", socksProxyConfig.getHost(), socksProxyConfig.getPort());
+            logger.info("Configured SOCKS Proxy ({}:{}) for HTTPClient", socksProxyConfig.getHost(), socksProxyConfig.getPort());
             builder.proxy(new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(socksProxyConfig.getHost(), socksProxyConfig.getPort())));
         }
         return builder.build();
