@@ -13,8 +13,8 @@ popd > /dev/null
 pushd ${QUORUM_CLOUD_TEMPLATES_DIR} > /dev/null
 ${TERRAFORM_CMD} init -backend-config=terraform.auto.backend_config
 ${TERRAFORM_CMD} apply -auto-approve
-export private_key_file=$(${TERRAFORM_CMD} output -json | jq .private_key_file.value)
-export bastion_host_ip=$(${TERRAFORM_CMD} output -json | jq .bastion_host_ip.value)
+export private_key_file=$(${TERRAFORM_CMD} output -json | jq -r .private_key_file.value)
+export bastion_host_ip=$(${TERRAFORM_CMD} output -json | jq -r .bastion_host_ip.value)
 chmod 600 ${private_key_file}
 popd > /dev/null
 
