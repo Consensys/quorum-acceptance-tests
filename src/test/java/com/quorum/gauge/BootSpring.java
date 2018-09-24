@@ -2,6 +2,8 @@ package com.quorum.gauge;
 
 import com.thoughtworks.gauge.BeforeScenario;
 import com.thoughtworks.gauge.ClassInitializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
@@ -25,9 +27,13 @@ public class BootSpring implements ClassInitializer {
 
     @Service
     public static class FixNewLine {
+        private static final Logger logger = LoggerFactory.getLogger(FixNewLine.class);
+
         @BeforeScenario
         public void beforeScenario() {
-            System.out.println();
+            if (logger.isDebugEnabled()) {
+                System.out.println();
+            }
         }
     }
 }
