@@ -63,6 +63,7 @@ script:
 - ./run_tests.sh
 - set +e
 after_script:
+- ./upload_test_report.sh
 - ./stop_quorum.sh
 deploy:
   on:
