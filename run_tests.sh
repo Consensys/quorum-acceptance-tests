@@ -1,6 +1,7 @@
 #!/bin/bash
 
 echo "Running tests"
+env
 mvn clean test site -q \
   -DTRAVIS=${TRAVIS} \
   -DTRAVIS_JOB_NUMBER=${TRAVIS_JOB_NUMBER} \
