@@ -66,3 +66,10 @@ after_script:
 - ./stop_quorum.sh
 - set +e
 - ./upload_test_report.sh
+notifications:
+  slack:
+    rooms:
+    - secure: "6h88IhBfc3zURO+j51g7oggjzu7ENp9LY32/UJLdx8gkP1Vczhm4NoRBIsBij2hKuNzae3E+GFpI2223F63nEm/k9qtvHNjHZKFlqh70HOpFCs/PHV21kjYkWnlxgIcc3LXaXmscNJQlyPTiWvsf2HzJCkY7FmQs5WmmzRa4GeXvlxLuD07NBd8P4k9l89gtiN7XXy065eXpG/iQ1dSZ/I7ifF0WmxqYsAkAMawh3CoZeNq6Q0ej2MhDblNTTPkA3EUeXi5ihj+kpQ5Lh1vup0zBfKHaQAes5K6dL3gHoO+dgP9cUzs4wCdOrjSSO8uXrOlNQLIHw+HpMMcK5b8CgWiO3ijTMnWmWjzPex2SOqVkyM+IyU1YxpeG5Sc4SA/kruTMIMofA6cRVA9+9ILi3rkmLHJHavhRdkVoyCy42Xj1kIYLr1bMqx9Y4tLtnXqILwuTqIs90dViBJ8ntibIvSe6uhyUN98LrUOJwR5fx0HyvCYr0VVuFiJRmQ+90JrysHi7DDasStIGbzi9uusTB3oOVgJ4YJPAyUdEOie7TmxRRvCiEx0udnhnozZaKj4OKXS2qH0TfIJBMBrNWmJpxTcNxSbHV5rv53gvvhqCEnjiyBlRiSj/p7HM5KK2R6odNsfAUykwNK6PTTgqREkAeqhIcq1PNzunpnfFXWbnGNk="
+    on_success: change
+    on_failure: always
+    on_pull_requests: false
