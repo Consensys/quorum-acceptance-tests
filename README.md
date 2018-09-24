@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.org/trung/quorum-acceptance-test.svg?branch=master)](https://travis-ci.org/trung/quorum-acceptance-test)
 
+[Test Report](https://trung.github.io/quorum-acceptance-test/)
+
 ### Prerequisites
 
 * Java 8

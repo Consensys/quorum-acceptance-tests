@@ -16,8 +16,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
         <generated.sol.dir>${project.build.directory}/generate-sources/sol</generated.sol.dir>
-        <TOKEN>${GITHUB_TOKEN}</TOKEN>
-        <github.global.server>github</github.global.server>
         <!-- dependencies -->
         <jsch.version>0.1.54</jsch.version>
         <web3j-quorum.version>0.8.0</web3j-quorum.version>
@@ -65,43 +63,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-site-plugin</artifactId>
-                <configuration>
-                    <generateReports>false</generateReports>
-                    <generateProjectInfo>false</generateProjectInfo>
-                    <skipDeploy>true</skipDeploy>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-project-info-reports-plugin</artifactId>
-                <version>${maven-project-info-reports-plugin.version}</version>
-            </plugin>
-            <plugin>
-                <groupId>com.github.github</groupId>
-                <artifactId>site-maven-plugin</artifactId>
-                <version>${github.site-maven-plugin.version}</version>
-                <configuration>
-                    <branch>refs/heads/master</branch>
-                    <message>Test Reports</message>
-                    <path>${project.artifactId}</path>
-                    <repositoryName>trung.github.com</repositoryName>
-                    <repositoryOwner>trung</repositoryOwner>
-                    <oauth2Token>${TOKEN}</oauth2Token>
-                    <merge>true</merge>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>deploy-github-pages</id>
-                        <goals>
-                            <goal>site</goal>
-                        </goals>
-                        <phase>site</phase>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>com.thoughtworks.gauge.maven</groupId>
                 <artifactId>gauge-maven-plugin</artifactId>
@@ -163,4 +124,66 @@
         </plugins>
     </build>
 
+    <profiles>
+        <profile>
+            <id>travis</id>
+            <activation>
+                <property>
+                    <name>TRAVIS</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <properties>
+                <!-- expected to pass the below variables via -D option -->
+                <TRAVIS_JOB_NUMBER>TBD</TRAVIS_JOB_NUMBER>
+                <TRAVIS_TEST_RESULT>TBD</TRAVIS_TEST_RESULT>
+                <GITHUB_TOKEN>TBD</GITHUB_TOKEN>
+                <REPO_NAME>TBD</REPO_NAME>
+                <REPO_OWNER>TBD</REPO_OWNER>
+                <GITHUB_USERNAME>TBD</GITHUB_USERNAME>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-site-plugin</artifactId>
+                        <configuration>
+                            <generateReports>false</generateReports>
+                            <generateProjectInfo>false</generateProjectInfo>
+                            <skipDeploy>true</skipDeploy>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-project-info-reports-plugin</artifactId>
+                        <version>${maven-project-info-reports-plugin.version}</version>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.github.github</groupId>
+                        <artifactId>site-maven-plugin</artifactId>
+                        <version>${github.site-maven-plugin.version}</version>
+                        <configuration>
+                            <branch>refs/heads/master</branch>
+                            <message>Test Reports for Travis Job ${TRAVIS_JOB_NUMBER} - Result: ${TRAVIS_TEST_RESULT}</message>
+                            <path>${project.artifactId}</path>
+                            <merge>true</merge>
+                            <oauth2Token>${GITHUB_TOKEN}</oauth2Token>
+                            <repositoryName>${REPO_NAME}</repositoryName>
+                            <repositoryOwner>${REPO_OWNER}</repositoryOwner>
+                            <userName>${GITHUB_USERNAME}</userName>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>deploy-github-pages</id>
+                                <goals>
+                                    <goal>site</goal>
+                                </goals>
+                                <phase>site</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

@@ -1,4 +1,10 @@
 #!/bin/bash
 
 echo "Running tests"
-mvn clean test -q
+mvn clean test site -q \
+  -DTRAVIS_JOB_NUMBER=${TRAVIS_JOB_NUMBER} \
+  -DTRAVIS_TEST_RESULT=${TRAVIS_TEST_RESULT} \
+  -DGITHUB_TOKEN=${GITHUB_TOKEN} \
+  -DREPO_NAME=${REPO_NAME} \
+  -DREPO_OWNER=${REPO_OWNER} \
+  -DGITHUB_USERNAME=${GITHUB_USERNAME}
