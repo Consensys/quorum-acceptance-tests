@@ -31,7 +31,8 @@ done
 
 if [ ! -f ${f} ]; then
     echo "Timed out!"
-    exit 1
+    # we don't do exit 1 here as it will cause issue in Travis, just do a normal and purposedly failed command
+    ${TRAVIS_COMMIT} > /dev/null 2>&1
 fi
 
 echo "Start SOCKS proxy for SSH tunnelling"
