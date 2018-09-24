@@ -141,6 +141,7 @@
                 <REPO_NAME>TBD</REPO_NAME>
                 <REPO_OWNER>TBD</REPO_OWNER>
                 <GITHUB_USERNAME>TBD</GITHUB_USERNAME>
+                <CONSENSUS></CONSENSUS>
             </properties>
             <build>
                 <plugins>
@@ -165,7 +166,7 @@
                         <configuration>
                             <branch>refs/heads/master</branch>
                             <message>Test Reports for Travis Job ${TRAVIS_JOB_NUMBER} - Result: ${TRAVIS_TEST_RESULT}</message>
-                            <path>${project.artifactId}</path>
+                            <path>${project.artifactId}/${CONSENSUS}</path>
                             <merge>true</merge>
                             <oauth2Token>${GITHUB_TOKEN}</oauth2Token>
                             <repositoryName>${REPO_NAME}</repositoryName>
