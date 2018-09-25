@@ -15,8 +15,8 @@ import java.util.Random;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Service
-public class ValueBasedPrivateTransaction {
-    private static final Logger logger = LoggerFactory.getLogger(ValueBasedPrivateTransaction.class);
+public class ValueTransferPrivateTransaction {
+    private static final Logger logger = LoggerFactory.getLogger(ValueTransferPrivateTransaction.class);
 
     @Autowired
     TransactionService transactionService;
@@ -35,10 +35,11 @@ public class ValueBasedPrivateTransaction {
         DataStoreFactory.getScenarioDataStore().put("error", err);
     }
 
-    @Step("An error is returned.")
-    public void verifyError() {
+    @Step("Error message <expectedErrorMsg> is returned.\n")
+    public void verifyError(String expectedErrorMsg) {
         Response.Error err = (Response.Error) DataStoreFactory.getScenarioDataStore().get("error");
 
         assertThat(err).as("An error must be returned").isNotNull();
+        assertThat(err.getMessage()).isEqualTo(expectedErrorMsg);
     }
 }

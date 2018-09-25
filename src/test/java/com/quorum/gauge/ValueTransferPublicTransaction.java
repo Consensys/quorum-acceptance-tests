@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Service
-public class ValueBasedPublicTransaction {
+public class ValueTransferPublicTransaction {
 
     @Autowired
     TransactionService transactionService;

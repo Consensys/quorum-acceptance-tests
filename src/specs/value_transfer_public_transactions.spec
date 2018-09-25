@@ -1,4 +1,4 @@
-# Value-based Public Transactions
+# Value transfer in public transactions
 
 Value-based public transactions are supported by default in Etherum and Quorum keeps this feature.
 

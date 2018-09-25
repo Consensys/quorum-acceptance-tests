@@ -1,4 +1,4 @@
-# Multiple Private Smart Contracts
+# Multiple private smart contracts
 
 Sending multiple private smart contracts between nodes and verify if all nodes have received.
 

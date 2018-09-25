@@ -34,17 +34,17 @@ public class PrivateSmartContract {
     @Autowired
     TransactionService transactionService;
 
-    @Step("Deploy a simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target>.")
-    public void setupContract(int initialValue, QuorumNode source, QuorumNode target) {
+    @Step("Deploy a simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target>, named this contract as <contractName>.")
+    public void setupContract(int initialValue, QuorumNode source, QuorumNode target, String contractName) {
         logger.debug("Setting up contract from {} to {}", source, target);
         Contract contract = contractService.createSimpleContract(initialValue, source, target).toBlocking().first();
 
-        DataStoreFactory.getScenarioDataStore().put("contract", contract);
+        DataStoreFactory.getSpecDataStore().put(contractName, contract);
     }
 
-    @Step("Transaction Hash is returned.")
-    public void verifyTransactionHash() {
-        Contract c = (Contract) DataStoreFactory.getScenarioDataStore().get("contract");
+    @Step("Transaction Hash is returned for <contractName>.")
+    public void verifyTransactionHash(String contractName) {
+        Contract c = (Contract) DataStoreFactory.getSpecDataStore().get(contractName);
         String transactionHash = c.getTransactionReceipt().orElseThrow(()-> new RuntimeException("no transaction receipt for contract")).getTransactionHash();
         Gauge.writeMessage("Transaction Hash is %s", transactionHash);
 
@@ -53,8 +53,8 @@ public class PrivateSmartContract {
         DataStoreFactory.getScenarioDataStore().put("transactionHash", transactionHash);
     }
 
-    @Step("Transaction Receipt is present in <node>.")
-    public void verifyTransactionReceipt(QuorumNode node) {
+    @Step("Transaction Receipt is present in <node> for <contractName>.")
+    public void verifyTransactionReceipt(QuorumNode node, String contractName) {
         String transactionHash = (String) DataStoreFactory.getScenarioDataStore().get("transactionHash");
         Optional<TransactionReceipt> receipt = transactionService.getTransactionReceipt(node, transactionHash);
 
@@ -62,9 +62,9 @@ public class PrivateSmartContract {
         assertThat(receipt.get().getBlockNumber()).isNotEqualTo(BigInteger.valueOf(0));
     }
 
-    @Step("Contracts stored in <source> and <target> must have the same storage root.")
-    public void verifyStorageRoot(QuorumNode source, QuorumNode target) {
-        Contract c = (Contract) DataStoreFactory.getScenarioDataStore().get("contract");
+    @Step("<contractName> stored in <source> and <target> must have the same storage root.")
+    public void verifyStorageRoot(String contractName, QuorumNode source, QuorumNode target) {
+        Contract c = (Contract) DataStoreFactory.getSpecDataStore().get(contractName);
         Observable.zip(
                 contractService.getStorageRoot(source, c.getContractAddress()).subscribeOn(Schedulers.io()),
                 contractService.getStorageRoot(target, c.getContractAddress()).subscribeOn(Schedulers.io()),
@@ -72,9 +72,9 @@ public class PrivateSmartContract {
         );
     }
 
-    @Step("Contracts stored in <source> and <stranger> must not have the same storage root.")
-    public void verifyStorageRootForNonParticipatedNode(QuorumNode source, QuorumNode stranger) {
-        Contract c = (Contract) DataStoreFactory.getScenarioDataStore().get("contract");
+    @Step("<contractName> stored in <source> and <stranger> must not have the same storage root.")
+    public void verifyStorageRootForNonParticipatedNode(String contractName, QuorumNode source, QuorumNode stranger) {
+        Contract c = (Contract) DataStoreFactory.getSpecDataStore().get(contractName);
         Observable.zip(
                 contractService.getStorageRoot(source, c.getContractAddress()).subscribeOn(Schedulers.io()),
                 contractService.getStorageRoot(stranger, c.getContractAddress()).subscribeOn(Schedulers.io()),
@@ -82,17 +82,17 @@ public class PrivateSmartContract {
         );
     }
 
-    @Step("Smart contract's `get()` function execution in <node> returns <expectedValue>.")
-    public void verifyPrivacyWithParticipatedNodes(QuorumNode node, int expectedValue) {
-        Contract c = (Contract) DataStoreFactory.getScenarioDataStore().get("contract");
+    @Step("<contractName>'s `get()` function execution in <node> returns <expectedValue>.")
+    public void verifyPrivacyWithParticipatedNodes(String contractName, QuorumNode node, int expectedValue) {
+        Contract c = (Contract) DataStoreFactory.getSpecDataStore().get(contractName);
         int actualValue = contractService.readSimpleContractValue(node, c.getContractAddress());
 
         assertThat(actualValue).isEqualTo(expectedValue);
     }
 
-    @Step("Execute smart contract's `set()` function with new value <newValue> in <source> and it's private for <target>.\n")
-    public void updateNewValue(int newValue, QuorumNode source, QuorumNode target) {
-        Contract c = (Contract) DataStoreFactory.getScenarioDataStore().get("contract");
+    @Step("Execute <contractName>'s `set()` function with new value <newValue> in <source> and it's private for <target>.\n")
+    public void updateNewValue(String contractName, int newValue, QuorumNode source, QuorumNode target) {
+        Contract c = (Contract) DataStoreFactory.getSpecDataStore().get(contractName);
         TransactionReceipt receipt = contractService.updateSimpleContract(source, target, c.getContractAddress(), newValue).toBlocking().first();
 
         assertThat(receipt.getTransactionHash()).isNotBlank();
