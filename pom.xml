@@ -141,7 +141,7 @@
                 <REPO_NAME>TBD</REPO_NAME>
                 <REPO_OWNER>TBD</REPO_OWNER>
                 <GITHUB_USERNAME>TBD</GITHUB_USERNAME>
-                <CONSENSUS></CONSENSUS>
+                <CONSENSUS>TBD</CONSENSUS>
             </properties>
             <build>
                 <plugins>
@@ -160,26 +160,63 @@
                         <version>${maven-project-info-reports-plugin.version}</version>
                     </plugin>
                     <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <configuration>
+                            <executable>gauge</executable>
+                            <workingDirectory>${basedir}</workingDirectory>
+                            <arguments>
+                                <argument>docs</argument>
+                                <argument>spectacle</argument>
+                                <argument>src/specs</argument>
+                            </arguments>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>generate-html-specs</id>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <phase>pre-site</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
                         <groupId>com.github.github</groupId>
                         <artifactId>site-maven-plugin</artifactId>
                         <version>${github.site-maven-plugin.version}</version>
                         <configuration>
                             <branch>refs/heads/master</branch>
-                            <message>Test Reports for Travis Job ${TRAVIS_JOB_NUMBER} - Result: ${TRAVIS_TEST_RESULT}</message>
-                            <path>${project.artifactId}/${CONSENSUS}</path>
                             <merge>true</merge>
                             <oauth2Token>${GITHUB_TOKEN}</oauth2Token>
                             <repositoryName>${REPO_NAME}</repositoryName>
                             <repositoryOwner>${REPO_OWNER}</repositoryOwner>
                             <userName>${GITHUB_USERNAME}</userName>
+                            <message></message>
                         </configuration>
                         <executions>
                             <execution>
-                                <id>deploy-github-pages</id>
+                                <id>upload-specs-html</id>
                                 <goals>
                                     <goal>site</goal>
                                 </goals>
                                 <phase>site</phase>
+                                <configuration>
+                                    <message>Specs in HTML</message>
+                                    <path>${project.artifactId}/docs</path>
+                                    <outputDirectory>${basedir}/docs</outputDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>upload-test-report</id>
+                                <goals>
+                                    <goal>site</goal>
+                                </goals>
+                                <phase>site</phase>
+                                <configuration>
+                                    <message>Test Reports for Travis Job ${TRAVIS_JOB_NUMBER} - Result: ${TRAVIS_TEST_RESULT}</message>
+                                    <path>${project.artifactId}/${CONSENSUS}</path>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
