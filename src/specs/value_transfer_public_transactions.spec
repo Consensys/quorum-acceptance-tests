@@ -3,6 +3,7 @@
 Value-based public transactions are supported by default in Etherum and Quorum keeps this feature.
 
 ## Successful public transaction submission
+
 tags: public
 
 * Send "10" ETH from a default account in "Node1" to a default account in "Node2" in a public transaction.
@@ -11,6 +12,7 @@ tags: public
 * In "Node2", the default account's balance is now greater than its previous balance.
 
 ## Successful signed public transaction submission
+
 tags: public, sign
 
 Signing the transaction before submitting it to the node

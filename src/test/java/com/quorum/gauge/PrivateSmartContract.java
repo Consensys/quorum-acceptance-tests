@@ -1,6 +1,7 @@
 package com.quorum.gauge;
 
 import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.ext.EthGetQuorumPayload;
 import com.quorum.gauge.services.ContractService;
 import com.quorum.gauge.services.TransactionService;
 import com.thoughtworks.gauge.Gauge;
@@ -56,7 +57,7 @@ public class PrivateSmartContract {
     @Step("Transaction Receipt is present in <node> for <contractName>.")
     public void verifyTransactionReceipt(QuorumNode node, String contractName) {
         String transactionHash = (String) DataStoreFactory.getScenarioDataStore().get("transactionHash");
-        Optional<TransactionReceipt> receipt = transactionService.getTransactionReceipt(node, transactionHash);
+        Optional<TransactionReceipt> receipt = transactionService.getTransactionReceipt(node, transactionHash).toBlocking().first().getTransactionReceipt();
 
         assertThat(receipt.isPresent()).isTrue();
         assertThat(receipt.get().getBlockNumber()).isNotEqualTo(BigInteger.valueOf(0));
@@ -130,7 +131,7 @@ public class PrivateSmartContract {
         List<Observable<EthGetTransactionReceipt>> allObservableReceipts = new ArrayList<>();
         for (Contract c : contracts) {
             String txHash = c.getTransactionReceipt().orElseThrow(() -> new RuntimeException("no receipt for contract")).getTransactionHash();
-            allObservableReceipts.add(transactionService.getTransactionReceiptObservable(node, txHash).subscribeOn(Schedulers.io()));
+            allObservableReceipts.add(transactionService.getTransactionReceipt(node, txHash).subscribeOn(Schedulers.io()));
         }
         Integer actualCount = Observable.zip(allObservableReceipts, args -> {
             int count  = 0;
@@ -144,5 +145,21 @@ public class PrivateSmartContract {
         }).toBlocking().first();
 
         assertThat(actualCount).isEqualTo(expectedCount);
+    }
+
+    @Step("<contractName>'s payload is retrievable from <node>.")
+    public void verifyPrivateContractPayloadIsAccessible(String contractName, QuorumNode node) {
+        Contract c = (Contract) DataStoreFactory.getSpecDataStore().get(contractName);
+        EthGetQuorumPayload payload = transactionService.getPrivateTransactionPayload(node, c.getTransactionReceipt().get().getTransactionHash()).toBlocking().first();
+
+        assertThat(payload.getResult()).isNotEqualTo("0x");
+    }
+
+    @Step("<contractName>'s payload is not retrievable from <node>.")
+    public void verifyPrivateContractPayloadIsNotAccessible(String contractName, QuorumNode node) {
+        Contract c = (Contract) DataStoreFactory.getSpecDataStore().get(contractName);
+        EthGetQuorumPayload payload = transactionService.getPrivateTransactionPayload(node, c.getTransactionReceipt().get().getTransactionHash()).toBlocking().first();
+
+        assertThat(payload.getResult()).isEqualTo("0x");
     }
 }

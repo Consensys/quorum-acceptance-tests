@@ -6,6 +6,7 @@ Non-participated party from original transaction is trying to modify the private
 * Deploy a simple smart contract with initial value "100" in "Node1"'s default account and it's private for "Node7", named this contract as "contract17".
 
 ## Private state is maintained
+
 tags: privacy, state
 
 * Execute "contract17"'s `set()` function with new value "0" in "Node3" and it's private for "Node1".

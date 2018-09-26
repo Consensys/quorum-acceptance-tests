@@ -11,6 +11,7 @@ Sending multiple private smart contracts between nodes and verify if all nodes h
 * Deploy "10" private smart contracts between a default account in "Node7" and a default account in "Node1"
 
 ## Contracts are mined
+
 tags: privacy, load
 
 * "Node1" has received "20" transactions.

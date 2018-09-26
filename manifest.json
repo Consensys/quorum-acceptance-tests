@@ -2,6 +2,7 @@
   "Language": "java",
   "Plugins": [
     "html-report",
-    "xml-report"
+    "xml-report",
+    "spectacle"
   ]
 }

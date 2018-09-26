@@ -47,7 +47,7 @@ public class ValueTransferPublicTransaction {
     public void verifyTransactionHash() {
         String txHash = (String) DataStoreFactory.getScenarioDataStore().get("tx_hash");
         // if the transaction is accepted, its receipt must be available in any node
-        Optional<TransactionReceipt> receipt = transactionService.getTransactionReceiptObservable(QuorumNode.Node1, txHash)
+        Optional<TransactionReceipt> receipt = transactionService.getTransactionReceipt(QuorumNode.Node1, txHash)
                 .repeatWhen(completed -> completed.delay(2, TimeUnit.SECONDS))
                 .takeUntil(ethGetTransactionReceipt -> ethGetTransactionReceipt.getTransactionReceipt().isPresent())
                 .timeout(10, TimeUnit.SECONDS)

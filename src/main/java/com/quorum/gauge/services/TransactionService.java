@@ -1,6 +1,7 @@
 package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.ext.EthGetQuorumPayload;
 import com.quorum.gauge.ext.EthSignTransaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +13,6 @@ import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
-import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.quorum.Quorum;
 import org.web3j.quorum.methods.request.PrivateTransaction;
 import rx.Observable;
@@ -21,7 +21,6 @@ import rx.schedulers.Schedulers;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.Optional;
 
 @Service
 public class TransactionService extends AbstractService {
@@ -33,11 +32,7 @@ public class TransactionService extends AbstractService {
     @Autowired
     PrivacyService privacyService;
 
-    public Optional<TransactionReceipt> getTransactionReceipt(QuorumNode node, String transactionHash) {
-        return getTransactionReceiptObservable(node, transactionHash).toBlocking().first().getTransactionReceipt();
-    }
-
-    public Observable<EthGetTransactionReceipt> getTransactionReceiptObservable(QuorumNode node, String transactionHash) {
+    public Observable<EthGetTransactionReceipt> getTransactionReceipt(QuorumNode node, String transactionHash) {
         Quorum client = connectionFactory.getConnection(node);
         return client.ethGetTransactionReceipt(transactionHash).observable();
     }
@@ -138,6 +133,22 @@ public class TransactionService extends AbstractService {
                     logger.debug("{}", response);
                     String rawHexString = (String) response.get("raw");
                     return client.ethSendRawTransaction(rawHexString).observable();
+                });
+    }
+
+    // Invoking eth_getQuorumPayload
+    public Observable<EthGetQuorumPayload> getPrivateTransactionPayload(QuorumNode node, String transactionHash) {
+        Web3j client = connectionFactory.getWeb3jConnection(node);
+        return client.ethGetTransactionByHash(transactionHash).observable()
+                .flatMap(ethTransaction -> Observable.just(ethTransaction.getTransaction().orElseThrow(() -> new RuntimeException("no such transaction")).getInput()))
+                .flatMap(payloadHash -> {
+                    Request<?, EthGetQuorumPayload> request = new Request<>(
+                            "eth_getQuorumPayload",
+                            Arrays.asList(payloadHash),
+                            connectionFactory.getWeb3jService(node),
+                            EthGetQuorumPayload.class
+                    );
+                    return request.observable();
                 });
     }
 }
