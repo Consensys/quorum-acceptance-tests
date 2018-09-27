@@ -2,11 +2,13 @@ package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.ext.EthStorageRoot;
+import com.quorum.gauge.sol.ClientReceipt;
 import com.quorum.gauge.sol.SimpleStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.quorum.Quorum;
@@ -75,7 +77,7 @@ public class ContractService extends AbstractService {
                     Arrays.asList(privacyService.id(target)));
             return SimpleStorage.load(contractAddress, client, txManager,
                     BigInteger.valueOf(0),
-                    new BigInteger("47b760", 16)).set(BigInteger.valueOf(newValue)).observable();
+                    DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue)).observable();
         });
     }
 
@@ -86,5 +88,34 @@ public class ContractService extends AbstractService {
                 connectionFactory.getWeb3jService(node),
                 EthStorageRoot.class);
         return request.observable();
+    }
+
+    public Observable<? extends Contract> createClientReceiptSmartContract(QuorumNode node) {
+        Web3j client = connectionFactory.getWeb3jConnection(node);
+        return accountService.getDefaultAccountAddress(node)
+                .flatMap(address -> {
+                    org.web3j.tx.ClientTransactionManager txManager = new org.web3j.tx.ClientTransactionManager(
+                            client,
+                            address
+                    );
+                    return ClientReceipt.deploy(
+                        client,
+                        txManager,
+                        BigInteger.valueOf(0),
+                        DEFAULT_GAS_LIMIT).observable();
+                });
+    }
+
+    public Observable<TransactionReceipt> updateClientReceipt(QuorumNode node, String contractAddress, BigInteger value) {
+        Web3j client = connectionFactory.getWeb3jConnection(node);
+        return accountService.getDefaultAccountAddress(node)
+                .flatMap(address -> {
+                    org.web3j.tx.ClientTransactionManager txManager = new org.web3j.tx.ClientTransactionManager(
+                            client,
+                            address
+                    );
+                    return ClientReceipt.load(contractAddress, client, txManager, BigInteger.valueOf(0), DEFAULT_GAS_LIMIT)
+                            .deposit(new byte[32], value).observable();
+                });
     }
 }
