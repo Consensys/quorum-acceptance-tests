@@ -131,7 +131,7 @@ public class PrivateSmartContract {
         List<Observable<EthGetTransactionReceipt>> allObservableReceipts = new ArrayList<>();
         for (Contract c : contracts) {
             String txHash = c.getTransactionReceipt().orElseThrow(() -> new RuntimeException("no receipt for contract")).getTransactionHash();
-            allObservableReceipts.add(transactionService.getTransactionReceipt(node, txHash).subscribeOn(Schedulers.io()));
+            allObservableReceipts.add(transactionService.getTransactionReceipt(node, txHash).retry(10).subscribeOn(Schedulers.io()));
         }
         Integer actualCount = Observable.zip(allObservableReceipts, args -> {
             int count  = 0;
