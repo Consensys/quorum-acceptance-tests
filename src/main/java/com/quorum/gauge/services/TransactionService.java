@@ -100,6 +100,7 @@ public class TransactionService extends AbstractService {
                         toAddress,
                         BigInteger.valueOf(value),
                         null,
+                        null,
                         Arrays.asList(privacyService.id(to))
                 ))
                 .flatMap(tx -> client.ethSendTransaction(tx).observable());
@@ -116,6 +117,7 @@ public class TransactionService extends AbstractService {
                         DEFAULT_GAS_LIMIT,
                         toAddress,
                         BigInteger.valueOf(value),
+                        null,
                         null,
                         Arrays.asList(privacyService.id(to))
                 ))

@@ -18,7 +18,9 @@
         <generated.sol.dir>${project.build.directory}/generate-sources/sol</generated.sol.dir>
         <!-- dependencies -->
         <jsch.version>0.1.54</jsch.version>
-        <web3j-quorum.version>0.8.0</web3j-quorum.version>
+        <web3j-quorum.version>0.10.0</web3j-quorum.version>
+        <!-- there's an issue with code gen in web3j 3.5.0-->
+        <web3j.version>3.4.0</web3j.version>
         <gauge-java.version>0.6.7</gauge-java.version>
         <!-- plugins -->
         <gauge-maven-plugin.version>1.3.3</gauge-maven-plugin.version>
@@ -29,6 +31,11 @@
         <github.site-maven-plugin.version>0.12</github.site-maven-plugin.version>
     </properties>
     <dependencies>
+        <dependency>
+            <groupId>org.web3j</groupId>
+            <artifactId>core</artifactId>
+            <version>${web3j.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.thoughtworks.gauge</groupId>
             <artifactId>gauge-java</artifactId>
@@ -43,6 +50,12 @@
             <groupId>org.web3j</groupId>
             <artifactId>quorum</artifactId>
             <version>${web3j-quorum.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.web3j</groupId>
+                    <artifactId>core</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -101,6 +114,13 @@
                         </goals>
                     </execution>
                 </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.web3j</groupId>
+                        <artifactId>codegen</artifactId>
+                        <version>${web3j.version}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
