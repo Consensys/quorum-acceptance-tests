@@ -19,7 +19,7 @@ env:
   # AWS Configuration
   - secure: "cnHFg4wHhEWJAnEdKckMGrUV7EvqTRHhHaDG3kLppaWdqlTKu2yfciaoeYG+WnWqPf4p3LKEw/7cfroGfOqvFr31BTySBMTb98Rjp0qFdW2ZlAa7EVn1Ou3vmpDdMXEbpHNHIC+YxUOpNaati4FeKzNvICThnTchnRFXAM1+oQONGi9AAsrv+xCdnyWBeZZxqA7bIzb3QQosh+0kig+ciCWV/MQu+Waiuog8P1STfV56pC4O+H2qhKuLHI0f3LNueZSdxnFZdbtFptAoCpEWGU6JWPT7weMVShwpzLyg9ZvEjVN9ixkPvHSq27f3i5FyH4965QMuRnfNLA3auR1zDAuaSxwUd51nkSSPWIfV2YdYWZ73y+v6nsaaIywMjX9kxRCTMP6Oskkl5K+QNYafaz/D1x0so14erP3QwJWcSjl+UuN9teAEWJrRzTzX+u8yq/3T8zB9khs3009pqyazTHB0MVjNzJ1dO6dYINMq6UApBcEKLZm8yQxJisQsElJaCROC2Z/EaSuaHEXa6arKKwd9oIeO9B7/zOcS76Llb1GXIjYoGvuug54g477sWhgfKaqy2ykKdSjUtvx6vYi4s/s9WisIxdnqpN+1RFABXbSlIVhxD524UNAQJlav16h8Z6isv16llik3Ya7XbQbJR2K7qzUTuvP9F6Dx+wfFx84="
   - secure: "f1mXiAlFxnmXhLn+cNbjwwaAzfZBlMkEzYo1HMjcp+H9Co9PcPsyV8TXQRXLAbcV8j/xSKv1X0Fqex62jchr3g+MEvRj9Ls55cGyNdyESugYJBxUsVucILZC85Mkl8FB1qLcgfF86WdMWeE3oMseT3h7jYzr3jlZJtpCjdQtZWrUhWvfT9Sd/97kpRvAv81xXd7Wgp6LX+xHrdxA3iMj/3487kQIlO6uA4KzIdqIdIQ/Nv1czV4hMcBV0OTp+PiyLSK3nFHnPEpMM4cxMQta6zk+XbB0yFB3fqXv7n1E6kIioo4/egylS21PVouT165L/0tTehfxAY4o1UPbSvA0FnOQnHWT815vVu2T0MBcYOyQxCiYzQVP702x9QgMfvWH7P4SVIt3LY18h92H2YHK1W79fmkFPj3LBe8vKDFReLewDK46Blm2Ewo3G7gS7HTTTZmp35+c3Y9zzIP4Rs+/6CAVCPL/oXRvu5o+p/bE6KmPkZAGLn7MinHKv8WsS2ZB26Db142bmz+Bqi2Zp40uMHMJx75xkM+8Jx4+kuJDdbMU+YNFwUKinPR1m3MOOthhNDPd0Xf3D4NY1T0F8inG4PSr0xCj9WpPwPCz7swwN5v3phoi3Vjlgs/vClksXPQU4OnKqzyHNAEBpV7x/uylbP5n75mN8/m2TTsiQpWeIzk="
-  # Github Page configurationn to publish test report
+  # Github Page configuration to publish test report
   - secure: "xxDMUYszTo6x5y4jaZevN2IN6hDAzn3VaAUkUAFDkGqSY6FBgLPVRll9kompw9UTkfAuAeQA3T2p8ekYU3Y6nEh2Qaq0wpAVGncGnIfLP7XPuiW5rpATWoXN6lq0visVC6SEkXvyNQ5sZxLlrU2PWd7w6ArefDls5TK/FSlUMGHf85LjaXHAo7bcAqjjUPs3tx/Txkc8q4m0M8iu27Mp3p5Z11Svhsh62XGiZbpTBj0GZtF+/nAUo982w2Zy8NZ85CVCeLbWtQUTdzmYv8e//SY/XQrFz68BYWODDF3W4QcC2jPdHwodfCL0TMOQUQYGp9oXu6dRVU4nIESbXf89uSAPfn4YS3GTQHfb42flJXlZpY31sZtI5xCLO366iqvFw2fkBKvguHUEkk0uIMkyZxRu6MNJStk4BtALvNVVfA0lyIyFqrxWc2/82D5EPJcnhTSxpLr1o4opMJhfDjcIXK/igLpW/h5CxBaRs/V6zY0dmplvfauP37l3u8mWLkRfFI4CZw/jML6mkH6It6KuDzCgS8f3b3uboBscfXXg8qMn6XxCKbkqOsaseCWygMaMQq/yw2NePVkuJ7h8MZu/Pf7unL3x8tVPo8or3R5+C/QYqqTvNbHhwcIhi1y8GJIfjc1/91P1S8Rd1IlT4EOCw4Ql1VSVR1J0J/PUE6sq59o="
   - REPO_NAME=trung.github.com
   - REPO_OWNER=trung
@@ -76,3 +76,6 @@ notifications:
     on_success: change
     on_failure: always
     on_pull_requests: false
+    template:
+    - "Build <%{build_url}|#%{build_number}> of %{repository_slug}@%{branch} %{result} in %{duration}"
+    - "<https://quorumengineering.github.io/%{repository_name}/docs/html/|Specifications> - <https://quorumengineering.github.io/%{repository_name}/raft/|Test Report - Raft> - <https://quorumengineering.github.io/%{repository_name}/istanbul/|Test Report - Istanbul>"
