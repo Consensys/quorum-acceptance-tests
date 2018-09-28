@@ -1,15 +1,13 @@
 package com.quorum.gauge;
 
 import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.ext.EthGetQuorumPayload;
-import com.quorum.gauge.services.ContractService;
-import com.quorum.gauge.services.TransactionService;
 import com.thoughtworks.gauge.Gauge;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
@@ -21,19 +19,14 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @Service
 @SuppressWarnings("unchecked")
-public class PrivateSmartContract {
+public class PrivateSmartContract extends AbstractSpecImplementation {
     private static final Logger logger = LoggerFactory.getLogger(PrivateSmartContract.class);
-
-    @Autowired
-    ContractService contractService;
-
-    @Autowired
-    TransactionService transactionService;
 
     @Step("Deploy a simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target>, named this contract as <contractName>.")
     public void setupContract(int initialValue, QuorumNode source, QuorumNode target, String contractName) {
@@ -57,10 +50,14 @@ public class PrivateSmartContract {
     @Step("Transaction Receipt is present in <node> for <contractName>.")
     public void verifyTransactionReceipt(QuorumNode node, String contractName) {
         String transactionHash = (String) DataStoreFactory.getScenarioDataStore().get("transactionHash");
-        Optional<TransactionReceipt> receipt = transactionService.getTransactionReceipt(node, transactionHash).toBlocking().first().getTransactionReceipt();
+        Optional<TransactionReceipt> receipt = transactionService.getTransactionReceipt(node, transactionHash)
+                .repeatWhen(completed -> completed.delay(2, TimeUnit.SECONDS))
+                .takeUntil(ethGetTransactionReceipt -> ethGetTransactionReceipt.getTransactionReceipt().isPresent())
+                .timeout(10, TimeUnit.SECONDS)
+                .toBlocking().first().getTransactionReceipt();
 
         assertThat(receipt.isPresent()).isTrue();
-        assertThat(receipt.get().getBlockNumber()).isNotEqualTo(BigInteger.valueOf(0));
+        assertThat(receipt.get().getBlockNumber()).isNotEqualTo(currentBlockNumber());
     }
 
     @Step("<contractName> stored in <source> and <target> must have the same storage root.")
@@ -97,7 +94,7 @@ public class PrivateSmartContract {
         TransactionReceipt receipt = contractService.updateSimpleContract(source, target, c.getContractAddress(), newValue).toBlocking().first();
 
         assertThat(receipt.getTransactionHash()).isNotBlank();
-        assertThat(receipt.getBlockNumber()).isNotEqualTo(BigInteger.valueOf(0));
+        assertThat(receipt.getBlockNumber()).isNotEqualTo(currentBlockNumber());
     }
 
 

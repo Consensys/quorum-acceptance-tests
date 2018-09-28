@@ -1,11 +1,9 @@
 package com.quorum.gauge;
 
 import com.quorum.gauge.common.QuorumNode;
-import com.quorum.gauge.services.ContractService;
-import com.quorum.gauge.services.TransactionService;
+import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
@@ -19,11 +17,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Service
-public class PublicSmartContract {
-    @Autowired
-    ContractService contractService;
-    @Autowired
-    TransactionService transactionService;
+public class PublicSmartContract extends AbstractSpecImplementation {
 
     @Step("Deploy `ClientReceipt` smart contract from a default account in <node>, named this contract as <contractName>.")
     public void deployClientReceiptSmartContract(QuorumNode node, String contractName) {
@@ -37,7 +31,7 @@ public class PublicSmartContract {
         Contract c = (Contract) DataStoreFactory.getScenarioDataStore().get(contractName);
 
         assertThat(c.getTransactionReceipt().isPresent()).isTrue();
-        assertThat(c.getTransactionReceipt().get().getBlockNumber()).isNotEqualTo(BigInteger.valueOf(0));
+        assertThat(c.getTransactionReceipt().get().getBlockNumber()).isNotEqualTo(currentBlockNumber());
     }
 
     @Step("Execute <contractName>'s `deposit()` function <count> times with arbitrary id and value from <node>.")

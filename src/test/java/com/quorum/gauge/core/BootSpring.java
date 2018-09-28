@@ -1,5 +1,6 @@
-package com.quorum.gauge;
+package com.quorum.gauge.core;
 
+import com.quorum.gauge.Main;
 import com.thoughtworks.gauge.BeforeScenario;
 import com.thoughtworks.gauge.ClassInitializer;
 import org.slf4j.Logger;

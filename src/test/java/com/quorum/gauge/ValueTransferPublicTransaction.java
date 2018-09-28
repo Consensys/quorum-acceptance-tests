@@ -1,11 +1,9 @@
 package com.quorum.gauge;
 
 import com.quorum.gauge.common.QuorumNode;
-import com.quorum.gauge.services.AccountService;
-import com.quorum.gauge.services.TransactionService;
+import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import rx.Observable;
@@ -18,13 +16,7 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Service
-public class ValueTransferPublicTransaction {
-
-    @Autowired
-    TransactionService transactionService;
-
-    @Autowired
-    AccountService accountService;
+public class ValueTransferPublicTransaction extends AbstractSpecImplementation {
 
     @Step("Send <value> ETH from a default account in <from> to a default account in <to> in a public transaction.")
     public void sendTransaction(int value, QuorumNode from, QuorumNode to) {
@@ -54,7 +46,7 @@ public class ValueTransferPublicTransaction {
                 .toBlocking().last().getTransactionReceipt();
 
         assertThat(receipt.isPresent()).isTrue();
-        assertThat(receipt.get().getBlockNumber()).isNotEqualTo(BigInteger.valueOf(0));
+        assertThat(receipt.get().getBlockNumber()).isNotEqualTo(currentBlockNumber());
     }
 
     @Step("In <node>, the default account's balance is now less than its previous balance.")
