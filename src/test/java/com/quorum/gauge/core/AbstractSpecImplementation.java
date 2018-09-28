@@ -18,7 +18,7 @@ public abstract class AbstractSpecImplementation {
 
     @Autowired
     protected AccountService accountService;
-    
+
     protected BigInteger currentBlockNumber() {
         return (BigInteger) DataStoreFactory.getScenarioDataStore().get("blocknumber");
     }
