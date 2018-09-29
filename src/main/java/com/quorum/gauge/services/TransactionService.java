@@ -67,7 +67,7 @@ public class TransactionService extends AbstractService {
                 accountService.getDefaultAccountAddress(to).subscribeOn(Schedulers.io()),
                 (fromAddress, toAddress) -> Transaction.createEtherTransaction(fromAddress,
                         null,
-                        null,
+                        BigInteger.ZERO,
                         DEFAULT_GAS_LIMIT,
                         toAddress,
                         BigInteger.valueOf(value)))
