@@ -78,4 +78,4 @@ notifications:
     on_pull_requests: false
     template:
     - "Build <%{build_url}|#%{build_number}> of %{repository_slug}@%{branch} %{result} in %{duration}"
-    - "<https://quorumengineering.github.io/%{repository_name}/docs/html/|Specifications> - <https://quorumengineering.github.io/%{repository_name}/raft/|Test Report - Raft> - <https://quorumengineering.github.io/%{repository_name}/istanbul/|Test Report - Istanbul>"
+    - "<https://quorumengineering.github.io/%{repository_name}/docs/html/|Specifications> - <https://quorumengineering.github.io/%{repository_name}/raft/|Test Report (Raft)> - <https://quorumengineering.github.io/%{repository_name}/istanbul/|Test Report (Istanbul)>"
