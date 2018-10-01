@@ -1,8 +1,9 @@
-[![Build Status](https://travis-ci.org/trung/quorum-acceptance-test.svg?branch=master)](https://travis-ci.org/trung/quorum-acceptance-test)
+[![Build Status](https://travis-ci.org/QuorumEngineering/quorum-acceptance-tests.svg?branch=master)](https://travis-ci.org/QuorumEngineering/quorum-acceptance-tests)
 
 Latest test reports for Quorum Networking using:
-* [Raft](https://trung.github.io/quorum-acceptance-test/raft/)
-* [Istanbul](https://trung.github.io/quorum-acceptance-test/istanbul/)
+* [Specifications](https://quorumengineering.github.io/quorum-acceptance-tests/docs/html/)
+* [Raft](https://quorumengineering.github.io/quorum-acceptance-tests/raft/)
+* [Istanbul](https://quorumengineering.github.io/quorum-acceptance-tests/istanbul/)
 
 ### Prerequisites
 
