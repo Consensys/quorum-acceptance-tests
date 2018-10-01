@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.quorum.gauge</groupId>
-    <artifactId>quorum-acceptance-test</artifactId>
+    <artifactId>quorum-acceptance-tests</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
     <parent>
