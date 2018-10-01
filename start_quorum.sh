@@ -37,6 +37,8 @@ if [ ! -f ${f} ]; then
     ${TRAVIS_COMMIT} > /dev/null 2>&1
 fi
 
+cat ${f}
+
 echo "Start SOCKS proxy for SSH tunnelling"
 ssh -D ${QUORUM_SOCKSPROXY_PORT} -N \
     -o ServerAliveInterval=30 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet \
