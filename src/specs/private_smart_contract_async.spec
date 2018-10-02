@@ -1,7 +1,6 @@
 # Sending private smart contract asynchronously
 
 Ability to submit a simple private smart contract asynchrously with callback
-
 ```
 pragma solidity ^0.4.15;
 

@@ -1,6 +1,25 @@
 # Multiple private smart contracts
 
 Sending multiple private smart contracts between nodes and verify if all nodes have received.
+```
+pragma solidity ^0.4.15;
+
+contract SimpleStorage {
+    uint private storedData;
+
+    constructor(uint initVal) public {
+        storedData = initVal;
+    }
+
+    function set(uint x) public {
+        storedData = x;
+    }
+
+    function get() public constant returns (uint retVal) {
+        return storedData;
+    }
+}
+```
 
 * Deploy "10" private smart contracts between a default account in "Node1" and a default account in "Node2"
 * Deploy "10" private smart contracts between a default account in "Node2" and a default account in "Node3"

@@ -57,9 +57,12 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     public void verifyTransactionReceipt(QuorumNode node, String contractName) {
         String transactionHash = (String) DataStoreFactory.getScenarioDataStore().get(contractName + "_transactionHash");
         Optional<TransactionReceipt> receipt = transactionService.getTransactionReceipt(node, transactionHash)
-                .repeatWhen(completed -> completed.delay(2, TimeUnit.SECONDS))
-                .takeUntil(ethGetTransactionReceipt -> ethGetTransactionReceipt.getTransactionReceipt().isPresent())
-                .timeout(10, TimeUnit.SECONDS)
+                .map(ethGetTransactionReceipt -> {
+                    if (ethGetTransactionReceipt.getTransactionReceipt().isPresent())
+                        return ethGetTransactionReceipt;
+                    throw new RuntimeException("retry");
+                })
+                .retryWhen(attempts -> attempts.zipWith(Observable.range(1, 10), (n, i) -> i).flatMap(i -> Observable.timer(3, TimeUnit.SECONDS)))
                 .toBlocking().first().getTransactionReceipt();
 
         assertThat(receipt.isPresent()).isTrue();
