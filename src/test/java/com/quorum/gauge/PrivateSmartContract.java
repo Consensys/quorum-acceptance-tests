@@ -1,24 +1,31 @@
 package com.quorum.gauge;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.ext.EthGetQuorumPayload;
-import com.thoughtworks.gauge.Gauge;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.WebSocket;
+import okhttp3.WebSocketListener;
+import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 import rx.Observable;
 import rx.schedulers.Schedulers;
 
+import java.io.IOException;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -40,16 +47,15 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     public void verifyTransactionHash(String contractName) {
         Contract c = (Contract) DataStoreFactory.getSpecDataStore().get(contractName);
         String transactionHash = c.getTransactionReceipt().orElseThrow(()-> new RuntimeException("no transaction receipt for contract")).getTransactionHash();
-        Gauge.writeMessage("Transaction Hash is %s", transactionHash);
 
         assertThat(transactionHash).isNotBlank();
 
-        DataStoreFactory.getScenarioDataStore().put("transactionHash", transactionHash);
+        DataStoreFactory.getScenarioDataStore().put(contractName + "_transactionHash", transactionHash);
     }
 
     @Step("Transaction Receipt is present in <node> for <contractName>.")
     public void verifyTransactionReceipt(QuorumNode node, String contractName) {
-        String transactionHash = (String) DataStoreFactory.getScenarioDataStore().get("transactionHash");
+        String transactionHash = (String) DataStoreFactory.getScenarioDataStore().get(contractName + "_transactionHash");
         Optional<TransactionReceipt> receipt = transactionService.getTransactionReceipt(node, transactionHash)
                 .repeatWhen(completed -> completed.delay(2, TimeUnit.SECONDS))
                 .takeUntil(ethGetTransactionReceipt -> ethGetTransactionReceipt.getTransactionReceipt().isPresent())
@@ -158,5 +164,78 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         EthGetQuorumPayload payload = transactionService.getPrivateTransactionPayload(node, c.getTransactionReceipt().get().getTransactionHash()).toBlocking().first();
 
         assertThat(payload.getResult()).isEqualTo("0x");
+    }
+
+    @Step("Asynchronously deploy a simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target>, named this contract as <contractName>.")
+    public void setupContractAsync(int initialValue, QuorumNode source, QuorumNode target, String contractName) {
+        // sourceAccount == null indicates that we are using the default account
+        setupContractAsyncWithAccount(initialValue, source, null, target, contractName);
+    }
+
+    private void setupContractAsyncWithAccount(int initialValue, QuorumNode source, String sourceAccount, QuorumNode target, String contractName) {
+        CountDownLatch waitForCallback = new CountDownLatch(1);
+        CountDownLatch waitForWebSocket = new CountDownLatch(1);
+
+        String baseUrl = "waithook.com/" + UUID.randomUUID().toString();
+        String callbackUrl = "http://" + baseUrl;
+
+        Request callback = new Request.Builder().url("ws://" + baseUrl).build();
+        WebSocket ws = okHttpClient.newWebSocket(callback, new WebSocketListener() {
+            @Override
+            public void onOpen(WebSocket webSocket, Response response) {
+                logger.debug("Connected to callback listener");
+                waitForWebSocket.countDown();
+            }
+
+            @Override
+            public void onMessage(WebSocket webSocket, String text) {
+                logger.debug("Received text: {}", text);
+                try {
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    HashMap<String, Object> htmlPayload = objectMapper.readValue(text, new TypeReference<HashMap<String, Object>>() {
+                    });
+                    HashMap<String, String> htmlBody = objectMapper.readValue((String) htmlPayload.get("body"), new TypeReference<HashMap<String, String>>() {
+                    });
+                    String error = htmlBody.get("error");
+                    String txHash = htmlBody.get("txHash");
+                    logger.debug("Error: {}, TxHash: {}", error, txHash);
+                    if (StringUtils.isEmpty(error)) {
+                        DataStoreFactory.getScenarioDataStore().put(contractName + "_transactionHash", txHash);
+                    } else {
+                        DataStoreFactory.getScenarioDataStore().put(contractName + "_error", error);
+                    }
+                } catch (IOException e) {
+                    logger.debug("Unable to read response", e);
+                    throw new RuntimeException("Unable to read response [" + text + "]", e);
+                } finally {
+                    waitForCallback.countDown();
+                }
+            }
+        });
+
+        try {
+            waitForWebSocket.await();
+
+            contractService.createClientReceiptContractAsync(initialValue, source, sourceAccount, target, callbackUrl).toBlocking().first();
+
+            waitForCallback.await(20, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Step("Asynchronously deploy a simple smart contract with initial value <initialValue> in <source>'s non-existed account and it's private for <target>, named this contract as <contractName>.")
+    public void setupContractAsyncWithInvalidAccount(int initialValue, QuorumNode source, QuorumNode target, String contractName) {
+        byte[] randomBytes = new byte[20];
+        new Random().nextBytes(randomBytes);
+        String nonExistedAccount = "0x" + Hex.toHexString(randomBytes);
+        setupContractAsyncWithAccount(initialValue, source, nonExistedAccount, target, contractName);
+    }
+
+    @Step("An error is returned for <contractName>.")
+    public void verifyTransacionHashValue(String contractName) {
+        String actualValue = (String) DataStoreFactory.getScenarioDataStore().get(contractName + "_error");
+
+        assertThat(actualValue).as("Error message").isNotBlank();
     }
 }

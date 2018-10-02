@@ -2,6 +2,25 @@
 
 This is to verify that a private smart contract between 2 parties are not accessible by others.
 A simple smart contract is to store a int value and to provide `get()` and `set()` functions.
+```
+pragma solidity ^0.4.15;
+
+contract SimpleStorage {
+    uint private storedData;
+
+    constructor(uint initVal) public {
+        storedData = initVal;
+    }
+
+    function set(uint x) public {
+        storedData = x;
+    }
+
+    function get() public constant returns (uint retVal) {
+        return storedData;
+    }
+}
+```
 
 * Deploy a simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node7", named this contract as "contract17".
 

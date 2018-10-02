@@ -1,13 +1,16 @@
 package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.ext.EthSendTransactionAsync;
 import com.quorum.gauge.ext.EthStorageRoot;
+import com.quorum.gauge.ext.PrivateTransactionAsync;
 import com.quorum.gauge.sol.ClientReceipt;
 import com.quorum.gauge.sol.SimpleStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StreamUtils;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
@@ -17,8 +20,12 @@ import org.web3j.tx.Contract;
 import org.web3j.tx.ReadonlyTransactionManager;
 import org.web3j.tx.exceptions.ContractCallException;
 import rx.Observable;
+import rx.schedulers.Schedulers;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 
 @Service
@@ -37,6 +44,7 @@ public class ContractService extends AbstractService {
             ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
                     client,
                     address,
+                    null,
                     Arrays.asList(privacyService.id(target)));
             return SimpleStorage.deploy(client,
                     clientTransactionManager,
@@ -116,6 +124,44 @@ public class ContractService extends AbstractService {
                     );
                     return ClientReceipt.load(contractAddress, client, txManager, BigInteger.valueOf(0), DEFAULT_GAS_LIMIT)
                             .deposit(new byte[32], value).observable();
+                });
+    }
+
+    public Observable<EthSendTransactionAsync> createClientReceiptContractAsync(int initialValue, QuorumNode source, String sourceAccount, QuorumNode target, String callbackUrl) {
+        InputStream binaryStream = ClientReceipt.class.getResourceAsStream( "/com.quorum.gauge.sol/ClientReceipt.bin");
+        if (binaryStream == null) {
+            throw new IllegalStateException("Can't find resource ClientReceipt.bin");
+        }
+        return Observable.zip(
+                sourceAccount != null ? Observable.just(sourceAccount) : accountService.getDefaultAccountAddress(source).subscribeOn(Schedulers.io()),
+                accountService.getDefaultAccountAddress(target).subscribeOn(Schedulers.io()),
+                (fromAddress, toAddress) -> {
+                    try {
+                        String binary = StreamUtils.copyToString(binaryStream, Charset.defaultCharset());
+                        return new PrivateTransactionAsync(
+                                fromAddress,
+                                null,
+                                DEFAULT_GAS_LIMIT,
+                                toAddress,
+                                BigInteger.valueOf(0),
+                                binary,
+                                null,
+                                Arrays.asList(privacyService.id(target)),
+                                callbackUrl
+                        );
+                    } catch (IOException e) {
+                        logger.error("Unable to construct transaction arguments", e);
+                        throw new RuntimeException(e);
+                    }
+                })
+                .flatMap(tx -> {
+                    Request<?, EthSendTransactionAsync> request = new Request<>(
+                            "eth_sendTransactionAsync",
+                            Arrays.asList(tx),
+                            connectionFactory.getWeb3jService(source),
+                            EthSendTransactionAsync.class
+                    );
+                    return request.observable();
                 });
     }
 }
