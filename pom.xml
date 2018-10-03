@@ -139,6 +139,24 @@
                             </sources>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>02-add-sol-bin</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-resource</goal>
+                        </goals>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <directory>${generated.sol.dir}</directory>
+                                    <includes>
+                                        <include>**/*.bin</include>
+                                        <include>**/*.json</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>
