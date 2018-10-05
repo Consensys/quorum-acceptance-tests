@@ -26,7 +26,7 @@ Latest test reports for Quorum Networking using:
     $ ssh -D 5000 -N -o ServerAliveInterval=30 -i <private_key> ec2-user@<bastion node>
     ```
   * Obtain the nodes metadata from Bastion Node (`/qdata/quorum_metadata`) and create a file `config/application-local.yml` with content similar to a sample file in [`config`](config) folder.
-
+* When using `quorum-examples`, rename `config/application-local.7nodes.yml` to `config/application-local.yml`
 * Run `mvn clean test`
 
 ### Logging
