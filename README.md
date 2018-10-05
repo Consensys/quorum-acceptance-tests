@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/jpmorganchase/quorum-acceptance-tests.svg?branch=master)](https://travis-ci.org/jpmorganchase/quorum-acceptance-tests)
 
-Latest test reports for Quorum Networking using:
+Latest test reports are available:
 * [Specifications](https://jpmorganchase.github.io/quorum-acceptance-tests/docs/html/)
 * [Raft](https://jpmorganchase.github.io/quorum-acceptance-tests/raft/)
 * [Istanbul](https://jpmorganchase.github.io/quorum-acceptance-tests/istanbul/)
