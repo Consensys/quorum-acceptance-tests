@@ -21,8 +21,8 @@ env:
   - secure: "35Vf9BW8sfzw71+98/y/174+edCjSPegGX9Ih9615r4TahbTwZYLomt7F2plmA5rWVkk3Rj1pMQU440k3TxlKw9mRX8znQZxBBdr4M2n/xHL3xqEzFfPQYffjYiEF6+tVifJGElq8vF1KmNKuImxqLX66oI5iM0TzSzSFX+MAjEHvXQvn/nqEYmI6KmWuEcgZzKdyu5oqPhsEPqx7EdD+VFEjaYS8tp64CPRr8IKuK7vksOTyJa5TpyP4i7RRhN5+TuDJXuFlPkOMB1OBS2Co+oSQi1nhEjy0kRlzG9WlUyAhl9JRbe3L9cAe/O2QJEFCv744M13AHng7wcQYZPc2Qfxrmev3qTUM5mLcETDTYd28TNu2uJPeaqb9NKfoMoD4e6AsPnXy96nvx4KCKD9RT4fBRE4oWPvAQ+3NiGh8TM3ditFe6nBOUpBs9Tokt0J7sP8inZZM3oq5wqHrChLl0ivRE+yA1LutEkv9XLHz+Uz4lp8dacNeBIGXXvYcZDTJedlpO2rFEksJSNcLWLWITB5Sa2LOY7JUC1nd4G74SF9YxtYAZx6QYXmMi40r88/zrAO7ZYW0XPdcIoVxN/GiZxc3m5YrgOU0IwuPSGn6HveXUZqxL1eFepwIaezLbc+khqUOVMnOWTBpM4esXb2Xe5LTn9niwL8InAV8GRpz/Q="
   # Github Page configuration to publish test report
   - secure: "JGDd6xYOvHS6I5x6pHFkt4+hq9PVKtfx6sKr4xoRb2t9dXPMp8rWF01c7dUvblJD8sbxK1cqa6F5MKYyu84OICX34YU8vg16sRl/1Ug4ixHLK67FmIuqYoWpvHEf+Aw3azND3/i8WqcnmSNNA2KAlpuvjm5/gy63piHG1ROtXpIR7Wd1FK/1vto18lgqXJWJga6ZpVP9S3hRxxMgEoYL2ZVDJE/HLRgk55hEPg4uQnPIZzyPaAiVDU4ZObfZUjk2mBPx3vUxQmTv7UAXVCfYwXfrVo1pqR656QiXQb6AQuwzRoby36a4ivfkbFmgLOCqJ4MJDI1MLjKp8Uzg4qXBbTPFIXyuMfJKZDWQJv147c+oo/frbPj8qSIp2xpnCcZKwF5BzvSOK1NkoW9+tMD7VUdp6N3baEdGrA8HjNMoLQniy1pX6roHTUFWTInmfiKudknZ8Q94+E0a+u70Vv1Q+fYy7vCJL51qdW8UWuF93EzZ5vo9h7SeSf/4CD/rNIGYTTDv1TOVziLsXQBfYMvcgsADfPLD0ncD6ZSRK1BJCvBfvRCQGZPAxumbcGvUhQYmZELCb8UATMi0fh94I+Lk+MZwlaRf3ywqyS2x2YG2K8ud52AfHfIjRD8qK/KApGal3tIUczDbWxvktx4o6hNyVIxVsoPJkkFg2eysGrVBWRM="
-  - REPO_NAME=QuorumEngineering.github.io
-  - REPO_OWNER=QuorumEngineering
+  - REPO_NAME=jpmorganchase.github.io
+  - REPO_OWNER=jpmorganchase
   - GITHUB_USERNAME=trung
 addons:
   apt:
@@ -45,7 +45,7 @@ before_install:
 - wget https://releases.hashicorp.com/terraform/0.11.8/terraform_0.11.8_linux_amd64.zip -O terraform.zip -q
 - unzip terraform.zip
 - $TERRAFORM_CMD version
-- git clone https://github.com/QuorumEngineering/quorum-cloud.git
+- git clone https://github.com/jpmorganchase/quorum-cloud.git
 install:
 - gauge telemetry off
 - gauge install
@@ -60,15 +60,15 @@ matrix:
     - TF_VAR_consensus_mechanism=istanbul
     - TF_VAR_network_name=ci-${TF_VAR_consensus_mechanism}-${TRAVIS_COMMIT::6}
 before_script:
-- ./start_quorum.sh
+- ./src/travis/start_quorum.sh
 - set +e
 script:
-- ./run_tests.sh
+- ./src/travis/run_tests.sh
 - set +e
 after_script:
-- ./stop_quorum.sh
+- ./src/travis/stop_quorum.sh
 - set +e
-- ./upload_test_report.sh
+- ./src/travis/upload_test_report.sh
 notifications:
   slack:
     rooms:
@@ -79,4 +79,4 @@ notifications:
     template:
     - "Build <%{build_url}|#%{build_number}> of %{repository_slug}@%{branch}"
     - "%{result} in %{duration}"
-    - "<https://quorumengineering.github.io/%{repository_name}/docs/html/|Specifications> - <https://quorumengineering.github.io/%{repository_name}/raft/|Test Report (Raft)> - <https://quorumengineering.github.io/%{repository_name}/istanbul/|Test Report (Istanbul)>"
+    - "<https://jpmorganchase.github.io/%{repository_name}/docs/html/|Specifications> - <https://jpmorganchase.github.io/%{repository_name}/raft/|Test Report (Raft)> - <https://jpmorganchase.github.io/%{repository_name}/istanbul/|Test Report (Istanbul)>"

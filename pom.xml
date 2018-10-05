@@ -17,7 +17,6 @@
         <java.version>1.8</java.version>
         <generated.sol.dir>${project.build.directory}/generate-sources/sol</generated.sol.dir>
         <!-- dependencies -->
-        <jsch.version>0.1.54</jsch.version>
         <web3j-quorum.version>0.10.0</web3j-quorum.version>
         <!-- there's an issue with code gen in web3j 3.5.0-->
         <web3j.version>3.4.0</web3j.version>
@@ -66,11 +65,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>com.jcraft</groupId>
-            <artifactId>jsch</artifactId>
-            <version>${jsch.version}</version>
         </dependency>
     </dependencies>
 

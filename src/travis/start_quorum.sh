@@ -32,7 +32,7 @@ done
 if [ ! -f ${f} ]; then
     echo "Timed out!"
     # somehow Travis doesn't fallback to after_script so we explicitly clean up here
-    ./stop_quorum.sh
+    stop_quorum.sh
     # we don't do exit 1 here as it will cause issue in Travis, just do a normal and purposedly failed command
     ${TRAVIS_COMMIT} > /dev/null 2>&1
 fi
