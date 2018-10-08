@@ -101,6 +101,7 @@ public class ContractService extends AbstractService {
             ClientTransactionManager txManager = new ClientTransactionManager(
                     client,
                     address,
+                    null,
                     Arrays.asList(privacyService.id(target)));
             return SimpleStorage.load(contractAddress, client, txManager,
                     BigInteger.valueOf(0),
@@ -133,6 +134,21 @@ public class ContractService extends AbstractService {
                 });
     }
 
+    public Observable<? extends Contract> createClientReceiptPrivateSmartContract(QuorumNode source, QuorumNode target) {
+        Quorum client = connectionFactory.getConnection(source);
+        return accountService.getDefaultAccountAddress(source).flatMap(address -> {
+            ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
+                    client,
+                    address,
+                    null,
+                    Arrays.asList(privacyService.id(target)));
+            return ClientReceipt.deploy(client,
+                    clientTransactionManager,
+                    BigInteger.valueOf(0),
+                    DEFAULT_GAS_LIMIT).observable();
+        });
+    }
+
     public Observable<TransactionReceipt> updateClientReceipt(QuorumNode node, String contractAddress, BigInteger value) {
         Web3j client = connectionFactory.getWeb3jConnection(node);
         return accountService.getDefaultAccountAddress(node)
@@ -144,6 +160,20 @@ public class ContractService extends AbstractService {
                     return ClientReceipt.load(contractAddress, client, txManager, BigInteger.valueOf(0), DEFAULT_GAS_LIMIT)
                             .deposit(new byte[32], value).observable();
                 });
+    }
+
+    public Observable<TransactionReceipt> updateClientReceiptPrivate(QuorumNode source, QuorumNode target, String contractAddress, BigInteger value) {
+        Quorum client = connectionFactory.getConnection(source);
+        return accountService.getDefaultAccountAddress(source).flatMap(address -> {
+            ClientTransactionManager txManager = new ClientTransactionManager(
+                    client,
+                    address,
+                    null,
+                    Arrays.asList(privacyService.id(target)));
+            return ClientReceipt.load(contractAddress, client, txManager,
+                    BigInteger.valueOf(0),
+                    DEFAULT_GAS_LIMIT).deposit(new byte[32], value).observable();
+        });
     }
 
     public Observable<EthSendTransactionAsync> createClientReceiptContractAsync(int initialValue, QuorumNode source, String sourceAccount, QuorumNode target, String callbackUrl) {

@@ -27,11 +27,13 @@ import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 import rx.Observable;
+import rx.functions.FuncN;
 import rx.schedulers.Schedulers;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -67,18 +69,28 @@ public class PublicSmartContract extends AbstractSpecImplementation {
 
     @Step("<node> has received <expectedTxCount> transactions which totally contain <expectedEventCount> log events.")
     public void verifyLogEvents(QuorumNode node, int expectedTxCount, int expectedEventCount) {
-        List<TransactionReceipt> receipts = (List<TransactionReceipt>) DataStoreFactory.getScenarioDataStore().get("receipts");
-        int actualTxCount = 0;
-        int actualEventCount = 0;
-        for (TransactionReceipt r : receipts) {
-            assertThat(r.isStatusOK()).isTrue();
-            assertThat(r.getBlockNumber()).isNotEqualTo(BigInteger.ZERO);
-            actualTxCount++;
-            actualEventCount += r.getLogs().size();
+        List<TransactionReceipt> originalReceipts = (List<TransactionReceipt>) DataStoreFactory.getScenarioDataStore().get("receipts");
+
+        List<Observable<TransactionReceipt>> receiptsInNode = new ArrayList<>();
+        for (TransactionReceipt r : originalReceipts) {
+            receiptsInNode.add(transactionService.getTransactionReceipt(node, r.getTransactionHash()).map(tr -> tr.getTransactionReceipt().get()).subscribeOn(Schedulers.io()));
         }
 
-        assertThat(actualTxCount).as("Transaction Count").isEqualTo(expectedTxCount);
-        assertThat(actualEventCount).as("Log Event Count").isEqualTo(expectedEventCount);
+        AtomicInteger actualTxCount = new AtomicInteger();
+        AtomicInteger actualEventCount = new AtomicInteger();
+        Observable.zip(receiptsInNode, (FuncN<Void>) args -> {
+            for (Object o : args) {
+                TransactionReceipt r = (TransactionReceipt) o;
+                assertThat(r.isStatusOK()).isTrue();
+                assertThat(r.getBlockNumber()).isNotEqualTo(BigInteger.ZERO);
+                actualTxCount.getAndIncrement();
+                actualEventCount.addAndGet(r.getLogs().size());
+            }
+            return null;
+        }).toBlocking().first();
+
+        assertThat(actualTxCount.get()).as("Transaction Count").isEqualTo(expectedTxCount);
+        assertThat(actualEventCount.get()).as("Log Event Count").isEqualTo(expectedEventCount);
     }
 
 }

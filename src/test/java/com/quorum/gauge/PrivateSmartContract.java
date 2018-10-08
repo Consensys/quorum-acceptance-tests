@@ -80,9 +80,13 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
                     if (ethGetTransactionReceipt.getTransactionReceipt().isPresent())
                         return ethGetTransactionReceipt;
                     throw new RuntimeException("retry");
-                })
-                .retryWhen(attempts -> attempts.zipWith(Observable.range(1, 10), (n, i) -> i).flatMap(i -> Observable.timer(3, TimeUnit.SECONDS)))
-                .toBlocking().first().getTransactionReceipt();
+                }).retryWhen(attempts -> attempts.zipWith(
+                        Observable.range(1, 10), (n, i) -> i)
+                        .flatMap(i -> Observable.timer(3, TimeUnit.SECONDS))
+                        .doOnCompleted(() -> {
+                            throw new RuntimeException("Timed out!");
+                        })
+                ).toBlocking().first().getTransactionReceipt();
 
         assertThat(receipt.isPresent()).isTrue();
         assertThat(receipt.get().getBlockNumber()).isNotEqualTo(currentBlockNumber());
@@ -259,5 +263,24 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         String actualValue = (String) DataStoreFactory.getScenarioDataStore().get(contractName + "_error");
 
         assertThat(actualValue).as("Error message").isNotBlank();
+    }
+
+    @Step("Deploy `ClientReceipt` smart contract from a default account in <source> and it's private for <target>, named this contract as <contractName>.")
+    public void deployClientReceiptSmartContract(QuorumNode source, QuorumNode target, String contractName) {
+        Contract c = contractService.createClientReceiptPrivateSmartContract(source, target).toBlocking().first();
+
+        DataStoreFactory.getScenarioDataStore().put(contractName, c);
+    }
+
+    @Step("Execute <contractName>'s `deposit()` function <count> times with arbitrary id and value from <source>. And it's private for <target>.")
+    public void excuteDesposit(String contractName, int count, QuorumNode source, QuorumNode target) {
+        Contract c = (Contract) DataStoreFactory.getScenarioDataStore().get(contractName);
+        List<Observable<TransactionReceipt>> observables = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            observables.add(contractService.updateClientReceiptPrivate(source, target, c.getContractAddress(), BigInteger.ZERO).subscribeOn(Schedulers.io()));
+        }
+        List<TransactionReceipt> receipts = Observable.zip(observables, objects -> Observable.from(objects).map(o -> (TransactionReceipt)o ).toList().toBlocking().first()).toBlocking().first();
+
+        DataStoreFactory.getScenarioDataStore().put("receipts", receipts);
     }
 }
