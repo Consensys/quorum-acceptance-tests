@@ -37,7 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Service
 public class ValueTransferPublicTransaction extends AbstractSpecImplementation {
 
-    @Step("Send <value> ETH from a default account in <from> to a default account in <to> in a public transaction.")
+    @Step("Send <value> Wei from a default account in <from> to a default account in <to> in a public transaction")
     public void sendTransaction(int value, QuorumNode from, QuorumNode to) {
         // backup the current balance
         String txHash = Observable.zip(
@@ -54,7 +54,7 @@ public class ValueTransferPublicTransaction extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put("tx_hash", txHash);
     }
 
-    @Step("Transaction is accepted in the blockchain.")
+    @Step("Transaction is accepted in the blockchain")
     public void verifyTransactionHash() {
         String txHash = (String) DataStoreFactory.getScenarioDataStore().get("tx_hash");
         // if the transaction is accepted, its receipt must be available in any node
@@ -68,7 +68,7 @@ public class ValueTransferPublicTransaction extends AbstractSpecImplementation {
         assertThat(receipt.get().getBlockNumber()).isNotEqualTo(currentBlockNumber());
     }
 
-    @Step("In <node>, the default account's balance is now less than its previous balance.")
+    @Step("In <node>, the default account's balance is now less than its previous balance")
     public void verifyLesserBalance(QuorumNode node) {
         BigInteger prevBalance = (BigInteger) DataStoreFactory.getScenarioDataStore().get(String.format("%s_balance", node));
         BigInteger actualBalance = accountService.getDefaultAccountBalance(node).toBlocking().first().getBalance();
@@ -76,7 +76,7 @@ public class ValueTransferPublicTransaction extends AbstractSpecImplementation {
         assertThat(actualBalance).isLessThan(prevBalance);
     }
 
-    @Step("In <node>, the default account's balance is now greater than its previous balance.")
+    @Step("In <node>, the default account's balance is now greater than its previous balance")
     public void verifyMoreBalance(QuorumNode node) {
         BigInteger prevBalance = (BigInteger) DataStoreFactory.getScenarioDataStore().get(String.format("%s_balance", node));
         BigInteger actualBalance = accountService.getDefaultAccountBalance(node).toBlocking().first().getBalance();
@@ -84,7 +84,7 @@ public class ValueTransferPublicTransaction extends AbstractSpecImplementation {
         assertThat(actualBalance).isGreaterThan(prevBalance);
     }
 
-    @Step("Send <value> ETH from a default account in <from> to a default account in <to> in a signed public transaction.")
+    @Step("Send <value> Wei from a default account in <from> to a default account in <to> in a signed public transaction")
     public void sendSignedTransaction(int value, QuorumNode from, QuorumNode to) {
         // backup the current balance
         String txHash = Observable.zip(

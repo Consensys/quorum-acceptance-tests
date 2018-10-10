@@ -40,14 +40,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Service
 public class PublicSmartContract extends AbstractSpecImplementation {
 
-    @Step("Deploy `ClientReceipt` smart contract from a default account in <node>, named this contract as <contractName>.")
+    @Step("Deploy `ClientReceipt` smart contract from a default account in <node>, named this contract as <contractName>")
     public void deployClientReceiptSmartContract(QuorumNode node, String contractName) {
         Contract c = contractService.createClientReceiptSmartContract(node).toBlocking().first();
 
         DataStoreFactory.getScenarioDataStore().put(contractName, c);
     }
 
-    @Step("<contractName> is mined.")
+    @Step("<contractName> is mined")
     public void verifyContractIsMined(String contractName) {
         Contract c = (Contract) DataStoreFactory.getScenarioDataStore().get(contractName);
 
@@ -55,7 +55,7 @@ public class PublicSmartContract extends AbstractSpecImplementation {
         assertThat(c.getTransactionReceipt().get().getBlockNumber()).isNotEqualTo(currentBlockNumber());
     }
 
-    @Step("Execute <contractName>'s `deposit()` function <count> times with arbitrary id and value from <node>.")
+    @Step("Execute <contractName>'s `deposit()` function <count> times with arbitrary id and value from <node>")
     public void excuteDesposit(String contractName, int count, QuorumNode node) {
         Contract c = (Contract) DataStoreFactory.getScenarioDataStore().get(contractName);
         List<Observable<TransactionReceipt>> observables = new ArrayList<>();
@@ -67,7 +67,7 @@ public class PublicSmartContract extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put("receipts", receipts);
     }
 
-    @Step("<node> has received <expectedTxCount> transactions which totally contain <expectedEventCount> log events.")
+    @Step("<node> has received <expectedTxCount> transactions which contain <expectedEventCount> log events in total")
     public void verifyLogEvents(QuorumNode node, int expectedTxCount, int expectedEventCount) {
         List<TransactionReceipt> originalReceipts = (List<TransactionReceipt>) DataStoreFactory.getScenarioDataStore().get("receipts");
 

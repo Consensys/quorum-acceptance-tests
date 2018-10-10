@@ -22,6 +22,7 @@ package com.quorum.gauge.core;
 import com.quorum.gauge.services.AccountService;
 import com.quorum.gauge.services.ContractService;
 import com.quorum.gauge.services.TransactionService;
+import com.quorum.gauge.services.UtilService;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import okhttp3.OkHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +42,9 @@ public abstract class AbstractSpecImplementation {
 
     @Autowired
     protected OkHttpClient okHttpClient;
+
+    @Autowired
+    protected UtilService utilService;
 
     protected BigInteger currentBlockNumber() {
         return (BigInteger) DataStoreFactory.getScenarioDataStore().get("blocknumber");

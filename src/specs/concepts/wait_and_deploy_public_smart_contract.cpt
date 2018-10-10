@@ -1,0 +1,7 @@
+# Wait for block height is atleast <n> higher than <snapshotName> then deploy a public `ClientReceipt` smart contract
+
+* Wait until block height is atleast <n> higher than <snapshotName>
+* Deploy `ClientReceipt` smart contract from a default account in "Node1", named this contract as "contract12"
+* "contract12" is mined
+* Execute "contract12"'s `deposit()` function "10" times with arbitrary id and value from "Node1"
+* "Node1" has received "10" transactions which totally contain "10" log events

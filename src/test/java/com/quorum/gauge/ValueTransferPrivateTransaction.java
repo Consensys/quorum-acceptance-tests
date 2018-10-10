@@ -40,21 +40,21 @@ public class ValueTransferPrivateTransaction {
     @Autowired
     TransactionService transactionService;
 
-    @Step("Send some ETH from a default account in <from> to a default account in <to> in a private transaction.")
+    @Step("Send some Wei from a default account in <from> to a default account in <to> in a private transaction")
     public void sendTransaction(QuorumNode from, QuorumNode to) {
         Response.Error err = transactionService.sendPrivateTransaction(new Random().nextInt(10), from, to).toBlocking().first().getError();
 
         DataStoreFactory.getScenarioDataStore().put("error", err);
     }
 
-    @Step("Send some ETH from a default account in <from> to a default account in <to> in a signed private transaction.")
+    @Step("Send some Wei from a default account in <from> to a default account in <to> in a signed private transaction")
     public void sendSignedTransaction(QuorumNode from, QuorumNode to) {
         Response.Error err = transactionService.sendSignedPrivateTransaction(new Random().nextInt(10), from, to).toBlocking().first().getError();
 
         DataStoreFactory.getScenarioDataStore().put("error", err);
     }
 
-    @Step("Error message <expectedErrorMsg> is returned.\n")
+    @Step("Error message <expectedErrorMsg> is returned")
     public void verifyError(String expectedErrorMsg) {
         Response.Error err = (Response.Error) DataStoreFactory.getScenarioDataStore().get("error");
 

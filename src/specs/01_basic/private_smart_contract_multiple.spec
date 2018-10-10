@@ -1,5 +1,7 @@
 # Multiple private smart contracts
 
+tags: basic
+
 Sending multiple private smart contracts between nodes and verify if all nodes have received.
 ```
 pragma solidity ^0.4.15;
@@ -31,12 +33,12 @@ contract SimpleStorage {
 
 ## Contracts are mined
 
-tags: privacy, load
+tags: private, load
 
-* "Node1" has received "20" transactions.
-* "Node2" has received "20" transactions.
-* "Node3" has received "20" transactions.
-* "Node4" has received "20" transactions.
-* "Node5" has received "20" transactions.
-* "Node6" has received "20" transactions.
-* "Node7" has received "20" transactions.
+* "Node1" has received "20" transactions
+* "Node2" has received "20" transactions
+* "Node3" has received "20" transactions
+* "Node4" has received "20" transactions
+* "Node5" has received "20" transactions
+* "Node6" has received "20" transactions
+* "Node7" has received "20" transactions

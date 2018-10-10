@@ -54,15 +54,16 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 public class PrivateSmartContract extends AbstractSpecImplementation {
     private static final Logger logger = LoggerFactory.getLogger(PrivateSmartContract.class);
 
-    @Step("Deploy a simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target>, named this contract as <contractName>.")
+    @Step("Deploy a simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target>, named this contract as <contractName>")
     public void setupContract(int initialValue, QuorumNode source, QuorumNode target, String contractName) {
         logger.debug("Setting up contract from {} to {}", source, target);
         Contract contract = contractService.createSimpleContract(initialValue, source, target).toBlocking().first();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
+        DataStoreFactory.getScenarioDataStore().put(contractName, contract);
     }
 
-    @Step("Transaction Hash is returned for <contractName>.")
+    @Step("Transaction Hash is returned for <contractName>")
     public void verifyTransactionHash(String contractName) {
         Contract c = (Contract) DataStoreFactory.getSpecDataStore().get(contractName);
         String transactionHash = c.getTransactionReceipt().orElseThrow(()-> new RuntimeException("no transaction receipt for contract")).getTransactionHash();
@@ -72,7 +73,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(contractName + "_transactionHash", transactionHash);
     }
 
-    @Step("Transaction Receipt is present in <node> for <contractName>.")
+    @Step("Transaction Receipt is present in <node> for <contractName>")
     public void verifyTransactionReceipt(QuorumNode node, String contractName) {
         String transactionHash = (String) DataStoreFactory.getScenarioDataStore().get(contractName + "_transactionHash");
         Optional<TransactionReceipt> receipt = transactionService.getTransactionReceipt(node, transactionHash)
@@ -84,7 +85,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
                         Observable.range(1, 10), (n, i) -> i)
                         .flatMap(i -> Observable.timer(3, TimeUnit.SECONDS))
                         .doOnCompleted(() -> {
-                            throw new RuntimeException("Timed out!");
+                            throw new RuntimeException("Expected transaction receipt is ready but not due to time out!");
                         })
                 ).toBlocking().first().getTransactionReceipt();
 
@@ -92,7 +93,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         assertThat(receipt.get().getBlockNumber()).isNotEqualTo(currentBlockNumber());
     }
 
-    @Step("<contractName> stored in <source> and <target> must have the same storage root.")
+    @Step("<contractName> stored in <source> and <target> must have the same storage root")
     public void verifyStorageRoot(String contractName, QuorumNode source, QuorumNode target) {
         Contract c = (Contract) DataStoreFactory.getSpecDataStore().get(contractName);
         Observable.zip(
@@ -102,7 +103,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         );
     }
 
-    @Step("<contractName> stored in <source> and <stranger> must not have the same storage root.")
+    @Step("<contractName> stored in <source> and <stranger> must not have the same storage root")
     public void verifyStorageRootForNonParticipatedNode(String contractName, QuorumNode source, QuorumNode stranger) {
         Contract c = (Contract) DataStoreFactory.getSpecDataStore().get(contractName);
         Observable.zip(
@@ -112,7 +113,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         );
     }
 
-    @Step("<contractName>'s `get()` function execution in <node> returns <expectedValue>.")
+    @Step("<contractName>'s `get()` function execution in <node> returns <expectedValue>")
     public void verifyPrivacyWithParticipatedNodes(String contractName, QuorumNode node, int expectedValue) {
         Contract c = (Contract) DataStoreFactory.getSpecDataStore().get(contractName);
         int actualValue = contractService.readSimpleContractValue(node, c.getContractAddress());
@@ -120,7 +121,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         assertThat(actualValue).isEqualTo(expectedValue);
     }
 
-    @Step("Execute <contractName>'s `set()` function with new value <newValue> in <source> and it's private for <target>.\n")
+    @Step("Execute <contractName>'s `set()` function with new value <newValue> in <source> and it's private for <target>")
     public void updateNewValue(String contractName, int newValue, QuorumNode source, QuorumNode target) {
         Contract c = (Contract) DataStoreFactory.getSpecDataStore().get(contractName);
         TransactionReceipt receipt = contractService.updateSimpleContract(source, target, c.getContractAddress(), newValue).toBlocking().first();
@@ -149,7 +150,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(String.format("%s_target_contract", target), contracts);
     }
 
-    @Step("<node> has received <expectedCount> transactions.")
+    @Step("<node> has received <expectedCount> transactions")
     public void verifyNumberOfTransactions(QuorumNode node, int expectedCount) {
         List<Contract> sourceContracts = (List<Contract>) DataStoreFactory.getScenarioDataStore().get(String.format("%s_source_contract", node));
         List<Contract> targetContracts = (List<Contract>) DataStoreFactory.getScenarioDataStore().get(String.format("%s_target_contract", node));
@@ -176,7 +177,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         assertThat(actualCount).isEqualTo(expectedCount);
     }
 
-    @Step("<contractName>'s payload is retrievable from <node>.")
+    @Step("<contractName>'s payload is retrievable from <node>")
     public void verifyPrivateContractPayloadIsAccessible(String contractName, QuorumNode node) {
         Contract c = (Contract) DataStoreFactory.getSpecDataStore().get(contractName);
         EthGetQuorumPayload payload = transactionService.getPrivateTransactionPayload(node, c.getTransactionReceipt().get().getTransactionHash()).toBlocking().first();
@@ -184,7 +185,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         assertThat(payload.getResult()).isNotEqualTo("0x");
     }
 
-    @Step("<contractName>'s payload is not retrievable from <node>.")
+    @Step("<contractName>'s payload is not retrievable from <node>")
     public void verifyPrivateContractPayloadIsNotAccessible(String contractName, QuorumNode node) {
         Contract c = (Contract) DataStoreFactory.getSpecDataStore().get(contractName);
         EthGetQuorumPayload payload = transactionService.getPrivateTransactionPayload(node, c.getTransactionReceipt().get().getTransactionHash()).toBlocking().first();
@@ -192,7 +193,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         assertThat(payload.getResult()).isEqualTo("0x");
     }
 
-    @Step("Asynchronously deploy a simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target>, named this contract as <contractName>.")
+    @Step("Asynchronously deploy a simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target>, named this contract as <contractName>")
     public void setupContractAsync(int initialValue, QuorumNode source, QuorumNode target, String contractName) {
         // sourceAccount == null indicates that we are using the default account
         setupContractAsyncWithAccount(initialValue, source, null, target, contractName);
@@ -250,7 +251,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         }
     }
 
-    @Step("Asynchronously deploy a simple smart contract with initial value <initialValue> in <source>'s non-existed account and it's private for <target>, named this contract as <contractName>.")
+    @Step("Asynchronously deploy a simple smart contract with initial value <initialValue> in <source>'s non-existed account and it's private for <target>, named this contract as <contractName>")
     public void setupContractAsyncWithInvalidAccount(int initialValue, QuorumNode source, QuorumNode target, String contractName) {
         byte[] randomBytes = new byte[20];
         new Random().nextBytes(randomBytes);
@@ -258,21 +259,21 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         setupContractAsyncWithAccount(initialValue, source, nonExistedAccount, target, contractName);
     }
 
-    @Step("An error is returned for <contractName>.")
+    @Step("An error is returned for <contractName>")
     public void verifyTransacionHashValue(String contractName) {
         String actualValue = (String) DataStoreFactory.getScenarioDataStore().get(contractName + "_error");
 
         assertThat(actualValue).as("Error message").isNotBlank();
     }
 
-    @Step("Deploy `ClientReceipt` smart contract from a default account in <source> and it's private for <target>, named this contract as <contractName>.")
+    @Step("Deploy `ClientReceipt` smart contract from a default account in <source> and it's private for <target>, named this contract as <contractName>")
     public void deployClientReceiptSmartContract(QuorumNode source, QuorumNode target, String contractName) {
         Contract c = contractService.createClientReceiptPrivateSmartContract(source, target).toBlocking().first();
 
         DataStoreFactory.getScenarioDataStore().put(contractName, c);
     }
 
-    @Step("Execute <contractName>'s `deposit()` function <count> times with arbitrary id and value from <source>. And it's private for <target>.")
+    @Step("Execute <contractName>'s `deposit()` function <count> times with arbitrary id and value from <source>. And it's private for <target>")
     public void excuteDesposit(String contractName, int count, QuorumNode source, QuorumNode target) {
         Contract c = (Contract) DataStoreFactory.getScenarioDataStore().get(contractName);
         List<Observable<TransactionReceipt>> observables = new ArrayList<>();
