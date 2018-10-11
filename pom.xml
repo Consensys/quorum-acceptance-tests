@@ -177,7 +177,7 @@
                 <GITHUB_USERNAME>TBD</GITHUB_USERNAME>
                 <CONSENSUS>TBD</CONSENSUS>
                 <!-- in Travis, we run advanced test cases tagged with the corresponding consensus -->
-                <tags><![CDATA[basic || (advanced && ${CONSENSUS})]]></tags>
+                <tags>basic || (advanced &amp;&amp; ${CONSENSUS})</tags>
             </properties>
             <build>
                 <plugins>

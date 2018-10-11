@@ -21,6 +21,7 @@ package com.quorum.gauge;
 
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
+import com.thoughtworks.gauge.Gauge;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import org.springframework.stereotype.Service;
@@ -50,13 +51,13 @@ public class ValueTransferPublicTransaction extends AbstractSpecImplementation {
                 })
                 .flatMap( r -> transactionService.sendPublicTransaction(value, from, to))
                 .toBlocking().first().getTransactionHash();
-
+        Gauge.writeMessage("Transaction Hash: %s", txHash);
         DataStoreFactory.getScenarioDataStore().put("tx_hash", txHash);
     }
 
     @Step("Transaction is accepted in the blockchain")
     public void verifyTransactionHash() {
-        String txHash = (String) DataStoreFactory.getScenarioDataStore().get("tx_hash");
+        String txHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "tx_hash", String.class);
         // if the transaction is accepted, its receipt must be available in any node
         Optional<TransactionReceipt> receipt = transactionService.getTransactionReceipt(QuorumNode.Node1, txHash)
                 .repeatWhen(completed -> completed.delay(2, TimeUnit.SECONDS))
@@ -70,7 +71,7 @@ public class ValueTransferPublicTransaction extends AbstractSpecImplementation {
 
     @Step("In <node>, the default account's balance is now less than its previous balance")
     public void verifyLesserBalance(QuorumNode node) {
-        BigInteger prevBalance = (BigInteger) DataStoreFactory.getScenarioDataStore().get(String.format("%s_balance", node));
+        BigInteger prevBalance = mustHaveValue(DataStoreFactory.getScenarioDataStore(), String.format("%s_balance", node), BigInteger.class);
         BigInteger actualBalance = accountService.getDefaultAccountBalance(node).toBlocking().first().getBalance();
 
         assertThat(actualBalance).isLessThan(prevBalance);
@@ -78,7 +79,7 @@ public class ValueTransferPublicTransaction extends AbstractSpecImplementation {
 
     @Step("In <node>, the default account's balance is now greater than its previous balance")
     public void verifyMoreBalance(QuorumNode node) {
-        BigInteger prevBalance = (BigInteger) DataStoreFactory.getScenarioDataStore().get(String.format("%s_balance", node));
+        BigInteger prevBalance = mustHaveValue(DataStoreFactory.getScenarioDataStore(), String.format("%s_balance", node), BigInteger.class);
         BigInteger actualBalance = accountService.getDefaultAccountBalance(node).toBlocking().first().getBalance();
 
         assertThat(actualBalance).isGreaterThan(prevBalance);

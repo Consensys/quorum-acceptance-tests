@@ -65,7 +65,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
 
     @Step("Transaction Hash is returned for <contractName>")
     public void verifyTransactionHash(String contractName) {
-        Contract c = (Contract) DataStoreFactory.getSpecDataStore().get(contractName);
+        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         String transactionHash = c.getTransactionReceipt().orElseThrow(()-> new RuntimeException("no transaction receipt for contract")).getTransactionHash();
 
         assertThat(transactionHash).isNotBlank();
@@ -75,7 +75,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
 
     @Step("Transaction Receipt is present in <node> for <contractName>")
     public void verifyTransactionReceipt(QuorumNode node, String contractName) {
-        String transactionHash = (String) DataStoreFactory.getScenarioDataStore().get(contractName + "_transactionHash");
+        String transactionHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "_transactionHash", String.class);
         Optional<TransactionReceipt> receipt = transactionService.getTransactionReceipt(node, transactionHash)
                 .map(ethGetTransactionReceipt -> {
                     if (ethGetTransactionReceipt.getTransactionReceipt().isPresent())
@@ -95,7 +95,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
 
     @Step("<contractName> stored in <source> and <target> must have the same storage root")
     public void verifyStorageRoot(String contractName, QuorumNode source, QuorumNode target) {
-        Contract c = (Contract) DataStoreFactory.getSpecDataStore().get(contractName);
+        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         Observable.zip(
                 contractService.getStorageRoot(source, c.getContractAddress()).subscribeOn(Schedulers.io()),
                 contractService.getStorageRoot(target, c.getContractAddress()).subscribeOn(Schedulers.io()),
@@ -105,7 +105,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
 
     @Step("<contractName> stored in <source> and <stranger> must not have the same storage root")
     public void verifyStorageRootForNonParticipatedNode(String contractName, QuorumNode source, QuorumNode stranger) {
-        Contract c = (Contract) DataStoreFactory.getSpecDataStore().get(contractName);
+        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         Observable.zip(
                 contractService.getStorageRoot(source, c.getContractAddress()).subscribeOn(Schedulers.io()),
                 contractService.getStorageRoot(stranger, c.getContractAddress()).subscribeOn(Schedulers.io()),
@@ -115,7 +115,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
 
     @Step("<contractName>'s `get()` function execution in <node> returns <expectedValue>")
     public void verifyPrivacyWithParticipatedNodes(String contractName, QuorumNode node, int expectedValue) {
-        Contract c = (Contract) DataStoreFactory.getSpecDataStore().get(contractName);
+        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         int actualValue = contractService.readSimpleContractValue(node, c.getContractAddress());
 
         assertThat(actualValue).isEqualTo(expectedValue);
@@ -123,7 +123,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
 
     @Step("Execute <contractName>'s `set()` function with new value <newValue> in <source> and it's private for <target>")
     public void updateNewValue(String contractName, int newValue, QuorumNode source, QuorumNode target) {
-        Contract c = (Contract) DataStoreFactory.getSpecDataStore().get(contractName);
+        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         TransactionReceipt receipt = contractService.updateSimpleContract(source, target, c.getContractAddress(), newValue).toBlocking().first();
 
         assertThat(receipt.getTransactionHash()).isNotBlank();
@@ -152,8 +152,8 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
 
     @Step("<node> has received <expectedCount> transactions")
     public void verifyNumberOfTransactions(QuorumNode node, int expectedCount) {
-        List<Contract> sourceContracts = (List<Contract>) DataStoreFactory.getScenarioDataStore().get(String.format("%s_source_contract", node));
-        List<Contract> targetContracts = (List<Contract>) DataStoreFactory.getScenarioDataStore().get(String.format("%s_target_contract", node));
+        List<Contract> sourceContracts =  mustHaveValue(DataStoreFactory.getScenarioDataStore(), String.format("%s_source_contract", node), List.class);
+        List<Contract> targetContracts = mustHaveValue(DataStoreFactory.getScenarioDataStore(), String.format("%s_target_contract", node), List.class);
         List<Contract> contracts = new ArrayList<>(sourceContracts);
         if (targetContracts != null) {
             contracts.addAll(targetContracts);
@@ -179,7 +179,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
 
     @Step("<contractName>'s payload is retrievable from <node>")
     public void verifyPrivateContractPayloadIsAccessible(String contractName, QuorumNode node) {
-        Contract c = (Contract) DataStoreFactory.getSpecDataStore().get(contractName);
+        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         EthGetQuorumPayload payload = transactionService.getPrivateTransactionPayload(node, c.getTransactionReceipt().get().getTransactionHash()).toBlocking().first();
 
         assertThat(payload.getResult()).isNotEqualTo("0x");
@@ -187,7 +187,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
 
     @Step("<contractName>'s payload is not retrievable from <node>")
     public void verifyPrivateContractPayloadIsNotAccessible(String contractName, QuorumNode node) {
-        Contract c = (Contract) DataStoreFactory.getSpecDataStore().get(contractName);
+        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         EthGetQuorumPayload payload = transactionService.getPrivateTransactionPayload(node, c.getTransactionReceipt().get().getTransactionHash()).toBlocking().first();
 
         assertThat(payload.getResult()).isEqualTo("0x");
@@ -261,7 +261,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
 
     @Step("An error is returned for <contractName>")
     public void verifyTransacionHashValue(String contractName) {
-        String actualValue = (String) DataStoreFactory.getScenarioDataStore().get(contractName + "_error");
+        String actualValue = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "_error", String.class);
 
         assertThat(actualValue).as("Error message").isNotBlank();
     }
@@ -270,12 +270,13 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     public void deployClientReceiptSmartContract(QuorumNode source, QuorumNode target, String contractName) {
         Contract c = contractService.createClientReceiptPrivateSmartContract(source, target).toBlocking().first();
 
+        DataStoreFactory.getSpecDataStore().put(contractName, c);
         DataStoreFactory.getScenarioDataStore().put(contractName, c);
     }
 
     @Step("Execute <contractName>'s `deposit()` function <count> times with arbitrary id and value from <source>. And it's private for <target>")
     public void excuteDesposit(String contractName, int count, QuorumNode source, QuorumNode target) {
-        Contract c = (Contract) DataStoreFactory.getScenarioDataStore().get(contractName);
+        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         List<Observable<TransactionReceipt>> observables = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             observables.add(contractService.updateClientReceiptPrivate(source, target, c.getContractAddress(), BigInteger.ZERO).subscribeOn(Schedulers.io()));

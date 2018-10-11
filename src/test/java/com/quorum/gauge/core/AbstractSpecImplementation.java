@@ -23,11 +23,14 @@ import com.quorum.gauge.services.AccountService;
 import com.quorum.gauge.services.ContractService;
 import com.quorum.gauge.services.TransactionService;
 import com.quorum.gauge.services.UtilService;
+import com.thoughtworks.gauge.datastore.DataStore;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import okhttp3.OkHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigInteger;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public abstract class AbstractSpecImplementation {
 
@@ -47,6 +50,13 @@ public abstract class AbstractSpecImplementation {
     protected UtilService utilService;
 
     protected BigInteger currentBlockNumber() {
-        return (BigInteger) DataStoreFactory.getScenarioDataStore().get("blocknumber");
+        return mustHaveValue(DataStoreFactory.getScenarioDataStore(), "blocknumber", BigInteger.class);
+    }
+
+    protected <T> T mustHaveValue(DataStore ds, String key, Class<T> clazz) {
+        Object v = ds.get(key);
+        assertThat(v).as("Value class for key [" + key + "] in Gauge DataStore").isInstanceOf(clazz);
+        assertThat(v).as("Value for key [" + key + "] in Gauge DataStore").isNotNull();
+        return (T) v;
     }
 }

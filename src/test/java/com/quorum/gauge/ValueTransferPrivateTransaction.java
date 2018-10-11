@@ -20,12 +20,9 @@
 package com.quorum.gauge;
 
 import com.quorum.gauge.common.QuorumNode;
-import com.quorum.gauge.services.TransactionService;
+import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.Response;
 
@@ -34,11 +31,7 @@ import java.util.Random;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Service
-public class ValueTransferPrivateTransaction {
-    private static final Logger logger = LoggerFactory.getLogger(ValueTransferPrivateTransaction.class);
-
-    @Autowired
-    TransactionService transactionService;
+public class ValueTransferPrivateTransaction extends AbstractSpecImplementation {
 
     @Step("Send some Wei from a default account in <from> to a default account in <to> in a private transaction")
     public void sendTransaction(QuorumNode from, QuorumNode to) {
@@ -56,7 +49,7 @@ public class ValueTransferPrivateTransaction {
 
     @Step("Error message <expectedErrorMsg> is returned")
     public void verifyError(String expectedErrorMsg) {
-        Response.Error err = (Response.Error) DataStoreFactory.getScenarioDataStore().get("error");
+        Response.Error err =  mustHaveValue(DataStoreFactory.getScenarioDataStore(), "error", Response.Error.class);
 
         assertThat(err).as("An error must be returned").isNotNull();
         assertThat(err.getMessage()).isEqualTo(expectedErrorMsg);

@@ -34,7 +34,7 @@ tags: private, mining
 * Transaction Receipt is present in "Node1" for "contract17"
 * Transaction Receipt is present in "Node7" for "contract17"
 
-## Storage Root storing private smart contract must be the same
+## Storage Root storing private smart contracts must be the same
 
 tags: private, storage
 

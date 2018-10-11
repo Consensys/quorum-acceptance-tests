@@ -44,12 +44,13 @@ public class PublicSmartContract extends AbstractSpecImplementation {
     public void deployClientReceiptSmartContract(QuorumNode node, String contractName) {
         Contract c = contractService.createClientReceiptSmartContract(node).toBlocking().first();
 
+        DataStoreFactory.getSpecDataStore().put(contractName, c);
         DataStoreFactory.getScenarioDataStore().put(contractName, c);
     }
 
     @Step("<contractName> is mined")
     public void verifyContractIsMined(String contractName) {
-        Contract c = (Contract) DataStoreFactory.getScenarioDataStore().get(contractName);
+        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
 
         assertThat(c.getTransactionReceipt().isPresent()).isTrue();
         assertThat(c.getTransactionReceipt().get().getBlockNumber()).isNotEqualTo(currentBlockNumber());
@@ -57,7 +58,7 @@ public class PublicSmartContract extends AbstractSpecImplementation {
 
     @Step("Execute <contractName>'s `deposit()` function <count> times with arbitrary id and value from <node>")
     public void excuteDesposit(String contractName, int count, QuorumNode node) {
-        Contract c = (Contract) DataStoreFactory.getScenarioDataStore().get(contractName);
+        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         List<Observable<TransactionReceipt>> observables = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             observables.add(contractService.updateClientReceipt(node, c.getContractAddress(), BigInteger.TEN).subscribeOn(Schedulers.io()));
