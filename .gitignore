@@ -20,3 +20,6 @@ target
 config/application-local.yml
 
 src/site/resources/reports
+
+# dummy folder created by Travis
+env/travis-*/
