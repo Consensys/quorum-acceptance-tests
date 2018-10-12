@@ -146,14 +146,16 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
             return tmp;
         }).toBlocking().first();
 
+        DataStoreFactory.getSpecDataStore().put(String.format("%s_source_contract", source), contracts);
+        DataStoreFactory.getSpecDataStore().put(String.format("%s_target_contract", target), contracts);
         DataStoreFactory.getScenarioDataStore().put(String.format("%s_source_contract", source), contracts);
         DataStoreFactory.getScenarioDataStore().put(String.format("%s_target_contract", target), contracts);
     }
 
     @Step("<node> has received <expectedCount> transactions")
     public void verifyNumberOfTransactions(QuorumNode node, int expectedCount) {
-        List<Contract> sourceContracts =  mustHaveValue(DataStoreFactory.getScenarioDataStore(), String.format("%s_source_contract", node), List.class);
-        List<Contract> targetContracts = mustHaveValue(DataStoreFactory.getScenarioDataStore(), String.format("%s_target_contract", node), List.class);
+        List<Contract> sourceContracts =  haveValue(DataStoreFactory.getSpecDataStore(), String.format("%s_source_contract", node), List.class, new ArrayList<Contract>());
+        List<Contract> targetContracts = haveValue(DataStoreFactory.getSpecDataStore(), String.format("%s_target_contract", node), List.class, new ArrayList<Contract>());
         List<Contract> contracts = new ArrayList<>(sourceContracts);
         if (targetContracts != null) {
             contracts.addAll(targetContracts);

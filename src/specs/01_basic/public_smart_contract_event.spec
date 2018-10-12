@@ -1,6 +1,6 @@
 # Public smart contract with event
 
-tags: basic
+ Tags: basic
 
 A smart contract, `ClientReceipt`, logs all the deposits that have been performed.
 ```

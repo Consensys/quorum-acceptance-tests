@@ -1,12 +1,12 @@
 # Value transfer in public transactions
 
-tags: basic
+ Tags: basic
 
 Value-transfer public transactions are supported by default in Ethereum and Quorum keeps this feature.
 
 ## Successful public transaction submission
 
-tags: public
+ Tags: public
 
 * Send "10" Wei from a default account in "Node1" to a default account in "Node2" in a public transaction
 * Transaction is accepted in the blockchain
@@ -15,7 +15,7 @@ tags: public
 
 ## Successful signed public transaction submission
 
-tags: public, sign
+ Tags: public, sign
 
 Signing the transaction before submitting it to the node
 

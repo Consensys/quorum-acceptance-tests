@@ -1,6 +1,6 @@
 # Transactions for different block heights
 
-tags: advanced
+ Tags: advanced
 
 This is to verify the basic functionalities when certain block height is reached.
 The purpose is to increase the possibility for the network to accept transactions during edge scenarios like:
@@ -43,7 +43,7 @@ contract ClientReceipt {
 
 ## Private smart contracts for Istanbul consensus
 
-tags: istanbul, private, smart-contract
+ Tags: istanbul, private, smart-contract
 
 * Capture the current block height, named it as "snapshot"
 * Wait for block height is atleast "10" higher than "snapshot" then deploy a private simple smart contract
@@ -55,7 +55,7 @@ tags: istanbul, private, smart-contract
 
 ## Public smart contracts for Istanbul consensus
 
-tags: istanbul, public, smart-contract
+ Tags: istanbul, public, smart-contract
 
 * Capture the current block height, named it as "snapshot"
 * Wait for block height is atleast "10" higher than "snapshot" then deploy a public `ClientReceipt` smart contract
@@ -67,8 +67,8 @@ tags: istanbul, public, smart-contract
 
 ## Private smart contracts for Raft consensus
 
-tags: raft
+ Tags: raft
 
 * Deploy "100" private smart contracts between a default account in "Node1" and a default account in "Node7"
-* "Node1" has received "200" transactions
-* "Node7" has received "200" transactions
+* "Node1" has received "100" transactions
+* "Node7" has received "100" transactions

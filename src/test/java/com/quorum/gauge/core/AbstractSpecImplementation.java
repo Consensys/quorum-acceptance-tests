@@ -59,4 +59,12 @@ public abstract class AbstractSpecImplementation {
         assertThat(v).as("Value for key [" + key + "] in Gauge DataStore").isNotNull();
         return (T) v;
     }
+
+    protected <T> T haveValue(DataStore ds, String key, Class<T> clazz, T defaultValue) {
+        Object v = ds.get(key);
+        if (v == null) {
+            return defaultValue;
+        }
+        return mustHaveValue(ds, key, clazz);
+    }
 }

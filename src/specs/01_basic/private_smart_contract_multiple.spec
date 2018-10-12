@@ -1,6 +1,6 @@
 # Multiple private smart contracts
 
-tags: basic
+ Tags: basic
 
 Sending multiple private smart contracts between nodes and verify if all nodes have received.
 ```
@@ -33,7 +33,7 @@ contract SimpleStorage {
 
 ## Contracts are mined
 
-tags: private, load
+ Tags: private, load
 
 * "Node1" has received "20" transactions
 * "Node2" has received "20" transactions

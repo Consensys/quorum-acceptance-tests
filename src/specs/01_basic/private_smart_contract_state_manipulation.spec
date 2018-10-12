@@ -1,6 +1,6 @@
 # State manipulation in private smart contract
 
-tags: basic
+ Tags: basic
 
 A simple smart contract is to store a int value and to provide `get()` and `set()` functions.
 ```
@@ -28,7 +28,7 @@ Non-participated party from original transaction is trying to modify the private
 
 ## Private state is maintained
 
-tags: private, state
+ Tags: private, state
 
 * Execute "contract17"'s `set()` function with new value "0" in "Node3" and it's private for "Node1"
 * "contract17"'s `get()` function execution in "Node1" returns "100"
