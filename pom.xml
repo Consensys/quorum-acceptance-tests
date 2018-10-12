@@ -17,7 +17,8 @@
         <java.version>1.8</java.version>
         <generated.sol.dir>${project.build.directory}/generate-sources/sol</generated.sol.dir>
         <!-- only run non-advanced test cases. This property is from gauge-maven-plugin configuration -->
-        <tags>!advanced</tags>
+        <CONSENSUS>TBD</CONSENSUS>
+        <tags>(basic || basic-${CONSENSUS}) &amp;&amp; !advanced</tags>
         <!-- dependencies -->
         <web3j-quorum.version>0.10.0</web3j-quorum.version>
         <!-- there's an issue with code gen in web3j 3.5.0-->
@@ -177,7 +178,7 @@
                 <GITHUB_USERNAME>TBD</GITHUB_USERNAME>
                 <CONSENSUS>TBD</CONSENSUS>
                 <!-- in Travis, we run advanced test cases tagged with the corresponding consensus -->
-                <tags>basic || (advanced &amp;&amp; ${CONSENSUS})</tags>
+                <tags>basic || basic-${CONSENSUS} || (advanced &amp;&amp; ${CONSENSUS})</tags>
             </properties>
             <build>
                 <plugins>
