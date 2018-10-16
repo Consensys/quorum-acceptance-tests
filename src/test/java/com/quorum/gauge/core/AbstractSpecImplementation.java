@@ -26,13 +26,20 @@ import com.quorum.gauge.services.UtilService;
 import com.thoughtworks.gauge.datastore.DataStore;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import okhttp3.OkHttpClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import rx.Observable;
 
 import java.math.BigInteger;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public abstract class AbstractSpecImplementation {
+
+    private static final Logger logger = LoggerFactory.getLogger(AbstractSpecImplementation.class);
 
     @Autowired
     protected ContractService contractService;
@@ -66,5 +73,23 @@ public abstract class AbstractSpecImplementation {
             return defaultValue;
         }
         return mustHaveValue(ds, key, clazz);
+    }
+
+    protected void waitForBlockHeight(int currentBlockHeight, int untilBlockHeight) {
+        AtomicInteger lastBlockHeight = new AtomicInteger(currentBlockHeight);
+        utilService.getCurrentBlockNumber().flatMap(ethBlockNumber -> {
+            if (ethBlockNumber.getBlockNumber().intValue() < untilBlockHeight) {
+                logger.debug("Current block height is {}, wait until {}", ethBlockNumber.getBlockNumber(), untilBlockHeight);
+                lastBlockHeight.set(ethBlockNumber.getBlockNumber().intValue());
+                throw new RuntimeException("let's wait and retry");
+            }
+            return Observable.just(true);
+        }).retryWhen(
+                attempts -> attempts.zipWith(Observable.range(1, untilBlockHeight), (total, i) -> i)
+                        .flatMap(i -> Observable.timer(3, TimeUnit.SECONDS))
+                        .doOnCompleted(() -> {
+                            throw new RuntimeException("Timed out! Can't wait until block height is " + untilBlockHeight + " higher. Last block height was " + lastBlockHeight.get());
+                        })
+        ).toBlocking().first();
     }
 }

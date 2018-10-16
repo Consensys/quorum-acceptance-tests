@@ -9,7 +9,7 @@ This test is to validate the above feature. Assume that our network has 7 nodes 
 ## Modify number of validators from less than 2F + 1 to more than 2F + 1
 
 * The consensus should work at the beginning
-* Stop "3" validators so there are less than 2F + 1 validators in the network
-* The consensus should not work
+* Among "7" validators, stop "3" validators so there are less than 2F + 1 validators in the network
+* The consensus should stop
 * Resume the stopped validators
 * The consensus should work after resuming
