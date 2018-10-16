@@ -57,6 +57,7 @@ Latest test reports are available:
 ### Running Tests
 
 * When using `quorum-examples` locally, update `src/main/js/config.js` with correct configuration.
+* set language in `manifest.json` to `js`
 * Run 
     ```
     npm install (only once to install dependencies)
