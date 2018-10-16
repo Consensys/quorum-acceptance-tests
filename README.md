@@ -5,12 +5,14 @@ Latest test reports are available:
 * [Raft](https://jpmorganchase.github.io/quorum-acceptance-tests/raft/)
 * [Istanbul](https://jpmorganchase.github.io/quorum-acceptance-tests/istanbul/)
 
+#Java
 ### Prerequisites
 
 * Java 8
 * Maven 3.5.x
 * [Solidity Compiler](https://solidity.readthedocs.io/en/latest/installing-solidity.html)
 * [Gauge](https://gauge.org/get_started)
+* [npm](https://www.npmjs.com/get-npm) (if you want to write step implementation in javascript)
 
 ### Writing Tests
 
@@ -19,6 +21,7 @@ Latest test reports are available:
   * Folder `01_basic` contains specifications which describe Quorum's basic functionalities. All specifications must be tagged as `basic`
   * Folder `02_advanced` contains specifications which are for making sure Quorum's basic functionalities are working under different conditions in the chain. All specifications must be tagged as `advanced`
 * Glue codes are written in Java under [`src/test/java`](src/test/java) folder
+
 
 ### Running Tests
 
@@ -37,6 +40,29 @@ Latest test reports are available:
 ### Logging
 
 * Set environment variable: `LOGGING_LEVEL_COM_QUORUM_GAUGE=DEBUG`
+
+#Javascript
+
+### Prerequisites
+
+* [npm](https://www.npmjs.com/get-npm)
+
+
+### Writing Tests
+
+* Using [Gauge](https://github.com/getgauge/gauge) test automation framework
+* Test Specs are stored in [`src/specs/js`](src/specs/js) folder
+ * Step implementation are written in Javascript under [`src/main/js`](src/main/js) folder
+
+### Running Tests
+
+* When using `quorum-examples` locally, update `src/main/js/config.js` with correct configuration.
+* Run 
+    ```
+    npm install (only once to install dependencies)
+    npm start
+    ```
+
 
 ------
 

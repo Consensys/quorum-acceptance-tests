@@ -1,5 +1,5 @@
 {
-  "Language": "java",
+  "Language": "js",
   "Plugins": [
     "html-report",
     "xml-report",
