@@ -5,14 +5,13 @@ Latest test reports are available:
 * [Raft](https://jpmorganchase.github.io/quorum-acceptance-tests/raft/)
 * [Istanbul](https://jpmorganchase.github.io/quorum-acceptance-tests/istanbul/)
 
-#Java
+##Java
 ### Prerequisites
 
 * Java 8
 * Maven 3.5.x
 * [Solidity Compiler](https://solidity.readthedocs.io/en/latest/installing-solidity.html)
 * [Gauge](https://gauge.org/get_started)
-* [npm](https://www.npmjs.com/get-npm) (if you want to write step implementation in javascript)
 
 ### Writing Tests
 
@@ -41,10 +40,10 @@ Latest test reports are available:
 
 * Set environment variable: `LOGGING_LEVEL_COM_QUORUM_GAUGE=DEBUG`
 
-#Javascript
+##Javascript
 
 ### Prerequisites
-
+*  [Gauge](https://gauge.org/get_started)
 * [npm](https://www.npmjs.com/get-npm)
 
 
