@@ -45,11 +45,11 @@ module.exports = {
 
     nodesToTest: function () { return this.nodes().length - 1 },
 
-    keysPath: function () { return "/Users/amalraj.manigmail.com/quorum-examples/examples/7nodes/keys/" },
+   keysPath: function () { return "/Users/amalraj.manigmail.com/quorum-examples/examples/7nodes/keys/" },
 
-    basePath: function () { return "/vagrant/nodejs/acceptance-test/" },
+    /*basePath: function () { return "/vagrant/nodejs/acceptance-test/" },
 
-    qdataPath: function () { return "/home/vagrant/quorum-examples/examples/7nodes/qdata/" },
+    qdataPath: function () { return "/home/vagrant/quorum-examples/examples/7nodes/qdata/" },*/
 
     //info, debug, warn, error
     logLevel: function () { return 'warn' },
