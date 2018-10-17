@@ -50,7 +50,7 @@ Latest test reports are available:
 ### Writing Tests
 
 * Using [Gauge](https://github.com/getgauge/gauge) test automation framework
-* Test Specs are stored in [`src/specs/js`](src/specs/js) folder
+* Test Specs are stored in [`src/specs-js`](src/specs-js) folder
  * Step implementation are written in Javascript under [`src/main/js`](src/main/js) folder
 
 ### Running Tests
