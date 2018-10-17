@@ -5,7 +5,7 @@ Latest test reports are available:
 * [Raft](https://jpmorganchase.github.io/quorum-acceptance-tests/raft/)
 * [Istanbul](https://jpmorganchase.github.io/quorum-acceptance-tests/istanbul/)
 
-##Java
+## Java
 ### Prerequisites
 
 * Java 8
@@ -40,7 +40,7 @@ Latest test reports are available:
 
 * Set environment variable: `LOGGING_LEVEL_COM_QUORUM_GAUGE=DEBUG`
 
-##Javascript
+## Javascript
 
 ### Prerequisites
 *  [Gauge](https://gauge.org/get_started)
