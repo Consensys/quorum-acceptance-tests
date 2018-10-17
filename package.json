@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Tool for writing JavaScript tests for Quorum",
   "scripts": {
-    "start": "gauge run src/specs/js"
+    "start": "gauge run src/specs-js"
   },
   "dependencies": {
     "child-process-promise": "^2.2.1",
