@@ -40,7 +40,7 @@ cache:
   directories:
   - $HOME/.m2
 before_install:
-- curl -SsL https://downloads.gauge.org/stable | sh
+- curl -SsLk https://downloads.gauge.org/stable | sh
 - wget https://releases.hashicorp.com/terraform/0.11.8/terraform_0.11.8_linux_amd64.zip -O terraform.zip -q
 - unzip terraform.zip
 - $TERRAFORM_CMD version
