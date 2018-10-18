@@ -29,19 +29,18 @@ addons:
     update: true
     sources:
     - sourceline: ppa:ethereum/ethereum
-    - sourceline: "deb https://dl.bintray.com/gauge/gauge-deb stable main"
-      key_url: "http://pool.sks-keyservers.net/pks/lookup?search=0x023EDB0B&op=get&options=mr"
     packages:
     - openssh-client
     - dnsutils
     - maven
-    - gauge
     - solc
     - jq
+    - curl
 cache:
   directories:
   - $HOME/.m2
 before_install:
+- curl -SsL https://downloads.gauge.org/stable | sh
 - wget https://releases.hashicorp.com/terraform/0.11.8/terraform_0.11.8_linux_amd64.zip -O terraform.zip -q
 - unzip terraform.zip
 - $TERRAFORM_CMD version
