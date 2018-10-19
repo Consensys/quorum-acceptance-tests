@@ -25,5 +25,5 @@ check if events are emitted in all nodes
 * public smart contract from node "6" with "6" events
 
 ## test public smart contract from a default account in node7 and check events in nodes 1,2,3,4,5 & 6
-* public smart contract from node "7" with "100" events
+* public smart contract from node "7" with "10" events
 
