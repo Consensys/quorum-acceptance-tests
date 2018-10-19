@@ -25,7 +25,7 @@ check if events are emitted in all nodes
 * private smart contract from node "6" to node "7" with "6" events
 
 ## test private smart contract from a default account in node7 with private for node1. verify events are present only in node 7 & 1
-* private smart contract from node "7" to node "1" with "100" events
+* private smart contract from node "7" to node "1" with "10" events
 
 
 
