@@ -52,7 +52,7 @@ module.exports = {
     qdataPath: function () { return "/home/vagrant/quorum-examples/examples/7nodes/qdata/" },*/
 
     //info, debug, warn, error
-    logLevel: function () { return 'warn' },
+    logLevel: function () { return 'debug' },
 
     //processing time to create new blocks
     processingTime: function () {
