@@ -67,7 +67,7 @@ async function sendTransactionCallWithValidAccount(){
                 await utl.sleep(3000)
                 logger.debug("wait 3s over. check txn receipt")
                 var txRecpt = await web3.eth.getTransactionReceipt(resObj.txHash)
-                logger.debug("txRecpt:" + txRecpt)
+                logger.debug("txRecpt:" + JSON.stringify(txRecpt))
                 blockNumberFromTxHash = await txRecpt.blockNumber
                 logger.debug("blockNumberFromTxHash:" + blockNumberFromTxHash)
                 logger.debug("from account:" + txRecpt.from)
@@ -109,7 +109,7 @@ async function sendTransactionCallWithInValidAccount(){
 
     var web3 = new Web3(new Web3.providers.HttpProvider(nodeName))
     var blockNumberBefore = await web3.eth.getBlockNumber()
-    gotCallback = false
+    gotCallback = true
 
     var server = require('http').createServer(function(request, response) {
         const { headers, method, url } = request;
@@ -121,8 +121,13 @@ async function sendTransactionCallWithInValidAccount(){
             logger.error("on error:"+ err)
         }).on('data', (chunk) => {
                 logger.debug("data:"+chunk)
-                gotCallback = true
-
+                var errObj = JSON.parse(chunk)
+                if(errObj.error) {
+                    logger.info("failed with error:" + errObj.error)
+                    gotCallback = false
+                }else if(errObj.txHash){
+                    gotCallback = true
+                }
         })
     })
     var port = 5556
@@ -131,7 +136,8 @@ async function sendTransactionCallWithInValidAccount(){
     server.listen(port)
     logger.debug("server listening on port " + port)
 
-    sendTransactionCall(nodeName, "0xeed9d02e382b34818e88b88a309c7fe71e65f419d", port)
+    //pass invalid account
+    sendTransactionCall(nodeName, "0xcd9d02e382b34818e88b88a309c7fe71e65f419d", port)
 
     //add more delay here as istanbul takes time to mint blocks
     await utl.sleep(5000)
@@ -158,8 +164,7 @@ step('should accept transaction and create new block if from account is valid', 
 })
 
 step('should not accept transaction and create new block if from account is invalid', async() => {
-    //var res = await sendTransactionCallWithInValidAccount()
-    var res = true
+    var res = await sendTransactionCallWithInValidAccount()
     assert.equal(res, true)
 })
 
