@@ -19,7 +19,7 @@ Also, it takes about 20seconds for the ports of the servers to get released afte
 
 
 
-async function sendTransactionCall(nodeName, fromAccount, port){
+async function sendTransactionAsync(nodeName, fromAccount, port){
     var url = nodeName
     var reqData = {
         url: url,
@@ -29,23 +29,26 @@ async function sendTransactionCall(nodeName, fromAccount, port){
     logger.info("reqData:" + JSON.stringify(reqData))
     req(reqData, function (error, response, body) {
         if (!error && response.statusCode === 200) {
-            logger.debug("Success:"+JSON.stringify(body))
+            logger.debug("got response. Success:"+JSON.stringify(body))
         }
         else {
-            assert.equal(error, null, "error " + error)
-            logger.error("error: " + error)
+            logger.error("got response error: " + error)
             logger.warn("response.statusCode: " + response.statusCode)
             logger.warn("response.statusText: " + response.statusText)
+            assert.equal(error, null, "error " + error)
         }
     })
+    logger.debug("sendTransactionAsync finished.")
 }
 
-async function sendTransactionCallWithValidAccount(){
 
-    const nodeName = cfg.nodes()[parseInt("1")]
 
-    web3 = new Web3(new Web3.providers.HttpProvider(nodeName))
+async function checkSendTransaction(fromNode, account, port, validCase){
+    const nodeName = cfg.nodes()[fromNode]
+
+    var web3 = new Web3(new Web3.providers.HttpProvider(nodeName))
     var blockNumberBefore = await web3.eth.getBlockNumber()
+    failedWithError = false
     var blockNumberAfter = 0
     var blockNumberFromTxHash = 0
 
@@ -54,99 +57,52 @@ async function sendTransactionCallWithValidAccount(){
         logger.debug("headers:"+headers)
         logger.debug("method:"+method)
         logger.debug("url:"+url)
-        let body = [];
         request.on('error', (err) => {
             logger.error("on error:"+ err)
-        }).on('data', async (data) => {
-                logger.info("data:" + data)
-                var resObj = JSON.parse(data)
-                logger.debug("txn hash:" + resObj.txHash)
-                logger.debug("txn error:" + resObj.error)
-                //add ,more delay here as istanbul takes time to create the block
-                logger.debug("wait 3s for block mining...")
-                await utl.sleep(3000)
-                logger.debug("wait 3s over. check txn receipt")
-                var txRecpt = await web3.eth.getTransactionReceipt(resObj.txHash)
-                logger.debug("txRecpt:" + JSON.stringify(txRecpt))
-                blockNumberFromTxHash = await txRecpt.blockNumber
-                logger.debug("blockNumberFromTxHash:" + blockNumberFromTxHash)
-                logger.debug("from account:" + txRecpt.from)
-
-        })
-    })
-    var srvsh = require('http-shutdown')(server)
-    logger.debug("server created")
-    var port = 5555
-    server.listen(port)
-    logger.debug("server listening on port " + port)
-
-
-    sendTransactionCall(nodeName, "0xed9d02e382b34818e88b88a309c7fe71e65f419d", port)
-    logger.debug("send txn called in async. waiting for callback... 5seconds")
-    //add more delay here to verify the results as istanbul takes time to mint blocks
-    await utl.sleep(5000)
-
-    logger.debug("after 5seconds check block number")
-
-    blockNumberAfter = await web3.eth.getBlockNumber()
-
-    logger.debug("block number before=" + blockNumberBefore)
-    logger.debug("block number after=" + blockNumberAfter)
-    assert.notEqual(blockNumberBefore, blockNumberAfter, "new block not created")
-    assert.notEqual(blockNumberFromTxHash, 0, "block number is zero on the txn receipt of new transaction")
-
-    server.close()
-    srvsh.forceShutdown(function() {
-        logger.debug('Everything is cleanly shutdown.');
-    })
-    logger.debug("server shutdown")
-    return true
-}
-
-
-async function sendTransactionCallWithInValidAccount(){
-    const nodeName = cfg.nodes()[parseInt("1")]
-
-    var web3 = new Web3(new Web3.providers.HttpProvider(nodeName))
-    var blockNumberBefore = await web3.eth.getBlockNumber()
-    gotCallback = true
-
-    var server = require('http').createServer(function(request, response) {
-        const { headers, method, url } = request;
-        logger.debug("headers:"+headers)
-        logger.debug("method:"+method)
-        logger.debug("url:"+url)
-        let body = [];
-        request.on('error', (err) => {
-            logger.error("on error:"+ err)
-        }).on('data', (chunk) => {
+        }).on('data', async (chunk) => {
                 logger.debug("data:"+chunk)
-                var errObj = JSON.parse(chunk)
-                if(errObj.error) {
-                    logger.info("failed with error:" + errObj.error)
-                    gotCallback = false
-                }else if(errObj.txHash){
-                    gotCallback = true
+                var resObj = JSON.parse(chunk)
+                logger.debug("data parsed")
+                if(resObj.error) {
+                    logger.info("failed with error:" + resObj.error)
+                    failedWithError = true
+                }else if(resObj.txHash){
+                    failedWithError = false
+                    logger.debug("txn hash:" + resObj.txHash)
+                    //add ,more delay here as istanbul takes time to create the block
+                    logger.debug("wait 3s for block mining...")
+                    await utl.sleep(3000)
+                    logger.debug("wait 3s over. check txn receipt")
+                    var txRecpt = await web3.eth.getTransactionReceipt(resObj.txHash)
+                    logger.debug("txRecpt:" + JSON.stringify(txRecpt))
+                    blockNumberFromTxHash = await txRecpt.blockNumber
+                    logger.debug("blockNumberFromTxHash:" + blockNumberFromTxHash)
+                    logger.debug("from account:" + txRecpt.from)
                 }
         })
     })
-    var port = 5556
     var srvsh = require('http-shutdown')(server)
     logger.debug("server created")
     server.listen(port)
     logger.debug("server listening on port " + port)
 
     //pass invalid account
-    sendTransactionCall(nodeName, "0xcd9d02e382b34818e88b88a309c7fe71e65f419d", port)
+    sendTransactionAsync(nodeName, account, port)
 
     //add more delay here as istanbul takes time to mint blocks
     await utl.sleep(5000)
 
     var blockNumberAfter = await web3.eth.getBlockNumber()
-
     logger.debug("block number before=" + blockNumberBefore)
     logger.debug("block number after=" + blockNumberAfter)
-    assert.equal(gotCallback, false, "new block created for invalid account")
+
+    if(validCase){
+        assert.notEqual(blockNumberBefore, blockNumberAfter, "new block not created")
+        assert.notEqual(blockNumberFromTxHash, 0, "block number is zero on the txn receipt of new transaction")
+    }else{
+        assert.equal(failedWithError, true, "new block created for invalid account")
+    }
+
 
     server.close()
     srvsh.forceShutdown(function() {
@@ -159,12 +115,12 @@ async function sendTransactionCallWithInValidAccount(){
 
 
 step('should accept transaction and create new block if from account is valid', async() => {
-    var res = await sendTransactionCallWithValidAccount()
+    var res = await checkSendTransaction(1, "0xed9d02e382b34818e88b88a309c7fe71e65f419d", 5555, true)
      assert.equal(res, true)
 })
 
 step('should not accept transaction and create new block if from account is invalid', async() => {
-    var res = await sendTransactionCallWithInValidAccount()
+    var res = await checkSendTransaction(1, "0xec9d02e382b34818e88b88a309c7fe71e65f419d", 5556, false)
     assert.equal(res, true)
 })
 
