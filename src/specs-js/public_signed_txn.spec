@@ -1,4 +1,4 @@
-# public signed transaction - value transfer - run transactions in sequence
+# public signed transaction - value transfer
 
 This spec covers testing ether value transfer from one account to another account.
 If the transaction is successful it should get mined successfully.

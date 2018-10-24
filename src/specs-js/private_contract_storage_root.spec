@@ -1,4 +1,4 @@
-# test JSON RPC async calls
+# test storage root of private smart contract
 
 test the async calls
 
