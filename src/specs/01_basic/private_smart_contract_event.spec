@@ -34,3 +34,19 @@ contract ClientReceipt {
 * "Node4" has received "10" transactions which contain "0" log events in total
 * "Node5" has received "10" transactions which contain "0" log events in total
 * "Node6" has received "10" transactions which contain "0" log events in total
+
+
+## Log events in the state are **only** captured in participated parties when executing the contract
+
+ Tags: event, log
+
+* Deploy `ClientReceipt` smart contract from a default account in "Node1" and it's private for "Node7", named this contract as "contract17"
+* "contract17" is mined
+* Execute "contract17"'s `deposit()` function "10" times with arbitrary id and value from "Node1". And it's private for "Node7"
+* "Node1" has received 10 transactions from "contract17" which contain "10" log events in state
+* "Node7" has received 10 transactions from "contract17" which contain "10" log events in state
+* "Node2" has received 10 transactions from "contract17" which contain "0" log events in state
+* "Node3" has received 10 transactions from "contract17" which contain "0" log events in state
+* "Node4" has received 10 transactions from "contract17" which contain "0" log events in state
+* "Node5" has received 10 transactions from "contract17" which contain "0" log events in state
+* "Node6" has received 10 transactions from "contract17" which contain "0" log events in state

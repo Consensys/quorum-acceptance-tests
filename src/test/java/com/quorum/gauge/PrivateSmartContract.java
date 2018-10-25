@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
+import org.web3j.protocol.core.methods.response.EthLog;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 import rx.Observable;
@@ -286,5 +287,15 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         List<TransactionReceipt> receipts = Observable.zip(observables, objects -> Observable.from(objects).map(o -> (TransactionReceipt) o).toList().toBlocking().first()).toBlocking().first();
 
         DataStoreFactory.getScenarioDataStore().put("receipts", receipts);
+    }
+
+    @Step("<node> has received 10 transactions from <contractName> which contain <expectedEventCount> log events in state")
+    public void verifyLogEvents(QuorumNode node, String contractName, int expectedEventCount) {
+        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
+
+        EthLog ethLog = transactionService.getLogsUsingFilter(node, c.getContractAddress()).toBlocking().first();
+        List<EthLog.LogResult> logResults = ethLog.getLogs();
+
+        assertThat(logResults.size()).as("Log Event Count").isEqualTo(expectedEventCount);
     }
 }
