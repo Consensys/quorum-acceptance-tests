@@ -275,6 +275,8 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
 
         DataStoreFactory.getSpecDataStore().put(contractName, c);
         DataStoreFactory.getScenarioDataStore().put(contractName, c);
+        DataStoreFactory.getScenarioDataStore().put(contractName + "_source", source);
+        DataStoreFactory.getScenarioDataStore().put(contractName + "_target", target);
     }
 
     @Step("Execute <contractName>'s `deposit()` function <count> times with arbitrary id and value from <source>. And it's private for <target>")
@@ -289,7 +291,24 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put("receipts", receipts);
     }
 
-    @Step("<node> has received 10 transactions from <contractName> which contain <expectedEventCount> log events in state")
+    @Step("Execute <contractName>'s `deposit()` function <count> times with arbitrary id and value between original parties")
+    public void excuteDespositBetweenOriginalParties(String contractName, int count) {
+        List<Observable<TransactionReceipt>> observables = new ArrayList<>();
+        String[] contractNames = contractName.split(",");
+        for(String cName: contractNames) {
+            Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), cName, Contract.class);
+            QuorumNode source = mustHaveValue(DataStoreFactory.getScenarioDataStore(), cName + "_source", QuorumNode.class);
+            QuorumNode target = mustHaveValue(DataStoreFactory.getScenarioDataStore(), cName + "_target", QuorumNode.class);
+            for (int i = 0; i < count; i++) {
+                observables.add(contractService.updateClientReceiptPrivate(source, target, c.getContractAddress(), BigInteger.ZERO).subscribeOn(Schedulers.io()));
+            }
+        }
+        List<TransactionReceipt> receipts = Observable.zip(observables, objects -> Observable.from(objects).map(o -> (TransactionReceipt) o).toList().toBlocking().first()).toBlocking().first();
+
+        DataStoreFactory.getScenarioDataStore().put("receipts", receipts);
+    }
+
+    @Step("<node> has received transactions from <contractName> which contain <expectedEventCount> log events in state")
     public void verifyLogEvents(QuorumNode node, String contractName, int expectedEventCount) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
 
