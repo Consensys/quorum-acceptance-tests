@@ -6,13 +6,15 @@ TERRAFORM_CMD=${TERRAFORM_CMD:-terraform}
 
 echo "Provisioning Quorum Network"
 pushd ${QUORUM_CLOUD_TEMPLATES_DIR}/_terraform_init > /dev/null
-${TERRAFORM_CMD} init > /dev/null
-${TERRAFORM_CMD} apply -auto-approve > /dev/null
+${TERRAFORM_CMD} init
+echo "----------"
+${TERRAFORM_CMD} apply -auto-approve
 popd > /dev/null
 
 pushd ${QUORUM_CLOUD_TEMPLATES_DIR} > /dev/null
-${TERRAFORM_CMD} init -backend-config=terraform.auto.backend_config > /dev/null
-${TERRAFORM_CMD} apply -auto-approve > /dev/null
+${TERRAFORM_CMD} init -backend-config=terraform.auto.backend_config
+echo "----------"
+${TERRAFORM_CMD} apply -auto-approve
 ${TERRAFORM_CMD} output
 export private_key_file=$(${TERRAFORM_CMD} output -json | jq -r .private_key_file.value)
 export bastion_host_ip=$(${TERRAFORM_CMD} output -json | jq -r .bastion_host_ip.value)
