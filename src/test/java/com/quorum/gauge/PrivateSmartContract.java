@@ -66,7 +66,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     @Step("Transaction Hash is returned for <contractName>")
     public void verifyTransactionHash(String contractName) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
-        String transactionHash = c.getTransactionReceipt().orElseThrow(()-> new RuntimeException("no transaction receipt for contract")).getTransactionHash();
+        String transactionHash = c.getTransactionReceipt().orElseThrow(() -> new RuntimeException("no transaction receipt for contract")).getTransactionHash();
 
         assertThat(transactionHash).isNotBlank();
 
@@ -154,7 +154,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
 
     @Step("<node> has received <expectedCount> transactions")
     public void verifyNumberOfTransactions(QuorumNode node, int expectedCount) {
-        List<Contract> sourceContracts =  haveValue(DataStoreFactory.getSpecDataStore(), String.format("%s_source_contract", node), List.class, new ArrayList<Contract>());
+        List<Contract> sourceContracts = haveValue(DataStoreFactory.getSpecDataStore(), String.format("%s_source_contract", node), List.class, new ArrayList<Contract>());
         List<Contract> targetContracts = haveValue(DataStoreFactory.getSpecDataStore(), String.format("%s_target_contract", node), List.class, new ArrayList<Contract>());
         List<Contract> contracts = new ArrayList<>(sourceContracts);
         if (targetContracts != null) {
@@ -166,9 +166,9 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
             allObservableReceipts.add(transactionService.getTransactionReceipt(node, txHash).retry(10).subscribeOn(Schedulers.io()));
         }
         Integer actualCount = Observable.zip(allObservableReceipts, args -> {
-            int count  = 0;
+            int count = 0;
             for (Object o : args) {
-                EthGetTransactionReceipt r  = (EthGetTransactionReceipt) o;
+                EthGetTransactionReceipt r = (EthGetTransactionReceipt) o;
                 if (r.getTransactionReceipt().isPresent() && r.getTransactionReceipt().get().getBlockNumber().compareTo(BigInteger.valueOf(0)) != 0) {
                     count++;
                 }
@@ -205,7 +205,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         CountDownLatch waitForCallback = new CountDownLatch(1);
         CountDownLatch waitForWebSocket = new CountDownLatch(1);
 
-        String baseUrl = "waithook.com/" + UUID.randomUUID().toString();
+        String baseUrl = "waithook.com/testing_quorum_" + Math.abs(new Random().nextLong());
         String callbackUrl = "http://" + baseUrl;
 
         Request callback = new Request.Builder().url("ws://" + baseUrl).build();
@@ -283,7 +283,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         for (int i = 0; i < count; i++) {
             observables.add(contractService.updateClientReceiptPrivate(source, target, c.getContractAddress(), BigInteger.ZERO).subscribeOn(Schedulers.io()));
         }
-        List<TransactionReceipt> receipts = Observable.zip(observables, objects -> Observable.from(objects).map(o -> (TransactionReceipt)o ).toList().toBlocking().first()).toBlocking().first();
+        List<TransactionReceipt> receipts = Observable.zip(observables, objects -> Observable.from(objects).map(o -> (TransactionReceipt) o).toList().toBlocking().first()).toBlocking().first();
 
         DataStoreFactory.getScenarioDataStore().put("receipts", receipts);
     }

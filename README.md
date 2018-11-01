@@ -9,7 +9,10 @@ Latest test reports are available:
 
 * Java 8
 * Maven 3.5.x
-* [Solidity Compiler](https://solidity.readthedocs.io/en/latest/installing-solidity.html)
+* [Solidity Compiler](https://solidity.readthedocs.io/en/latest/installing-solidity.html) (make sure `solc` is installed and not `solcjs`)
+  * For MacOS: use `brew`
+  * For Linux: use `apt`, `snap` or `emerge`
+  * For Windows: download from [here](https://github.com/ethereum/solidity/releases)
 * [Gauge](https://gauge.org/get_started)
 
 ### Writing Tests

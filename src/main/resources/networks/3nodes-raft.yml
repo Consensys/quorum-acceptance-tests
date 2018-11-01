@@ -1,0 +1,21 @@
+# templates
+template-quorum-default: &quorum-default
+  image: quorumengineering/quorum:latest
+  config:
+    gcmode: archive
+    verbosity: 5
+template-tessera-default: &tessera-default
+  image: quorumengineering/tessera:latest
+  config:
+template-node-default: &node-default
+  quorum: *quorum-default
+  tx_manager: *tessera-default
+
+# main configuration
+name: 3nodes-raft
+consensus:
+  name: raft
+nodes:
+- *node-default
+- *node-default
+- *node-default
