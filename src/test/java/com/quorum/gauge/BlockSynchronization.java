@@ -71,4 +71,9 @@ public class BlockSynchronization extends AbstractSpecImplementation {
     public void verifyBlockHeightsInAllNodes(String id) {
         logger.debug("Verifying block heights in all nodes for network {}", id);
     }
+
+    @Step("<nodeName> is able to seal new blocks")
+    public void verifyBlockSealingViaLogs(QuorumNode nodeName) {
+        logger.debug("Verifying block sealing from logs stream from {}", nodeName);
+    }
 }

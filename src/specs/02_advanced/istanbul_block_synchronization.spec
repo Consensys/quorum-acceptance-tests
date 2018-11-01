@@ -1,21 +1,17 @@
-# Block synchronization
+# Block synchronization in Istanbul
 
-  Tags: advanced-1.8.12, sync, isolate, network-cleanup-required
+  Tags: advanced-1.8.12, sync, isolate, network-cleanup-required, istanbul
 
   Geth 1.8.12 introduces `--gcmode=full/archive`. This controls trie pruning which is enabled by default on all `--syncmode`.
   Setting `--gcmode=archive` would retain all historical data.
 
   This specification is to describe the expection w.r.t block synchronization for Quorum Network to function based on the following permutations
 
-      |id     |networkType      |consensus|gcmode |
-      |alpha1 |permissioned     |raft     |full   |
-      |alpha2 |permissioned     |raft     |archive|
-      |alpha3 |permissioned     |istanbul |full   |
-      |alpha4 |permissioned     |istanbul |archive|
-      |alpha5 |non-permissioned |raft     |full   |
-      |alpha6 |non-permissioned |raft     |archive|
-      |alpha7 |non-permissioned |istanbul |full   |
-      |alpha8 |non-permissioned |istanbul |archive|
+      |id        |networkType      |consensus|gcmode |
+      |istanbul1 |permissioned     |istanbul |full   |
+      |istanbul2 |permissioned     |istanbul |archive|
+      |istanbul2 |non-permissioned |istanbul |full   |
+      |istanbul2 |non-permissioned |istanbul |archive|
 
 * Note: this is not yet implemented and therefore skipped
 
@@ -25,8 +21,11 @@
 
 * Start a <networkType> Quorum Network, named it <id>, with "3" nodes with <gcmode> `gcmode`s using <consensus> consensus
 * Blocks are synced when adding new node "Node4" with <gcmode> `gcmode` to network <id>
+* "Node4" is able to seal new blocks
 * Blocks are synced when adding new node "Node5" with <gcmode> `gcmode` to network <id>
+* "Node5" is able to seal new blocks
 * Blocks are synced when adding new node "Node6" with <gcmode> `gcmode` to network <id>
+* "Node6" is able to seal new blocks
 * Verify privacy between "Node1" and "Node6" using a simple smart contract excluding "Node4"
 * Stop all nodes in the network <id>
 * Start all nodes in the network <id>
