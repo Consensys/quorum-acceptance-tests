@@ -20,8 +20,12 @@
 package com.quorum.gauge.core;
 
 import com.quorum.gauge.services.UtilService;
+import com.thoughtworks.gauge.AfterScenario;
 import com.thoughtworks.gauge.BeforeScenario;
+import com.thoughtworks.gauge.ExecutionContext;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,12 +33,20 @@ import java.math.BigInteger;
 
 @Service
 public class ExecutionHooks {
+    private static Logger logger = LoggerFactory.getLogger(ExecutionHooks.class);
+
     @Autowired
     UtilService utilService;
 
-    @BeforeScenario
+    @BeforeScenario(tags = "!isolate")
     public void saveCurrentBlockNumber() {
         BigInteger currentBlockNumber = utilService.getCurrentBlockNumber().toBlocking().first().getBlockNumber();
         DataStoreFactory.getScenarioDataStore().put("blocknumber", currentBlockNumber);
+    }
+
+    @AfterScenario(tags = "network-cleanup-required")
+    public void cleanUpNetwork(ExecutionContext context) {
+        String networkName = (String) DataStoreFactory.getScenarioDataStore().get("networkName");
+        logger.debug("Cleaning up network {}", networkName);
     }
 }
