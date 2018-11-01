@@ -19,6 +19,7 @@
 
 package com.quorum.gauge.common;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -30,6 +31,7 @@ import java.util.Map;
 public class QuorumNetworkProperty {
     private Map<QuorumNode, Node> nodes = new HashMap<>();
     private SocksProxy socksProxy;
+    private String generatorEndpoint;
 
     public SocksProxy getSocksProxy() {
         return socksProxy;
@@ -45,6 +47,14 @@ public class QuorumNetworkProperty {
 
     public void setNodes(Map<QuorumNode, Node> nodes) {
         this.nodes = nodes;
+    }
+
+    public String getGeneratorEndpoint() {
+        return generatorEndpoint;
+    }
+
+    public void setGeneratorEndpoint(String generatorEndpoint) {
+        this.generatorEndpoint = generatorEndpoint;
     }
 
     public static class SocksProxy {
@@ -69,6 +79,7 @@ public class QuorumNetworkProperty {
     }
 
     public static class Node {
+        @JsonProperty("privacy-address")
         private String privacyAddress;
         private String url;
 
