@@ -40,7 +40,7 @@ public class ExecutionHooks {
 
     @BeforeScenario
     public void saveCurrentBlockNumber(ExecutionContext context) {
-        if (context.getCurrentSpecification().getTags().contains("isolation")) {
+        if (context.getCurrentSpecification().getTags().contains("isolate")) {
             return;
         }
         BigInteger currentBlockNumber = utilService.getCurrentBlockNumber().toBlocking().first().getBlockNumber();

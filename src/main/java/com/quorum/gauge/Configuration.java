@@ -30,6 +30,7 @@ import org.springframework.context.annotation.Bean;
 
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.util.concurrent.TimeUnit;
 
 @org.springframework.context.annotation.Configuration
 public class Configuration {
@@ -41,6 +42,9 @@ public class Configuration {
     @Bean
     public OkHttpClient okHttpClient() {
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        builder.readTimeout(120, TimeUnit.SECONDS);
+        builder.writeTimeout(120, TimeUnit.SECONDS);
+        builder.connectTimeout(120, TimeUnit.SECONDS);
         if (logger.isDebugEnabled()) {
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor(logger::debug);
             logging.setLevel(HttpLoggingInterceptor.Level.BODY);

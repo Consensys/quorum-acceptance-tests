@@ -19,6 +19,7 @@
 
 package com.quorum.gauge.services;
 
+import com.quorum.gauge.common.Context;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -29,8 +30,24 @@ public abstract class AbstractService {
     BigInteger DEFAULT_GAS_LIMIT = new BigInteger("47b760", 16);
 
     @Autowired
-    QuorumNodeConnectionFactory connectionFactory;
+    private QuorumNodeConnectionFactory connectionFactory;
 
     @Autowired
-    QuorumNetworkProperty networkProperty;
+    private QuorumNetworkProperty networkProperty;
+
+    protected QuorumNodeConnectionFactory connectionFactory() {
+        if (Context.getConnectionFactory() == null) {
+            return connectionFactory;
+        } else {
+            return Context.getConnectionFactory();
+        }
+    }
+
+    protected QuorumNetworkProperty networkProperty() {
+        if (Context.getNetworkProperty() == null) {
+            return networkProperty;
+        } else {
+            return networkProperty;
+        }
+    }
 }

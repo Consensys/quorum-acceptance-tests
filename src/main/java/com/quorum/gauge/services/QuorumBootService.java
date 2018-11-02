@@ -36,7 +36,7 @@ import java.io.IOException;
  * It also holds references to all the Quorum Network Operator endpoints
  */
 @Service
-public class GeneratorService {
+public class QuorumBootService {
     @Autowired
     QuorumNetworkProperty networkProperty;
 

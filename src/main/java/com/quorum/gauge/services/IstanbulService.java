@@ -42,7 +42,7 @@ public class IstanbulService extends AbstractService {
         Request<?, MinerStartStop> request = new Request<>(
                 "miner_stop",
                 null,
-                connectionFactory.getWeb3jService(node),
+                connectionFactory().getWeb3jService(node),
                 MinerStartStop.class
         );
         return request.observable();
@@ -53,7 +53,7 @@ public class IstanbulService extends AbstractService {
         Request<?, MinerStartStop> request = new Request<>(
                 "miner_start",
                 Collections.EMPTY_LIST,
-                connectionFactory.getWeb3jService(node),
+                connectionFactory().getWeb3jService(node),
                 MinerStartStop.class
         );
         return request.observable();

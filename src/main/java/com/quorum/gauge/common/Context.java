@@ -17,19 +17,26 @@
  * under the License.
  */
 
-package com.quorum.gauge.services;
+package com.quorum.gauge.common;
 
-import com.quorum.gauge.common.QuorumNetworkProperty;
-import com.quorum.gauge.common.QuorumNode;
-import org.springframework.stereotype.Service;
+import com.quorum.gauge.services.QuorumNodeConnectionFactory;
 
-@Service
-public class PrivacyService extends AbstractService {
-    public String id(QuorumNode node) {
-        QuorumNetworkProperty.Node nodeConfig = networkProperty().getNodes().get(node);
-        if (nodeConfig == null) {
-            throw new IllegalArgumentException("Node " + node + " not found in config");
-        }
-        return nodeConfig.getPrivacyAddress();
+public class Context {
+    static ThreadLocal<QuorumNodeConnectionFactory> connectionFactoryThreadLocal = new ThreadLocal<>();
+
+    public static void setConnectionFactory(QuorumNodeConnectionFactory c) {
+        connectionFactoryThreadLocal.set(c);
+    }
+
+    public static QuorumNodeConnectionFactory getConnectionFactory() {
+        return connectionFactoryThreadLocal.get();
+    }
+
+    public static QuorumNetworkProperty getNetworkProperty() {
+        return getConnectionFactory() == null ? null : getConnectionFactory().getNetworkProperty();
+    }
+
+    public static void clear() {
+        connectionFactoryThreadLocal.remove();
     }
 }

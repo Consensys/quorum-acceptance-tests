@@ -19,10 +19,7 @@
 
 package com.quorum.gauge.core;
 
-import com.quorum.gauge.services.AccountService;
-import com.quorum.gauge.services.ContractService;
-import com.quorum.gauge.services.TransactionService;
-import com.quorum.gauge.services.UtilService;
+import com.quorum.gauge.services.*;
 import com.thoughtworks.gauge.datastore.DataStore;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import okhttp3.OkHttpClient;
@@ -55,6 +52,9 @@ public abstract class AbstractSpecImplementation {
 
     @Autowired
     protected UtilService utilService;
+
+    @Autowired
+    protected QuorumBootService quorumBootService;
 
     protected BigInteger currentBlockNumber() {
         return mustHaveValue(DataStoreFactory.getScenarioDataStore(), "blocknumber", BigInteger.class);

@@ -28,7 +28,7 @@ import rx.Observable;
 @Service
 public class AccountService extends AbstractService {
     public Observable<String> getAccountAddresses(QuorumNode node) {
-        return connectionFactory.getConnection(node).ethAccounts().observable()
+        return connectionFactory().getConnection(node).ethAccounts().observable()
                 .flatMap(ethAccounts -> Observable.from(ethAccounts.getAccounts()));
     }
 
@@ -38,6 +38,6 @@ public class AccountService extends AbstractService {
 
     public Observable<EthGetBalance> getDefaultAccountBalance(QuorumNode node) {
         return getDefaultAccountAddress(node).flatMap(
-                s -> connectionFactory.getConnection(node).ethGetBalance(s, DefaultBlockParameterName.LATEST).observable());
+                s -> connectionFactory().getConnection(node).ethGetBalance(s, DefaultBlockParameterName.LATEST).observable());
     }
 }
