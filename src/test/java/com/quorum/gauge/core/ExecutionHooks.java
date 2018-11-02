@@ -38,8 +38,11 @@ public class ExecutionHooks {
     @Autowired
     UtilService utilService;
 
-    @BeforeScenario(tags = "!isolate")
-    public void saveCurrentBlockNumber() {
+    @BeforeScenario
+    public void saveCurrentBlockNumber(ExecutionContext context) {
+        if (context.getCurrentSpecification().getTags().contains("isolation")) {
+            return;
+        }
         BigInteger currentBlockNumber = utilService.getCurrentBlockNumber().toBlocking().first().getBlockNumber();
         DataStoreFactory.getScenarioDataStore().put("blocknumber", currentBlockNumber);
     }
