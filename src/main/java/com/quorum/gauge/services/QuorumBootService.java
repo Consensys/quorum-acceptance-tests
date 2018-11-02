@@ -20,8 +20,11 @@
 package com.quorum.gauge.services;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.quorum.gauge.common.QuorumNetworkProperty;
+import com.quorum.gauge.common.QuorumNode;
 import okhttp3.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,6 +32,7 @@ import org.springframework.util.StringUtils;
 import rx.Observable;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * This is to interact with qctl generator in order to provision a managed Quorum Network.
@@ -69,7 +73,12 @@ public class QuorumBootService {
                     .get().build();
             try {
                 Response response = httpClient.newCall(request).execute();
-                QuorumNetworkProperty newNetworkProperty = new ObjectMapper().readValue(response.body().byteStream(), QuorumNetworkProperty.class);
+                Map<QuorumNode, QuorumNetworkProperty.Node> newNodes = new ObjectMapper()
+                        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                        .readValue(response.body().byteStream(), new TypeReference<Map<QuorumNode, QuorumNetworkProperty.Node>>() {
+                        });
+                QuorumNetworkProperty newNetworkProperty = new QuorumNetworkProperty();
+                newNetworkProperty.setNodes(newNodes);
                 QuorumNodeConnectionFactory newFactory = new QuorumNodeConnectionFactory();
                 newFactory.okHttpClient = httpClient;
                 newFactory.networkProperty = newNetworkProperty;
