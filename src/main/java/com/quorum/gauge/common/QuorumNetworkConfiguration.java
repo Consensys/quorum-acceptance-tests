@@ -26,10 +26,10 @@ public class QuorumNetworkConfiguration {
     public static final String DEFAULT_QUORUM_DOCKER_IMAGE = "vsmk98/geth-upgrade-1.8.12";
     public static final String DEFAULT_TX_MANAGER_DOCKER_IMAGE = "quorumengineering/tessera:latest";
 
-    private String name;
-    private QuorumNetworkGenesis genesis;
-    private QuorumNetworkConsensus consensus;
-    private List<QuorumNodeConfiguration> nodes = new ArrayList<>();
+    public String name;
+    public QuorumNetworkGenesis genesis;
+    public QuorumNetworkConsensus consensus;
+    public List<QuorumNodeConfiguration> nodes = new ArrayList<>();
 
     private QuorumNetworkConfiguration() {
 

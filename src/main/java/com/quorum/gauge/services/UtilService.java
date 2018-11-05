@@ -29,7 +29,11 @@ import rx.Observable;
 public class UtilService extends AbstractService {
 
     public Observable<EthBlockNumber> getCurrentBlockNumber() {
-        Web3j client = connectionFactory().getWeb3jConnection(QuorumNode.Node1);
+        return getCurrentBlockNumberFrom(QuorumNode.Node1);
+    }
+
+    public Observable<EthBlockNumber> getCurrentBlockNumberFrom(QuorumNode node) {
+        Web3j client = connectionFactory().getWeb3jConnection(node);
         return client.ethBlockNumber().observable();
     }
 }

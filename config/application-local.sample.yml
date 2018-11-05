@@ -5,7 +5,12 @@ quorum:
   socks-proxy:
     host: localhost
     port: 5000
-  # Metadata about nodes in the network
+  # Endpoint to bootstrap a managed Quorum Network providing
+  # capabilities to add/remove/stop/start nodes
+  # mainly used for advanced test scenarios
+  boot-endpoint: http://localhost:8800
+  # Metadata about nodes in an existing network
+  # mainly used for functional test scenarios
   nodes:
     Node1:
       privacy-address: xjF8q8yEn9NvpT6QMQ5/KDxsrNJUxXPsJz+eiowLVFk=

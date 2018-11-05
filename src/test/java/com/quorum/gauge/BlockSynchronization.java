@@ -23,6 +23,7 @@ import com.quorum.gauge.common.Context;
 import com.quorum.gauge.common.QuorumNetworkConfiguration;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
+import com.quorum.gauge.services.QuorumBootService;
 import com.quorum.gauge.services.QuorumNodeConnectionFactory;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
@@ -37,6 +38,8 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Service
 public class BlockSynchronization extends AbstractSpecImplementation {
@@ -76,12 +79,10 @@ public class BlockSynchronization extends AbstractSpecImplementation {
                     .quorum(quorum)
                     .txManager(txManager));
         }
-        String conf = newNetwork.toYAML();
-        logger.debug("Using network configuration: {}", conf);
-        QuorumNodeConnectionFactory connectionFactory = quorumBootService.createQuorumNetwork(conf).toBlocking().first();
+        QuorumBootService.QuorumNetwork quorumNetwork = quorumBootService.createQuorumNetwork(newNetwork).toBlocking().first();
 
         DataStoreFactory.getScenarioDataStore().put("networkName", id);
-        DataStoreFactory.getScenarioDataStore().put("connectionFactory_" + id, connectionFactory);
+        DataStoreFactory.getScenarioDataStore().put("network_" + id, quorumNetwork);
     }
 
     @Step("Send some transactions to create blocks in network <id> and capture the latest block height as <latestBlockHeightName>")
@@ -102,14 +103,30 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         }
     }
 
-    @Step("Add new node with <gcmode> gcmode, named it <nodeName>, and join the network <id>")
+    @Step("Add new node with <gcmode> `gcmode`, named it <nodeName>, and join the network <id>")
     public void addNewNode(String gcmode, QuorumNode nodeName, String id) {
         logger.debug("Add new node name={}, gcmode={}, network={}", nodeName, gcmode, id);
+        String networkName = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkName", String.class);
+
+        assertThat(id).isEqualTo(networkName);
+
+        QuorumBootService.QuorumNetwork qn = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "network_" + id, QuorumBootService.QuorumNetwork.class);
+        QuorumNode actualNodeName = quorumBootService.addNode(qn, "--gcmode", gcmode).toBlocking().first();
+
+        assertThat(actualNodeName).isEqualTo(nodeName);
+
+        // reading logs and make sure the new node can seal a block
+
     }
 
     @Step("Verify node <nodeName> has the same block height with <latestBlockHeightName>")
     public void verifyBlockHeight(QuorumNode nodeName, String latestBlockHeightName) {
         logger.debug("Verify block height for node {}", nodeName);
+        BigInteger lastBlockHeight = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "latestBlockHeightName", BigInteger.class);
+        BigInteger currentBlockNumber = utilService.getCurrentBlockNumberFrom(nodeName).toBlocking().first().getBlockNumber();
+
+        assertThat(currentBlockNumber).isEqualTo(lastBlockHeight);
+
     }
 
     @Step("Verify privacy between <source> and <target> using a simple smart contract excluding <arbitraryNode>")
