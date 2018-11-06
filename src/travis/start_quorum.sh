@@ -14,7 +14,8 @@ ${TERRAFORM_CMD} init -backend-config=terraform.auto.backend_config > /dev/null
 echo "----------"
 ${TERRAFORM_CMD} apply -auto-approve
 if [ $? -ne 0 ]; then
-    stop_quorum.sh
+    popd > /dev/null
+    ./src/travis/stop_quorum.sh
     exit 1
 fi
 ${TERRAFORM_CMD} output
@@ -36,7 +37,8 @@ done
 if [ ! -f ${f} ]; then
     echo "Timed out!"
     # somehow Travis doesn't fallback to after_script so we explicitly clean up here
-    stop_quorum.sh
+     popd > /dev/null
+    ./src/travis/stop_quorum.sh
     # we don't do exit 1 here as it will cause issue in Travis, just do a normal and purposedly failed command
     ${TRAVIS_COMMIT} > /dev/null 2>&1
 fi

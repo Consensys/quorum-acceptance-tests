@@ -24,7 +24,6 @@ import com.quorum.gauge.common.QuorumNetworkConfiguration;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.services.QuorumBootService;
-import com.quorum.gauge.services.QuorumNodeConnectionFactory;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import org.slf4j.Logger;
@@ -88,9 +87,9 @@ public class BlockSynchronization extends AbstractSpecImplementation {
     @Step("Send some transactions to create blocks in network <id> and capture the latest block height as <latestBlockHeightName>")
     public void sendSomeTransactions(String id, String latestBlockHeightName) {
         logger.debug("Send some transtractions to network name={}, capture blockheight to {}", id, latestBlockHeightName);
-        QuorumNodeConnectionFactory connectionFactory = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "connectionFactory_" + id, QuorumNodeConnectionFactory.class);
+        QuorumBootService.QuorumNetwork quorumNetwork = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "network_" + id, QuorumBootService.QuorumNetwork.class);
         try {
-            Context.setConnectionFactory(connectionFactory);
+            Context.setConnectionFactory(quorumNetwork.connectionFactory);
             int arbitraryValue = new Random().nextInt(50) + 1;
             List<Observable<? extends Contract>> allObservableContracts = new ArrayList<>();
             for (int i = 0; i < 10; i++) {
