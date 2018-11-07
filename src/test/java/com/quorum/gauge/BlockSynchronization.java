@@ -50,7 +50,7 @@ import static org.assertj.core.api.Assertions.fail;
 public class BlockSynchronization extends AbstractSpecImplementation {
     private static final Logger logger = LoggerFactory.getLogger(BlockSynchronization.class);
 
-    @Step("Start a <networkType> Quorum Network, named it <id>, with <nodeCount> nodes with <gcmode> `gcmode`s using <consensus> consensus")
+    @Step("Start a <networkType> Quorum Network, named it <id>, with <nodeCount> nodes with <gcmode> `gcmode` using <consensus> consensus")
     public void startNetwork(String networkType, String id, int nodeCount, String gcmode, String consensus) {
         logger.debug("Create a network with name={}, type={}, gcmode={}, consensus={}", id, networkType, gcmode, consensus);
 

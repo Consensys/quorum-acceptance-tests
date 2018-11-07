@@ -13,9 +13,9 @@
 
 ## Verify block synchronization
 
-  Tags: add, start, stop
+  Tags: add, start, stop, network-setup
 
-* Start a <networkType> Quorum Network, named it <id>, with "3" nodes with <gcmode> `gcmode`s using <consensus> consensus
+* Start a <networkType> Quorum Network, named it <id>, with "3" nodes with <gcmode> `gcmode` using <consensus> consensus
 * Blocks are synced when adding new node "Node4" with <gcmode> `gcmode` to network <id>
 * "Node4" is able to seal new blocks
 * Blocks are synced when adding new node "Node5" with <gcmode> `gcmode` to network <id>

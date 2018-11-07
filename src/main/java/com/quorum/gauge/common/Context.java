@@ -28,6 +28,9 @@ public class Context {
     static ThreadLocal<QuorumNodeConnectionFactory> connectionFactoryThreadLocal = new ThreadLocal<>();
 
     public static void setConnectionFactory(QuorumNodeConnectionFactory c) {
+        if (c == null) {
+            return;
+        }
         logger.debug("Setting connection factory for thread {}, with nodes {}", Thread.currentThread().getName(), c.getNetworkProperty().getNodes());
         connectionFactoryThreadLocal.set(c);
     }

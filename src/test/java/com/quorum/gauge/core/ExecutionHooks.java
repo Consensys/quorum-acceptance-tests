@@ -19,11 +19,10 @@
 
 package com.quorum.gauge.core;
 
+import com.quorum.gauge.common.Context;
 import com.quorum.gauge.services.QuorumBootService;
 import com.quorum.gauge.services.UtilService;
-import com.thoughtworks.gauge.AfterScenario;
-import com.thoughtworks.gauge.BeforeScenario;
-import com.thoughtworks.gauge.ExecutionContext;
+import com.thoughtworks.gauge.*;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -73,6 +72,22 @@ public class ExecutionHooks {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @BeforeStep(tags = "network-setup")
+    public void beforeStep() {
+        String networkName = (String) DataStoreFactory.getScenarioDataStore().get("networkName");
+        if (StringUtils.isEmpty(networkName)) {
+            // network not even started
+            return;
+        }
+        QuorumBootService.QuorumNetwork quorumNetwork = (QuorumBootService.QuorumNetwork) DataStoreFactory.getScenarioDataStore().get("network_" + networkName);
+        Context.setConnectionFactory(quorumNetwork.connectionFactory);
+    }
+
+    @AfterStep(tags = "network-setup")
+    public void afterStep() {
+        Context.clear();
     }
 
 }
