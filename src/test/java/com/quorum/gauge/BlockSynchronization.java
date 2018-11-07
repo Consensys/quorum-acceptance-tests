@@ -26,6 +26,10 @@ import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.services.QuorumBootService;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.WebSocket;
+import okhttp3.WebSocketListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -37,12 +41,10 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 @Service
 public class BlockSynchronization extends AbstractSpecImplementation {
@@ -187,5 +189,35 @@ public class BlockSynchronization extends AbstractSpecImplementation {
     @Step("<nodeName> is able to seal new blocks")
     public void verifyBlockSealingViaLogs(QuorumNode nodeName) {
         logger.debug("Verifying block sealing from logs stream from {}", nodeName);
+        String expectedLogMsg = "Successfully sealed new block";
+        String networkName = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkName", String.class);
+        QuorumBootService.QuorumNetwork qn = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "network_" + networkName, QuorumBootService.QuorumNetwork.class);
+        WebSocket ws = null;
+        try {
+            Context.setConnectionFactory(qn.connectionFactory);
+            Request logRequest = new Request.Builder().url(qn.operatorAddress.replaceFirst("http://", "ws://") + "/v1/nodes/" + nodeName.ordinal() + "/quorum/logs").build();
+            CountDownLatch latch = new CountDownLatch(1);
+            ws = okHttpClient.newWebSocket(logRequest, new WebSocketListener() {
+                @Override
+                public void onMessage(WebSocket webSocket, String text) {
+                    if (text.contains(expectedLogMsg)) {
+                        latch.countDown();
+                    }
+                }
+
+                @Override
+                public void onOpen(WebSocket webSocket, Response response) {
+                    logger.debug("Connected to log stream API");
+                }
+            });
+            latch.await(30, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            fail("Timed out! Can't see " + expectedLogMsg + " from " + nodeName + " logs");
+        } finally {
+            if (ws != null) {
+                ws.close(1000, "test finished");
+            }
+            Context.clear();
+        }
     }
 }
