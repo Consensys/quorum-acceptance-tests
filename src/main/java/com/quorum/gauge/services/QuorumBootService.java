@@ -37,6 +37,7 @@ import rx.schedulers.Schedulers;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -91,6 +92,7 @@ public class QuorumBootService {
                         });
                 QuorumNetworkProperty newNetworkProperty = new QuorumNetworkProperty();
                 newNetworkProperty.setNodes(newNodes);
+                newNetworkProperty.setBootEndpoint(networkProperty.getBootEndpoint());
                 QuorumNodeConnectionFactory newFactory = new QuorumNodeConnectionFactory();
                 newFactory.okHttpClient = httpClient;
                 newFactory.networkProperty = newNetworkProperty;
@@ -128,8 +130,8 @@ public class QuorumBootService {
             // just create a node
             try {
                 Request addNodeRequest = new Request.Builder()
-                        .url(qn.connectionFactory.networkProperty.getBootEndpoint() + "/v1/nodes")
-                        .put(RequestBody.create(MediaType.parse("application/json"), new ObjectMapper().writeValueAsString(newNodeConfig)))
+                        .url(qn.operatorAddress + "/v1/nodes")
+                        .put(RequestBody.create(MediaType.parse("application/json"), new ObjectMapper().writeValueAsString(Arrays.asList(newNodeConfig))))
                         .build();
                 Response response = httpClient.newCall(addNodeRequest).execute();
                 Map<QuorumNode, QuorumNetworkProperty.Node> newNodes = new ObjectMapper()
@@ -157,6 +159,7 @@ public class QuorumBootService {
             return Observable.just(newNode);
         }).map(newNode -> {
             qn.config.addNodes(newNodeConfig);
+            qn.connectionFactory.getNetworkProperty().getNodes().put(newNode.getKey(), newNode.getValue());
             return newNode.getKey();
         });
 

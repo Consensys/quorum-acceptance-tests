@@ -20,11 +20,15 @@
 package com.quorum.gauge.common;
 
 import com.quorum.gauge.services.QuorumNodeConnectionFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Context {
+    private static final Logger logger = LoggerFactory.getLogger(Context.class);
     static ThreadLocal<QuorumNodeConnectionFactory> connectionFactoryThreadLocal = new ThreadLocal<>();
 
     public static void setConnectionFactory(QuorumNodeConnectionFactory c) {
+        logger.debug("Setting connection factory for thread {}, with nodes {}", Thread.currentThread().getName(), c.getNetworkProperty().getNodes());
         connectionFactoryThreadLocal.set(c);
     }
 

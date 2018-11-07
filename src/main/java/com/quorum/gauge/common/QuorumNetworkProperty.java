@@ -108,5 +108,17 @@ public class QuorumNetworkProperty {
         public void setValidatorAddress(String validatorAddress) {
             this.validatorAddress = validatorAddress;
         }
+
+        @Override
+        public String toString() {
+            StringBuffer buf = new StringBuffer();
+            buf.append("Node[")
+                    .append("url: ").append(url)
+                    .append(",privacy-addess: ").append(privacyAddress)
+                    .append(",validator-address: ").append(validatorAddress)
+                    .append("]");
+
+            return buf.toString();
+        }
     }
 }

@@ -9,9 +9,7 @@
 
       |id        |networkType      |consensus|gcmode |
       |istanbul1 |permissioned     |istanbul |full   |
-      |istanbul2 |permissioned     |istanbul |archive|
-      |istanbul3 |non-permissioned |istanbul |full   |
-      |istanbul4 |non-permissioned |istanbul |archive|
+
 
 ## Verify block synchronization
 

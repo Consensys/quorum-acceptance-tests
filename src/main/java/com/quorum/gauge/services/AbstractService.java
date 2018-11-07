@@ -47,7 +47,7 @@ public abstract class AbstractService {
         if (Context.getNetworkProperty() == null) {
             return networkProperty;
         } else {
-            return networkProperty;
+            return Context.getNetworkProperty();
         }
     }
 }

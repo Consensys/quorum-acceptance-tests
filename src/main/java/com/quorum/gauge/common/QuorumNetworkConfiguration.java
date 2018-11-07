@@ -19,6 +19,8 @@
 
 package com.quorum.gauge.common;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.*;
 
 public class QuorumNetworkConfiguration {
@@ -89,6 +91,7 @@ public class QuorumNetworkConfiguration {
 
     public static class QuorumNodeConfiguration {
         public GenericQuorumNodeConfiguration quorum;
+        @JsonProperty("tx_manager")
         public GenericQuorumNodeConfiguration txManager;
 
         private QuorumNodeConfiguration() {

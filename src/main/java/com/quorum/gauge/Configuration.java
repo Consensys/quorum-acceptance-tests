@@ -42,9 +42,9 @@ public class Configuration {
     @Bean
     public OkHttpClient okHttpClient() {
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
-        builder.readTimeout(120, TimeUnit.SECONDS);
-        builder.writeTimeout(120, TimeUnit.SECONDS);
-        builder.connectTimeout(120, TimeUnit.SECONDS);
+        builder.readTimeout(5, TimeUnit.MINUTES);
+        builder.writeTimeout(5, TimeUnit.MINUTES);
+        builder.connectTimeout(5, TimeUnit.MINUTES);
         if (logger.isDebugEnabled()) {
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor(logger::debug);
             logging.setLevel(HttpLoggingInterceptor.Level.BODY);

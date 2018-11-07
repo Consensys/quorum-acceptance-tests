@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -57,6 +58,10 @@ public class ExecutionHooks {
     @AfterScenario(tags = "network-cleanup-required")
     public void cleanUpNetwork() {
         String networkName = (String) DataStoreFactory.getScenarioDataStore().get("networkName");
+        if (StringUtils.isEmpty(networkName)) {
+            // network not even started
+            return;
+        }
         QuorumBootService.QuorumNetwork quorumNetwork = (QuorumBootService.QuorumNetwork) DataStoreFactory.getScenarioDataStore().get("network_" + networkName);
         logger.debug("Cleaning up network {}", networkName);
         Request request = new Request.Builder()
