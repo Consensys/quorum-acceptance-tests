@@ -21,9 +21,11 @@ package com.quorum.gauge;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.quorum.gauge.common.Context;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.ext.EthGetQuorumPayload;
+import com.quorum.gauge.services.QuorumNodeConnectionFactory;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import okhttp3.Request;
@@ -44,8 +46,7 @@ import rx.schedulers.Schedulers;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -160,10 +161,25 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         if (targetContracts != null) {
             contracts.addAll(targetContracts);
         }
+        QuorumNodeConnectionFactory connectionFactory = Context.getConnectionFactory();
+        Executor executor = Executors.newFixedThreadPool(Math.min(expectedCount, 100), new ThreadFactory() {
+            private int count = 0;
+
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "RxJavaCustom-" + (count++)) {
+                    @Override
+                    public void run() {
+                        Context.setConnectionFactory(connectionFactory);
+                        super.run();
+                    }
+                };
+            }
+        });
         List<Observable<EthGetTransactionReceipt>> allObservableReceipts = new ArrayList<>();
         for (Contract c : contracts) {
             String txHash = c.getTransactionReceipt().orElseThrow(() -> new RuntimeException("no receipt for contract")).getTransactionHash();
-            allObservableReceipts.add(transactionService.getTransactionReceipt(node, txHash).retry(10).subscribeOn(Schedulers.io()));
+            allObservableReceipts.add(transactionService.getTransactionReceipt(node, txHash).retry(10).subscribeOn(Schedulers.from(executor)));
         }
         Integer actualCount = Observable.zip(allObservableReceipts, args -> {
             int count = 0;
@@ -279,9 +295,25 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     @Step("Execute <contractName>'s `deposit()` function <count> times with arbitrary id and value from <source>. And it's private for <target>")
     public void excuteDesposit(String contractName, int count, QuorumNode source, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
+        QuorumNodeConnectionFactory connectionFactory = Context.getConnectionFactory();
+        Executor executor = Executors.newFixedThreadPool(Math.min(count, 100), new ThreadFactory() {
+            private int count = 0;
+
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "RxJavaCustom-" + (count++)) {
+                    @Override
+                    public void run() {
+                        Context.setConnectionFactory(connectionFactory);
+                        super.run();
+                    }
+                };
+            }
+        });
         List<Observable<TransactionReceipt>> observables = new ArrayList<>();
         for (int i = 0; i < count; i++) {
-            observables.add(contractService.updateClientReceiptPrivate(source, target, c.getContractAddress(), BigInteger.ZERO).subscribeOn(Schedulers.io()));
+            observables.add(contractService.updateClientReceiptPrivate(source, target, c.getContractAddress(), BigInteger.ZERO)
+                    .subscribeOn(Schedulers.from(executor)));
         }
         List<TransactionReceipt> receipts = Observable.zip(observables, objects -> Observable.from(objects).map(o -> (TransactionReceipt) o).toList().toBlocking().first()).toBlocking().first();
 

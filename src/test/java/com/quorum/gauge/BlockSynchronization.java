@@ -207,10 +207,13 @@ public class BlockSynchronization extends AbstractSpecImplementation {
 
                 @Override
                 public void onOpen(WebSocket webSocket, Response response) {
-                    logger.debug("Connected to log stream API");
+                    logger.debug("Connected to log stream API for node {}", nodeName);
                 }
             });
             latch.await(30, TimeUnit.SECONDS);
+            // save the current block number
+            BigInteger currentBlockNumber = utilService.getCurrentBlockNumber().toBlocking().first().getBlockNumber();
+            DataStoreFactory.getScenarioDataStore().put("blocknumber", currentBlockNumber);
         } catch (InterruptedException e) {
             fail("Timed out! Can't see " + expectedLogMsg + " from " + nodeName + " logs");
         } finally {

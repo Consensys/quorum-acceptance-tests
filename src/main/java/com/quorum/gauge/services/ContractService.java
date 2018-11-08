@@ -64,7 +64,9 @@ public class ContractService extends AbstractService {
                     client,
                     address,
                     null,
-                    Arrays.asList(privacyService.id(target)));
+                    Arrays.asList(privacyService.id(target)),
+                    DEFAULT_MAX_RETRY,
+                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
             return SimpleStorage.deploy(client,
                     clientTransactionManager,
                     BigInteger.valueOf(0),
@@ -102,7 +104,9 @@ public class ContractService extends AbstractService {
                     client,
                     address,
                     null,
-                    Arrays.asList(privacyService.id(target)));
+                    Arrays.asList(privacyService.id(target)),
+                    DEFAULT_MAX_RETRY,
+                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
             return SimpleStorage.load(contractAddress, client, txManager,
                     BigInteger.valueOf(0),
                     DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue)).observable();
@@ -124,8 +128,9 @@ public class ContractService extends AbstractService {
                 .flatMap(address -> {
                     org.web3j.tx.ClientTransactionManager txManager = new org.web3j.tx.ClientTransactionManager(
                             client,
-                            address
-                    );
+                            address,
+                            DEFAULT_MAX_RETRY,
+                            DEFAULT_SLEEP_DURATION_IN_MILLIS);
                     return ClientReceipt.deploy(
                             client,
                             txManager,
@@ -141,7 +146,9 @@ public class ContractService extends AbstractService {
                     client,
                     address,
                     null,
-                    Arrays.asList(privacyService.id(target)));
+                    Arrays.asList(privacyService.id(target)),
+                    DEFAULT_MAX_RETRY,
+                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
             return ClientReceipt.deploy(client,
                     clientTransactionManager,
                     BigInteger.valueOf(0),
@@ -155,8 +162,9 @@ public class ContractService extends AbstractService {
                 .flatMap(address -> {
                     org.web3j.tx.ClientTransactionManager txManager = new org.web3j.tx.ClientTransactionManager(
                             client,
-                            address
-                    );
+                            address,
+                            DEFAULT_MAX_RETRY,
+                            DEFAULT_SLEEP_DURATION_IN_MILLIS);
                     return ClientReceipt.load(contractAddress, client, txManager, BigInteger.valueOf(0), DEFAULT_GAS_LIMIT)
                             .deposit(new byte[32], value).observable();
                 });
@@ -169,7 +177,9 @@ public class ContractService extends AbstractService {
                     client,
                     address,
                     null,
-                    Arrays.asList(privacyService.id(target)));
+                    Arrays.asList(privacyService.id(target)),
+                    DEFAULT_MAX_RETRY,
+                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
             return ClientReceipt.load(contractAddress, client, txManager,
                     BigInteger.valueOf(0),
                     DEFAULT_GAS_LIMIT).deposit(new byte[32], value).observable();

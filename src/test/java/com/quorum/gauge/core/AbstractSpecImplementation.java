@@ -19,6 +19,7 @@
 
 package com.quorum.gauge.core;
 
+import com.quorum.gauge.common.Context;
 import com.quorum.gauge.services.*;
 import com.thoughtworks.gauge.datastore.DataStore;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
@@ -27,8 +28,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import rx.Observable;
+import rx.Scheduler;
+import rx.schedulers.Schedulers;
 
 import java.math.BigInteger;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -91,5 +97,25 @@ public abstract class AbstractSpecImplementation {
                             throw new RuntimeException("Timed out! Can't wait until block height is " + untilBlockHeight + " higher. Last block height was " + lastBlockHeight.get());
                         })
         ).toBlocking().first();
+    }
+
+    // created a fixed thread pool executor and inject quorum connection factory into the scheduled thread
+    protected Scheduler networkAwaredScheduler(int threadCount) {
+        QuorumNodeConnectionFactory connectionFactory = Context.getConnectionFactory();
+        Executor executor = Executors.newFixedThreadPool(Math.min(threadCount, 100), new ThreadFactory() {
+            private int count = 0;
+
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "RxJavaCustom-" + (count++)) {
+                    @Override
+                    public void run() {
+                        Context.setConnectionFactory(connectionFactory);
+                        super.run();
+                    }
+                };
+            }
+        });
+        return Schedulers.from(executor);
     }
 }
