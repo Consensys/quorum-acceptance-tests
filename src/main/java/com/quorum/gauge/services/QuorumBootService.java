@@ -36,10 +36,7 @@ import rx.Observable;
 import rx.schedulers.Schedulers;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * This is to interact with qctl generator in order to provision a managed Quorum Network.
@@ -163,6 +160,56 @@ public class QuorumBootService {
             return newNode.getKey();
         });
 
+    }
+
+    public List<Observable<Response>> stopNodes(QuorumNetwork qn) {
+        return performActionOnNetworkNodes(qn, "stop");
+    }
+
+    public List<Observable<Response>> startNodes(QuorumNetwork qn) {
+        return performActionOnNetworkNodes(qn, "start");
+    }
+
+
+    protected List<Observable<Response>> performActionOnNetworkNodes(QuorumNetwork qn, String action) {
+        List<Observable<Response>> allObservables = new ArrayList<>();
+        try {
+            for (QuorumNode node : qn.connectionFactory.getNetworkProperty().getNodes().keySet()) {
+                Observable<Response> stopQuorumResponseObsevable = Observable.defer(() -> {
+                    try {
+                        Map<String, String> body = new HashMap<>();
+                        body.put("target", "quorum");
+                        body.put("action", action);
+                        Request stopQuorumRequest = new Request.Builder()
+                                .url(qn.operatorAddress + "/v1/nodes/" + node.ordinal())
+                                .post(RequestBody.create(MediaType.parse("application/json"), new ObjectMapper().writeValueAsString(body)))
+                                .build();
+                        return Observable.just(httpClient.newCall(stopQuorumRequest).execute());
+                    } catch (IOException e) {
+                        return Observable.error(e);
+                    }
+                });
+                Observable<Response> stopTxManagerResponseObsevable = Observable.defer(() -> {
+                    try {
+                        Map<String, String> body = new HashMap<>();
+                        body.put("target", "tx_manager");
+                        body.put("action", action);
+                        Request stopQuorumRequest = new Request.Builder()
+                                .url(qn.operatorAddress + "/v1/nodes/" + node.ordinal())
+                                .post(RequestBody.create(MediaType.parse("application/json"), new ObjectMapper().writeValueAsString(body)))
+                                .build();
+                        return Observable.just(httpClient.newCall(stopQuorumRequest).execute());
+                    } catch (IOException e) {
+                        return Observable.error(e);
+                    }
+                });
+                allObservables.add(stopQuorumResponseObsevable);
+                allObservables.add(stopTxManagerResponseObsevable);
+            }
+            return allObservables;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static class CreateQuorumNetworkResponse {

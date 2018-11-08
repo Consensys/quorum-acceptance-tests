@@ -22,6 +22,7 @@ package com.quorum.gauge;
 import com.quorum.gauge.common.Context;
 import com.quorum.gauge.common.QuorumNetworkConfiguration;
 import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.services.QuorumBootService;
 import com.thoughtworks.gauge.Step;
@@ -35,13 +36,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.web3j.tx.Contract;
 import rx.Observable;
-import rx.schedulers.Schedulers;
+import rx.Scheduler;
+import rx.functions.FuncN;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -94,20 +97,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
     public void sendSomeTransactions(String id, String latestBlockHeightName) {
         logger.debug("Send some transtractions to network name={}, capture blockheight to {}", id, latestBlockHeightName);
         QuorumBootService.QuorumNetwork quorumNetwork = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "network_" + id, QuorumBootService.QuorumNetwork.class);
-        Executor executor = Executors.newFixedThreadPool(10, new ThreadFactory() {
-            private int count = 0;
-
-            @Override
-            public Thread newThread(Runnable r) {
-                return new Thread(r, "RxJavaCustom-" + (count++)) {
-                    @Override
-                    public void run() {
-                        Context.setConnectionFactory(quorumNetwork.connectionFactory);
-                        super.run();
-                    }
-                };
-            }
-        });
+        Scheduler scheduler = networkAwaredScheduler(10);
         try {
             Context.setConnectionFactory(quorumNetwork.connectionFactory);
             int arbitraryValue = new Random().nextInt(50) + 1;
@@ -115,7 +105,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
             for (int i = 0; i < 10; i++) {
                 allObservableContracts.add(contractService.createSimpleContract(arbitraryValue, QuorumNode.Node1, QuorumNode.values()[(i % 2) + 1])
                         .doAfterTerminate(() -> Context.clear())
-                        .subscribeOn(Schedulers.from(executor)));
+                        .subscribeOn(scheduler));
             }
             BigInteger blockNumber = Observable.zip(allObservableContracts, args -> utilService.getCurrentBlockNumber().toBlocking().first()).toBlocking().first().getBlockNumber();
             DataStoreFactory.getScenarioDataStore().put("latestBlockHeightName", blockNumber);
@@ -149,22 +139,18 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         QuorumBootService.QuorumNetwork qn = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "network_" + networkName, QuorumBootService.QuorumNetwork.class);
         try {
             Context.setConnectionFactory(qn.connectionFactory);
-            // retry 10 times, 3 seconds each to wait for block height getting synced
+            // retry to wait for block height getting synced
             BigInteger currentBlockNumber = utilService.getCurrentBlockNumberFrom(nodeName)
                     .map(ethBlockNumber -> {
-                        if (ethBlockNumber.getBlockNumber().intValue() == 0) {
+                        if (ethBlockNumber.getBlockNumber().intValue() < lastBlockHeight.intValue()) {
                             throw new RuntimeException("retry");
                         }
                         return ethBlockNumber.getBlockNumber();
                     })
-                    .retryWhen(attempts ->
-                            attempts.zipWith(Observable.range(1, 10), (n, i) -> i)
-                                    .flatMap(i -> Observable.timer(3, TimeUnit.SECONDS)).doOnCompleted(() -> {
-                                throw new RuntimeException("Expected block height has some value but still 0 after timed out!");
-                            }))
+                    .retryWhen(new RetryWithDelay(20, 3000))
                     .toBlocking().first();
 
-            assertThat(currentBlockNumber).isGreaterThanOrEqualTo(lastBlockHeight);
+            // if timed out happens, the block height was not synced
         } finally {
             Context.clear();
         }
@@ -174,16 +160,55 @@ public class BlockSynchronization extends AbstractSpecImplementation {
     @Step("Stop all nodes in the network <id>")
     public void stopAllNodes(String id) {
         logger.debug("Stopping nodes in network {}", id);
+        QuorumBootService.QuorumNetwork qn = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "network_" + id, QuorumBootService.QuorumNetwork.class);
+        Scheduler scheduler = networkAwaredScheduler(qn.config.nodes.size());
+        List<Observable<Response>> parallelObservables = new ArrayList<>();
+        for (Observable<Response> res : quorumBootService.stopNodes(qn)) {
+            parallelObservables.add(res.subscribeOn(scheduler));
+        }
+        Observable.zip(parallelObservables, (FuncN<Object>) args -> {
+            for (Object o : args) {
+                Response res = (Response) o;
+                assertThat(res.code()).as(res.message()).isEqualTo(200);
+            }
+            return true;
+        });
     }
 
     @Step("Start all nodes in the network <id>")
     public void startAllNodes(String id) {
         logger.debug("Starting nodes in network {}", id);
+        QuorumBootService.QuorumNetwork qn = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "network_" + id, QuorumBootService.QuorumNetwork.class);
+        Scheduler scheduler = networkAwaredScheduler(qn.config.nodes.size());
+        List<Observable<Response>> parallelObservables = new ArrayList<>();
+        for (Observable<Response> res : quorumBootService.startNodes(qn)) {
+            parallelObservables.add(res.subscribeOn(scheduler));
+        }
+        Observable.zip(parallelObservables, (FuncN<Object>) args -> {
+            for (Object o : args) {
+                Response res = (Response) o;
+                assertThat(res.code()).isEqualTo(200);
+            }
+            return true;
+        });
     }
 
     @Step("Verify block heights in all nodes are the same in the network <id>")
     public void verifyBlockHeightsInAllNodes(String id) {
         logger.debug("Verifying block heights in all nodes for network {}", id);
+        QuorumBootService.QuorumNetwork qn = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "network_" + id, QuorumBootService.QuorumNetwork.class);
+        Scheduler scheduler = networkAwaredScheduler(qn.config.nodes.size());
+        List<Observable<BigInteger>> blockHeightObservables = new ArrayList<>();
+        for (QuorumNode node : qn.connectionFactory.getNetworkProperty().getNodes().keySet()) {
+            blockHeightObservables.add(utilService.getCurrentBlockNumberFrom(node).flatMap(ethBlockNumber -> Observable.just(ethBlockNumber.getBlockNumber())).subscribeOn(scheduler));
+        }
+        Observable.zip(blockHeightObservables, (FuncN<Object>) args -> {
+            for (Object o : args) {
+                BigInteger blockHeight = (BigInteger) o;
+                assertThat(blockHeight).isNotEqualTo(BigInteger.ZERO);
+            }
+            return true;
+        });
     }
 
     @Step("<nodeName> is able to seal new blocks")
