@@ -55,6 +55,9 @@ public class QuorumBootService {
     @Autowired
     IstanbulService istanbulService;
 
+    @Autowired
+    RaftService raftService;
+
     /**
      * @param quorumNetworkConfiguration this is the YAML file following the quorum-tools format
      * @return network operator endpoint
@@ -112,14 +115,15 @@ public class QuorumBootService {
      * @return
      */
     public synchronized Observable<QuorumNode> addNode(QuorumNetwork qn, String... gethArgs) {
+        QuorumNetworkConfiguration.GenericQuorumNodeConfiguration quorumConfig = QuorumNetworkConfiguration.GenericQuorumNodeConfiguration.New()
+                .image(QuorumNetworkConfiguration.DEFAULT_QUORUM_DOCKER_IMAGE)
+                .config("verbosity", "5");
         QuorumNetworkConfiguration.QuorumNodeConfiguration newNodeConfig =
                 QuorumNetworkConfiguration.QuorumNodeConfiguration.New()
-                        .quorum(QuorumNetworkConfiguration.GenericQuorumNodeConfiguration.New()
-                                .image(QuorumNetworkConfiguration.DEFAULT_QUORUM_DOCKER_IMAGE)
-                                .config("verbosity", "5")
-                        ).txManager(QuorumNetworkConfiguration.GenericQuorumNodeConfiguration.New()
-                        .image(QuorumNetworkConfiguration.DEFAULT_TX_MANAGER_DOCKER_IMAGE)
-                );
+                        .quorum(quorumConfig)
+                        .txManager(QuorumNetworkConfiguration.GenericQuorumNodeConfiguration.New()
+                                .image(QuorumNetworkConfiguration.DEFAULT_TX_MANAGER_DOCKER_IMAGE)
+                        );
         for (int i = 0; i < gethArgs.length; i += 2) {
             newNodeConfig.quorum.config(gethArgs[i], gethArgs[i + 1]);
         }
@@ -149,11 +153,28 @@ public class QuorumBootService {
                     }
                     return Observable.zip(proposals, args -> null).flatMap(xx -> Observable.just(newNode));
                 case raft:
-                    break;
+                    List<Observable<RaftService.RaftAddPeer>> peers = new ArrayList<>();
+                    for (QuorumNode n : qn.connectionFactory.getNetworkProperty().getNodes().keySet()) {
+                        peers.add(raftService.addPeer(n, newNode.getValue().getEnode()));
+                    }
+                    return Observable.from(peers).flatMap(raftAddPeerObservable -> raftAddPeerObservable.flatMap(raftAddPeer -> Observable.defer(() -> {
+                        try {
+                            Map<String, Object> body = new HashMap<>();
+                            body.put("target", "quorum");
+                            body.put("action", "fn_setRaftId");
+                            body.put("fnArgs", Arrays.asList(String.valueOf(raftAddPeer.getResult())));
+                            Request writeRaftIdRequest = new Request.Builder()
+                                    .url(qn.operatorAddress + "/v1/nodes")
+                                    .post(RequestBody.create(MediaType.parse("application/json"), new ObjectMapper().writeValueAsString(body)))
+                                    .build();
+                            return Observable.just(httpClient.newCall(writeRaftIdRequest).execute());
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }))).flatMap(response -> Observable.just(newNode)).take(1);
                 default:
                     throw new RuntimeException("consensus type not implemented");
             }
-            return Observable.just(newNode);
         }).map(newNode -> {
             qn.config.addNodes(newNodeConfig);
             qn.connectionFactory.getNetworkProperty().getNodes().put(newNode.getKey(), newNode.getValue());

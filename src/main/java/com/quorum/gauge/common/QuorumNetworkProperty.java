@@ -84,6 +84,8 @@ public class QuorumNetworkProperty {
         private String url;
         @JsonProperty("validator-address")
         private String validatorAddress;
+        @JsonProperty("enode-address")
+        private String enode;
 
         public String getPrivacyAddress() {
             return privacyAddress;
@@ -116,9 +118,18 @@ public class QuorumNetworkProperty {
                     .append("url: ").append(url)
                     .append(",privacy-addess: ").append(privacyAddress)
                     .append(",validator-address: ").append(validatorAddress)
+                    .append(",enode: ").append(enode)
                     .append("]");
 
             return buf.toString();
+        }
+
+        public String getEnode() {
+            return enode;
+        }
+
+        public void setEnode(String enode) {
+            this.enode = enode;
         }
     }
 }
