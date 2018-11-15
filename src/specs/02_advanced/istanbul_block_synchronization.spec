@@ -1,4 +1,4 @@
-# Block synchronization in Istanbul
+# Block synchronization when using Istanbul BFT consensus
 
   Tags: advanced-1.8.12, sync, isolate, network-cleanup-required, istanbul
 
@@ -13,6 +13,7 @@
       |istanbul3 |non-permissioned |istanbul |full   |
       |istanbul4 |non-permissioned |istanbul |archive|
 
+  `quorum-tools` is needed in order to run this specification with command `qctl quorum boot`. `boot-endpoint` in `application-local.yml` must be configured accordingly
 
 ## Verify block synchronization
 

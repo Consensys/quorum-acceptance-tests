@@ -1,4 +1,4 @@
-# Block synchronization in Raft
+# Block synchronization when using Raft consensus
 
   Tags: advanced-1.8.12, sync, isolate, network-cleanup-required, raft
 
@@ -12,6 +12,8 @@
       |raft2 |permissioned     |raft     |archive|
       |raft3 |non-permissioned |raft     |full   |
       |raft4 |non-permissioned |raft     |archive|
+
+  `quorum-tools` is needed in order to run this specification with command `qctl quorum boot`. `boot-endpoint` in `application-local.yml` must be configured accordingly
 
 ## Verify block synchronization
 
