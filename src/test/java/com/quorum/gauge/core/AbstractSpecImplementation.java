@@ -63,7 +63,12 @@ public abstract class AbstractSpecImplementation {
     protected QuorumBootService quorumBootService;
 
     protected BigInteger currentBlockNumber() {
-        return mustHaveValue(DataStoreFactory.getScenarioDataStore(), "blocknumber", BigInteger.class);
+        return mustHaveValue(DataStoreFactory.getScenarioDataStore(), "blockNumber", BigInteger.class);
+    }
+
+    protected void saveCurrentBlockNumber() {
+        BigInteger blockNumber = utilService.getCurrentBlockNumber().toBlocking().first().getBlockNumber();
+        DataStoreFactory.getScenarioDataStore().put("blockNumber", blockNumber);
     }
 
     protected <T> T mustHaveValue(DataStore ds, String key, Class<T> clazz) {

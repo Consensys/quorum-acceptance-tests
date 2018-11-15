@@ -164,14 +164,20 @@ public class QuorumBootService {
                             body.put("action", "fn_setRaftId");
                             body.put("fnArgs", Arrays.asList(String.valueOf(raftAddPeer.getResult())));
                             Request writeRaftIdRequest = new Request.Builder()
-                                    .url(qn.operatorAddress + "/v1/nodes")
+                                    .url(qn.operatorAddress + "/v1/nodes/" + newNode.getKey().ordinal())
                                     .post(RequestBody.create(MediaType.parse("application/json"), new ObjectMapper().writeValueAsString(body)))
                                     .build();
                             return Observable.just(httpClient.newCall(writeRaftIdRequest).execute());
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
-                    }))).flatMap(response -> Observable.just(newNode)).take(1);
+                    }))).flatMap(response -> {
+                        if (response.isSuccessful()) {
+                            return Observable.just(newNode);
+                        } else {
+                            return Observable.error(new RuntimeException(response.message()));
+                        }
+                    }).take(1);
                 default:
                     throw new RuntimeException("consensus type not implemented");
             }

@@ -58,6 +58,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
 
     @Step("Deploy a simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target>, named this contract as <contractName>")
     public void setupContract(int initialValue, QuorumNode source, QuorumNode target, String contractName) {
+        saveCurrentBlockNumber();
         logger.debug("Setting up contract from {} to {}", source, target);
         Contract contract = contractService.createSimpleContract(initialValue, source, target).toBlocking().first();
 

@@ -38,10 +38,22 @@ public class RaftService extends AbstractService {
                 connectionFactory().getWeb3jService(node),
                 RaftService.RaftAddPeer.class
         );
-        return request.observable();
+        return request.observable().map(raftAddPeer -> {
+            raftAddPeer.setNode(node);
+            return raftAddPeer;
+        });
     }
 
     public static class RaftAddPeer extends Response<Integer> {
+        private QuorumNode node;
 
+        // node that perform addPeer
+        public QuorumNode getNode() {
+            return node;
+        }
+
+        public void setNode(QuorumNode node) {
+            this.node = node;
+        }
     }
 }
