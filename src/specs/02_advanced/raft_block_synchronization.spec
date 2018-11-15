@@ -17,6 +17,8 @@
 
   Tags: add, start, stop, network-setup
 
+  This scenario is run against each row of data in the table above
+
 * Start a <networkType> Quorum Network, named it <id>, with "3" nodes with <gcmode> `gcmode` using <consensus> consensus
 * Blocks are synced when adding new node "Node4" with <gcmode> `gcmode` to network <id>
 * Blocks are synced when adding new node "Node5" with <gcmode> `gcmode` to network <id>
