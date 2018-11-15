@@ -55,7 +55,7 @@ public class ExecutionHooks {
     }
 
     @AfterScenario(tags = "network-cleanup-required")
-    public void cleanUpNetwork() {
+    public void cleanUpNetwork(ExecutionContext context) {
         String networkName = (String) DataStoreFactory.getScenarioDataStore().get("networkName");
         if (StringUtils.isEmpty(networkName)) {
             // network not even started
