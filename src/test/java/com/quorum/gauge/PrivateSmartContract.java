@@ -300,7 +300,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put("receipts", receipts);
     }
 
-    @Step("Send <count> simple private smart contracts between a default account in <source> and it's private for <targets>")
+    @Step("Send <count> simple private smart contracts from a default account in <source> and it's separately private for <targets>")
     public void sendPrivateSmartContracts(int count, QuorumNode source, String targets) {
         String[] target = targets.split(",");
         QuorumNode[] targetNodes = new QuorumNode[target.length];
@@ -308,9 +308,11 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
             targetNodes[i] = QuorumNode.valueOf(target[i]);
         }
         List<Observable<? extends Contract>> allObservableContracts = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            int arbitraryValue = new Random().nextInt(50) + 1;
-            allObservableContracts.add(contractService.createSimpleContract(arbitraryValue, source, QuorumNode.values()[i % targetNodes.length]).subscribeOn(Schedulers.io()));
+        for (QuorumNode targetNode : targetNodes) {
+            for (int i = 0; i < count; i++) {
+                int arbitraryValue = new Random().nextInt(50) + 1;
+                allObservableContracts.add(contractService.createSimpleContract(arbitraryValue, source, targetNode).subscribeOn(Schedulers.io()));
+            }
         }
         BigInteger blockNumber = Observable.zip(allObservableContracts, args -> utilService.getCurrentBlockNumber().toBlocking().first()).toBlocking().first().getBlockNumber();
         assertThat(blockNumber).isNotEqualTo(currentBlockNumber());
