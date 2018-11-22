@@ -26,10 +26,28 @@ import org.springframework.stereotype.Service;
 @Service
 public class PrivacyService extends AbstractService {
     public String id(QuorumNode node) {
+        return getQuorumNodeConfig(node).getPrivacyAddress();
+    }
+
+    public String walletPath(QuorumNode node) {
+        return getQuorumNodeConfig(node).getWalletPath();
+    }
+
+    public String walletPass(QuorumNode node) {
+        return getQuorumNodeConfig(node).getWalletPass();
+    }
+
+    public String thirdPartyUrl(QuorumNode node) {
+        return getQuorumNodeConfig(node).getThirdPartyUrl();
+    }
+
+
+    private QuorumNetworkProperty.Node getQuorumNodeConfig(QuorumNode node){
         QuorumNetworkProperty.Node nodeConfig = networkProperty().getNodes().get(node);
         if (nodeConfig == null) {
             throw new IllegalArgumentException("Node " + node + " not found in config");
         }
-        return nodeConfig.getPrivacyAddress();
+        return nodeConfig;
     }
+
 }

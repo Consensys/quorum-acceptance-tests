@@ -82,10 +82,16 @@ public class QuorumNetworkProperty {
         @JsonProperty("privacy-address")
         private String privacyAddress;
         private String url;
+        @JsonProperty("third-party-url")
+        private String thirdPartyUrl;
         @JsonProperty("validator-address")
         private String validatorAddress;
         @JsonProperty("enode-address")
         private String enode;
+        @JsonProperty("wallet-path")
+        private String walletPath;
+        @JsonProperty("wallet-pass")
+        private String walletPass;
 
         public String getPrivacyAddress() {
             return privacyAddress;
@@ -130,6 +136,30 @@ public class QuorumNetworkProperty {
 
         public void setEnode(String enode) {
             this.enode = enode;
+        }
+
+        public String getThirdPartyUrl() {
+            return thirdPartyUrl;
+        }
+
+        public void setThirdPartyUrl(String thirdPartyUrl) {
+            this.thirdPartyUrl = thirdPartyUrl;
+        }
+
+        public String getWalletPath() {
+            return walletPath;
+        }
+
+        public void setWalletPath(String walletPath) {
+            this.walletPath = walletPath;
+        }
+
+        public String getWalletPass() {
+            return walletPass;
+        }
+
+        public void setWalletPass(String walletPass) {
+            this.walletPass = walletPass;
         }
     }
 }
