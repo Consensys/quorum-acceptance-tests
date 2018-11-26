@@ -178,7 +178,7 @@ public class TransactionService extends AbstractService {
 
     // Invoking eth_getLogs
     public Observable<EthLog> getLogsUsingFilter(QuorumNode node, String contractAddress) {
-        Web3j client = connectionFactory.getWeb3jConnection(node);
+        Web3j client = connectionFactory().getWeb3jConnection(node);
         EthFilter filter = new EthFilter(DefaultBlockParameter.valueOf(BigInteger.ZERO), DefaultBlockParameter.valueOf("latest"), contractAddress);
 
         return client.ethGetLogs(filter).observable();
