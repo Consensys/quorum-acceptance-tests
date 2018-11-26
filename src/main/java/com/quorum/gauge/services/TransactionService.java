@@ -55,12 +55,12 @@ public class TransactionService extends AbstractService {
     PrivacyService privacyService;
 
     public Observable<EthGetTransactionReceipt> getTransactionReceipt(QuorumNode node, String transactionHash) {
-        Quorum client = connectionFactory.getConnection(node);
+        Quorum client = connectionFactory().getConnection(node);
         return client.ethGetTransactionReceipt(transactionHash).observable();
     }
 
     public Observable<EthSendTransaction> sendPublicTransaction(int value, QuorumNode from, QuorumNode to) {
-        Web3j client = connectionFactory.getWeb3jConnection(from);
+        Web3j client = connectionFactory().getWeb3jConnection(from);
         return Observable.zip(
                 accountService.getDefaultAccountAddress(from).subscribeOn(Schedulers.io()),
                 accountService.getDefaultAccountAddress(to).subscribeOn(Schedulers.io()),
@@ -83,7 +83,7 @@ public class TransactionService extends AbstractService {
     }
 
     public Observable<EthSendTransaction> sendSignedPublicTransaction(int value, QuorumNode from, QuorumNode to) {
-        Web3j client = connectionFactory.getWeb3jConnection(from);
+        Web3j client = connectionFactory().getWeb3jConnection(from);
         return Observable.zip(
                 accountService.getDefaultAccountAddress(from).subscribeOn(Schedulers.io()),
                 accountService.getDefaultAccountAddress(to).subscribeOn(Schedulers.io()),
@@ -97,7 +97,7 @@ public class TransactionService extends AbstractService {
                     Request<?, EthSignTransaction> request = new Request<>(
                             "eth_signTransaction",
                             Arrays.asList(tx),
-                            connectionFactory.getWeb3jService(from),
+                            connectionFactory().getWeb3jService(from),
                             EthSignTransaction.class
                     );
                     return request.observable();
@@ -111,7 +111,7 @@ public class TransactionService extends AbstractService {
     }
 
     public Observable<EthSendTransaction> sendPrivateTransaction(int value, QuorumNode from, QuorumNode to) {
-        Quorum client = connectionFactory.getConnection(from);
+        Quorum client = connectionFactory().getConnection(from);
         return Observable.zip(
                 accountService.getDefaultAccountAddress(from).subscribeOn(Schedulers.io()),
                 accountService.getDefaultAccountAddress(to).subscribeOn(Schedulers.io()),
@@ -129,7 +129,7 @@ public class TransactionService extends AbstractService {
     }
 
     public Observable<EthSendTransaction> sendSignedPrivateTransaction(int value, QuorumNode from, QuorumNode to) {
-        Web3j client = connectionFactory.getWeb3jConnection(from);
+        Web3j client = connectionFactory().getWeb3jConnection(from);
         return Observable.zip(
                 accountService.getDefaultAccountAddress(from).subscribeOn(Schedulers.io()),
                 accountService.getDefaultAccountAddress(to).subscribeOn(Schedulers.io()),
@@ -147,7 +147,7 @@ public class TransactionService extends AbstractService {
                     Request<?, EthSignTransaction> request = new Request<>(
                             "eth_signTransaction",
                             Arrays.asList(tx),
-                            connectionFactory.getWeb3jService(from),
+                            connectionFactory().getWeb3jService(from),
                             EthSignTransaction.class
                     );
                     return request.observable();
@@ -162,14 +162,14 @@ public class TransactionService extends AbstractService {
 
     // Invoking eth_getQuorumPayload
     public Observable<EthGetQuorumPayload> getPrivateTransactionPayload(QuorumNode node, String transactionHash) {
-        Web3j client = connectionFactory.getWeb3jConnection(node);
+        Web3j client = connectionFactory().getWeb3jConnection(node);
         return client.ethGetTransactionByHash(transactionHash).observable()
                 .flatMap(ethTransaction -> Observable.just(ethTransaction.getTransaction().orElseThrow(() -> new RuntimeException("no such transaction")).getInput()))
                 .flatMap(payloadHash -> {
                     Request<?, EthGetQuorumPayload> request = new Request<>(
                             "eth_getQuorumPayload",
                             Arrays.asList(payloadHash),
-                            connectionFactory.getWeb3jService(node),
+                            connectionFactory().getWeb3jService(node),
                             EthGetQuorumPayload.class
                     );
                     return request.observable();

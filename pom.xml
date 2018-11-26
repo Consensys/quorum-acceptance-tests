@@ -21,6 +21,7 @@
         <tags>(basic || basic-${CONSENSUS}) &amp;&amp; !advanced</tags>
         <!-- dependencies -->
         <web3j-quorum.version>0.10.0</web3j-quorum.version>
+        <commons-lang.version>2.6</commons-lang.version>
         <!-- there's an issue with code gen in web3j 3.5.0-->
         <web3j.version>3.4.0</web3j.version>
         <gauge-java.version>0.6.7</gauge-java.version>
@@ -68,6 +69,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>${commons-lang.version}</version>
         </dependency>
     </dependencies>
 
@@ -251,7 +257,9 @@
                                 </goals>
                                 <phase>site</phase>
                                 <configuration>
-                                    <message>Test Reports for Travis Job ${TRAVIS_JOB_NUMBER} - Result: ${TRAVIS_TEST_RESULT}</message>
+                                    <message>Test Reports for Travis Job ${TRAVIS_JOB_NUMBER} - Result:
+                                        ${TRAVIS_TEST_RESULT}
+                                    </message>
                                     <path>${project.artifactId}/${CONSENSUS}</path>
                                 </configuration>
                             </execution>

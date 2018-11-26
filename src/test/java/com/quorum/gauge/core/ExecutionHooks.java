@@ -19,22 +19,75 @@
 
 package com.quorum.gauge.core;
 
+import com.quorum.gauge.common.Context;
+import com.quorum.gauge.services.QuorumBootService;
 import com.quorum.gauge.services.UtilService;
-import com.thoughtworks.gauge.BeforeScenario;
+import com.thoughtworks.gauge.*;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
+import java.io.IOException;
 import java.math.BigInteger;
 
 @Service
 public class ExecutionHooks {
+    private static Logger logger = LoggerFactory.getLogger(ExecutionHooks.class);
+
     @Autowired
     UtilService utilService;
 
+    @Autowired
+    OkHttpClient httpClient;
+
     @BeforeScenario
-    public void saveCurrentBlockNumber() {
+    public void saveCurrentBlockNumber(ExecutionContext context) {
+        if (context.getCurrentSpecification().getTags().contains("isolate")) {
+            return;
+        }
         BigInteger currentBlockNumber = utilService.getCurrentBlockNumber().toBlocking().first().getBlockNumber();
         DataStoreFactory.getScenarioDataStore().put("blocknumber", currentBlockNumber);
     }
+
+    @AfterScenario(tags = "network-cleanup-required")
+    public void cleanUpNetwork(ExecutionContext context) {
+        String networkName = (String) DataStoreFactory.getScenarioDataStore().get("networkName");
+        if (StringUtils.isEmpty(networkName)) {
+            // network not even started
+            return;
+        }
+        QuorumBootService.QuorumNetwork quorumNetwork = (QuorumBootService.QuorumNetwork) DataStoreFactory.getScenarioDataStore().get("network_" + networkName);
+        logger.debug("Cleaning up network {}", networkName);
+        Request request = new Request.Builder()
+                .url(quorumNetwork.connectionFactory.getNetworkProperty().getBootEndpoint() + "/v1/networks/" + networkName)
+                .delete()
+                .build();
+        try {
+            httpClient.newCall(request).execute();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @BeforeStep(tags = "network-setup")
+    public void beforeStep() {
+        String networkName = (String) DataStoreFactory.getScenarioDataStore().get("networkName");
+        if (StringUtils.isEmpty(networkName)) {
+            // network not even started
+            return;
+        }
+        QuorumBootService.QuorumNetwork quorumNetwork = (QuorumBootService.QuorumNetwork) DataStoreFactory.getScenarioDataStore().get("network_" + networkName);
+        Context.setConnectionFactory(quorumNetwork.connectionFactory);
+    }
+
+    @AfterStep(tags = "network-setup")
+    public void afterStep() {
+        Context.clear();
+    }
+
 }

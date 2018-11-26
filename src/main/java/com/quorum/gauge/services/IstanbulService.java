@@ -27,6 +27,7 @@ import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.Response;
 import rx.Observable;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 @Service
@@ -37,12 +38,15 @@ public class IstanbulService extends AbstractService {
 
     }
 
+    public static class IstanbulPropose extends Response<String> {
+    }
+
     public Observable<MinerStartStop> stopMining(QuorumNode node) {
         logger.debug("Request {} to stop mining", node);
         Request<?, MinerStartStop> request = new Request<>(
                 "miner_stop",
                 null,
-                connectionFactory.getWeb3jService(node),
+                connectionFactory().getWeb3jService(node),
                 MinerStartStop.class
         );
         return request.observable();
@@ -53,8 +57,19 @@ public class IstanbulService extends AbstractService {
         Request<?, MinerStartStop> request = new Request<>(
                 "miner_start",
                 Collections.EMPTY_LIST,
-                connectionFactory.getWeb3jService(node),
+                connectionFactory().getWeb3jService(node),
                 MinerStartStop.class
+        );
+        return request.observable();
+    }
+
+    public Observable<IstanbulPropose> propose(QuorumNode node, String proposedValidatorAddress) {
+        logger.debug("Node {} proposing {}", node, proposedValidatorAddress);
+        Request<?, IstanbulPropose> request = new Request<>(
+                "istanbul_propose",
+                Arrays.asList(proposedValidatorAddress, true),
+                connectionFactory().getWeb3jService(node),
+                IstanbulPropose.class
         );
         return request.observable();
     }

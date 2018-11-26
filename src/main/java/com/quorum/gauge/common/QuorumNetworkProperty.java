@@ -19,6 +19,7 @@
 
 package com.quorum.gauge.common;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -30,6 +31,7 @@ import java.util.Map;
 public class QuorumNetworkProperty {
     private Map<QuorumNode, Node> nodes = new HashMap<>();
     private SocksProxy socksProxy;
+    private String bootEndpoint;
 
     public SocksProxy getSocksProxy() {
         return socksProxy;
@@ -45,6 +47,14 @@ public class QuorumNetworkProperty {
 
     public void setNodes(Map<QuorumNode, Node> nodes) {
         this.nodes = nodes;
+    }
+
+    public String getBootEndpoint() {
+        return bootEndpoint;
+    }
+
+    public void setBootEndpoint(String bootEndpoint) {
+        this.bootEndpoint = bootEndpoint;
     }
 
     public static class SocksProxy {
@@ -69,8 +79,13 @@ public class QuorumNetworkProperty {
     }
 
     public static class Node {
+        @JsonProperty("privacy-address")
         private String privacyAddress;
         private String url;
+        @JsonProperty("validator-address")
+        private String validatorAddress;
+        @JsonProperty("enode-address")
+        private String enode;
 
         public String getPrivacyAddress() {
             return privacyAddress;
@@ -86,6 +101,35 @@ public class QuorumNetworkProperty {
 
         public void setUrl(String url) {
             this.url = url;
+        }
+
+        public String getValidatorAddress() {
+            return validatorAddress;
+        }
+
+        public void setValidatorAddress(String validatorAddress) {
+            this.validatorAddress = validatorAddress;
+        }
+
+        @Override
+        public String toString() {
+            StringBuffer buf = new StringBuffer();
+            buf.append("Node[")
+                    .append("url: ").append(url)
+                    .append(",privacy-addess: ").append(privacyAddress)
+                    .append(",validator-address: ").append(validatorAddress)
+                    .append(",enode: ").append(enode)
+                    .append("]");
+
+            return buf.toString();
+        }
+
+        public String getEnode() {
+            return enode;
+        }
+
+        public void setEnode(String enode) {
+            this.enode = enode;
         }
     }
 }

@@ -1,0 +1,17 @@
+# Verify privacy between <nodeSource> and <nodeTarget> excluding <arbitraryNode> when using a simple smart contract 
+
+* Deploy a simple smart contract with initial value "123" in <nodeSource>'s default account and it's private for <nodeTarget>, named this contract as "arbitraryContract1"
+* Transaction Hash is returned for "arbitraryContract1"
+* Transaction Receipt is present in <nodeSource> for "arbitraryContract1"
+* Transaction Receipt is present in <nodeTarget> for "arbitraryContract1"
+* "arbitraryContract1" stored in <nodeSource> and <nodeTarget> must have the same storage root
+* "arbitraryContract1" stored in <nodeSource> and "Node3" must not have the same storage root
+* "arbitraryContract1"'s `get()` function execution in <nodeSource> returns "123"
+* "arbitraryContract1"'s `get()` function execution in <nodeTarget> returns "123"
+* "arbitraryContract1"'s `get()` function execution in <arbitraryNode> returns "0"
+* Deploy `ClientReceipt` smart contract from a default account in <nodeSource> and it's private for <nodeTarget>, named this contract as "arbitraryContract2"
+* "arbitraryContract2" is mined
+* Execute "arbitraryContract2"'s `deposit()` function "10" times with arbitrary id and value from <nodeSource>. And it's private for <nodeTarget>
+* <nodeSource> has received "10" transactions which contain "10" log events in total
+* <nodeTarget> has received "10" transactions which contain "10" log events in total
+* <arbitraryNode> has received "10" transactions which contain "0" log events in total
