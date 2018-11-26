@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
+import org.web3j.protocol.core.methods.response.EthLog;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 import rx.Observable;
@@ -284,6 +285,8 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
 
         DataStoreFactory.getSpecDataStore().put(contractName, c);
         DataStoreFactory.getScenarioDataStore().put(contractName, c);
+        DataStoreFactory.getScenarioDataStore().put(contractName + "_source", source);
+        DataStoreFactory.getScenarioDataStore().put(contractName + "_target", target);
     }
 
     @Step("Execute <contractName>'s `deposit()` function <count> times with arbitrary id and value from <source>. And it's private for <target>")
@@ -298,6 +301,33 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         List<TransactionReceipt> receipts = Observable.zip(observables, objects -> Observable.from(objects).map(o -> (TransactionReceipt) o).toList().toBlocking().first()).toBlocking().first();
 
         DataStoreFactory.getScenarioDataStore().put("receipts", receipts);
+    }
+  
+    @Step("Execute <contractName>'s `deposit()` function <count> times with arbitrary id and value between original parties")
+    public void excuteDespositBetweenOriginalParties(String contractName, int count) {
+        List<Observable<TransactionReceipt>> observables = new ArrayList<>();
+        String[] contractNames = contractName.split(",");
+        for(String cName: contractNames) {
+            Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), cName, Contract.class);
+            QuorumNode source = mustHaveValue(DataStoreFactory.getScenarioDataStore(), cName + "_source", QuorumNode.class);
+            QuorumNode target = mustHaveValue(DataStoreFactory.getScenarioDataStore(), cName + "_target", QuorumNode.class);
+            for (int i = 0; i < count; i++) {
+                observables.add(contractService.updateClientReceiptPrivate(source, target, c.getContractAddress(), BigInteger.ZERO).subscribeOn(Schedulers.io()));
+            }
+        }
+        List<TransactionReceipt> receipts = Observable.zip(observables, objects -> Observable.from(objects).map(o -> (TransactionReceipt) o).toList().toBlocking().first()).toBlocking().first();
+
+        DataStoreFactory.getScenarioDataStore().put("receipts", receipts);
+    }
+
+    @Step("<node> has received transactions from <contractName> which contain <expectedEventCount> log events in state")
+    public void verifyLogEvents(QuorumNode node, String contractName, int expectedEventCount) {
+        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
+
+        EthLog ethLog = transactionService.getLogsUsingFilter(node, c.getContractAddress()).toBlocking().first();
+        List<EthLog.LogResult> logResults = ethLog.getLogs();
+
+        assertThat(logResults.size()).as("Log Event Count").isEqualTo(expectedEventCount);
     }
 
     @Step("Send <count> simple private smart contracts from a default account in <source> and it's separately private for <targets>")

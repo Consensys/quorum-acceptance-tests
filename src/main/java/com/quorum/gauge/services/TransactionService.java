@@ -27,10 +27,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.Request;
+import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
+import org.web3j.protocol.core.methods.response.EthLog;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.quorum.Quorum;
 import org.web3j.quorum.methods.request.PrivateTransaction;
@@ -171,5 +174,14 @@ public class TransactionService extends AbstractService {
                     );
                     return request.observable();
                 });
+    }
+
+    // Invoking eth_getLogs
+    public Observable<EthLog> getLogsUsingFilter(QuorumNode node, String contractAddress) {
+        Web3j client = connectionFactory.getWeb3jConnection(node);
+        EthFilter filter = new EthFilter(DefaultBlockParameter.valueOf(BigInteger.ZERO), DefaultBlockParameter.valueOf("latest"), contractAddress);
+
+        return client.ethGetLogs(filter).observable();
+
     }
 }
