@@ -52,4 +52,8 @@ public class QuorumNodeConnectionFactory {
         }
         return new HttpService(nodeConfig.getUrl(), okHttpClient, false);
     }
+
+    public QuorumNetworkProperty getNetworkProperty() {
+        return this.networkProperty;
+    }
 }

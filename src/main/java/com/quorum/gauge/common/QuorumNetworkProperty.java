@@ -31,7 +31,7 @@ import java.util.Map;
 public class QuorumNetworkProperty {
     private Map<QuorumNode, Node> nodes = new HashMap<>();
     private SocksProxy socksProxy;
-    private String generatorEndpoint;
+    private String bootEndpoint;
 
     public SocksProxy getSocksProxy() {
         return socksProxy;
@@ -49,12 +49,12 @@ public class QuorumNetworkProperty {
         this.nodes = nodes;
     }
 
-    public String getGeneratorEndpoint() {
-        return generatorEndpoint;
+    public String getBootEndpoint() {
+        return bootEndpoint;
     }
 
-    public void setGeneratorEndpoint(String generatorEndpoint) {
-        this.generatorEndpoint = generatorEndpoint;
+    public void setBootEndpoint(String bootEndpoint) {
+        this.bootEndpoint = bootEndpoint;
     }
 
     public static class SocksProxy {
@@ -82,6 +82,10 @@ public class QuorumNetworkProperty {
         @JsonProperty("privacy-address")
         private String privacyAddress;
         private String url;
+        @JsonProperty("validator-address")
+        private String validatorAddress;
+        @JsonProperty("enode-address")
+        private String enode;
 
         public String getPrivacyAddress() {
             return privacyAddress;
@@ -97,6 +101,35 @@ public class QuorumNetworkProperty {
 
         public void setUrl(String url) {
             this.url = url;
+        }
+
+        public String getValidatorAddress() {
+            return validatorAddress;
+        }
+
+        public void setValidatorAddress(String validatorAddress) {
+            this.validatorAddress = validatorAddress;
+        }
+
+        @Override
+        public String toString() {
+            StringBuffer buf = new StringBuffer();
+            buf.append("Node[")
+                    .append("url: ").append(url)
+                    .append(",privacy-addess: ").append(privacyAddress)
+                    .append(",validator-address: ").append(validatorAddress)
+                    .append(",enode: ").append(enode)
+                    .append("]");
+
+            return buf.toString();
+        }
+
+        public String getEnode() {
+            return enode;
+        }
+
+        public void setEnode(String enode) {
+            this.enode = enode;
         }
     }
 }

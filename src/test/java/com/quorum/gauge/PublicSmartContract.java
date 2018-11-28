@@ -20,6 +20,7 @@
 package com.quorum.gauge;
 
 import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
@@ -27,8 +28,8 @@ import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 import rx.Observable;
+import rx.Scheduler;
 import rx.functions.FuncN;
-import rx.schedulers.Schedulers;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -60,10 +61,11 @@ public class PublicSmartContract extends AbstractSpecImplementation {
     public void excuteDesposit(String contractName, int count, QuorumNode node) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         List<Observable<TransactionReceipt>> observables = new ArrayList<>();
+        Scheduler scheduler = networkAwaredScheduler(count);
         for (int i = 0; i < count; i++) {
-            observables.add(contractService.updateClientReceipt(node, c.getContractAddress(), BigInteger.TEN).subscribeOn(Schedulers.io()));
+            observables.add(contractService.updateClientReceipt(node, c.getContractAddress(), BigInteger.TEN).subscribeOn(scheduler));
         }
-        List<TransactionReceipt> receipts = Observable.zip(observables, objects -> Observable.from(objects).map(o -> (TransactionReceipt)o ).toList().toBlocking().first()).toBlocking().first();
+        List<TransactionReceipt> receipts = Observable.zip(observables, objects -> Observable.from(objects).map(o -> (TransactionReceipt) o).toList().toBlocking().first()).toBlocking().first();
 
         DataStoreFactory.getScenarioDataStore().put("receipts", receipts);
     }
@@ -73,8 +75,18 @@ public class PublicSmartContract extends AbstractSpecImplementation {
         List<TransactionReceipt> originalReceipts = (List<TransactionReceipt>) DataStoreFactory.getScenarioDataStore().get("receipts");
 
         List<Observable<TransactionReceipt>> receiptsInNode = new ArrayList<>();
+        Scheduler scheduler = networkAwaredScheduler(expectedTxCount);
         for (TransactionReceipt r : originalReceipts) {
-            receiptsInNode.add(transactionService.getTransactionReceipt(node, r.getTransactionHash()).map(tr -> tr.getTransactionReceipt().get()).subscribeOn(Schedulers.io()));
+            receiptsInNode.add(transactionService.getTransactionReceipt(node, r.getTransactionHash())
+                    .map(tr -> {
+                        if (tr.getTransactionReceipt().isPresent()) {
+                            return tr.getTransactionReceipt().get();
+                        } else {
+                            throw new RuntimeException("retry");
+                        }
+                    })
+                    .retryWhen(new RetryWithDelay(20, 3000))
+                    .subscribeOn(scheduler));
         }
 
         AtomicInteger actualTxCount = new AtomicInteger();
