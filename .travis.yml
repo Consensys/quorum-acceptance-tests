@@ -64,7 +64,7 @@ matrix:
   - name: raft-with-1.8.12
     env:
     - TF_VAR_consensus_mechanism=raft
-    - TF_VAR_network_name=ci-${TF_VAR_consensus_mechanism}-1.8.12-${TRAVIS_COMMIT::6}
+    - TF_VAR_network_name=ci-${TF_VAR_consensus_mechanism}-1_8_12-${TRAVIS_COMMIT::6}
     - TF_VAR_quorum_docker_image=erolagnab/quorum
     - TF_VAR_quorum_docker_image_tag=geth-upgrade-1.8.12
     - REPO_NAME=trung.github.io
@@ -72,7 +72,7 @@ matrix:
   - name: istanbul-with-1.8.12
     env:
     - TF_VAR_consensus_mechanism=istanbul
-    - TF_VAR_network_name=ci-${TF_VAR_consensus_mechanism}-1.8.12-${TRAVIS_COMMIT::6}
+    - TF_VAR_network_name=ci-${TF_VAR_consensus_mechanism}-1_8_12-${TRAVIS_COMMIT::6}
     - TF_VAR_quorum_docker_image=erolagnab/quorum
     - TF_VAR_quorum_docker_image_tag=geth-upgrade-1.8.12
     - REPO_NAME=trung.github.io
