@@ -26,6 +26,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.TypeReference;
+import org.web3j.abi.datatypes.Function;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
@@ -45,8 +48,11 @@ import rx.schedulers.Schedulers;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Random;
+
+import static com.quorum.gauge.sol.SimpleStorage.FUNC_SET;
 
 @Service
 public class TransactionService extends AbstractService {
@@ -180,8 +186,16 @@ public class TransactionService extends AbstractService {
                 });
     }
 
+    // Invoking eth_getLogs
+    public Observable<EthLog> getLogsUsingFilter(QuorumNode node, String contractAddress) {
+        Web3j client = connectionFactory().getWeb3jConnection(node);
+        EthFilter filter = new EthFilter(DefaultBlockParameter.valueOf(BigInteger.ZERO), DefaultBlockParameter.valueOf("latest"), contractAddress);
+
+        return client.ethGetLogs(filter).observable();
+    }
+
     public Observable<EthEstimateGas> estimateGasForTransaction(int value, QuorumNode from, QuorumNode to) {
-        Web3j client = connectionFactory.getWeb3jConnection(from);
+        Web3j client = connectionFactory().getWeb3jConnection(from);
         return Observable.zip(
                 accountService.getDefaultAccountAddress(from).subscribeOn(Schedulers.io()),
                 accountService.getDefaultAccountAddress(to).subscribeOn(Schedulers.io()),
@@ -204,7 +218,7 @@ public class TransactionService extends AbstractService {
     }
 
     public Observable<EthEstimateGas> estimateGasForPublicContract(QuorumNode from, Contract c) {
-        Web3j client = connectionFactory.getWeb3jConnection(from);
+        Web3j client = connectionFactory().getWeb3jConnection(from);
         String fromAddress;
         try {
             fromAddress = client.ethCoinbase().send().getAddress();
@@ -228,7 +242,7 @@ public class TransactionService extends AbstractService {
     }
 
     public Observable<EthEstimateGas> estimateGasForPrivateContract(QuorumNode from, QuorumNode privateFor, Contract c) {
-        Web3j client = connectionFactory.getWeb3jConnection(from);
+        Web3j client = connectionFactory().getWeb3jConnection(from);
         String fromAddress;
         try {
             fromAddress = client.ethCoinbase().send().getAddress();
@@ -256,7 +270,7 @@ public class TransactionService extends AbstractService {
     }
 
     public Observable<EthEstimateGas> estimateGasForPublicContractCall(QuorumNode from, Contract c) {
-        Web3j client = connectionFactory.getWeb3jConnection(from);
+        Web3j client = connectionFactory().getWeb3jConnection(from);
         String fromAddress;
         try {
             fromAddress = client.ethCoinbase().send().getAddress();
@@ -265,18 +279,13 @@ public class TransactionService extends AbstractService {
             throw new RuntimeException(e);
         }
 
-    // Invoking eth_getLogs
-    public Observable<EthLog> getLogsUsingFilter(QuorumNode node, String contractAddress) {
-        Web3j client = connectionFactory().getWeb3jConnection(node);
-        EthFilter filter = new EthFilter(DefaultBlockParameter.valueOf(BigInteger.ZERO), DefaultBlockParameter.valueOf("latest"), contractAddress);
+        //create the encoded smart contract call
+        Function function = new Function(
+                FUNC_SET,
+                Arrays.<org.web3j.abi.datatypes.Type>asList(new org.web3j.abi.datatypes.generated.Uint256(99)),
+                Collections.<TypeReference<?>>emptyList());
+        String data = FunctionEncoder.encode(function);
 
-        return client.ethGetLogs(filter).observable();
-
-    }
-}
-
-        //TODO: need to work out how to generate the data for SimpleContract.set(), instead of using hardcoded data
-        String data = "60fe47b10000000000000000000000000000000000000000000000000000000000000063";
         return client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST)
                 .observable()
                 .flatMap(ethGetTransactionCount -> {
@@ -292,7 +301,7 @@ public class TransactionService extends AbstractService {
     }
 
     public Observable<EthEstimateGas> estimateGasForPrivateContractCall(QuorumNode from, QuorumNode privateFor, Contract c) {
-        Web3j client = connectionFactory.getWeb3jConnection(from);
+        Web3j client = connectionFactory().getWeb3jConnection(from);
         String fromAddress;
         try {
             fromAddress = client.ethCoinbase().send().getAddress();
@@ -301,8 +310,13 @@ public class TransactionService extends AbstractService {
             throw new RuntimeException(e);
         }
 
-        //TODO: need to work out how to generate the data for SimpleContract.set(), instead of using hardcoded data
-        String data = "60fe47b10000000000000000000000000000000000000000000000000000000000000063";
+        //create the encoded smart contract call
+        Function function = new Function(
+                FUNC_SET,
+                Arrays.<org.web3j.abi.datatypes.Type>asList(new org.web3j.abi.datatypes.generated.Uint256(99)),
+                Collections.<TypeReference<?>>emptyList());
+        String data = FunctionEncoder.encode(function);
+
         return client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST)
                 .observable()
                 .flatMap(ethGetTransactionCount -> {

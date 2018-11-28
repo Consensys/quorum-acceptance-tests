@@ -21,7 +21,7 @@ EstimateGas api call should return valid 'close' estimate of required gas.
  Tags: public, nosupport
 
 * Estimate gas for deploying `SimpleContract` public smart contract from a default account in "Node1"
-* Gas estimate "77841" is returned
+* Gas estimate "83586" is returned
 
 ## Estimate gas required to call a public smart contract
 
@@ -40,7 +40,7 @@ EstimateGas api call should return valid 'close' estimate of required gas.
  Tags: private, nosupport
 
 * Estimate gas for deploying `SimpleContract` private smart contract from a default account in "Node1" and private for "Node7"
-* Gas estimate "77841" is returned
+* Gas estimate "83586" is returned
 
 ## Estimate gas required to call a private smart contract
 
