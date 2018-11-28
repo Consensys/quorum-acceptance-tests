@@ -41,6 +41,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Map;
 
+
 @Service
 public class TransactionService extends AbstractService {
     private static final Logger logger = LoggerFactory.getLogger(TransactionService.class);
@@ -81,11 +82,14 @@ public class TransactionService extends AbstractService {
 
     public Observable<EthSendTransaction> sendSignedPublicTransaction(int value, QuorumNode from, QuorumNode to) {
         Web3j client = connectionFactory().getWeb3jConnection(from);
+        String frmAddr = accountService.getDefaultAccountAddress(from).toBlocking().first();
+        BigInteger transactionCount = client.ethGetTransactionCount(frmAddr, DefaultBlockParameterName.LATEST).observable().toBlocking().first().getTransactionCount();
+        logger.debug("transCount:" + transactionCount.intValue());
         return Observable.zip(
                 accountService.getDefaultAccountAddress(from).subscribeOn(Schedulers.io()),
                 accountService.getDefaultAccountAddress(to).subscribeOn(Schedulers.io()),
                 (fromAddress, toAddress) -> Transaction.createEtherTransaction(fromAddress,
-                        null,
+                        transactionCount,
                         BigInteger.ZERO,
                         DEFAULT_GAS_LIMIT,
                         toAddress,
@@ -127,12 +131,16 @@ public class TransactionService extends AbstractService {
 
     public Observable<EthSendTransaction> sendSignedPrivateTransaction(int value, QuorumNode from, QuorumNode to) {
         Web3j client = connectionFactory().getWeb3jConnection(from);
+        String frmAddr = accountService.getDefaultAccountAddress(from).toBlocking().first();
+        BigInteger transactionCount = client.ethGetTransactionCount(frmAddr, DefaultBlockParameterName.LATEST).observable().toBlocking().first().getTransactionCount();
+        logger.debug("transCount:" + transactionCount.intValue());
         return Observable.zip(
                 accountService.getDefaultAccountAddress(from).subscribeOn(Schedulers.io()),
                 accountService.getDefaultAccountAddress(to).subscribeOn(Schedulers.io()),
-                (fromAddress, toAddress) -> new PrivateTransaction(
+                (fromAddress, toAddress) -> new CustomPrivateTransaction(
                         fromAddress,
-                        null,
+                        transactionCount,
+                        BigInteger.ZERO,
                         DEFAULT_GAS_LIMIT,
                         toAddress,
                         BigInteger.valueOf(value),

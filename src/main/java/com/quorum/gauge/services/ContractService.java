@@ -23,8 +23,7 @@ import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.ext.EthSendTransactionAsync;
 import com.quorum.gauge.ext.EthStorageRoot;
 import com.quorum.gauge.ext.PrivateTransactionAsync;
-import com.quorum.gauge.sol.ClientReceipt;
-import com.quorum.gauge.sol.SimpleStorage;
+import com.quorum.gauge.sol.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +36,7 @@ import org.web3j.quorum.Quorum;
 import org.web3j.quorum.tx.ClientTransactionManager;
 import org.web3j.tx.Contract;
 import org.web3j.tx.ReadonlyTransactionManager;
+import org.web3j.tx.TransactionManager;
 import org.web3j.tx.exceptions.ContractCallException;
 import rx.Observable;
 import rx.schedulers.Schedulers;
@@ -75,6 +75,7 @@ public class ContractService extends AbstractService {
         });
     }
 
+
     // Read-only contract
     public int readSimpleContractValue(QuorumNode node, String contractAddress) {
         Quorum client = connectionFactory().getConnection(node);
@@ -96,6 +97,7 @@ public class ContractService extends AbstractService {
             throw new RuntimeException(e);
         }
     }
+
 
     public Observable<TransactionReceipt> updateSimpleContract(QuorumNode source, QuorumNode target, String contractAddress, int newValue) {
         Quorum client = connectionFactory().getConnection(source);
@@ -138,6 +140,199 @@ public class ContractService extends AbstractService {
                             DEFAULT_GAS_LIMIT).observable();
                 });
     }
+
+    public int readGenericStoreContractGetValue(QuorumNode node, String contractAddress, String contractName, String methodName) {
+        Quorum client = connectionFactory().getConnection(node);
+        String address;
+        try {
+            address = client.ethCoinbase().send().getAddress();
+            ReadonlyTransactionManager txManager = new ReadonlyTransactionManager(client, address);
+
+            switch (contractName.toLowerCase().trim()) {
+                case "storea":
+
+                    switch (methodName.toLowerCase().trim()) {
+                        case "geta":
+                            return Storea.load(contractAddress, client, txManager,
+                                    BigInteger.valueOf(0),
+                                    DEFAULT_GAS_LIMIT).geta().send().intValue();
+                        case "getb":
+                            return Storea.load(contractAddress, client, txManager,
+                                    BigInteger.valueOf(0),
+                                    DEFAULT_GAS_LIMIT).getb().send().intValue();
+                        case "getc":
+                            return Storea.load(contractAddress, client, txManager,
+                                    BigInteger.valueOf(0),
+                                    DEFAULT_GAS_LIMIT).getc().send().intValue();
+                        default:
+                            throw new Exception("invalid method name " + methodName + " for contract " + contractName);
+
+                    }
+
+
+                case "storeb":
+
+                    switch (methodName.toLowerCase().trim()) {
+                        case "getb":
+                            return Storeb.load(contractAddress, client, txManager,
+                                    BigInteger.valueOf(0),
+                                    DEFAULT_GAS_LIMIT).getb().send().intValue();
+                        case "getc":
+                            return Storeb.load(contractAddress, client, txManager,
+                                    BigInteger.valueOf(0),
+                                    DEFAULT_GAS_LIMIT).getc().send().intValue();
+                        default:
+                            throw new Exception("invalid method name " + methodName + " for contract " + contractName);
+                    }
+
+
+                case "storec":
+                    switch (methodName.toLowerCase().trim()) {
+                        case "getc":
+                            return Storec.load(contractAddress, client, txManager,
+                                    BigInteger.valueOf(0),
+                                    DEFAULT_GAS_LIMIT).getc().send().intValue();
+                        default:
+                            throw new Exception("invalid method name " + methodName + " for contract " + contractName);
+                    }
+
+                default:
+                    throw new Exception("invalid contract name ");
+            }
+        } catch (Exception e) {
+            logger.debug("readStoreContractValue() " + contractName + " " + methodName, e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Observable<TransactionReceipt> setGenericStoreContractSetValue(QuorumNode node, String contractAddress, String contractName, String methodName, int value, boolean isPrivate, QuorumNode target) {
+        Quorum client = connectionFactory().getConnection(node);
+
+        String fromAddress = accountService.getDefaultAccountAddress(node).toBlocking().first();
+        TransactionManager txManager;
+        if (isPrivate) {
+            txManager = new ClientTransactionManager(
+                    client,
+                    fromAddress,
+                    null,
+                    Arrays.asList(privacyService.id(target)),
+                    DEFAULT_MAX_RETRY,
+                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+        } else {
+            txManager = new org.web3j.tx.ClientTransactionManager(
+                    client,
+                    fromAddress,
+                    DEFAULT_MAX_RETRY,
+                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+        }
+        try {
+
+
+            switch (contractName.toLowerCase().trim()) {
+                case "storea":
+
+                    switch (methodName.toLowerCase().trim()) {
+                        case "seta":
+                            return Storea.load(contractAddress, client, txManager,
+                                    BigInteger.valueOf(0),
+                                    DEFAULT_GAS_LIMIT).seta(BigInteger.valueOf(value)).observable();
+                        case "setb":
+                            return Storea.load(contractAddress, client, txManager,
+                                    BigInteger.valueOf(0),
+                                    DEFAULT_GAS_LIMIT).setb(BigInteger.valueOf(value)).observable();
+                        case "setc":
+                            return Storea.load(contractAddress, client, txManager,
+                                    BigInteger.valueOf(0),
+                                    DEFAULT_GAS_LIMIT).setc(BigInteger.valueOf(value)).observable();
+                        default:
+                            throw new Exception("invalid method name " + methodName + " for contract " + contractName);
+
+                    }
+
+
+                case "storeb":
+
+                    switch (methodName.toLowerCase().trim()) {
+                        case "setb":
+                            return Storeb.load(contractAddress, client, txManager,
+                                    BigInteger.valueOf(0),
+                                    DEFAULT_GAS_LIMIT).setb(BigInteger.valueOf(value)).observable();
+                        case "setc":
+                            return Storeb.load(contractAddress, client, txManager,
+                                    BigInteger.valueOf(0),
+                                    DEFAULT_GAS_LIMIT).setc(BigInteger.valueOf(value)).observable();
+                        default:
+                            throw new Exception("invalid method name " + methodName + " for contract " + contractName);
+                    }
+
+
+                case "storec":
+                    switch (methodName.toLowerCase().trim()) {
+                        case "setc":
+                            return Storec.load(contractAddress, client, txManager,
+                                    BigInteger.valueOf(0),
+                                    DEFAULT_GAS_LIMIT).setc(BigInteger.valueOf(value)).observable();
+                        default:
+                            throw new Exception("invalid method name " + methodName + " for contract " + contractName);
+                    }
+
+                default:
+                    throw new Exception("invalid contract name " + contractName);
+            }
+        } catch (Exception e) {
+            logger.debug("setStoreContractValue() " + contractName + " " + methodName, e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Observable<? extends Contract> createGenericStoreContract(QuorumNode node, String contractName, int initalValue, String dpContractAddress, boolean isPrivate, QuorumNode target) {
+        Quorum client = connectionFactory().getConnection(node);
+
+        String fromAddress = accountService.getDefaultAccountAddress(node).toBlocking().first();
+        TransactionManager transactionManager;
+        if (isPrivate) {
+            transactionManager = new ClientTransactionManager(
+                    client,
+                    fromAddress,
+                    null,
+                    Arrays.asList(privacyService.id(target)),
+                    DEFAULT_MAX_RETRY,
+                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+        } else {
+            transactionManager = new org.web3j.tx.ClientTransactionManager(
+                    client,
+                    fromAddress,
+                    DEFAULT_MAX_RETRY,
+                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+        }
+
+        switch (contractName.toLowerCase().trim()) {
+            case "storea":
+                return Storea.deploy(
+                        client,
+                        transactionManager,
+                        BigInteger.valueOf(0),
+                        DEFAULT_GAS_LIMIT, BigInteger.valueOf(initalValue), dpContractAddress).observable();
+
+            case "storeb":
+                return Storeb.deploy(
+                        client,
+                        transactionManager,
+                        BigInteger.valueOf(0),
+                        DEFAULT_GAS_LIMIT, BigInteger.valueOf(initalValue), dpContractAddress).observable();
+
+            case "storec":
+                return Storec.deploy(
+                        client,
+                        transactionManager,
+                        BigInteger.valueOf(0),
+                        DEFAULT_GAS_LIMIT, BigInteger.valueOf(initalValue)).observable();
+            default:
+                throw new RuntimeException("invalid contract name " + contractName);
+
+        }
+    }
+
 
     public Observable<? extends Contract> createClientReceiptPrivateSmartContract(QuorumNode source, QuorumNode target) {
         Quorum client = connectionFactory().getConnection(source);
