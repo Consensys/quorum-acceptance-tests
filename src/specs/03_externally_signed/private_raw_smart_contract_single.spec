@@ -24,7 +24,7 @@ contract SimpleStorage {
 }
 ```
 
-* DeployRaw a simple smart contract with initial value "23" in "Node1"'s default account and it's private for "Node7", named this contract as "contract31"
+* Deploy a simple smart contract with initial value "23" signed by external wallet "Wallet1" in "Node1" and it's private for "Node7", name this contract as "contract31"
 
 ## Contract is mined
 /*
@@ -61,7 +61,7 @@ contract SimpleStorage {
 
  Tags: raw
 
-* ExecuteRaw "contract31"'s `set()` function with new value "5" in "Node1" and it's private for "Node7"
+* Execute "contract31"'s `set()` function with new value "5" signed by external wallet "Wallet8" in "Node1" and it's private for "Node7"
 * "contract31"'s `get()` function execution in "Node1" returns "5"
 * "contract31"'s `get()` function execution in "Node7" returns "5"
 * "contract31"'s `get()` function execution in "Node3" returns "0"

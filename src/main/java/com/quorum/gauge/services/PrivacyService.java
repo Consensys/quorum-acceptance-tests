@@ -21,6 +21,7 @@ package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.common.Wallet;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -29,18 +30,9 @@ public class PrivacyService extends AbstractService {
         return getQuorumNodeConfig(node).getPrivacyAddress();
     }
 
-    public String walletPath(QuorumNode node) {
-        return getQuorumNodeConfig(node).getWalletPath();
-    }
-
-    public String walletPass(QuorumNode node) {
-        return getQuorumNodeConfig(node).getWalletPass();
-    }
-
     public String thirdPartyUrl(QuorumNode node) {
         return getQuorumNodeConfig(node).getThirdPartyUrl();
     }
-
 
     private QuorumNetworkProperty.Node getQuorumNodeConfig(QuorumNode node){
         QuorumNetworkProperty.Node nodeConfig = networkProperty().getNodes().get(node);
@@ -50,4 +42,11 @@ public class PrivacyService extends AbstractService {
         return nodeConfig;
     }
 
+    public QuorumNetworkProperty.WalletData walletData(Wallet wallet){
+        QuorumNetworkProperty.WalletData walletData = networkProperty().getWallets().get(wallet);
+        if (walletData == null) {
+            throw new IllegalArgumentException("Wallet " + wallet + " not found in config");
+        }
+        return walletData;
+    }
 }

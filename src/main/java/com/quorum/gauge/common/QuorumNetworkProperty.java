@@ -30,6 +30,7 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "quorum")
 public class QuorumNetworkProperty {
     private Map<QuorumNode, Node> nodes = new HashMap<>();
+    private Map<Wallet, WalletData> wallets = new HashMap<>();
     private SocksProxy socksProxy;
     private String bootEndpoint;
 
@@ -55,6 +56,14 @@ public class QuorumNetworkProperty {
 
     public void setBootEndpoint(String bootEndpoint) {
         this.bootEndpoint = bootEndpoint;
+    }
+
+    public Map<Wallet, WalletData> getWallets() {
+        return wallets;
+    }
+
+    public void setWallets(Map<Wallet, WalletData> wallets) {
+        this.wallets = wallets;
     }
 
     public static class SocksProxy {
@@ -88,10 +97,6 @@ public class QuorumNetworkProperty {
         private String validatorAddress;
         @JsonProperty("enode-address")
         private String enode;
-        @JsonProperty("wallet-path")
-        private String walletPath;
-        @JsonProperty("wallet-pass")
-        private String walletPass;
 
         public String getPrivacyAddress() {
             return privacyAddress;
@@ -145,6 +150,13 @@ public class QuorumNetworkProperty {
         public void setThirdPartyUrl(String thirdPartyUrl) {
             this.thirdPartyUrl = thirdPartyUrl;
         }
+    }
+
+    public static class WalletData {
+        @JsonProperty("path")
+        private String walletPath;
+        @JsonProperty("pass")
+        private String walletPass;
 
         public String getWalletPath() {
             return walletPath;
