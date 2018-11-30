@@ -150,7 +150,6 @@ public class ContractService extends AbstractService {
 
             switch (contractName.toLowerCase().trim()) {
                 case "storea":
-
                     switch (methodName.toLowerCase().trim()) {
                         case "geta":
                             return Storea.load(contractAddress, client, txManager,
@@ -168,10 +167,7 @@ public class ContractService extends AbstractService {
                             throw new Exception("invalid method name " + methodName + " for contract " + contractName);
 
                     }
-
-
                 case "storeb":
-
                     switch (methodName.toLowerCase().trim()) {
                         case "getb":
                             return Storeb.load(contractAddress, client, txManager,
@@ -184,8 +180,6 @@ public class ContractService extends AbstractService {
                         default:
                             throw new Exception("invalid method name " + methodName + " for contract " + contractName);
                     }
-
-
                 case "storec":
                     switch (methodName.toLowerCase().trim()) {
                         case "getc":
@@ -195,7 +189,6 @@ public class ContractService extends AbstractService {
                         default:
                             throw new Exception("invalid method name " + methodName + " for contract " + contractName);
                     }
-
                 default:
                     throw new Exception("invalid contract name ");
             }
@@ -226,11 +219,8 @@ public class ContractService extends AbstractService {
                     DEFAULT_SLEEP_DURATION_IN_MILLIS);
         }
         try {
-
-
             switch (contractName.toLowerCase().trim()) {
                 case "storea":
-
                     switch (methodName.toLowerCase().trim()) {
                         case "seta":
                             return Storea.load(contractAddress, client, txManager,
@@ -248,10 +238,7 @@ public class ContractService extends AbstractService {
                             throw new Exception("invalid method name " + methodName + " for contract " + contractName);
 
                     }
-
-
                 case "storeb":
-
                     switch (methodName.toLowerCase().trim()) {
                         case "setb":
                             return Storeb.load(contractAddress, client, txManager,
@@ -264,8 +251,6 @@ public class ContractService extends AbstractService {
                         default:
                             throw new Exception("invalid method name " + methodName + " for contract " + contractName);
                     }
-
-
                 case "storec":
                     switch (methodName.toLowerCase().trim()) {
                         case "setc":
@@ -275,7 +260,6 @@ public class ContractService extends AbstractService {
                         default:
                             throw new Exception("invalid method name " + methodName + " for contract " + contractName);
                     }
-
                 default:
                     throw new Exception("invalid contract name " + contractName);
             }
@@ -305,7 +289,6 @@ public class ContractService extends AbstractService {
                     DEFAULT_MAX_RETRY,
                     DEFAULT_SLEEP_DURATION_IN_MILLIS);
         }
-
         switch (contractName.toLowerCase().trim()) {
             case "storea":
                 return Storea.deploy(
@@ -320,7 +303,6 @@ public class ContractService extends AbstractService {
                         transactionManager,
                         BigInteger.valueOf(0),
                         DEFAULT_GAS_LIMIT, BigInteger.valueOf(initalValue), dpContractAddress).observable();
-
             case "storec":
                 return Storec.deploy(
                         client,
@@ -329,7 +311,6 @@ public class ContractService extends AbstractService {
                         DEFAULT_GAS_LIMIT, BigInteger.valueOf(initalValue)).observable();
             default:
                 throw new RuntimeException("invalid contract name " + contractName);
-
         }
     }
 

@@ -39,26 +39,29 @@ public class SmartContractDualState extends AbstractSpecImplementation {
     @Step("Deploy <contractName> smart contract with initial value <initialValue> from a default account in <node>, named this contract as <contractNameKey>")
     public void setupStorecAsPublicDependentContract(String contractName, int initialValue, QuorumNode node, String contractNameKey) {
         Contract c = contractService.createGenericStoreContract(node, contractName, initialValue, null, false, null).toBlocking().first();
-        logger.debug(contractName + " contract address is:{}", c.getContractAddress());
+        logger.debug("{} contract address is:{}", contractName, c.getContractAddress());
+
+        assertThat(c.getContractAddress()).isNotBlank();
+
         DataStoreFactory.getSpecDataStore().put(contractNameKey, c);
         DataStoreFactory.getScenarioDataStore().put(contractNameKey, c);
         String typeKey = contractNameKey + "Type";
         DataStoreFactory.getSpecDataStore().put(typeKey, contractName);
         DataStoreFactory.getScenarioDataStore().put(typeKey, contractName);
-        assertThat(c.getContractAddress()).isNotBlank();
-
     }
 
     @Step("Deploy <contractName> smart contract with initial value <initialValue> from a default account in <node> and it's private for <target>, named this contract as <contractNameKey>")
     public void setupStorecAsPrivateDependentContract(String contractName, int initialValue, QuorumNode node, QuorumNode target, String contractNameKey) {
         Contract c = contractService.createGenericStoreContract(node, contractName, initialValue, null, true, target).toBlocking().first();
-        logger.debug(contractName + " contract address is:{}", c.getContractAddress());
+        logger.debug("{} contract address is:{}", contractName, c.getContractAddress());
+
+        assertThat(c.getContractAddress()).isNotBlank();
+
         DataStoreFactory.getSpecDataStore().put(contractNameKey, c);
         DataStoreFactory.getScenarioDataStore().put(contractNameKey, c);
         String typeKey = contractNameKey + "Type";
         DataStoreFactory.getSpecDataStore().put(typeKey, contractName);
         DataStoreFactory.getScenarioDataStore().put(typeKey, contractName);
-        assertThat(c.getContractAddress()).isNotBlank();
 
     }
 
@@ -66,13 +69,15 @@ public class SmartContractDualState extends AbstractSpecImplementation {
     public void setupStoreaOrStorebAsPublicContract(String contractName, String depContractName, int initialValue, QuorumNode node, String contractNameKey) {
         Contract dc = mustHaveValue(DataStoreFactory.getSpecDataStore(), depContractName, Contract.class);
         Contract c = contractService.createGenericStoreContract(node, contractName, initialValue, dc.getContractAddress(), false, null).toBlocking().first();
-        logger.debug(contractName + " contract address is:{} with dc contract address: {}", c.getContractAddress(), dc.getContractAddress());
+        logger.debug("{} contract address is:{} with dc contract address: {}", contractName, c.getContractAddress(), dc.getContractAddress());
+
+        assertThat(c.getContractAddress()).isNotBlank();
+
         DataStoreFactory.getSpecDataStore().put(contractNameKey, c);
         DataStoreFactory.getScenarioDataStore().put(contractNameKey, c);
         String typeKey = contractNameKey + "Type";
         DataStoreFactory.getSpecDataStore().put(typeKey, contractName);
         DataStoreFactory.getScenarioDataStore().put(typeKey, contractName);
-        assertThat(c.getContractAddress()).isNotBlank();
     }
 
     @Step("Deploy <contractName> smart contract with contract <dependentContractName> initial value <initialValue> from a default account in <source> and it's private for <target>, named this contract as <contractNameKey>")
@@ -80,13 +85,15 @@ public class SmartContractDualState extends AbstractSpecImplementation {
         Contract dc = mustHaveValue(DataStoreFactory.getSpecDataStore(), dependentContractName, Contract.class);
         logger.debug("Setting up contract from {} to {}", source, target);
         Contract contract = contractService.createGenericStoreContract(source, contractName, initialValue, dc.getContractAddress(), true, target).toBlocking().first();
-        logger.debug(contractName + " contract address is:{} with dc contract address: {}", contract.getContractAddress(), dc.getContractAddress());
+        logger.debug("{} contract address is:{} with dc contract address: {}", contractName, contract.getContractAddress(), dc.getContractAddress());
+
+        assertThat(contract.getContractAddress()).isNotBlank();
+
         DataStoreFactory.getSpecDataStore().put(contractNameKey, contract);
         DataStoreFactory.getScenarioDataStore().put(contractNameKey, contract);
         String typeKey = contractNameKey + "Type";
         DataStoreFactory.getSpecDataStore().put(typeKey, contractName);
         DataStoreFactory.getScenarioDataStore().put(typeKey, contractName);
-        assertThat(contract.getContractAddress()).isNotBlank();
     }
 
     @Step("<contractNameKey>'s <methodName> function execution in <node> returns <expectedValue>")
@@ -94,7 +101,8 @@ public class SmartContractDualState extends AbstractSpecImplementation {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey, Contract.class);
         String contractName = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey + "Type", String.class);
         int actualValue = contractService.readGenericStoreContractGetValue(node, c.getContractAddress(), contractName, methodName);
-        logger.debug(contractNameKey + " " + contractName + " " + methodName + " = {}", actualValue);
+        logger.debug("{} {} {} = {}", contractNameKey, contractName, methodName, actualValue);
+
         assertThat(actualValue).isEqualTo(expectedValue);
     }
 
@@ -102,9 +110,10 @@ public class SmartContractDualState extends AbstractSpecImplementation {
     public void setStoreContractValueInPrivate(String contractNameKey, String methodName, QuorumNode node, int value, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey, Contract.class);
         String contractName = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey + "Type", String.class);
-        logger.debug(contractNameKey + " contract address is:{}", c.getContractAddress());
+        logger.debug(" contract address is:{}", contractNameKey, c.getContractAddress());
         TransactionReceipt tr = contractService.setGenericStoreContractSetValue(node, c.getContractAddress(), contractName, methodName, value, true, target).toBlocking().first();
-        logger.debug(contractNameKey + " " + contractName + " " + methodName + " txHash = {}", tr.getTransactionHash());
+        logger.debug("{} {} {}, txHash = {}", contractNameKey, contractName, methodName, tr.getTransactionHash());
+
         assertThat(tr.getTransactionHash()).isNotBlank();
     }
 
@@ -113,10 +122,10 @@ public class SmartContractDualState extends AbstractSpecImplementation {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey, Contract.class);
         String contractName = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey + "Type", String.class);
         boolean failed = false;
-        logger.debug(contractNameKey + " contract address is:{}", c.getContractAddress());
+        logger.debug("{} contract address is:{}", contractNameKey, c.getContractAddress());
         try {
             TransactionReceipt tr = contractService.setGenericStoreContractSetValue(node, c.getContractAddress(), contractName, methodName, value, true, target).toBlocking().first();
-            logger.debug(contractNameKey + " " + contractName + " " + methodName + " txHash = {}", tr.getTransactionHash());
+            logger.debug("{} {} {}, txHash = {}", contractNameKey, contractName, methodName, tr.getTransactionHash());
         } catch (Exception txe) {
             logger.debug("error:transaction failed:" + txe.getMessage());
             if (txe.getMessage().contains("Transaction has failed"))
@@ -131,9 +140,10 @@ public class SmartContractDualState extends AbstractSpecImplementation {
     public void setStoreContractValueInPublic(String contractNameKey, String methodName, QuorumNode node, int value) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey, Contract.class);
         String contractName = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey + "Type", String.class);
-        logger.debug(contractNameKey + " contract address is:{}", c.getContractAddress() + " " + methodName + " " + value);
+        logger.debug("{} contract address is:{}, {} {}", contractNameKey, c.getContractAddress(), methodName, value);
         TransactionReceipt tr = contractService.setGenericStoreContractSetValue(node, c.getContractAddress(), contractName, methodName, value, false, null).toBlocking().first();
-        logger.debug(contractNameKey + " " + contractName + " " + methodName + " txHash = {}", tr.getTransactionHash());
+        logger.debug("{} {} {}, txHash = {}", contractNameKey, contractName, methodName, tr.getTransactionHash());
+
         assertThat(tr.getTransactionHash()).isNotBlank();
     }
 
@@ -143,12 +153,12 @@ public class SmartContractDualState extends AbstractSpecImplementation {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey, Contract.class);
         String contractName = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey + "Type", String.class);
         boolean failed = false;
-        logger.debug(contractNameKey + " contract address is:{}", c.getContractAddress());
+        logger.debug("{} contract address is:{}", contractNameKey, c.getContractAddress());
         try {
             TransactionReceipt tr = contractService.setGenericStoreContractSetValue(node, c.getContractAddress(), contractName, methodName, value, false, null).toBlocking().first();
-            logger.debug(contractNameKey + " " + contractName + " " + methodName + " txHash = {}", tr.getTransactionHash());
+            logger.debug("{} {} {}, txHash = {}", contractNameKey, contractName, methodName, tr.getTransactionHash());
         } catch (Exception txe) {
-            logger.debug("ERROR:transaction failed:" + txe.getMessage());
+            logger.debug("Expected transaction failed: {}", txe.getMessage());
             if (txe.getMessage().contains("Transaction has failed"))
                 failed = true;
             else
