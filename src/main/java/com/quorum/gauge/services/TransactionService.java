@@ -22,6 +22,7 @@ package com.quorum.gauge.services;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.ext.EthGetQuorumPayload;
 import com.quorum.gauge.ext.EthSignTransaction;
+import com.quorum.gauge.ext.ExtendedPrivateTransaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +37,6 @@ import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
 import org.web3j.protocol.core.methods.response.EthLog;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.quorum.Quorum;
-import org.web3j.quorum.methods.request.PrivateTransaction;
 import rx.Observable;
 import rx.schedulers.Schedulers;
 
@@ -85,18 +85,18 @@ public class TransactionService extends AbstractService {
 
     public Observable<EthSendTransaction> sendSignedPublicTransaction(int value, QuorumNode from, QuorumNode to) {
         Web3j client = connectionFactory().getWeb3jConnection(from);
-        String frmAddr = accountService.getDefaultAccountAddress(from).toBlocking().first();
-        BigInteger transactionCount = client.ethGetTransactionCount(frmAddr, DefaultBlockParameterName.LATEST).observable().toBlocking().first().getTransactionCount();
-        logger.debug("transCount:" + transactionCount.intValue());
         return Observable.zip(
                 accountService.getDefaultAccountAddress(from).subscribeOn(Schedulers.io()),
                 accountService.getDefaultAccountAddress(to).subscribeOn(Schedulers.io()),
-                (fromAddress, toAddress) -> Transaction.createEtherTransaction(fromAddress,
-                        transactionCount,
-                        BigInteger.ZERO,
-                        DEFAULT_GAS_LIMIT,
-                        toAddress,
-                        BigInteger.valueOf(value)))
+                (fromAddress, toAddress) -> {
+                    BigInteger transactionCount = client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST).observable().toBlocking().first().getTransactionCount();
+                    return Transaction.createEtherTransaction(fromAddress,
+                            transactionCount,
+                            BigInteger.ZERO,
+                            DEFAULT_GAS_LIMIT,
+                            toAddress,
+                            BigInteger.valueOf(value));
+                })
                 .flatMap(tx -> {
                     Request<?, EthSignTransaction> request = new Request<>(
                             "eth_signTransaction",
@@ -119,9 +119,10 @@ public class TransactionService extends AbstractService {
         return Observable.zip(
                 accountService.getDefaultAccountAddress(from).subscribeOn(Schedulers.io()),
                 accountService.getDefaultAccountAddress(to).subscribeOn(Schedulers.io()),
-                (fromAddress, toAddress) -> new PrivateTransaction(
+                (fromAddress, toAddress) -> new ExtendedPrivateTransaction(
                         fromAddress,
                         null,
+                        BigInteger.ZERO,
                         DEFAULT_GAS_LIMIT,
                         toAddress,
                         BigInteger.valueOf(value),
@@ -134,23 +135,23 @@ public class TransactionService extends AbstractService {
 
     public Observable<EthSendTransaction> sendSignedPrivateTransaction(int value, QuorumNode from, QuorumNode to) {
         Web3j client = connectionFactory().getWeb3jConnection(from);
-        String frmAddr = accountService.getDefaultAccountAddress(from).toBlocking().first();
-        BigInteger transactionCount = client.ethGetTransactionCount(frmAddr, DefaultBlockParameterName.LATEST).observable().toBlocking().first().getTransactionCount();
-        logger.debug("transCount:" + transactionCount.intValue());
         return Observable.zip(
                 accountService.getDefaultAccountAddress(from).subscribeOn(Schedulers.io()),
                 accountService.getDefaultAccountAddress(to).subscribeOn(Schedulers.io()),
-                (fromAddress, toAddress) -> new CustomPrivateTransaction(
-                        fromAddress,
-                        transactionCount,
-                        BigInteger.ZERO,
-                        DEFAULT_GAS_LIMIT,
-                        toAddress,
-                        BigInteger.valueOf(value),
-                        null,
-                        null,
-                        Arrays.asList(privacyService.id(to))
-                ))
+                (fromAddress, toAddress) -> {
+                    BigInteger transactionCount = client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST).observable().toBlocking().first().getTransactionCount();
+                    return new ExtendedPrivateTransaction(
+                            fromAddress,
+                            transactionCount,
+                            BigInteger.ZERO,
+                            DEFAULT_GAS_LIMIT,
+                            toAddress,
+                            BigInteger.valueOf(value),
+                            null,
+                            null,
+                            Arrays.asList(privacyService.id(to))
+                    );
+                })
                 .flatMap(tx -> {
                     Request<?, EthSignTransaction> request = new Request<>(
                             "eth_signTransaction",
