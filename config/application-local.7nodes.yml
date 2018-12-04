@@ -29,10 +29,3 @@ quorum:
       privacy-address: ROAZBWtSacxXQrOe3FGAqJDyJjFePR5ce4TSIzmJ0Bc=
       url: http://localhost:22006
       third-party-url: http://localhost:9087
-  wallets:
-    Wallet1:
-      wallet-path: wallets/key1
-      wallet-pass:
-    Wallet8:
-      wallet-path: wallets/key8
-      wallet-pass:

@@ -7,3 +7,12 @@ logging:
 spring:
   profiles:
     include: local
+
+quorum:
+  wallets:
+    Wallet1:
+      wallet-path: src/main/resources/wallets/key1
+      wallet-pass:
+    Wallet8:
+      wallet-path: src/main/resources/wallets/key8
+      wallet-pass:
