@@ -41,9 +41,8 @@ cache:
   directories:
   - $HOME/.m2
 before_install:
-- echo deb https://dl.bintray.com/gauge/gauge-deb nightly main | sudo tee -a /etc/apt/sources.list
-- sudo apt-get update
-- sudo apt-get --allow-unauthenticated install gauge
+- wget https://github.com/getgauge/gauge/releases/download/v1.0.3/gauge-1.0.3-linux.x86_64.zip -O gauge.zip -q
+- sudo unzip -o gauge.zip -d /usr/local/bin
 - wget https://releases.hashicorp.com/terraform/0.11.8/terraform_0.11.8_linux_amd64.zip -O terraform.zip -q
 - unzip terraform.zip
 - $TERRAFORM_CMD version
@@ -81,4 +80,5 @@ notifications:
     template:
     - "Build <%{build_url}|#%{build_number}> of %{repository_slug}@%{branch}"
     - "%{result} in %{duration}"
-    - "<https://jpmorganchase.github.io/%{repository_name}/docs/html/|Specifications> - <https://jpmorganchase.github.io/%{repository_name}/raft/|Test Report (Raft)> - <https://jpmorganchase.github.io/%{repository_name}/istanbul/|Test Report (Istanbul)>"
+    - "<https://jpmorganchase.github.io/%{repository_name}/docs/html/|Test Specifications>"
+    - "Execution reports: <https://jpmorganchase.github.io/%{repository_name}/raft/|Raft> - <https://jpmorganchase.github.io/%{repository_name}/istanbul/|Istanbul>"
