@@ -1,46 +1,46 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.5.0;
 
-contract storeb {
-    function setb(uint x) public;
+interface storeb {
+    function setb(uint x) external;
 
-    function setc(uint x) public;
+    function setc(uint x) external;
 
-    function getb() public view returns (uint);
+    function getb() external view returns (uint);
 
-    function getc() public view returns (uint);
+    function getc() external view returns (uint);
 }
 
 contract storea {
-    uint public a;
-    storeb b;
+    uint private storedValue;
+    storeb anotherStorage;
 
     constructor (uint initVal, address _addrb) public {
-        a = initVal;
-        b = storeb(_addrb);
+        storedValue = initVal;
+        anotherStorage = storeb(_addrb);
     }
 
-    function geta() public view returns (uint retVal) {
-        return a;
+    function geta() public view returns (uint) {
+        return storedValue;
     }
 
-    function getb() public view returns (uint retVal) {
-        return b.getb();
+    function getb() public view returns (uint) {
+        return anotherStorage.getb();
     }
 
-    function getc() public view returns (uint retVal) {
-        return b.getc();
+    function getc() public view returns (uint) {
+        return anotherStorage.getc();
     }
 
     function seta(uint x) public {
-        uint mc = b.getb();
-        a = x * mc;
+        uint mc = anotherStorage.getb();
+        storedValue = x * mc;
     }
 
     function setb(uint x) public {
-        b.setb(x);
+        anotherStorage.setb(x);
     }
 
     function setc(uint x) public {
-        b.setc(x);
+        anotherStorage.setc(x);
     }
 }

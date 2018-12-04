@@ -1,17 +1,17 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.5.0;
 
 contract storec {
-    uint public c;
+    uint private storedValue;
 
     constructor (uint pval) public {
-        c = pval;
+        storedValue = pval;
     }
 
     function setc(uint x) public {
-        c = x;
+        storedValue = x;
     }
 
-    function getc() public view returns (uint retVal) {
-        return c;
+    function getc() public view returns (uint) {
+        return storedValue;
     }
 }

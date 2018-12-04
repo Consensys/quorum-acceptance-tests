@@ -34,7 +34,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @Service
 @SuppressWarnings("unchecked")
 public class SmartContractDualState extends AbstractSpecImplementation {
-    private static final Logger logger = LoggerFactory.getLogger(PrivateSmartContract.class);
+    private static final Logger logger = LoggerFactory.getLogger(SmartContractDualState.class);
 
     @Step("Deploy <contractName> smart contract with initial value <initialValue> from a default account in <node>, named this contract as <contractNameKey>")
     public void setupStorecAsPublicDependentContract(String contractName, int initialValue, QuorumNode node, String contractNameKey) {

@@ -216,8 +216,3 @@ contract storea {
 * "a4"'s "geta" function execution in "Node1" returns "1"
 * "b4"'s "getb" function execution in "Node1" returns "1"
 * "c4"'s "getc" function execution in "Node1" returns "1"
-
-
-
-
-
