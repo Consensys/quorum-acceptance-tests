@@ -23,13 +23,17 @@ import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import org.assertj.core.data.Percentage;
 import org.springframework.stereotype.Service;
+import org.web3j.exceptions.MessageDecodingException;
 import org.web3j.protocol.core.methods.response.EthEstimateGas;
 import org.web3j.tx.Contract;
 
+import java.math.BigInteger;
 import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 @Service
 public class EstimateGas extends AbstractSpecImplementation {
@@ -94,10 +98,16 @@ public class EstimateGas extends AbstractSpecImplementation {
     }
 
 
-    @Step("Gas estimate <expectedValue> is returned")
-    public void verifyEstimate(String expectedValue) {
+    @Step("Gas estimate <expectedValue> is returned within <tolerance> percent")
+    public void verifyEstimate(String expectedValue, String tolerance) {
         EthEstimateGas estimatedValue =  mustHaveValue(DataStoreFactory.getScenarioDataStore(), "estimatedValue", EthEstimateGas.class);
 
-        assertThat(estimatedValue.getAmountUsed()).isEqualTo(expectedValue);
+        Double percentage = new Double(tolerance);
+        try {
+            assertThat(estimatedValue.getAmountUsed()).isCloseTo(new BigInteger(expectedValue), Percentage.withPercentage(percentage));
+        } catch (MessageDecodingException e) {
+            fail("Invalid estimate was returned which cannot be interpreted: '%s'", estimatedValue.getRawResponse());
+        }
+
     }
 }

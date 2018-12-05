@@ -83,7 +83,7 @@ public class TransactionService extends AbstractService {
                             .flatMap(ethGetTransactionCount -> {
                                 Transaction tx = Transaction.createEtherTransaction(fromAddress,
                                         ethGetTransactionCount.getTransactionCount(),
-                                        BigInteger.valueOf(0),
+                                        BigInteger.ZERO,
                                         DEFAULT_GAS_LIMIT,
                                         toAddress,
                                         BigInteger.valueOf(value));
@@ -208,7 +208,7 @@ public class TransactionService extends AbstractService {
                             .flatMap(ethGetTransactionCount -> {
                                 Transaction tx = Transaction.createEtherTransaction(fromAddress,
                                         ethGetTransactionCount.getTransactionCount(),
-                                        BigInteger.valueOf(0),
+                                        BigInteger.ZERO,
                                         DEFAULT_GAS_LIMIT,
                                         toAddress,
                                         BigInteger.valueOf(value));
@@ -233,9 +233,9 @@ public class TransactionService extends AbstractService {
                 .flatMap(ethGetTransactionCount -> {
                     Transaction tx = Transaction.createContractTransaction(fromAddress,
                             ethGetTransactionCount.getTransactionCount(),
-                            BigInteger.valueOf(0),
+                            BigInteger.ZERO,
                             DEFAULT_GAS_LIMIT,
-                            BigInteger.valueOf(0),
+                            BigInteger.ZERO,
                             data);
                     return client.ethEstimateGas(tx).observable();
                 });
@@ -260,7 +260,7 @@ public class TransactionService extends AbstractService {
                             ethGetTransactionCount.getTransactionCount(),
                             DEFAULT_GAS_LIMIT,
                             null,
-                            BigInteger.valueOf(0),
+                            BigInteger.ZERO,
                             data,
                             null,
                             Arrays.asList(privacyService.id(privateFor))
@@ -289,9 +289,10 @@ public class TransactionService extends AbstractService {
         return client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST)
                 .observable()
                 .flatMap(ethGetTransactionCount -> {
-                    Transaction tx = Transaction.createFunctionCallTransaction(fromAddress,
+                    Transaction tx = Transaction.createFunctionCallTransaction(
+                            fromAddress,
                             ethGetTransactionCount.getTransactionCount(),
-                            BigInteger.valueOf(0),
+                            BigInteger.ZERO,
                             DEFAULT_GAS_LIMIT,
                             c.getContractAddress(),
                             BigInteger.valueOf(new Random().nextInt(100)),
