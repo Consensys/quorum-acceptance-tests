@@ -2,38 +2,10 @@
 
  Tags: basic, dual-state, contract-interaction
 
-This is to test dual state approach.
-
-The dual state approach separates public and private state by making the core vm environment context aware.
-
-Although not currently implemented it will need to prohibit value transfers and it must initialise all transactions
-from accounts on the public state. This means that sending transactions increments the account nonce on the public state
-and contract addresses are derived from the public state when initialised by a transaction. For obvious reasons,
-contract created by private contracts are still derived from public state.
-
-This is required in order to have consensus over the public state at all times as non-private participants would still
-process the transaction on the public state even though private payload can not be decrypted. This means that participants
-of a private group must do the same in order to have public consensus. However the creation of the contract and
-interaction still occurs on the private state.
-
-It implements support for the following calling model:
-
-S: sender, (X): private, X: public, ->: direction, [ ]: read only mode
-
-1. S -> A -> B
-2. S -> (A) -> (B)
-3. S -> (A) -> [ B -> C ]
-
-It does not support
-
-1. (S) -> A
-2. (S) -> (A)
-3. S -> (A) -> B
-
-Implemented "read only" mode for the EVM. Read only mode is checked during any opcode that could potentially modify the state.
-If such an opcode is encountered during "read only", it throws an exception.
-
-The EVM is flagged "read only" when a private contract calls in to public state.
+References:
+1. The dual public and private state [explained in details](https://github.com/jpmorganchase/quorum/blob/eab8d793f946f292954ff8e150645661ba599164/NOTES.md)
+2. STATICCALL in [Solc 0.5.0 breaking changes](https://solidity.readthedocs.io/en/latest/050-breaking-changes.html)
+3. [Pull Request](https://github.com/jpmorganchase/quorum/pull/592) to handle `StaticCall` with dual state implementation
 
 The following smart contracts are used:
 
