@@ -12,102 +12,102 @@ The following smart contracts are used:
 __storec.sol__
 ```
 contract storec {
-   uint public c;
+    uint private storedValue;
 
-   constructor (uint pval) public {
-       c = pval;
-   }
+    constructor (uint pval) public {
+        storedValue = pval;
+    }
 
-   function setc(uint x) public {
-       c = x;
-   }
+    function setc(uint x) public {
+        storedValue = x;
+    }
 
-   function getc() public view returns (uint retVal) {
-       return c;
-   }
+    function getc() public view returns (uint) {
+        return storedValue;
+    }
 }
 ```
 
 __storeb.sol__
 ```
-contract storec {
-    function setc(uint x) public;
+interface storec {
+    function setc(uint x) external;
 
-    function getc() public view returns (uint);
+    function getc() external view returns (uint);
 }
 
 contract storeb {
-    uint public b;
-    storec c;
+    uint private storedValue;
+    storec anotherStorage;
 
     constructor (uint initVal, address _addrc) public {
-        b = initVal;
-        c = storec(_addrc);
+        storedValue = initVal;
+        anotherStorage = storec(_addrc);
     }
 
-    function getc() public view returns (uint retVal) {
-        return c.getc();
+    function getc() public view returns (uint) {
+        return anotherStorage.getc();
     }
 
-    function getb() public view returns (uint retVal) {
-        return b;
+    function getb() public view returns (uint) {
+        return storedValue;
     }
 
     function setc(uint x) public {
-        return c.setc(x);
+        return anotherStorage.setc(x);
     }
 
     function setb(uint x) public {
-        uint mc = c.getc();
-        b = x * mc;
+        uint mc = anotherStorage.getc();
+        storedValue = x * mc;
     }
 }
 ```
 
 __storea.sol__
 ```
-contract storeb {
-    function setb(uint x) public;
+interface storeb {
+    function setb(uint x) external;
 
-    function setc(uint x) public;
+    function setc(uint x) external;
 
-    function getb() public view returns (uint);
+    function getb() external view returns (uint);
 
-    function getc() public view returns (uint);
+    function getc() external view returns (uint);
 }
 
 contract storea {
-    uint public a;
-    storeb b;
+    uint private storedValue;
+    storeb anotherStorage;
 
     constructor (uint initVal, address _addrb) public {
-        a = initVal;
-        b = storeb(_addrb);
+        storedValue = initVal;
+        anotherStorage = storeb(_addrb);
     }
 
-    function geta() public view returns (uint retVal) {
-        return a;
+    function geta() public view returns (uint) {
+        return storedValue;
     }
 
-    function getb() public view returns (uint retVal) {
-        return b.getb();
+    function getb() public view returns (uint) {
+        return anotherStorage.getb();
     }
 
-    function getc() public view returns (uint retVal) {
-        return b.getc();
+    function getc() public view returns (uint) {
+        return anotherStorage.getc();
     }
 
     function seta(uint x) public {
-        uint mc = b.getb();
-        a = x * mc;
+        uint mc = anotherStorage.getb();
+        storedValue = x * mc;
     }
 
     function setb(uint x) public {
-        b.setb(x);
+        anotherStorage.setb(x);
     }
 
     function setc(uint x) public {
-        b.setc(x);
+        anotherStorage.setc(x);
     }
 }
 ```
