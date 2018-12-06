@@ -304,7 +304,7 @@ public class TransactionService extends AbstractService {
                             BigInteger.ZERO,
                             DEFAULT_GAS_LIMIT,
                             c.getContractAddress(),
-                            BigInteger.valueOf(new Random().nextInt(100)),
+                            BigInteger.ZERO,
                             data);
                     return client.ethEstimateGas(tx).observable();
                 });
@@ -335,7 +335,7 @@ public class TransactionService extends AbstractService {
                             ethGetTransactionCount.getTransactionCount(),
                             DEFAULT_GAS_LIMIT,
                             c.getContractAddress(),
-                            BigInteger.valueOf(new Random().nextInt(100)),
+                            BigInteger.ZERO,
                             data,
                             null,
                             Arrays.asList(privacyService.id(privateFor))

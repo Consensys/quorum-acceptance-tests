@@ -48,7 +48,7 @@ public class EstimateGas extends AbstractSpecImplementation {
 
     @Step("Deploy `SimpleContract` public smart contract from a default account in <from>")
     public void createContract(QuorumNode from) {
-        Contract c = contractService.createSimpleContract(0, from, from).toBlocking().first();
+        Contract c = contractService.createSimpleContract(0, from, null).toBlocking().first();
 
         DataStoreFactory.getSpecDataStore().put("publicContract1", c);
     }
@@ -90,7 +90,7 @@ public class EstimateGas extends AbstractSpecImplementation {
 
     @Step("Estimate gas for calling the `SimpleContract` private smart contract from a default account in <from> and private for <privateFor>")
     public void estimatePrivateContractCall(QuorumNode from, QuorumNode privateFor) {
-        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), "publicContract1", Contract.class);
+        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), "privateContract1", Contract.class);
 
         EthEstimateGas estimatedValue = transactionService.estimateGasForPrivateContractCall(from, privateFor, c).toBlocking().first();
 
