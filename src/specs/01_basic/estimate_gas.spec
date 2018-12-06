@@ -48,7 +48,7 @@ EstimateGas api call should return valid 'close' estimate of required gas.
 
 ## Estimate gas required to call a private smart contract
 
- Tags: public
+ Tags: private
 
 * Estimate gas for calling the `SimpleContract` private smart contract from a default account in "Node1" and private for "Node7"
 * Gas estimate "41639" is returned within "10" percent
