@@ -1,6 +1,6 @@
 # Estimate gas required for transactions and contracts
 
- Tags: basic
+ Tags: basic, estimategas
 
 EstimateGas api call should return valid 'close' estimate of required gas.
 
