@@ -48,6 +48,9 @@ public abstract class AbstractSpecImplementation {
     protected ContractService contractService;
 
     @Autowired
+    protected NestedContractService nestedContractService;
+
+    @Autowired
     protected TransactionService transactionService;
 
     @Autowired
