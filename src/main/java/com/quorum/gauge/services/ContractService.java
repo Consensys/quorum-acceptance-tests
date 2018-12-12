@@ -199,29 +199,21 @@ public class ContractService extends AbstractService {
         if (binaryStream == null) {
             throw new IllegalStateException("Can't find resource ClientReceipt.bin");
         }
-        return Observable.zip(
-                sourceAccount != null ? Observable.just(sourceAccount) : accountService.getDefaultAccountAddress(source).subscribeOn(Schedulers.io()),
-                accountService.getDefaultAccountAddress(target).subscribeOn(Schedulers.io()),
-                (fromAddress, toAddress) -> {
-                    try {
-                        String binary = StreamUtils.copyToString(binaryStream, Charset.defaultCharset());
-                        return new PrivateTransactionAsync(
-                                fromAddress,
-                                null,
-                                DEFAULT_GAS_LIMIT,
-                                toAddress,
-                                BigInteger.valueOf(0),
-                                binary,
-                                null,
-                                Arrays.asList(privacyService.id(target)),
-                                callbackUrl
-                        );
-                    } catch (IOException e) {
-                        logger.error("Unable to construct transaction arguments", e);
-                        throw new RuntimeException(e);
-                    }
-                })
-                .flatMap(tx -> {
+        return (sourceAccount != null ? Observable.just(sourceAccount) : accountService.getDefaultAccountAddress(source))
+            .flatMap( fromAddress -> {
+                try {
+                    String binary = StreamUtils.copyToString(binaryStream, Charset.defaultCharset());
+                    PrivateTransactionAsync tx = new PrivateTransactionAsync(
+                            fromAddress,
+                            null,
+                            DEFAULT_GAS_LIMIT,
+                            null,
+                            BigInteger.valueOf(0),
+                            binary,
+                            null,
+                            Arrays.asList(privacyService.id(target)),
+                            callbackUrl
+                    );
                     Request<?, EthSendTransactionAsync> request = new Request<>(
                             "eth_sendTransactionAsync",
                             Arrays.asList(tx),
@@ -229,6 +221,10 @@ public class ContractService extends AbstractService {
                             EthSendTransactionAsync.class
                     );
                     return request.observable();
-                });
+                } catch (IOException e) {
+                    logger.error("Unable to construct transaction arguments", e);
+                    throw new RuntimeException(e);
+                }
+            });
     }
 }
