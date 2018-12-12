@@ -23,6 +23,7 @@ import com.quorum.gauge.common.QuorumNode;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.EthBlockNumber;
+import org.web3j.protocol.core.methods.response.NetPeerCount;
 import org.web3j.protocol.core.methods.response.Transaction;
 import rx.Observable;
 
@@ -50,4 +51,12 @@ public class UtilService extends AbstractService {
         }, Throwable::printStackTrace);
         return transactions;
     }
+
+    public int getNumberOfNodes(QuorumNode node) {
+        Web3j client = connectionFactory().getWeb3jConnection(node);
+        NetPeerCount peerCount = client.netPeerCount().observable().toBlocking().first();
+
+        return peerCount.getQuantity().intValue();
+    }
+
 }

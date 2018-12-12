@@ -40,11 +40,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class RaftGasUsage extends AbstractSpecImplementation {
     private static final Logger logger = LoggerFactory.getLogger(RaftGasUsage.class);
 
-    private enum DataStoreKey {result, node, message}
-    private enum DataStoreValue {success, exception}
-
     @Autowired
     RaftService raftService;
+
+    @Step("Get number of nodes and store as <storageKey>")
+    public void getPeerCount(String storageKey) {
+        int peerCount = utilService.getNumberOfNodes(QuorumNode.Node1);
+        DataStoreFactory.getScenarioDataStore().put(storageKey, peerCount);
+    }
+
+    @Step("Check <storageKey> nodes are still running")
+    public void checkPeerCount(String storageKey) {
+        int currentPeerCount = utilService.getNumberOfNodes(QuorumNode.Node1);
+        int expectedPeerCount = mustHaveValue(DataStoreFactory.getScenarioDataStore(), storageKey, Integer.class);
+        assertThat(currentPeerCount).isEqualTo(expectedPeerCount);
+    }
 
     @Step("Private transaction where minter is a participant and gas value is <gas>, name this contract as <contractName>")
     public void sendPrivateTransactionWithParticipantMinter(int gas, String contractName) {
@@ -72,41 +82,61 @@ public class RaftGasUsage extends AbstractSpecImplementation {
 
     @Step("Contract <contractName> had exception with message <expectedMessage>")
     public void checkContractForException(String contractName, String expectedMessage) {
-        DataStoreValue result = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "." + DataStoreKey.result, DataStoreValue.class);
-        assertThat(result).isEqualTo(DataStoreValue.exception);
-        String actualMessage = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "." + DataStoreKey.message, String.class);
-        assertThat(actualMessage).matches(".*" + expectedMessage + ".*");
+        CreationResult result = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, CreationResult.class);
+        assertThat(result.getResult()).isEqualTo(CreationResult.CreationResultTypes.exception);
+        assertThat(result.getErrorMessage()).matches(".*" + expectedMessage + ".*");
     }
 
 
-    @Step("Contract <contractName> result is <expectedResult>")
-    public void checkContractResult(String contractName, DataStoreValue expectedResult) {
-        DataStoreValue result = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "." + DataStoreKey.result, DataStoreValue.class);
-        assertThat(result).isEqualTo(expectedResult);
+    @Step("Contract <contractName> creation succeeded")
+    public void checkContractResult(String contractName) {
+        CreationResult result = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, CreationResult.class);
+        assertThat(result.getResult()).isEqualTo(CreationResult.CreationResultTypes.success);
     }
 
     @Step("Contract <contractName> is not pending")
     public void checkNoPending(String contractName) {
-        QuorumNode node = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "." + DataStoreKey.node, QuorumNode.class);
+        CreationResult result = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, CreationResult.class);
 
-        // TODO: this doesn't work, so assertion is commented out for now
-        List<Transaction> transactions= utilService.getPendingHashes(node);
-        //assertThat(transactions).isEmpty();
+        List<Transaction> transactions= utilService.getPendingHashes(result.getNode());
+        assertThat(transactions).isEmpty();
     }
 
     /**
      * Create contract, storing result in Scenario Data Store:
-     *      key = <contractName> + ".node", value = node where contract was submitted
-     *      key = <contractName> + ".result", value = "success" or "exception"
      */
     private void createContract(int gas, QuorumNode source, QuorumNode target, String contractName) {
-        DataStoreFactory.getScenarioDataStore().put(contractName + "." + DataStoreKey.node, source);
         try {
             Contract contract = contractService.createSimpleContract(42, source, target, BigInteger.valueOf(gas)).toBlocking().first();
-             DataStoreFactory.getScenarioDataStore().put(contractName + "." + DataStoreKey.result, DataStoreValue.success);
+            DataStoreFactory.getScenarioDataStore().put(contractName, new CreationResult(CreationResult.CreationResultTypes.success, source, ""));
         } catch (RuntimeException e) {
-            DataStoreFactory.getScenarioDataStore().put(contractName + "." + DataStoreKey.result, DataStoreValue.exception);
-            DataStoreFactory.getScenarioDataStore().put(contractName + "." + DataStoreKey.message, e.getMessage());
+            DataStoreFactory.getScenarioDataStore().put(contractName, new CreationResult(CreationResult.CreationResultTypes.exception, source, e.getMessage()));
+        }
+    }
+
+    private static class CreationResult {
+        enum CreationResultTypes {success, exception}
+
+        private final CreationResultTypes result;
+        private final QuorumNode node;
+        private final String errorMessage;
+
+        public CreationResult(CreationResultTypes result, QuorumNode node, String errorMessage) {
+            this.result = result;
+            this.node = node;
+            this.errorMessage = errorMessage;
+        }
+
+        public CreationResultTypes getResult() {
+            return result;
+        }
+
+        public QuorumNode getNode() {
+            return node;
+        }
+
+        public String getErrorMessage() {
+            return errorMessage;
         }
     }
 }
