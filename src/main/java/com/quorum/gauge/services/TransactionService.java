@@ -27,22 +27,33 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.TypeReference;
+import org.web3j.abi.datatypes.Function;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.request.Transaction;
+import org.web3j.protocol.core.methods.response.EthEstimateGas;
 import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
 import org.web3j.protocol.core.methods.response.EthLog;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.quorum.Quorum;
+import org.web3j.quorum.methods.request.PrivateTransaction;
+import org.web3j.tx.Contract;
 import rx.Observable;
 import rx.schedulers.Schedulers;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Random;
+
+import static com.quorum.gauge.sol.SimpleStorage.FUNC_SET;
 
 @Service
 public class TransactionService extends AbstractService {
@@ -73,7 +84,7 @@ public class TransactionService extends AbstractService {
                             .flatMap(ethGetTransactionCount -> {
                                 Transaction tx = Transaction.createEtherTransaction(fromAddress,
                                         ethGetTransactionCount.getTransactionCount(),
-                                        BigInteger.valueOf(0),
+                                        BigInteger.ZERO,
                                         DEFAULT_GAS_LIMIT,
                                         toAddress,
                                         BigInteger.valueOf(value));
@@ -190,6 +201,147 @@ public class TransactionService extends AbstractService {
         EthFilter filter = new EthFilter(DefaultBlockParameter.valueOf(BigInteger.ZERO), DefaultBlockParameter.valueOf("latest"), contractAddress);
 
         return client.ethGetLogs(filter).observable();
-
     }
+
+    public Observable<EthEstimateGas> estimateGasForTransaction(int value, QuorumNode from, QuorumNode to) {
+        Web3j client = connectionFactory().getWeb3jConnection(from);
+        return Observable.zip(
+                accountService.getDefaultAccountAddress(from).subscribeOn(Schedulers.io()),
+                accountService.getDefaultAccountAddress(to).subscribeOn(Schedulers.io()),
+                (fromAddress, toAddress) -> Arrays.asList(fromAddress, toAddress))
+                .flatMap(l -> {
+                    String fromAddress = l.get(0);
+                    String toAddress = l.get(1);
+                    return client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST)
+                            .observable()
+                            .flatMap(ethGetTransactionCount -> {
+                                Transaction tx = Transaction.createEtherTransaction(fromAddress,
+                                        ethGetTransactionCount.getTransactionCount(),
+                                        BigInteger.ZERO,
+                                        DEFAULT_GAS_LIMIT,
+                                        toAddress,
+                                        BigInteger.valueOf(value));
+                                return client.ethEstimateGas(tx).observable();
+                            });
+                });
+    }
+
+    public Observable<EthEstimateGas> estimateGasForPublicContract(QuorumNode from, Contract c) {
+        Web3j client = connectionFactory().getWeb3jConnection(from);
+        String fromAddress;
+        try {
+            fromAddress = client.ethCoinbase().send().getAddress();
+        } catch (IOException e) {
+            logger.error("Unable to get default account for node " + from, e);
+            throw new RuntimeException(e);
+        }
+
+        String data = c.getContractBinary();
+        return client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST)
+                .observable()
+                .flatMap(ethGetTransactionCount -> {
+                    Transaction tx = Transaction.createContractTransaction(fromAddress,
+                            ethGetTransactionCount.getTransactionCount(),
+                            BigInteger.ZERO,
+                            DEFAULT_GAS_LIMIT,
+                            BigInteger.ZERO,
+                            data);
+                    return client.ethEstimateGas(tx).observable();
+                });
+    }
+
+    public Observable<EthEstimateGas> estimateGasForPrivateContract(QuorumNode from, QuorumNode privateFor, Contract c) {
+        Web3j client = connectionFactory().getWeb3jConnection(from);
+        String fromAddress;
+        try {
+            fromAddress = client.ethCoinbase().send().getAddress();
+        } catch (IOException e) {
+            logger.error("Unable to get default account for node " + from, e);
+            throw new RuntimeException(e);
+        }
+
+        String data = c.getContractBinary();
+        return client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST)
+                .observable()
+                .flatMap(ethGetTransactionCount -> {
+                    Transaction tx = new PrivateTransaction(
+                            fromAddress,
+                            ethGetTransactionCount.getTransactionCount(),
+                            DEFAULT_GAS_LIMIT,
+                            null,
+                            BigInteger.ZERO,
+                            data,
+                            null,
+                            Arrays.asList(privacyService.id(privateFor))
+                    );
+                    return client.ethEstimateGas(tx).observable();
+                });
+    }
+
+    public Observable<EthEstimateGas> estimateGasForPublicContractCall(QuorumNode from, Contract c) {
+        Web3j client = connectionFactory().getWeb3jConnection(from);
+        String fromAddress;
+        try {
+            fromAddress = client.ethCoinbase().send().getAddress();
+        } catch (IOException e) {
+            logger.error("Unable to get default account for node " + from, e);
+            throw new RuntimeException(e);
+        }
+
+        //create the encoded smart contract call
+        Function function = new Function(
+                FUNC_SET,
+                Arrays.<org.web3j.abi.datatypes.Type>asList(new org.web3j.abi.datatypes.generated.Uint256(99)),
+                Collections.<TypeReference<?>>emptyList());
+        String data = FunctionEncoder.encode(function);
+
+        return client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST)
+                .observable()
+                .flatMap(ethGetTransactionCount -> {
+                    Transaction tx = Transaction.createFunctionCallTransaction(
+                            fromAddress,
+                            ethGetTransactionCount.getTransactionCount(),
+                            BigInteger.ZERO,
+                            DEFAULT_GAS_LIMIT,
+                            c.getContractAddress(),
+                            BigInteger.ZERO,
+                            data);
+                    return client.ethEstimateGas(tx).observable();
+                });
+    }
+
+    public Observable<EthEstimateGas> estimateGasForPrivateContractCall(QuorumNode from, QuorumNode privateFor, Contract c) {
+        Web3j client = connectionFactory().getWeb3jConnection(from);
+        String fromAddress;
+        try {
+            fromAddress = client.ethCoinbase().send().getAddress();
+        } catch (IOException e) {
+            logger.error("Unable to get default account for node " + from, e);
+            throw new RuntimeException(e);
+        }
+
+        //create the encoded smart contract call
+        Function function = new Function(
+                FUNC_SET,
+                Arrays.<org.web3j.abi.datatypes.Type>asList(new org.web3j.abi.datatypes.generated.Uint256(99)),
+                Collections.<TypeReference<?>>emptyList());
+        String data = FunctionEncoder.encode(function);
+
+        return client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST)
+                .observable()
+                .flatMap(ethGetTransactionCount -> {
+                    Transaction tx = new PrivateTransaction(
+                            fromAddress,
+                            ethGetTransactionCount.getTransactionCount(),
+                            DEFAULT_GAS_LIMIT,
+                            c.getContractAddress(),
+                            BigInteger.ZERO,
+                            data,
+                            null,
+                            Arrays.asList(privacyService.id(privateFor))
+                    );
+                    return client.ethEstimateGas(tx).observable();
+                });
+    }
+
 }

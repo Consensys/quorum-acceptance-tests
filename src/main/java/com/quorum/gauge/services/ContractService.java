@@ -46,6 +46,7 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.List;
 
 @Service
 public class ContractService extends AbstractService {
@@ -63,12 +64,19 @@ public class ContractService extends AbstractService {
 
     public Observable<? extends Contract> createSimpleContract(int initialValue, QuorumNode source, QuorumNode target, BigInteger gas) {
         Quorum client = connectionFactory().getConnection(source);
+        final List<String> privateFor;
+        if (null != target) {
+            privateFor = Arrays.asList(privacyService.id(target));
+        } else {
+            privateFor = null;
+        }
+
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
             ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
                     client,
                     address,
                     null,
-                    Arrays.asList(privacyService.id(target)),
+                    privateFor,
                     DEFAULT_MAX_RETRY,
                     DEFAULT_SLEEP_DURATION_IN_MILLIS);
             return SimpleStorage.deploy(client,
