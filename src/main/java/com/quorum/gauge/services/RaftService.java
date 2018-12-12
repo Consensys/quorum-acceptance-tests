@@ -19,7 +19,10 @@
 
 package com.quorum.gauge.services;
 
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.ext.RaftCluster;
+import com.quorum.gauge.ext.RaftLeader;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.Request;
@@ -27,6 +30,7 @@ import org.web3j.protocol.core.Response;
 import rx.Observable;
 
 import java.util.Arrays;
+import java.util.Map;
 
 @Service
 public class RaftService extends AbstractService {
@@ -42,6 +46,44 @@ public class RaftService extends AbstractService {
             raftAddPeer.setNode(node);
             return raftAddPeer;
         });
+    }
+
+    public Observable<RaftCluster> getCluster(QuorumNode node) {
+        Request<String, RaftCluster> request = new Request<>(
+                "raft_cluster",
+                null,
+                connectionFactory().getWeb3jService(node),
+                RaftCluster.class);
+        return request.observable();
+    }
+
+    /**
+     * Retrieve the enode for the raft leader and look it up in the
+     * configured nodes to convert it into a QuorumNode identity.
+     */
+    public QuorumNode getLeader(QuorumNode node) {
+        Request<String, RaftLeader> request = new Request<>(
+                "raft_leader",
+                null,
+                connectionFactory().getWeb3jService(node),
+                RaftLeader.class);
+        RaftLeader response = request.observable().toBlocking().first();
+        String leaderEnode = response.getResult();
+
+        Map<QuorumNode, QuorumNetworkProperty.Node> nodes = connectionFactory().getNetworkProperty().getNodes();
+        QuorumNode leaderNodeId = null;
+        for (QuorumNode nodeId : nodes.keySet()) {
+            QuorumNetworkProperty.Node nodeProperties = nodes.get(nodeId);
+            if (nodeProperties.getEnode().equals(leaderEnode)) {
+                leaderNodeId = nodeId;
+                break;
+            }
+        }
+        if (null == leaderNodeId) {
+            throw new RuntimeException("Leader enode not found in config: " + leaderEnode);
+        }
+
+        return leaderNodeId;
     }
 
     public static class RaftAddPeer extends Response<Integer> {

@@ -1,0 +1,49 @@
+# Gas usage for private contracts on participant and non-participant nodes
+
+ Tags: basic, gas, private, onetestonly
+
+Private contracts with insufficient gas should be handled correctly in all scenarios.
+In particular, we need to test the following type of scenario:
+- Private txn is published with marginal gas
+- Minter is not a participant to the transaction and accepts the transaction as it does not know full gas requirement
+- Block is minted containing the private txn
+- Block is validated by a node that is party to the transaction and which calculates the full gas usage as higher than that supplied
+Note that intrinsic gas for the simple contract is between 25,224 and 25,352, required gas is approx 97,800
+
+## Private contract with gas below intrinsic gas should be rejected (and not remain pending).
+
+* Private transaction where minter is a participant and gas value is "25100", name this contract as "contract1"
+* Contract "contract1" had exception with message "intrinsic gas too low"
+* Contract "contract1" is not pending
+
+* Private transaction where minter is not a participant and gas value is "25100", name this contract as "contract2"
+* Contract "contract2" had exception with message "intrinsic gas too low"
+* Contract "contract2" is not pending
+
+//TODO:
+//* Check all nodes are still running
+
+## Private contract with gas between intrinsic gas and required gas should be rejected (and not remain pending).
+
+* Private transaction where minter is a participant and gas value is "26000", name this contract as "contract3"
+* Contract "contract3" had exception with message "not-enough gas"
+* Contract "contract3" is not pending
+
+* Private transaction where minter is not a participant and gas value is "26000", name this contract as "contract4"
+* Contract "contract4" had exception with message "not-enough gas"
+* Contract "contract4" is not pending
+
+//TODO:
+//* Check all nodes are still running
+
+## Private contract with sufficient gas should be accepted.
+
+* Private transaction where minter is a participant and gas value is "98000", name this contract as "contract5"
+* Contract "contract5" result is "success"
+//TODO:
+//* Check that contract is processed ok
+
+* Private transaction where minter is not a participant and gas value is "98000", name this contract as "contract6"
+* Contract "contract5" result is "success"
+//TODO:
+//* Check that contract is processed ok

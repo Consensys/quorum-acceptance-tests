@@ -23,7 +23,11 @@ import com.quorum.gauge.common.QuorumNode;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.EthBlockNumber;
+import org.web3j.protocol.core.methods.response.Transaction;
 import rx.Observable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class UtilService extends AbstractService {
@@ -35,5 +39,15 @@ public class UtilService extends AbstractService {
     public Observable<EthBlockNumber> getCurrentBlockNumberFrom(QuorumNode node) {
         Web3j client = connectionFactory().getWeb3jConnection(node);
         return client.ethBlockNumber().observable();
+    }
+
+    //TODO: this doesn't seem to work (it doesn't return any pending transactions)
+    public List<Transaction> getPendingHashes(QuorumNode node) {
+        Web3j client = connectionFactory().getWeb3jConnection(node);
+        List<Transaction> transactions = new ArrayList<>();
+        client.pendingTransactionObservable().subscribe(tx -> {
+            transactions.add(tx);
+        }, Throwable::printStackTrace);
+        return transactions;
     }
 }
