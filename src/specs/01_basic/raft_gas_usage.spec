@@ -1,6 +1,6 @@
 # Gas usage for private contracts on participant and non-participant nodes
 
- Tags: basic, gas, private, onetestonly
+ Tags: basic-raft, gas, private
 
 Private contracts with insufficient gas should be handled correctly in all scenarios.
 In particular, we need to test the following type of scenario:
