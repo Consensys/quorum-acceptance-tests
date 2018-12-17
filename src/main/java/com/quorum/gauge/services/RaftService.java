@@ -74,6 +74,9 @@ public class RaftService extends AbstractService {
         QuorumNode leaderNodeId = null;
         for (QuorumNode nodeId : nodes.keySet()) {
             QuorumNetworkProperty.Node nodeProperties = nodes.get(nodeId);
+            if (null == nodeProperties.getEnode()) {
+                throw new RuntimeException("Enode is missing in configuration for node: " + nodeId);
+            }
             if (nodeProperties.getEnode().equals(leaderEnode)) {
                 leaderNodeId = nodeId;
                 break;
