@@ -302,12 +302,12 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
 
         DataStoreFactory.getScenarioDataStore().put("receipts", receipts);
     }
-  
+
     @Step("Execute <contractName>'s `deposit()` function <count> times with arbitrary id and value between original parties")
     public void excuteDespositBetweenOriginalParties(String contractName, int count) {
         List<Observable<TransactionReceipt>> observables = new ArrayList<>();
         String[] contractNames = contractName.split(",");
-        for(String cName: contractNames) {
+        for (String cName : contractNames) {
             Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), cName, Contract.class);
             QuorumNode source = mustHaveValue(DataStoreFactory.getScenarioDataStore(), cName + "_source", QuorumNode.class);
             QuorumNode target = mustHaveValue(DataStoreFactory.getScenarioDataStore(), cName + "_target", QuorumNode.class);
