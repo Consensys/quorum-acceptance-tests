@@ -19,7 +19,9 @@
 
 package com.quorum.gauge.services;
 
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.common.Wallet;
 import com.quorum.gauge.sol.SimpleStorage;
 import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
@@ -48,114 +50,134 @@ public class RawContractService extends AbstractService {
     PrivacyService privacyService;
 
     @Autowired
-    AccountService accountService;
-
-    @Autowired
     OkHttpClient httpClient;
 
-    public Observable<? extends Contract> createRawSimplePublicContract(int initialValue, QuorumNode source) {
+    public Observable<? extends Contract> createRawSimplePublicContract(int initialValue, Wallet wallet, QuorumNode source) {
         Web3jService web3jService = connectionFactory().getWeb3jService(source);
         Web3j web3j = Web3j.build(web3jService);
-        return accountService.getDefaultAccountAddress(source).flatMap(address -> {
 
-            try {
-                Credentials credentials = WalletUtils.loadCredentials(privacyService.walletPass(source),
-                        privacyService.walletPath(source));
+        try {
+            QuorumNetworkProperty.WalletData walletData = privacyService.walletData(wallet);
+            Credentials credentials = WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath());
 
-                QuorumRawTransactionManager qrtxm = new QuorumRawTransactionManager(httpClient,
-                        privacyService.thirdPartyUrl(source),
-                        web3j,
-                        web3jService,
-                        credentials, null,
-                        DEFAULT_MAX_RETRY,
-                        DEFAULT_SLEEP_DURATION_IN_MILLIS);
+            QuorumRawTransactionManager qrtxm = new QuorumRawTransactionManager(httpClient,
+                    privacyService.thirdPartyUrl(source),
+                    web3j,
+                    web3jService,
+                    credentials, null,
+                    DEFAULT_MAX_RETRY,
+                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
 
-                return SimpleStorage.deploy(web3j,
-                        qrtxm,
-                        BigInteger.valueOf(0),
-                        DEFAULT_GAS_LIMIT,
-                        BigInteger.valueOf(initialValue)).observable();
+            return SimpleStorage.deploy(web3j,
+                    qrtxm,
+                    BigInteger.valueOf(0),
+                    DEFAULT_GAS_LIMIT,
+                    BigInteger.valueOf(initialValue)).observable();
 
-            } catch (IOException e) {
-                logger.error("RawTransaction- public", e);
-                return Observable.error(e);
-            } catch (CipherException e) {
-                logger.error("RawTransaction - public - bad credentials", e);
-                return Observable.error(e);
-            }
+        } catch (IOException e) {
+            logger.error("RawTransaction- public", e);
+            return Observable.error(e);
+        } catch (CipherException e) {
+            logger.error("RawTransaction - public - bad credentials", e);
+            return Observable.error(e);
+        }
+    }
 
-        });
+    public Observable<TransactionReceipt> updateRawSimplePublicContract(QuorumNode source, Wallet wallet, String contractAddress, int newValue) {
+
+        Web3jService web3jService = connectionFactory().getWeb3jService(source);
+        Web3j web3j = Web3j.build(web3jService);
+
+        try {
+            QuorumNetworkProperty.WalletData walletData = privacyService.walletData(wallet);
+            Credentials credentials = WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath());
+
+            QuorumRawTransactionManager qrtxm = new QuorumRawTransactionManager(httpClient,
+                    privacyService.thirdPartyUrl(source),
+                    web3j,
+                    web3jService,
+                    credentials,
+                    null,
+                    DEFAULT_MAX_RETRY,
+                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+
+            return SimpleStorage.load(contractAddress, web3j,
+                    qrtxm,
+                    BigInteger.valueOf(0),
+                    DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue)).observable();
+
+        } catch (IOException e) {
+            logger.error("RawTransaction- public", e);
+            return Observable.error(e);
+        } catch (CipherException e) {
+            logger.error("RawTransaction - public - bad credentials", e);
+            return Observable.error(e);
+        }
     }
 
 
-    public Observable<? extends Contract> createRawSimplePrivateContract(int initialValue, QuorumNode source, QuorumNode target) {
+    public Observable<? extends Contract> createRawSimplePrivateContract(int initialValue, Wallet wallet, QuorumNode source, QuorumNode target) {
         Web3jService web3jService = connectionFactory().getWeb3jService(source);
         Web3j web3j = Web3j.build(web3jService);
-        return accountService.getDefaultAccountAddress(source).flatMap(address -> {
 
-            try {
-                Credentials credentials = WalletUtils.loadCredentials(privacyService.walletPass(source),
-                        privacyService.walletPath(source));
+        try {
+            QuorumNetworkProperty.WalletData walletData = privacyService.walletData(wallet);
+            Credentials credentials = WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath());
 
-                QuorumRawTransactionManager qrtxm = new QuorumRawTransactionManager(httpClient,
-                        privacyService.thirdPartyUrl(source),
-                        web3j,
-                        web3jService,
-                        credentials,
-                        Arrays.asList(privacyService.id(target)),
-                        DEFAULT_MAX_RETRY,
-                        DEFAULT_SLEEP_DURATION_IN_MILLIS);
+            QuorumRawTransactionManager qrtxm = new QuorumRawTransactionManager(httpClient,
+                    privacyService.thirdPartyUrl(source),
+                    web3j,
+                    web3jService,
+                    credentials,
+                    Arrays.asList(privacyService.id(target)),
+                    DEFAULT_MAX_RETRY,
+                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
 
-                return SimpleStorage.deploy(web3j,
-                        qrtxm,
-                        BigInteger.valueOf(0),
-                        DEFAULT_GAS_LIMIT,
-                        BigInteger.valueOf(initialValue)).observable();
+            return SimpleStorage.deploy(web3j,
+                    qrtxm,
+                    BigInteger.valueOf(0),
+                    DEFAULT_GAS_LIMIT,
+                    BigInteger.valueOf(initialValue)).observable();
 
-            } catch (IOException e) {
-                logger.error("RawTransaction - private", e);
-                return Observable.error(e);
-            } catch (CipherException e) {
-                logger.error("RawTransaction - private - bad credentials", e);
-                return Observable.error(e);
-            }
-
-        });
+        } catch (IOException e) {
+            logger.error("RawTransaction - private", e);
+            return Observable.error(e);
+        } catch (CipherException e) {
+            logger.error("RawTransaction - private - bad credentials", e);
+            return Observable.error(e);
+        }
     }
 
-    public Observable<TransactionReceipt> updateRawSimplePrivateContract(QuorumNode source, QuorumNode target, String contractAddress, int newValue) {
+    public Observable<TransactionReceipt> updateRawSimplePrivateContract(int newValue, String contractAddress, Wallet wallet, QuorumNode source, QuorumNode target) {
 
         Web3jService web3jService = connectionFactory().getWeb3jService(source);
         Web3j web3j = Web3j.build(web3jService);
-        return accountService.getDefaultAccountAddress(source).flatMap(address -> {
 
-            try {
-                Credentials credentials = WalletUtils.loadCredentials(privacyService.walletPass(source),
-                        privacyService.walletPath(source));
+        try {
+            QuorumNetworkProperty.WalletData walletData = privacyService.walletData(wallet);
+            Credentials credentials = WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath());
 
-                QuorumRawTransactionManager qrtxm = new QuorumRawTransactionManager(httpClient,
-                        privacyService.thirdPartyUrl(source),
-                        web3j,
-                        web3jService,
-                        credentials,
-                        Arrays.asList(privacyService.id(target)),
-                        DEFAULT_MAX_RETRY,
-                        DEFAULT_SLEEP_DURATION_IN_MILLIS);
+            QuorumRawTransactionManager qrtxm = new QuorumRawTransactionManager(httpClient,
+                    privacyService.thirdPartyUrl(source),
+                    web3j,
+                    web3jService,
+                    credentials,
+                    Arrays.asList(privacyService.id(target)),
+                    DEFAULT_MAX_RETRY,
+                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
 
-                return SimpleStorage.load(contractAddress, web3j,
-                        qrtxm,
-                        BigInteger.valueOf(0),
-                        DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue)).observable();
+            return SimpleStorage.load(contractAddress, web3j,
+                    qrtxm,
+                    BigInteger.valueOf(0),
+                    DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue)).observable();
 
-            } catch (IOException e) {
-                logger.error("RawTransaction- public", e);
-                return Observable.error(e);
-            } catch (CipherException e) {
-                logger.error("RawTransaction - public - bad credentials", e);
-                return Observable.error(e);
-            }
-
-        });
+        } catch (IOException e) {
+            logger.error("RawTransaction - private", e);
+            return Observable.error(e);
+        } catch (CipherException e) {
+            logger.error("RawTransaction - private - bad credentials", e);
+            return Observable.error(e);
+        }
     }
 
 }

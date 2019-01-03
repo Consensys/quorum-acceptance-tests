@@ -25,5 +25,24 @@ contract SimpleStorage {
 
 ## Contract is deployed and mined
 
-* Deploy raw `SimpleStorage` public smart contract from a default account in "Node1", named this contract as "contract13"
-* "contract13" is mined
+* Deploy `SimpleStorage` public smart contract with initial value "32" signed by external wallet "Wallet1" on node "Node2", name this contract as "contract32"
+* "contract32" is mined
+
+## Everyone in the network has the same state for the contract
+
+ Tags: raw
+
+* "contract32"'s `get()` function execution in "Node1" returns "32"
+* "contract32"'s `get()` function execution in "Node2" returns "32"
+* "contract32"'s `get()` function execution in "Node7" returns "32"
+* "contract32"'s `get()` function execution in "Node3" returns "32"
+
+## When there's an update, every node is updated
+
+ Tags: raw
+
+* Execute "contract32"'s `set()` function with new value "5" signed by external wallet "Wallet8" in "Node3"
+* "contract32"'s `get()` function execution in "Node1" returns "5"
+* "contract32"'s `get()` function execution in "Node2" returns "5"
+* "contract32"'s `get()` function execution in "Node7" returns "5"
+* "contract32"'s `get()` function execution in "Node3" returns "5"
