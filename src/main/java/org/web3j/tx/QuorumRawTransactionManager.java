@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
+import java.util.Objects;
 
 public class QuorumRawTransactionManager extends RawTransactionManager {
 
@@ -42,6 +43,10 @@ public class QuorumRawTransactionManager extends RawTransactionManager {
 
     @Override
     public EthSendTransaction signAndSend(RawTransaction rawTransaction) throws IOException {
+
+        if (Objects.isNull(privateFor) || privateFor.isEmpty()) {
+            return super.signAndSend(rawTransaction);
+        }
 
         if (null != privateFor && privateFor.size() > 0) {
             rawTransaction = storeRaw(rawTransaction);
