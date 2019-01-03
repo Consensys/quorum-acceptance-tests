@@ -24,6 +24,8 @@ import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
@@ -41,6 +43,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @Service
 public class PublicSmartContract extends AbstractSpecImplementation {
+
+    private static final Logger logger = LoggerFactory.getLogger(PublicSmartContract.class);
 
     @Step("Deploy `ClientReceipt` smart contract from a default account in <node>, named this contract as <contractName>")
     public void deployClientReceiptSmartContract(QuorumNode node, String contractName) {
@@ -119,6 +123,9 @@ public class PublicSmartContract extends AbstractSpecImplementation {
             contractObservables.add(contractService.createClientReceiptSmartContract(node).subscribeOn(Schedulers.io()));
         }
         while (currentBlockHeight.intValue() < targetBlockHeight) {
+            // as this test will take time to complete so this log is important
+            // to tell Travis not to kill the CI
+            logger.warn("[Travis] Current block height = {}, targetBlockHeight = {}", currentBlockHeight.intValue(), targetBlockHeight);
             currentBlockHeight = Observable.zip(contractObservables, args -> args.length)
                     .flatMap(i -> utilService.getCurrentBlockNumber())
                     .toBlocking()
