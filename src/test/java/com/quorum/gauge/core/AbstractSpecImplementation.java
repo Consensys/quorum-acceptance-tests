@@ -20,6 +20,7 @@
 package com.quorum.gauge.core;
 
 import com.quorum.gauge.common.Context;
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.services.*;
 import com.thoughtworks.gauge.datastore.DataStore;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
@@ -64,6 +65,9 @@ public abstract class AbstractSpecImplementation {
 
     @Autowired
     protected QuorumBootService quorumBootService;
+
+    @Autowired
+    private QuorumNetworkProperty networkProperty;
 
     protected BigInteger currentBlockNumber() {
         return mustHaveValue(DataStoreFactory.getScenarioDataStore(), "blocknumber", BigInteger.class);
@@ -125,5 +129,9 @@ public abstract class AbstractSpecImplementation {
             }
         });
         return Schedulers.from(executor);
+    }
+
+    protected int numberOfQuorumNodes() {
+        return networkProperty.getNodes().size();
     }
 }

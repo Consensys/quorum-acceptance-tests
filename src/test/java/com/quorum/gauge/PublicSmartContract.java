@@ -24,12 +24,15 @@ import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 import rx.Observable;
 import rx.Scheduler;
 import rx.functions.FuncN;
+import rx.schedulers.Schedulers;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -40,6 +43,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @Service
 public class PublicSmartContract extends AbstractSpecImplementation {
+
+    private static final Logger logger = LoggerFactory.getLogger(PublicSmartContract.class);
 
     @Step("Deploy `ClientReceipt` smart contract from a default account in <node>, named this contract as <contractName>")
     public void deployClientReceiptSmartContract(QuorumNode node, String contractName) {
@@ -106,4 +111,26 @@ public class PublicSmartContract extends AbstractSpecImplementation {
         assertThat(actualEventCount.get()).as("Log Event Count").isEqualTo(expectedEventCount);
     }
 
+    @Step("Wait for block height is multiple of <count> by sending arbitrary public transactions")
+    public void waitForBlockHeightBySendingPublicTransaction(int count) {
+        int bloomConfirmations = 256; // this value comes from bloomConfirms which is the number of confirmation blocks before a bloom section is moved
+        int delta = 20; // marginal tollerance
+        BigInteger currentBlockHeight = currentBlockNumber();
+        int targetBlockHeight = currentBlockHeight.intValue() + (count - currentBlockHeight.intValue() % count) + bloomConfirmations + delta;
+        List<Observable<? extends Contract>> contractObservables = new ArrayList<>();
+        for (int i = 0; i < 100; i++) {
+            QuorumNode node = QuorumNode.values()[i % numberOfQuorumNodes()];
+            contractObservables.add(contractService.createClientReceiptSmartContract(node).subscribeOn(Schedulers.io()));
+        }
+        while (currentBlockHeight.intValue() < targetBlockHeight) {
+            // as this test will take time to complete so this log is important
+            // to tell Travis not to kill the CI
+            logger.warn("[Travis] Current block height = {}, targetBlockHeight = {}", currentBlockHeight.intValue(), targetBlockHeight);
+            currentBlockHeight = Observable.zip(contractObservables, args -> args.length)
+                    .flatMap(i -> utilService.getCurrentBlockNumber())
+                    .toBlocking()
+                    .first()
+                    .getBlockNumber();
+        }
+    }
 }
