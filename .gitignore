@@ -1,6 +1,9 @@
 # Gauge - metadata dir
 .gauge
 
+# IntelliJ project settings
+.idea
+
 # Gauge - log files dir
 logs
 

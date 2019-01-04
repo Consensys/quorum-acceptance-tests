@@ -30,6 +30,7 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "quorum")
 public class QuorumNetworkProperty {
     private Map<QuorumNode, Node> nodes = new HashMap<>();
+    private Map<Wallet, WalletData> wallets = new HashMap<>();
     private SocksProxy socksProxy;
     private String bootEndpoint;
 
@@ -57,6 +58,14 @@ public class QuorumNetworkProperty {
         this.bootEndpoint = bootEndpoint;
     }
 
+    public Map<Wallet, WalletData> getWallets() {
+        return wallets;
+    }
+
+    public void setWallets(Map<Wallet, WalletData> wallets) {
+        this.wallets = wallets;
+    }
+
     public static class SocksProxy {
         private String host;
         private int port;
@@ -82,6 +91,8 @@ public class QuorumNetworkProperty {
         @JsonProperty("privacy-address")
         private String privacyAddress;
         private String url;
+        @JsonProperty("third-party-url")
+        private String thirdPartyUrl;
         @JsonProperty("validator-address")
         private String validatorAddress;
         @JsonProperty("enode-address")
@@ -130,6 +141,37 @@ public class QuorumNetworkProperty {
 
         public void setEnode(String enode) {
             this.enode = enode;
+        }
+
+        public String getThirdPartyUrl() {
+            return thirdPartyUrl;
+        }
+
+        public void setThirdPartyUrl(String thirdPartyUrl) {
+            this.thirdPartyUrl = thirdPartyUrl;
+        }
+    }
+
+    public static class WalletData {
+        @JsonProperty("path")
+        private String walletPath;
+        @JsonProperty("pass")
+        private String walletPass;
+
+        public String getWalletPath() {
+            return walletPath;
+        }
+
+        public void setWalletPath(String walletPath) {
+            this.walletPath = walletPath;
+        }
+
+        public String getWalletPass() {
+            return walletPass;
+        }
+
+        public void setWalletPass(String walletPass) {
+            this.walletPass = walletPass;
         }
     }
 }

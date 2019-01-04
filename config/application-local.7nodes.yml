@@ -4,21 +4,28 @@ quorum:
     Node1:
       privacy-address: BULeR8JyUWhiuuCMU/HLA0Q5pzkYT+cHII3ZKBey3Bo=
       url: http://localhost:22000
+      third-party-url: http://localhost:9081
     Node2:
       privacy-address: QfeDAys9MPDs2XHExtc84jKGHxZg/aj52DTh0vtA3Xc=
       url: http://localhost:22001
+      third-party-url: http://localhost:9082
     Node3:
       privacy-address: 1iTZde/ndBHvzhcl7V68x44Vx7pl8nwx9LqnM/AfJUg=
       url: http://localhost:22002
+      third-party-url: http://localhost:9083
     Node4:
       privacy-address: oNspPPgszVUFw0qmGFfWwh1uxVUXgvBxleXORHj07g8=
       url: http://localhost:22003
+      third-party-url: http://localhost:9084
     Node5:
       privacy-address: R56gy4dn24YOjwyesTczYa8m5xhP6hF2uTMCju/1xkY=
       url: http://localhost:22004
+      third-party-url: http://localhost:9085
     Node6:
       privacy-address: UfNSeSGySeKg11DVNEnqrUtxYRVor4+CvluI8tVv62Y=
       url: http://localhost:22005
+      third-party-url: http://localhost:9086
     Node7:
       privacy-address: ROAZBWtSacxXQrOe3FGAqJDyJjFePR5ce4TSIzmJ0Bc=
       url: http://localhost:22006
+      third-party-url: http://localhost:9087

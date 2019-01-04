@@ -21,15 +21,32 @@ package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.common.Wallet;
 import org.springframework.stereotype.Service;
 
 @Service
 public class PrivacyService extends AbstractService {
     public String id(QuorumNode node) {
+        return getQuorumNodeConfig(node).getPrivacyAddress();
+    }
+
+    public String thirdPartyUrl(QuorumNode node) {
+        return getQuorumNodeConfig(node).getThirdPartyUrl();
+    }
+
+    private QuorumNetworkProperty.Node getQuorumNodeConfig(QuorumNode node){
         QuorumNetworkProperty.Node nodeConfig = networkProperty().getNodes().get(node);
         if (nodeConfig == null) {
             throw new IllegalArgumentException("Node " + node + " not found in config");
         }
-        return nodeConfig.getPrivacyAddress();
+        return nodeConfig;
+    }
+
+    public QuorumNetworkProperty.WalletData walletData(Wallet wallet){
+        QuorumNetworkProperty.WalletData walletData = networkProperty().getWallets().get(wallet);
+        if (walletData == null) {
+            throw new IllegalArgumentException("Wallet " + wallet + " not found in config");
+        }
+        return walletData;
     }
 }
