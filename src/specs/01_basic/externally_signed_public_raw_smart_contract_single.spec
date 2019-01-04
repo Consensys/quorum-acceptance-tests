@@ -1,6 +1,6 @@
-# Public raw smart contract
+# Public raw smart contract when signed externally
 
- Tags: raw
+ Tags: basic, raw, externally-signed, public
 
 A smart contract, `ClientReceipt`, logs all the deposits that have been performed.
 ```

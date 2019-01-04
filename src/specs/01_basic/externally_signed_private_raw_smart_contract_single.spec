@@ -1,11 +1,11 @@
-# Single private smart contract
+# Single private smart contract when signed externally
 
- Tags: raw
+ Tags: basic, raw, externally-signed, private
 
 This is to verify that a private smart contract between 2 parties are not accessible by others.
 A simple smart contract is to store a int value and to provide `get()` and `set()` functions.
 ```
-pragma solidity ^0.4.15;
+pragma solidity ^0.5.0;
 
 contract SimpleStorage {
     uint private storedData;
@@ -27,7 +27,7 @@ contract SimpleStorage {
 * Deploy a simple smart contract with initial value "23" signed by external wallet "Wallet1" in "Node1" and it's private for "Node7", name this contract as "contract31"
 
 ## Contract is mined
-/*
+
  Tags: raw
 
 * Transaction Hash is returned for "contract31"
