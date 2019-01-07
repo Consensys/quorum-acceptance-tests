@@ -4,7 +4,7 @@
 
 Sending multiple private smart contracts between nodes and verify if all nodes have received.
 ```
-pragma solidity ^0.4.15;
+pragma solidity ^0.5.0;
 
 contract SimpleStorage {
     uint private storedData;
@@ -17,7 +17,7 @@ contract SimpleStorage {
         storedData = x;
     }
 
-    function get() public constant returns (uint retVal) {
+    function get() public view returns (uint retVal) {
         return storedData;
     }
 }
