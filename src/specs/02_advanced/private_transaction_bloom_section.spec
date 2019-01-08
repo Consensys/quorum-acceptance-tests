@@ -25,7 +25,9 @@ contract ClientReceipt {
 }
 ```
 
-## FIXME: Log events are **only** captured in participated parties when executing the contract
+* Note: this spec requires a revisit due to high block number setup
+
+## Log events are **only** captured in participated parties when executing the contract
 
   Tags: raft, pr570
 
