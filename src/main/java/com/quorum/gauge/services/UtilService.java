@@ -20,14 +20,15 @@
 package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.ext.PendingTransaction;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.methods.response.EthBlockNumber;
 import org.web3j.protocol.core.methods.response.NetPeerCount;
 import org.web3j.protocol.core.methods.response.Transaction;
 import rx.Observable;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -42,14 +43,15 @@ public class UtilService extends AbstractService {
         return client.ethBlockNumber().observable();
     }
 
-    //TODO: this doesn't seem to work (it doesn't return any pending transactions)
-    public List<Transaction> getPendingHashes(QuorumNode node) {
-        Web3j client = connectionFactory().getWeb3jConnection(node);
-        List<Transaction> transactions = new ArrayList<>();
-        client.pendingTransactionObservable().subscribe(tx -> {
-            transactions.add(tx);
-        }, Throwable::printStackTrace);
-        return transactions;
+    public List<Transaction> getPendingTransactions(QuorumNode node) {
+        Request<?, PendingTransaction> request = new Request<>(
+                "eth_pendingTransactions",
+                null,
+                connectionFactory().getWeb3jService(node),
+                PendingTransaction.class
+        );
+
+        return request.observable().toBlocking().first().getTransactions();
     }
 
     public int getNumberOfNodes(QuorumNode node) {

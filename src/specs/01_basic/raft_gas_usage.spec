@@ -17,11 +17,11 @@ Note that intrinsic gas for the simple contract is between 25,224 and 25,352, re
 
 * Private transaction where minter is a participant and gas value is "25100", name this contract as "contract1"
 * Contract "contract1" had exception with message "intrinsic gas too low"
-* Contract "contract1" is not pending
+* No transactions are pending on node for "contract1"
 
 * Private transaction where minter is not a participant and gas value is "25100", name this contract as "contract2"
 * Contract "contract2" had exception with message "intrinsic gas too low"
-* Contract "contract2" is not pending
+* No transactions are pending on node for "contract2"
 
 * Check "nodecount" nodes are still running
 
@@ -31,11 +31,11 @@ Note that intrinsic gas for the simple contract is between 25,224 and 25,352, re
 
 * Private transaction where minter is a participant and gas value is "26000", name this contract as "contract3"
 * Contract "contract3" had exception with message "not-enough gas"
-* Contract "contract3" is not pending
+* No transactions are pending on node for "contract3"
 
 * Private transaction where minter is not a participant and gas value is "26000", name this contract as "contract4"
 * Contract "contract4" had exception with message "not-enough gas"
-* Contract "contract4" is not pending
+* No transactions are pending on node for "contract4"
 
 * Check "nodecount" nodes are still running
 
@@ -43,6 +43,8 @@ Note that intrinsic gas for the simple contract is between 25,224 and 25,352, re
 
 * Private transaction where minter is a participant and gas value is "98000", name this contract as "contract5"
 * Contract "contract5" creation succeeded
+* No transactions are pending on node for "contract5"
 
 * Private transaction where minter is not a participant and gas value is "98000", name this contract as "contract6"
-* Contract "contract5" creation succeeded
+* Contract "contract6" creation succeeded
+* No transactions are pending on node for "contract6"

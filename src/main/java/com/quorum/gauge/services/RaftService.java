@@ -21,9 +21,12 @@ package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.ext.NodeInfo;
 import com.quorum.gauge.ext.RaftCluster;
 import com.quorum.gauge.ext.RaftLeader;
 import org.apache.commons.lang.StringEscapeUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.Response;
@@ -34,6 +37,7 @@ import java.util.Map;
 
 @Service
 public class RaftService extends AbstractService {
+    private static final Logger logger = LoggerFactory.getLogger(RaftService.class);
 
     public Observable<RaftAddPeer> addPeer(QuorumNode node, String enode) {
         Request<?, RaftService.RaftAddPeer> request = new Request<>(
@@ -58,8 +62,8 @@ public class RaftService extends AbstractService {
     }
 
     /**
-     * Retrieve the enode for the raft leader and look it up in the
-     * configured nodes to convert it into a QuorumNode identity.
+     * Retrieve the enode for the raft leader and compare it with the enode of
+     * all the peers to convert it into a QuorumNode identity.
      */
     public QuorumNode getLeader(QuorumNode node) {
         Request<String, RaftLeader> request = new Request<>(
@@ -69,24 +73,26 @@ public class RaftService extends AbstractService {
                 RaftLeader.class);
         RaftLeader response = request.observable().toBlocking().first();
         String leaderEnode = response.getResult();
+        logger.debug("Retrieved leader enode: {}", leaderEnode);
 
         Map<QuorumNode, QuorumNetworkProperty.Node> nodes = connectionFactory().getNetworkProperty().getNodes();
-        QuorumNode leaderNodeId = null;
         for (QuorumNode nodeId : nodes.keySet()) {
-            QuorumNetworkProperty.Node nodeProperties = nodes.get(nodeId);
-            if (null == nodeProperties.getEnode()) {
-                throw new RuntimeException("Enode is missing in configuration for node: " + nodeId);
+            Request<?, NodeInfo> nodeInfoRequest = new Request<>(
+                    "admin_nodeInfo",
+                    null,
+                    connectionFactory().getWeb3jService(nodeId),
+                    NodeInfo.class
+            );
+
+            NodeInfo nodeInfo = nodeInfoRequest.observable().toBlocking().first();
+            String thisEnode = nodeInfo.getEnode();
+            logger.debug("Retrieved enode info: {}", thisEnode);
+            if (thisEnode.contains(leaderEnode)) {
+                return nodeId;
             }
-            if (nodeProperties.getEnode().equals(leaderEnode)) {
-                leaderNodeId = nodeId;
-                break;
-            }
-        }
-        if (null == leaderNodeId) {
-            throw new RuntimeException("Leader enode not found in config: " + leaderEnode);
         }
 
-        return leaderNodeId;
+        throw new RuntimeException("Leader enode not found in peers: " + leaderEnode);
     }
 
     public static class RaftAddPeer extends Response<Integer> {

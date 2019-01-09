@@ -94,12 +94,23 @@ public class RaftGasUsage extends AbstractSpecImplementation {
         assertThat(result.getResult()).isEqualTo(CreationResult.CreationResultTypes.success);
     }
 
-    @Step("Contract <contractName> is not pending")
-    public void checkNoPending(String contractName) {
+    @Step("No transactions are pending on node for <contractName>")
+    public void noTransactionsPending(String contractName) {
         CreationResult result = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, CreationResult.class);
 
-        List<Transaction> transactions= utilService.getPendingHashes(result.getNode());
+        List<Transaction> transactions= utilService.getPendingTransactions(result.getNode());
         assertThat(transactions).isEmpty();
+    }
+
+    @Step("Contract <contractName> is not pending")
+    public void checkContractNotPending(String contractName) {
+        CreationResult result = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, CreationResult.class);
+
+        String transactionHash = result.contract.getTransactionReceipt().orElseThrow(() -> new RuntimeException("no transaction receipt for contract")).getTransactionHash();
+
+        List<Transaction> transactions= utilService.getPendingTransactions(result.getNode());
+        transactions.forEach(t -> logger.info("=== GOT HASH: {}", t.getHash()));
+        transactions.forEach(t -> assertThat(t.getHash()).isNotEqualTo(transactionHash));
     }
 
     /**
@@ -108,9 +119,11 @@ public class RaftGasUsage extends AbstractSpecImplementation {
     private void createContract(int gas, QuorumNode source, QuorumNode target, String contractName) {
         try {
             Contract contract = contractService.createSimpleContract(42, source, target, BigInteger.valueOf(gas)).toBlocking().first();
-            DataStoreFactory.getScenarioDataStore().put(contractName, new CreationResult(CreationResult.CreationResultTypes.success, source, ""));
+            DataStoreFactory.getScenarioDataStore().put(contractName,
+                    new CreationResult(CreationResult.CreationResultTypes.success, contract, source, ""));
         } catch (RuntimeException e) {
-            DataStoreFactory.getScenarioDataStore().put(contractName, new CreationResult(CreationResult.CreationResultTypes.exception, source, e.getMessage()));
+            DataStoreFactory.getScenarioDataStore().put(contractName,
+                    new CreationResult(CreationResult.CreationResultTypes.exception, null, source, e.getMessage()));
         }
     }
 
@@ -118,11 +131,13 @@ public class RaftGasUsage extends AbstractSpecImplementation {
         enum CreationResultTypes {success, exception}
 
         private final CreationResultTypes result;
+        private final Contract contract;
         private final QuorumNode node;
         private final String errorMessage;
 
-        public CreationResult(CreationResultTypes result, QuorumNode node, String errorMessage) {
+        public CreationResult(CreationResultTypes result, Contract contract, QuorumNode node, String errorMessage) {
             this.result = result;
+            this.contract = contract;
             this.node = node;
             this.errorMessage = errorMessage;
         }
