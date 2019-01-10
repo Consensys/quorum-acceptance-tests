@@ -58,6 +58,10 @@ public class ContractService extends AbstractService {
     AccountService accountService;
 
     public Observable<? extends Contract> createSimpleContract(int initialValue, QuorumNode source, QuorumNode target) {
+        return createSimpleContract(initialValue, source, target, DEFAULT_GAS_LIMIT);
+    }
+
+    public Observable<? extends Contract> createSimpleContract(int initialValue, QuorumNode source, QuorumNode target, BigInteger gas) {
         Quorum client = connectionFactory().getConnection(source);
         final List<String> privateFor;
         if (null != target) {
@@ -77,7 +81,7 @@ public class ContractService extends AbstractService {
             return SimpleStorage.deploy(client,
                     clientTransactionManager,
                     BigInteger.valueOf(0),
-                    DEFAULT_GAS_LIMIT,
+                    gas,
                     BigInteger.valueOf(initialValue)).observable();
         });
     }

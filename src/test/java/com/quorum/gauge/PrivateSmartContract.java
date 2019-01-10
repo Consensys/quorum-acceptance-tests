@@ -290,7 +290,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     }
 
     @Step("Execute <contractName>'s `deposit()` function <count> times with arbitrary id and value from <source>. And it's private for <target>")
-    public void excuteDesposit(String contractName, int count, QuorumNode source, QuorumNode target) {
+    public void executeDeposit(String contractName, int count, QuorumNode source, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         Scheduler scheduler = networkAwaredScheduler(count);
         List<Observable<TransactionReceipt>> observables = new ArrayList<>();
@@ -304,7 +304,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     }
 
     @Step("Execute <contractName>'s `deposit()` function <count> times with arbitrary id and value between original parties")
-    public void excuteDespositBetweenOriginalParties(String contractName, int count) {
+    public void executeDepositBetweenOriginalParties(String contractName, int count) {
         List<Observable<TransactionReceipt>> observables = new ArrayList<>();
         String[] contractNames = contractName.split(",");
         for (String cName : contractNames) {
