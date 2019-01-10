@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
+import org.web3j.tx.exceptions.ContractCallException;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -121,19 +122,13 @@ public class SmartContractDualState extends AbstractSpecImplementation {
     public void setStoreContractValueInPrivateShouldFail(String contractNameKey, String methodName, QuorumNode node, int value, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey, Contract.class);
         String contractName = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey + "Type", String.class);
-        boolean failed = false;
         logger.debug("{} contract address is:{}", contractNameKey, c.getContractAddress());
         try {
             TransactionReceipt tr = contractService.setGenericStoreContractSetValue(node, c.getContractAddress(), contractName, methodName, value, true, target).toBlocking().first();
             logger.debug("{} {} {}, txHash = {}", contractNameKey, contractName, methodName, tr.getTransactionHash());
         } catch (Exception txe) {
-            logger.debug("error:transaction failed:" + txe.getMessage());
-            if (txe.getMessage().contains("Transaction has failed"))
-                failed = true;
-            else
-                throw new RuntimeException(txe);
+            assertThat(txe).hasMessageContaining("Transaction has failed");
         }
-        assertThat(failed).isTrue();
     }
 
     @Step("<contractNameKey>'s <methodName> function execution in <node> with value <value>")
@@ -147,24 +142,27 @@ public class SmartContractDualState extends AbstractSpecImplementation {
         assertThat(tr.getTransactionHash()).isNotBlank();
     }
 
+    @Step("<contractNameKey>'s <methodName> function execution in <node> should fail")
+    public void setStoreContractValueInPublic(String contractNameKey, String methodName, QuorumNode node) {
+        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey, Contract.class);
+        String contractName = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey + "Type", String.class);
+        try {
+            contractService.readGenericStoreContractGetValue(node, c.getContractAddress(), contractName, methodName);
+        } catch (Exception e) {
+            assertThat(e).hasCauseInstanceOf(ContractCallException.class);
+        }
+    }
 
     @Step("<contractNameKey>'s <methodName> function execution in <node> with value <value>, should fail")
     public void setStoreContractValueInPublicShouldFail(String contractNameKey, String methodName, QuorumNode node, int value) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey, Contract.class);
         String contractName = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey + "Type", String.class);
-        boolean failed = false;
         logger.debug("{} contract address is:{}", contractNameKey, c.getContractAddress());
         try {
             TransactionReceipt tr = contractService.setGenericStoreContractSetValue(node, c.getContractAddress(), contractName, methodName, value, false, null).toBlocking().first();
             logger.debug("{} {} {}, txHash = {}", contractNameKey, contractName, methodName, tr.getTransactionHash());
         } catch (Exception txe) {
-            logger.debug("Expected transaction failed: {}", txe.getMessage());
-            if (txe.getMessage().contains("Transaction has failed"))
-                failed = true;
-            else
-                throw new RuntimeException(txe);
+            assertThat(txe).hasMessageContaining("Transaction has failed");
         }
-        assertThat(failed).isTrue();
     }
-
 }

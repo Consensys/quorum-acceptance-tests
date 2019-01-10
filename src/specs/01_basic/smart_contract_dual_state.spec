@@ -181,9 +181,9 @@ contract storea {
 * Deploy "storea" smart contract with contract "b4" initial value "1" from a default account in "Node1", named this contract as "a4"
 * "a4"'s "geta" function execution in "Node1" returns "1"
 * "a4"'s "setc" function execution in "Node1" with value "10", should fail
-* "a4"'s "getc" function execution in "Node1" returns "1"
+* "a4"'s "getc" function execution in "Node1" should fail
 * "a4"'s "setb" function execution in "Node1" with value "10", should fail
-* "a4"'s "getb" function execution in "Node1" returns "1"
+* "a4"'s "getb" function execution in "Node1" should fail
 * "a4"'s "seta" function execution in "Node1" with value "10", should fail
 * "a4"'s "geta" function execution in "Node1" returns "1"
 * "b4"'s "getb" function execution in "Node1" returns "1"
