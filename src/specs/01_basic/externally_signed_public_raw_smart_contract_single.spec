@@ -34,7 +34,7 @@ contract SimpleStorage {
 
 * "contract32"'s `get()` function execution in "Node1" returns "32"
 * "contract32"'s `get()` function execution in "Node2" returns "32"
-* "contract32"'s `get()` function execution in "Node7" returns "32"
+* "contract32"'s `get()` function execution in "Node4" returns "32"
 * "contract32"'s `get()` function execution in "Node3" returns "32"
 
 ## When there's an update, every node is updated
@@ -44,5 +44,5 @@ contract SimpleStorage {
 * Execute "contract32"'s `set()` function with new value "5" signed by external wallet "Wallet8" in "Node3"
 * "contract32"'s `get()` function execution in "Node1" returns "5"
 * "contract32"'s `get()` function execution in "Node2" returns "5"
-* "contract32"'s `get()` function execution in "Node7" returns "5"
+* "contract32"'s `get()` function execution in "Node4" returns "5"
 * "contract32"'s `get()` function execution in "Node3" returns "5"

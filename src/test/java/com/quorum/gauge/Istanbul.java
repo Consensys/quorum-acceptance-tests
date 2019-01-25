@@ -51,7 +51,7 @@ public class Istanbul extends AbstractSpecImplementation {
 
     @Step("Among <total> validators, stop <x> validators so there are less than 2F + 1 validators in the network")
     public void stopValidators(int total, int x) {
-        List<QuorumNode> nodes = Observable.from(QuorumNode.values()).take(7).toList().toBlocking().first();
+        List<QuorumNode> nodes = Observable.from(QuorumNode.values()).take(total).toList().toBlocking().first();
         Collections.shuffle(nodes);
         List<QuorumNode> stoppedNodes = nodes.subList(0, x);
         BigInteger lastBlockNumber = Observable.from(stoppedNodes)

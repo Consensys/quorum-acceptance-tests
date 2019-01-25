@@ -13,23 +13,23 @@ quorum:
   # mainly used for functional test scenarios
   nodes:
     Node1:
-      privacy-address: xjF8q8yEn9NvpT6QMQ5/KDxsrNJUxXPsJz+eiowLVFk=
-      url: http://172.31.106.65:22000
+      privacy-address: SXdAvvLuoUY6NO2qSJlr+rAYFa/5PyUD6AZu4lrGqhM=
+      url: http://172.31.100.34:22000
     Node2:
-      privacy-address: PWq8vjGvlZxQjM0uUkDGSkuaNfrBC3ktIh9iRrKp+Qw=
-      url: http://172.31.98.75:22000
+      privacy-address: 8jUTuy/Ll8kgptEl0qeJdPAZ4rHC6/X38aJ0/M9Vh0o=
+      url: http://172.31.101.63:22000
     Node3:
-      privacy-address: wCHD/0T3u9vFvsKvbEsHeLl+NMrvoZMd08QOSon6vxU=
-      url: http://172.31.107.18:22000
+      privacy-address: 8bPas4ftJullCL3U8y/r9C4XDRzdKhJ0t5rXXVm4/U4=
+      url: http://172.31.102.159:22000
     Node4:
-      privacy-address: ZRZocxoQEJfGCsNjZUxWxDOQfz1nOkdlkqFjBy9MbyE=
-      url: http://172.31.85.125:22000
+      privacy-address: lgDYWZoOPfy3HpPOeGQCaZkd6XmyZxwCGDDDdgZ+Ngg=
+      url: http://172.31.101.33:22000
     Node5:
-      privacy-address: Bw/MSUKwiyHaSixsBBikhR1GohP0R4BmZDL6r3XJfR4=
-      url: http://172.31.89.24:22000
+      privacy-address: ioizrAV2KrEMwJfOuKfQJEWuIOc41ZJUvI9QXx64o0M=
+      url: http://172.31.101.38:22000
     Node6:
-      privacy-address: ONr2l4AxptXy0ef1rwECvQkoJsz3J63pb0C9kTWsBnI=
-      url: http://172.31.93.207:22000
+      privacy-address: FULo2nE79tj+EnjvPnnQe9rK44UHZseOERMCDxeXbjs=
+      url: http://172.31.102.93:22000
     Node7:
-      privacy-address: 3FWFk/qBfy9KVf2R0oYaki3tnEIWtkEY/F7zNdsCIF4=
-      url: http://172.31.125.149:22000
+      privacy-address: y+BfCzwQkAisAOz7+UDpyzRYSV9nb1KVDAy9SPgmBhs=
+      url: http://172.31.100.127:22000
