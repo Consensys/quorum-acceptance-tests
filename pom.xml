@@ -35,7 +35,7 @@
         <CONSENSUS>TBD</CONSENSUS>
         <tags>(basic || basic-${CONSENSUS}) &amp;&amp; !advanced</tags>
         <!-- dependencies -->
-        <web3j-quorum.version>4.0.5-SNAPSHOT</web3j-quorum.version>
+        <web3j-quorum.version>4.0.6-SNAPSHOT</web3j-quorum.version>
         <commons-lang.version>2.6</commons-lang.version>
         <!-- there's an issue with code gen in web3j 3.5.0-->
         <web3j.version>3.4.0</web3j.version>

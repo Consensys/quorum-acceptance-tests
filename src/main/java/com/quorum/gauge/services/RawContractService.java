@@ -130,7 +130,9 @@ public class RawContractService extends AbstractService {
                     credentials,
                     privacyService.id(source),
                     Arrays.asList(privacyService.id(target)),
-                    enclave);
+                    enclave,
+                    DEFAULT_MAX_RETRY,
+                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
 
             return SimpleStorage.deploy(client,
                     qrtxm,
@@ -159,7 +161,9 @@ public class RawContractService extends AbstractService {
                     credentials,
                     privacyService.id(source),
                     Arrays.asList(privacyService.id(target)),
-                    enclave);
+                    enclave,
+                    DEFAULT_MAX_RETRY,
+                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
 
             return SimpleStorage.load(contractAddress, client,
                     qrtxm,
