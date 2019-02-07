@@ -12,21 +12,6 @@
         <version>2.0.5.RELEASE</version>
     </parent>
 
-    <!-- TODO Remove this when a 4.0.5+ release for org.web3j:quorum is available-->
-    <repositories>
-        <repository>
-            <id>maven-snapshots</id>
-            <url>http://oss.sonatype.org/content/repositories/snapshots</url>
-            <layout>default</layout>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
@@ -35,7 +20,7 @@
         <CONSENSUS>TBD</CONSENSUS>
         <tags>(basic || basic-${CONSENSUS}) &amp;&amp; !advanced</tags>
         <!-- dependencies -->
-        <web3j-quorum.version>4.0.6-SNAPSHOT</web3j-quorum.version>
+        <web3j-quorum.version>4.0.6</web3j-quorum.version>
         <commons-lang.version>2.6</commons-lang.version>
         <!-- there's an issue with code gen in web3j 3.5.0-->
         <web3j.version>3.4.0</web3j.version>
