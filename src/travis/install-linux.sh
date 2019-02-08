@@ -3,6 +3,12 @@
 # This script installs the dependencies needed to bring up the 4node network for a specific consensus and run the automated acceptance test against it
 
 echo "install started..."
+apt update
+apt -y install openjdk-8-jre-headless
+apt -y install maven
+apt-get -y install software-properties-common
+add-apt-repository -y ppa:ethereum/ethereum
+apt-get -y install solc
 echo "getting tessera jar..."
 wget https://github.com/jpmorganchase/tessera/releases/download/tessera-0.8/tessera-app-0.8-app.jar -O tessera.jar -q
 sudo cp tessera.jar $HOME
