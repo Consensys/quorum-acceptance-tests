@@ -1,4 +1,4 @@
-# Single private smart contract when signed externally
+# Private raw smart contract when signed externally
 
  Tags: basic, raw, externally-signed, private
 
