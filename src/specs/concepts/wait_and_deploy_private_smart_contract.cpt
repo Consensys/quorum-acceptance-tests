@@ -1,5 +1,5 @@
 # Wait for block height is atleast <n> higher than <snapshotName> then deploy a private simple smart contract
 
 * Wait until block height is atleast <n> higher than <snapshotName>
-* Deploy a simple smart contract with initial value "10" in "Node1"'s default account and it's private for "Node7", named this contract as "contract17"
+* Deploy a simple smart contract with initial value "10" in "Node1"'s default account and it's private for "Node4", named this contract as "contract17"
 * "contract17" is mined

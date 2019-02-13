@@ -30,6 +30,3 @@ contract ClientReceipt {
 * "Node2" has received "10" transactions which contain "10" log events in total
 * "Node3" has received "10" transactions which contain "10" log events in total
 * "Node4" has received "10" transactions which contain "10" log events in total
-* "Node5" has received "10" transactions which contain "10" log events in total
-* "Node6" has received "10" transactions which contain "10" log events in total
-* "Node7" has received "10" transactions which contain "10" log events in total

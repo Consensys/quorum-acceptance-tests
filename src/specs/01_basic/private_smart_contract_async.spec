@@ -25,11 +25,11 @@ contract SimpleStorage {
 
 ## Contract is successfully mined with valid account
 
-* Asynchronously deploy a simple smart contract with initial value "10" in "Node1"'s default account and it's private for "Node7", named this contract as "contract17"
+* Asynchronously deploy a simple smart contract with initial value "10" in "Node1"'s default account and it's private for "Node4", named this contract as "contract17"
 * Transaction Receipt is present in "Node1" for "contract17"
-* Transaction Receipt is present in "Node7" for "contract17"
+* Transaction Receipt is present in "Node4" for "contract17"
 
 ## Contract is not mined with non-existed account
 
-* Asynchronously deploy a simple smart contract with initial value "20" in "Node1"'s non-existed account and it's private for "Node7", named this contract as "contract17_error"
+* Asynchronously deploy a simple smart contract with initial value "20" in "Node1"'s non-existed account and it's private for "Node4", named this contract as "contract17_error"
 * An error is returned for "contract17_error"

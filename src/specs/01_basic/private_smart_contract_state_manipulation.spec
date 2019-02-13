@@ -25,7 +25,7 @@ contract SimpleStorage {
 Non-participated party from original transaction is trying to modify the private state of the participated party.
 
 * Note: this step is not implemented indicating that the spec execution is temporarily skipped
-* Deploy a simple smart contract with initial value "100" in "Node1"'s default account and it's private for "Node7", named this contract as "contract17"
+* Deploy a simple smart contract with initial value "100" in "Node1"'s default account and it's private for "Node4", named this contract as "contract17"
 
 ## Private state is maintained
 
