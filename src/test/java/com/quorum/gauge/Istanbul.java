@@ -49,11 +49,16 @@ public class Istanbul extends AbstractSpecImplementation {
         waitForBlockHeight(currentBlockNumber().intValue(), currentBlockNumber().intValue() + diff);
     }
 
-    @Step("Among <total> validators, stop <x> validators so there are less than 2F + 1 validators in the network")
-    public void stopValidators(int total, int x) {
-        List<QuorumNode> nodes = Observable.from(QuorumNode.values()).take(total).toList().toBlocking().first();
+    @Step("Among all validators, stop some validators so there are less than 2F + 1 validators in the network")
+    public void stopValidators() {
+        int totalNodes = utilService.getNumberOfNodes(QuorumNode.Node1) + 1;
+        int numOfValidatorsToStop = 3;
+        if (totalNodes <= 4)
+            numOfValidatorsToStop = 2;
+
+        List<QuorumNode> nodes = Observable.from(QuorumNode.values()).take(totalNodes).toList().toBlocking().first();
         Collections.shuffle(nodes);
-        List<QuorumNode> stoppedNodes = nodes.subList(0, x);
+        List<QuorumNode> stoppedNodes = nodes.subList(0, numOfValidatorsToStop);
         BigInteger lastBlockNumber = Observable.from(stoppedNodes)
                 .flatMap(node -> istanbulService.stopMining(node).subscribeOn(Schedulers.io()))
                 .flatMap(s -> utilService.getCurrentBlockNumber())
