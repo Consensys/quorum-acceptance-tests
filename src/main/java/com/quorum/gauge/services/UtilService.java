@@ -54,6 +54,10 @@ public class UtilService extends AbstractService {
         return request.observable().toBlocking().first().getTransactions();
     }
 
+    /**
+     * @param node
+     * @return number of peers from the view of {@code node}
+     */
     public int getNumberOfNodes(QuorumNode node) {
         Web3j client = connectionFactory().getWeb3jConnection(node);
         NetPeerCount peerCount = client.netPeerCount().observable().toBlocking().first();
