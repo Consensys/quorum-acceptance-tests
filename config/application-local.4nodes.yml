@@ -1,4 +1,4 @@
-# This is for network from 7nodes quorum-examples
+# This is for 4nodes network provisioned locally using `quorum-cloud/travis/4nodes`
 quorum:
   nodes:
     Node1:
