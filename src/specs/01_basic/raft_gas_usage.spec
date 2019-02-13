@@ -9,7 +9,7 @@ In particular, we need to test the following type of scenario:
 - Block is minted containing the private txn
 - Block is validated by a node that IS party to the transaction and which calculates the gas usage as higher than that supplied
 - Block is therefore rejected by the validator
-Note that intrinsic gas for the simple contract is between 25,224 and 25,352, required gas is approx 97,800
+Note that intrinsic gas for the simple contract is approx 57352 and total required gas is approx 115,586
 
 ## Private contract with gas below intrinsic gas should be rejected (and not remain pending).
 
@@ -29,11 +29,11 @@ Note that intrinsic gas for the simple contract is between 25,224 and 25,352, re
 
 * Get number of nodes and store as "nodecount"
 
-* Private transaction where minter is a participant and gas value is "26000", name this contract as "contract3"
+* Private transaction where minter is a participant and gas value is "60352", name this contract as "contract3"
 * Contract "contract3" had exception with message "not-enough gas"
 * No transactions are pending on node for "contract3"
 
-* Private transaction where minter is not a participant and gas value is "26000", name this contract as "contract4"
+* Private transaction where minter is not a participant and gas value is "60352", name this contract as "contract4"
 * Contract "contract4" had exception with message "not-enough gas"
 * No transactions are pending on node for "contract4"
 
@@ -41,10 +41,10 @@ Note that intrinsic gas for the simple contract is between 25,224 and 25,352, re
 
 ## Private contract with sufficient gas should be accepted.
 
-* Private transaction where minter is a participant and gas value is "98000", name this contract as "contract5"
+* Private transaction where minter is a participant and gas value is "120000", name this contract as "contract5"
 * Contract "contract5" creation succeeded
 * No transactions are pending on node for "contract5"
 
-* Private transaction where minter is not a participant and gas value is "98000", name this contract as "contract6"
+* Private transaction where minter is not a participant and gas value is "120000", name this contract as "contract6"
 * Contract "contract6" creation succeeded
 * No transactions are pending on node for "contract6"
