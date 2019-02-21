@@ -47,6 +47,8 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
 
+import static java.util.Collections.singletonList;
+
 @Service
 public class ContractService extends AbstractService {
     private static final Logger logger = LoggerFactory.getLogger(ContractService.class);
@@ -109,21 +111,27 @@ public class ContractService extends AbstractService {
         }
     }
 
+    public Observable<TransactionReceipt> updateSimpleContract(final QuorumNode source, final QuorumNode target,
+                                                   final String contractAddress, final int newValue) {
+        return this.updateSimpleContractWithGasLimit(source, target, contractAddress, DEFAULT_GAS_LIMIT, newValue);
+    }
 
-    public Observable<TransactionReceipt> updateSimpleContract(QuorumNode source, QuorumNode target, String contractAddress, int newValue) {
-        Quorum client = connectionFactory().getConnection(source);
-        return accountService.getDefaultAccountAddress(source).flatMap(address -> {
-            ClientTransactionManager txManager = new ClientTransactionManager(
-                    client,
-                    address,
-                    null,
-                    Arrays.asList(privacyService.id(target)),
-                    DEFAULT_MAX_RETRY,
-                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
-            return SimpleStorage.load(contractAddress, client, txManager,
-                    BigInteger.valueOf(0),
-                    DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue)).observable();
-        });
+    public Observable<TransactionReceipt> updateSimpleContractWithGasLimit(final QuorumNode source,
+                                                               final QuorumNode target,
+                                                               final String contractAddress,
+                                                               final BigInteger gasLimit,
+                                                               final int newValue) {
+        final Quorum client = connectionFactory().getConnection(source);
+        final BigInteger value = BigInteger.valueOf(newValue);
+        final List<String> privateFor = singletonList(privacyService.id(target));
+
+        return accountService.getDefaultAccountAddress(source)
+            .map(address -> new ClientTransactionManager(
+                client, address, null, privateFor, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
+            ))
+            .flatMap(txManager -> SimpleStorage.load(
+                contractAddress, client, txManager, BigInteger.ZERO, gasLimit).set(value).observable()
+            );
     }
 
     public Observable<EthStorageRoot> getStorageRoot(QuorumNode node, String contractAddress) {
