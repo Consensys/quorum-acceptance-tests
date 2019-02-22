@@ -16,17 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package com.quorum.gauge;
 
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.thoughtworks.gauge.Step;
+import com.thoughtworks.gauge.datastore.DataStore;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import org.assertj.core.data.Percentage;
 import org.springframework.stereotype.Service;
 import org.web3j.exceptions.MessageDecodingException;
 import org.web3j.protocol.core.methods.response.EthEstimateGas;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 
 import java.math.BigInteger;
@@ -44,7 +45,6 @@ public class EstimateGas extends AbstractSpecImplementation {
 
         DataStoreFactory.getScenarioDataStore().put("estimatedValue", estimatedValue);
     }
-
 
     @Step("Deploy `SimpleContract` public smart contract from a default account in <from>")
     public void createContract(QuorumNode from) {
@@ -97,10 +97,9 @@ public class EstimateGas extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put("estimatedValue", estimatedValue);
     }
 
-
     @Step("Gas estimate <expectedValue> is returned within <tolerance> percent")
     public void verifyEstimate(String expectedValue, String tolerance) {
-        EthEstimateGas estimatedValue =  mustHaveValue(DataStoreFactory.getScenarioDataStore(), "estimatedValue", EthEstimateGas.class);
+        EthEstimateGas estimatedValue = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "estimatedValue", EthEstimateGas.class);
 
         Double percentage = new Double(tolerance);
         try {
@@ -110,4 +109,25 @@ public class EstimateGas extends AbstractSpecImplementation {
         }
 
     }
+
+    @Step("Update contract <contractName> with value <value>, from <from> to <privateFor> using estimated gas")
+    public void updateContractUsingEstimatedGas(final String contractName, final int value,
+                                                final QuorumNode from, final QuorumNode privateFor) {
+        final DataStore specStore = DataStoreFactory.getSpecDataStore();
+        final DataStore scenarioStore = DataStoreFactory.getScenarioDataStore();
+
+        final Contract contract = mustHaveValue(specStore, contractName, Contract.class);
+        final String contractAddress = contract.getContractAddress();
+
+        final EthEstimateGas estimatedGasResult = mustHaveValue(scenarioStore, "estimatedValue", EthEstimateGas.class);
+        final BigInteger estimatedGasLimit = estimatedGasResult.getAmountUsed();
+
+        final TransactionReceipt receipt = contractService
+            .updateSimpleContractWithGasLimit(from, privateFor, contractAddress, estimatedGasLimit, value)
+            .toBlocking()
+            .first();
+
+        assertThat(receipt.getStatus()).isEqualTo("0x1");
+    }
+
 }
