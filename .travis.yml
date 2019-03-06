@@ -28,20 +28,19 @@ env:
 addons:
   apt:
     update: true
-    sources:
-      - sourceline: ppa:ethereum/ethereum
     packages:
       - dpkg # fixes issue with dpkg-deb error due to travis image issue
       - openssh-client
       - dnsutils
       - maven
-      - solc
       - jq
       - curl
 cache:
   directories:
     - $HOME/.m2
 before_install:
+  - sudo wget https://github.com/ethereum/solidity/releases/download/v0.5.4/solc-static-linux -O /usr/local/bin/solc
+  - sudo chmod +x /usr/local/bin/solc
   - wget https://github.com/getgauge/gauge/releases/download/v1.0.4/gauge-1.0.4-linux.x86_64.zip -O gauge.zip -q
   - sudo unzip -o gauge.zip -d /usr/local/bin
   - wget https://releases.hashicorp.com/terraform/0.11.11/terraform_0.11.11_linux_amd64.zip -O terraform.zip -q
