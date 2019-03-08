@@ -1,6 +1,6 @@
 # Nested private smart contracts
 
- Tags: privacy, nested
+ Tags: basic, privacy, nested
 
 This is to verify that nested private smart contracts between 2 parties are not accessible by others.
 
