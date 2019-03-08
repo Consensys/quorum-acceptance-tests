@@ -23,8 +23,11 @@ import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.services.IstanbulService;
 import com.thoughtworks.gauge.ContinueOnFailure;
+import com.thoughtworks.gauge.Gauge;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import rx.Observable;
@@ -39,6 +42,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @Service
 public class Istanbul extends AbstractSpecImplementation {
+    private static final Logger logger = LoggerFactory.getLogger(Istanbul.class);
+
     @Autowired
     IstanbulService istanbulService;
 
@@ -49,11 +54,19 @@ public class Istanbul extends AbstractSpecImplementation {
         waitForBlockHeight(currentBlockNumber().intValue(), currentBlockNumber().intValue() + diff);
     }
 
-    @Step("Among <total> validators, stop <x> validators so there are less than 2F + 1 validators in the network")
-    public void stopValidators(int total, int x) {
-        List<QuorumNode> nodes = Observable.from(QuorumNode.values()).take(7).toList().toBlocking().first();
+    @Step("Among all validators, stop some validators so there are less than 2F + 1 validators in the network")
+    public void stopValidators() {
+        int totalNodesLive = utilService.getNumberOfNodes(QuorumNode.Node1) + 1;
+        int totalNodesConfigured = numberOfQuorumNodes();
+        int numOfValidatorsToStop = Math.round((totalNodesLive - 1) / 2.0f);
+        // we only can stop validators that are configured
+        assertThat(numOfValidatorsToStop).describedAs("Not enough configured validators to perform STOP operation").isLessThanOrEqualTo(totalNodesConfigured);
+
+        Gauge.writeMessage(String.format("Stopping %d validators from total of %d validators", numOfValidatorsToStop, totalNodesLive));
+
+        List<QuorumNode> nodes = Observable.from(QuorumNode.values()).take(totalNodesConfigured).toList().toBlocking().first();
         Collections.shuffle(nodes);
-        List<QuorumNode> stoppedNodes = nodes.subList(0, x);
+        List<QuorumNode> stoppedNodes = nodes.subList(0, numOfValidatorsToStop);
         BigInteger lastBlockNumber = Observable.from(stoppedNodes)
                 .flatMap(node -> istanbulService.stopMining(node).subscribeOn(Schedulers.io()))
                 .flatMap(s -> utilService.getCurrentBlockNumber())

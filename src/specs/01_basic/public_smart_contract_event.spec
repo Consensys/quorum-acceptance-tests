@@ -1,10 +1,10 @@
 # Public smart contract with event
 
- Tags: basic
+ Tags: basic, public
 
 A smart contract, `ClientReceipt`, logs all the deposits that have been performed.
 ```
-pragma solidity ^0.4.0;
+pragma solidity ^0.5.0;
 
 contract ClientReceipt {
     event Deposit(
@@ -21,6 +21,8 @@ contract ClientReceipt {
 
 ## Log events in total are captured when executing the contract
 
+ Tags: log-events
+
 * Deploy `ClientReceipt` smart contract from a default account in "Node1", named this contract as "contract12"
 * "contract12" is mined
 * Execute "contract12"'s `deposit()` function "10" times with arbitrary id and value from "Node1"
@@ -28,6 +30,3 @@ contract ClientReceipt {
 * "Node2" has received "10" transactions which contain "10" log events in total
 * "Node3" has received "10" transactions which contain "10" log events in total
 * "Node4" has received "10" transactions which contain "10" log events in total
-* "Node5" has received "10" transactions which contain "10" log events in total
-* "Node6" has received "10" transactions which contain "10" log events in total
-* "Node7" has received "10" transactions which contain "10" log events in total

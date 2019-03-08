@@ -24,7 +24,7 @@ contract SimpleStorage {
 }
 ```
 
-* Deploy a simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node7", named this contract as "contract17"
+* Deploy a simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract17"
 
 ## Contract is mined
 
@@ -32,13 +32,13 @@ contract SimpleStorage {
 
 * Transaction Hash is returned for "contract17"
 * Transaction Receipt is present in "Node1" for "contract17"
-* Transaction Receipt is present in "Node7" for "contract17"
+* Transaction Receipt is present in "Node4" for "contract17"
 
 ## Storage Root storing private smart contracts must be the same
 
  Tags: private, storage
 
-* "contract17" stored in "Node1" and "Node7" must have the same storage root
+* "contract17" stored in "Node1" and "Node4" must have the same storage root
 * "contract17" stored in "Node1" and "Node3" must not have the same storage root
 
 ## Transaction payload is secured
@@ -46,7 +46,7 @@ contract SimpleStorage {
  Tags: private, transaction
 
 * "contract17"'s payload is retrievable from "Node1"
-* "contract17"'s payload is retrievable from "Node7"
+* "contract17"'s payload is retrievable from "Node4"
 * "contract17"'s payload is not retrievable from "Node3"
 
 ## Privacy is enforced between parties
@@ -54,14 +54,14 @@ contract SimpleStorage {
  Tags: private
 
 * "contract17"'s `get()` function execution in "Node1" returns "42"
-* "contract17"'s `get()` function execution in "Node7" returns "42"
+* "contract17"'s `get()` function execution in "Node4" returns "42"
 * "contract17"'s `get()` function execution in "Node3" returns "0"
 
 ## When there's an update, privacy is still enforced
 
  Tags: private
 
-* Execute "contract17"'s `set()` function with new value "5" in "Node1" and it's private for "Node7"
+* Execute "contract17"'s `set()` function with new value "5" in "Node1" and it's private for "Node4"
 * "contract17"'s `get()` function execution in "Node1" returns "5"
-* "contract17"'s `get()` function execution in "Node7" returns "5"
+* "contract17"'s `get()` function execution in "Node4" returns "5"
 * "contract17"'s `get()` function execution in "Node3" returns "0"

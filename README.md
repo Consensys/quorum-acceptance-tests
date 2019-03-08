@@ -22,6 +22,7 @@ Latest test reports are available:
   * Folder `01_basic` contains specifications which describe Quorum's basic functionalities. All specifications must be tagged as `basic`
   * Folder `02_advanced` contains specifications which are for making sure Quorum's basic functionalities are working under different conditions in the chain. All specifications must be tagged as `advanced`
 * Glue codes are written in Java under [`src/test/java`](src/test/java) folder
+* Tests are written against 4-node Quorum network
 
 ### Running Tests
 
@@ -33,8 +34,8 @@ Latest test reports are available:
   * Obtain the nodes metadata from Bastion Node (`/qdata/quorum_metadata`) and create a file `config/application-local.yml` with content similar to a sample file in [`config`](config) folder.
 * When using `quorum-examples`, rename `config/application-local.7nodes.yml` to `config/application-local.yml`
 * Run `mvn clean test`
-  * In Travis, `basic` and `advanced` specifications (targetting the consensus used) are run
-  * In local, only `basic` specifications are run. Refer to [Gauge documentation](https://docs.gauge.org/latest/execution.html) and [Gauge Maven Plugin](https://github.com/getgauge/gauge-maven-plugin) to see how to run specs selectively.
+  * By default in Travis, specifications/scenarios with tags `basic` and `advanced` (including targeted consensus, e.g.: basic-raft, raft or basic-istanbul, istanbul) are run
+  * By defautl in local machine, only specifications/scenarios with tags `basic` are run. Refer to [Gauge documentation](https://docs.gauge.org/latest/execution.html) and [Gauge Maven Plugin](https://github.com/getgauge/gauge-maven-plugin) to see how to run specs selectively.
     E.g.: `mvn test -Dtags="advanced && istanbul"` to run only `advanced` specifications and scenarios tagged with `istanbul`
 
 ### Logging

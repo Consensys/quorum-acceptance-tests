@@ -51,9 +51,9 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Random;
 
 import static com.quorum.gauge.sol.SimpleStorage.FUNC_SET;
+
 
 @Service
 public class TransactionService extends AbstractService {

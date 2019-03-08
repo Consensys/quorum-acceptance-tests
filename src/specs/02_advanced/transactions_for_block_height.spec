@@ -8,7 +8,7 @@ proposer rotation.
 
 Using the following smart contracts:
 ```
-pragma solidity ^0.5.0;
+pragma solidity ^0.4.21;
 
 contract SimpleStorage {
     uint private storedData;
@@ -26,7 +26,7 @@ contract SimpleStorage {
     }
 }
 
-pragma solidity ^0.5.0;
+pragma solidity ^0.4.21;
 
 contract ClientReceipt {
     event Deposit(
@@ -49,9 +49,9 @@ contract ClientReceipt {
 * Wait for block height is atleast "10" higher than "snapshot" then deploy a private simple smart contract
 * Wait for block height is atleast "20" higher than "snapshot" then deploy a private simple smart contract
 * Wait for block height is atleast "50" higher than "snapshot" then deploy a private simple smart contract
+* Wait for block height is atleast "70" higher than "snapshot" then deploy a private simple smart contract
 * Wait for block height is atleast "100" higher than "snapshot" then deploy a private simple smart contract
-* Wait for block height is atleast "200" higher than "snapshot" then deploy a private simple smart contract
-* Wait for block height is atleast "500" higher than "snapshot" then deploy a private simple smart contract
+* Wait for block height is atleast "150" higher than "snapshot" then deploy a private simple smart contract
 
 ## Public smart contracts for Istanbul consensus
 
@@ -61,14 +61,14 @@ contract ClientReceipt {
 * Wait for block height is atleast "10" higher than "snapshot" then deploy a public `ClientReceipt` smart contract
 * Wait for block height is atleast "20" higher than "snapshot" then deploy a public `ClientReceipt` smart contract
 * Wait for block height is atleast "50" higher than "snapshot" then deploy a public `ClientReceipt` smart contract
+* Wait for block height is atleast "70" higher than "snapshot" then deploy a public `ClientReceipt` smart contract
 * Wait for block height is atleast "100" higher than "snapshot" then deploy a public `ClientReceipt` smart contract
-* Wait for block height is atleast "200" higher than "snapshot" then deploy a public `ClientReceipt` smart contract
-* Wait for block height is atleast "500" higher than "snapshot" then deploy a public `ClientReceipt` smart contract
+* Wait for block height is atleast "150" higher than "snapshot" then deploy a public `ClientReceipt` smart contract
 
 ## Private smart contracts for Raft consensus
 
  Tags: raft
 
-* Deploy "100" private smart contracts between a default account in "Node1" and a default account in "Node7"
+* Deploy "100" private smart contracts between a default account in "Node1" and a default account in "Node4"
 * "Node1" has received "100" transactions
-* "Node7" has received "100" transactions
+* "Node4" has received "100" transactions
