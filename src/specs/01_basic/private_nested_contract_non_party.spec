@@ -1,6 +1,6 @@
 # Nested private smart contracts - non party node sending transactions
 
- Tags: basic, privacy, nested, non-party
+ Tags: basic, privacy, nested, non-party, privacy-enhancements
 
 This is to verify that a node must not be able to send transactions to private smart contract to which it is not party.
 In this scenario, the node is party to a contract but not the transitive one.

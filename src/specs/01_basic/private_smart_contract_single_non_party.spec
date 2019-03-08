@@ -1,6 +1,6 @@
 # Single private smart contract - non-party sending transaction
 
- Tags: basic, privacy, non-party
+ Tags: basic, privacy, non-party, privacy-enhancements
 
 This is to verify that a node must not be able to send transactions to private smart contract to which it is not party.
 
