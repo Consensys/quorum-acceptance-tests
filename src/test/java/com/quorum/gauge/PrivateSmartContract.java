@@ -347,4 +347,17 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         BigInteger blockNumber = Observable.zip(allObservableContracts, args -> utilService.getCurrentBlockNumber().toBlocking().first()).toBlocking().first().getBlockNumber();
         assertThat(blockNumber).isNotEqualTo(currentBlockNumber());
     }
+
+    @Step("Fail to execute <contractName>'s `set()` function with new value <newValue> in <source> and it's private for <target>")
+    public void updateSimpleContractFail(String contractName, int newValue, QuorumNode source, QuorumNode target) {
+        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
+        TransactionReceipt receipt = null;
+        try {
+            receipt = contractService.updateSimpleContract(source, target, c.getContractAddress(), newValue).toBlocking().first();
+            // if no exception, receipt must have status 0x0
+            assertThat(receipt.isStatusOK()).as("Transaction Receipt Status").isFalse();
+        } catch (Exception e) {
+            // expected an exception to be thrown
+        }
+    }
 }

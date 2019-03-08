@@ -35,6 +35,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 @Service
 @SuppressWarnings("unchecked")
@@ -120,27 +121,21 @@ public class NestedPrivateContract extends AbstractSpecImplementation {
     @Step("Nested Contract C1 Fails To Execute <contractName>'s `set()` function with new value <newValue> in <source> and it's private for <target>")
     public void updateNewValueC1Fails(String contractName, int newValue, QuorumNode source, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
-        Exception exception = null;
-        try {
-            nestedContractService.updateC1Contract(source, target, c.getContractAddress(), newValue).toBlocking().first();
-        } catch (Exception e) {
-            exception = e;
-        }
 
-        assertThat(exception).isNotNull();
+        assertThatThrownBy(
+                () -> nestedContractService.updateC1Contract(source, target, c.getContractAddress(), newValue).toBlocking().first()
+        ).as("Exception Thrown")
+                .isNotNull();
     }
 
     @Step("Nested Contract C2 Fails To Execute <contractName>'s `set()` function with new value <newValue> in <source> and it's private for <target>")
     public void updateNewValueC2Fails(String contractName, int newValue, QuorumNode source, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
-        Exception exception = null;
-        try {
-            nestedContractService.updateC2Contract(source, target, c.getContractAddress(), newValue).toBlocking().first();
-        } catch (Exception e) {
-            exception = e;
-        }
 
-        assertThat(exception).isNotNull();
+        assertThatThrownBy(
+                () -> nestedContractService.updateC2Contract(source, target, c.getContractAddress(), newValue).toBlocking().first()
+        ).as("Exception Thrown")
+                .isNotNull();
     }
 
 
