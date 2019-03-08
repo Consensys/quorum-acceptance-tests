@@ -1,11 +1,12 @@
-# Nested private smart contracts - non party tries to call set and fails
+# Nested private smart contracts - non party node sending transactions
 
- Tags: privacy
+ Tags: privacy, nested, non-party
 
-This is to verify that a private smart contract between 2 parties are not accessible by others.
+This is to verify that a node must not be able to send transactions to private smart contract to which it is not party.
+
 A simple smart contract is to store a int value and to provide `get()` and `set()` functions.
 ```
-pragma solidity ^0.4.15;
+pragma solidity ^0.5.0;
 
 contract C1 {
 
@@ -40,8 +41,9 @@ contract C2  {
 }
 ```
 
-* Deploy a C1 contract with initial value "42" in "Node1"'s default account and it's private for "Node7", named this contract as "contractC1_2"
+* Deploy a C1 contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_2"
 * Deploy a C2 contract with initial value "contractC1_2" in "Node1"'s default account and it's private for "Node2", named this contract as "contractC2_2"
+
 ## Contracts are mined
 
  Tags: private, mining
@@ -49,7 +51,7 @@ contract C2  {
 * Nested Contract Transaction Hash is returned for "contractC1_2"
 * Nested Contract Transaction Hash is returned for "contractC2_2"
 * Nested Contract Transaction Receipt is present in "Node1" for "contractC1_2"
-* Nested Contract Transaction Receipt is present in "Node7" for "contractC1_2"
+* Nested Contract Transaction Receipt is present in "Node4" for "contractC1_2"
 * Nested Contract Transaction Receipt is present in "Node1" for "contractC2_2"
 * Nested Contract Transaction Receipt is present in "Node2" for "contractC2_2"
 
@@ -59,10 +61,10 @@ contract C2  {
 
 * Nested Contract C2 Fails To Execute "contractC2_2"'s `set()` function with new value "5" in "Node1" and it's private for "Node2"
 * Nested Contract C1 "contractC1_2"'s `get()` function execution in "Node1" returns "42"
-* Nested Contract C1 "contractC1_2"'s `get()` function execution in "Node7" returns "42"
+* Nested Contract C1 "contractC1_2"'s `get()` function execution in "Node4" returns "42"
 * Nested Contract C1 "contractC1_2"'s `get()` function execution in "Node2" returns "0"
 * Nested Contract C2 "contractC2_2"'s `get()` function execution in "Node1" returns "42"
-* Nested Contract C2 "contractC2_2"'s `get()` function execution in "Node7" returns "0"
+* Nested Contract C2 "contractC2_2"'s `get()` function execution in "Node4" returns "0"
 * Nested Contract C2 "contractC2_2"'s `get()` function execution in "Node2" returns "0"
 
 ## Non party node (Node2) fails to submit transaction to execute set for C2
@@ -71,10 +73,10 @@ contract C2  {
 
 * Nested Contract C2 Fails To Execute "contractC2_2"'s `set()` function with new value "7" in "Node2" and it's private for "Node1"
 * Nested Contract C1 "contractC1_2"'s `get()` function execution in "Node1" returns "42"
-* Nested Contract C1 "contractC1_2"'s `get()` function execution in "Node7" returns "42"
+* Nested Contract C1 "contractC1_2"'s `get()` function execution in "Node4" returns "42"
 * Nested Contract C1 "contractC1_2"'s `get()` function execution in "Node2" returns "0"
 * Nested Contract C2 "contractC2_2"'s `get()` function execution in "Node1" returns "42"
-* Nested Contract C2 "contractC2_2"'s `get()` function execution in "Node7" returns "0"
+* Nested Contract C2 "contractC2_2"'s `get()` function execution in "Node4" returns "0"
 * Nested Contract C2 "contractC2_2"'s `get()` function execution in "Node2" returns "0"
 
 ## Non party node (Node2) fails to submit transaction to execute set for C1
@@ -83,5 +85,5 @@ This verifies that quorum on node 2 will reject the transaction because the pree
 
 * Nested Contract C1 Fails To Execute "contractC1_2"'s `set()` function with new value "35" in "Node2" and it's private for "Node1"
 * Nested Contract C1 "contractC1_2"'s `get()` function execution in "Node1" returns "42"
-* Nested Contract C1 "contractC1_2"'s `get()` function execution in "Node7" returns "42"
+* Nested Contract C1 "contractC1_2"'s `get()` function execution in "Node4" returns "42"
 * Nested Contract C1 "contractC1_2"'s `get()` function execution in "Node2" returns "0"
