@@ -1,4 +1,0 @@
-# <contractName>'s transaction is applied successfully in <node>
-
-* Transaction Hash is returned for <contractName>
-* Transaction Receipt is present in <node> for <contractName>

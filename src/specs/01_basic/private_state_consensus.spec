@@ -6,10 +6,9 @@ At the time or writing, the solution is feasible only when list of participants 
 Hence Private State Consensus is not enabled by default, it's configurable per contract and
 being passed via `sendTransaction` RPC call from client.
 
-## Private State is in consensus among participants
+There are 2 set of contracts to be used selectively in the below scenarios.
 
-Given a simple storage smart contract
-
+Single smart contract
 ```
 pragma solidity ^0.5.0;
 
@@ -30,16 +29,7 @@ contract SimpleStorage {
 }
 ```
 
-* TXN1, private state consensus "true", deploys a simple smart contract with initial value "40" in "Node1"'s default account and it's private for "Node4", named this contract as "contract14"
-* "contract14"'s transaction is applied successfully in "Node1"
-* "contract14"'s transaction is applied successfully in "Node4"
-* "contract14"'s `get()` function execution in "Node1" returns "40"
-* "contract14"'s `get()` function execution in "Node4" returns "40"
-
-## Transaction that triggers interaction between a contract which enables private state consensus and the one which doesn't
-
-Given the following nested contracts
-
+Nested smart contracts
 ```
 pragma solidity ^0.5.0;
 
@@ -76,41 +66,61 @@ contract C2  {
 }
 ```
 
-Whereas C1 enables private state consensus and C2 does not
+For simplicity, Private State Consensus is abbreviated to PSC through out the specification.
 
-* TXN1, private state consensus "true", deploys a C1 contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_1"
-* TXN2, private state consensus "false", deploys a C2 contract with initial value "contractC1_1" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_1"
-* TXN3, private state consensus "true", with nested Contract C2 Fails To Execute "contractC2_1"'s `set()` function with new value "7" in "Node1" and it's private for "Node4"
-* TXN4, private state consensus "false", with nested Contract C2 Fails To Execute "contractC2_1"'s `set()` function with new value "7" in "Node1" and it's private for "Node4"
-The Quorum1 preemptive checks determine that the new transaction affects both a PSC and a non PSC contract and rejects the transaction
+## Private State is in consensus among participants
 
-## Transaction that attempts to use a different set of participants for a contract
+* Deploy a "PSC" contract `SimpleStorage` with initial value "40" in "Node1"'s default account and it's private for "Node4", named this contract as "contract14"
+* "contract14" is deployed "successfully" in "Node1,Node4"
+* "contract14"'s `get()` function execution in "Node1" returns "40"
+* "contract14"'s `get()` function execution in "Node4" returns "40"
 
-* TXN1, private state consensus "true", deploys a C1 contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_1"
-* TXN2, private state consensus "true", where Contract C1 executes "contractC1_1"'s `set()` function with new value "7" in "Node1" and it's private for "Node2" fails validation in tessera
-The preemptive execution on Node1 finds that TXN2 is affecting C1 (and identifies the transaction that
-created it - TXN1). Quorum1 sends TXN2 to Tessera1 with the affected transaction TXN1. Tessera1 validates that
-the recipients for TXN1 and TXN2 match. Tessera1 rejects the transaction.
+## Deny transactions that are sent to a non-PSC nested contract executing a function in a PSC parent contract
 
-## Transaction that attempts to use a different set of participants for a contract (nested)
+C1 is PSC contract and C2 is not. Transactions to C1 that impacts C2 are not allowed
 
-* TXN1, private state consensus "true", deploys a C1 contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_1"
-* TXN2, private state consensus "true", deploys a C2 contract with initial value "contractC1_1" in "Node1"'s default account and it's private for "Node2", named this contract as "contractC2_1"
-* TXN3, private state consensus "true", where nested Contract C2 Executes "contractC2_1"'s `set()` function with new value "7" in "Node1" and it's private for "Node2"
-The preemptive execution of the TXN3 finds that both C2_1 and C1_1 contracts are affected by the transaction
-and it pushes both TXN1 and TXN2 as affected transactions whith TXN3. Tessera receives the new transaction and validates
-that all transactions TXN1, TXN2 and TXN3 have the same participants list (as all of them have have the PSC=true).
-Tessera1 rejects the transction.
-
-## Transaction that affects one PSC contract which reads from a non PSC contract
-
-Not sure we should allow this. The node which publishes the transaction will probably apply the new transaction as
-successful while the other nodes would reject it (as the state of the PSC contract would rely on different values
-for the non PSC contract).
-
-## Transaction that affects one non PSC contract which reads from a PSC contract
-
-I don't see any reason why not to allow this. Still - with no restrictions on the recipients of the non PSC contract the
-results may vary on each node.
+* Deploy a "PSC" contract C1 with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
+* "contractC1_14" is deployed "successfully" in "Node1,Node4"
+* Deploy a "non-PSC" contract C2 with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
+* "contractC2_14" is deployed "successfully" in "Node1,Node4"
+* Fail to execute "contractC2_14"'s `set()` function with new arbitrary value in "Node1" and it's private for "Node4"
 
 
+## Deny transactions that are sent to a PSC contract reading from a non-PSC contract
+
+C1 is PSC contract and C2 is not. Transactions to C1 that reads from C2 are not allowed
+
+* Deploy a "PSC" contract C1 with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
+* "contractC1_14" is deployed "successfully" in "Node1,Node4"
+* Deploy a "non-PSC" contract C2 with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
+* "contractC2_14" is deployed "successfully" in "Node1,Node4"
+* Fail to execute "contractC2_14"'s `get()` function in "Node1"
+
+## Allow transactions that are sent to a non-PSC contract reading from a PSC contract
+
+C1 is non-PSC contract and C2 is. Transactions to C1 that reads from C2 are allowed
+
+* Deploy a "non-PSC" contract C1 with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
+* "contractC1_14" is deployed "successfully" in "Node1,Node4"
+* Deploy a "PSC" contract C2 with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
+* "contractC2_14" is deployed "successfully" in "Node1,Node4"
+* "contractC2_14"'s `get()` function execution in "Node1" returns "42"
+
+## Deny transactions creating a nested contract with a different set of participants
+
+Transactions must be private for same set of original participants. Otherwise they will be denied
+
+* Deploy a "PSC" contract C1 with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
+* "contractC1_14" is deployed "successfully" in "Node1,Node4"
+* Deploy a "PSC" contract C2 with initial value "contractC1_1" in "Node1"'s default account and it's private for "Node2", named this contract as "contractC2_14"
+* "contractC2_14" is deployed "unsuccessfully" in "Node1,Node2"
+
+## Deny transactions sending to a nested contract with a different set of participants
+
+Transactions must be private for same set of original participants. Otherwise they will be denied
+
+* Deploy a "PSC" contract C1 with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
+* "contractC1_14" is deployed "successfully" in "Node1,Node4"
+* Deploy a "PSC" contract C2 with initial value "contractC1_1" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
+* "contractC2_14" is deployed "successfully" in "Node1,Node4"
+* Fail to execute "contractC2_14"'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
