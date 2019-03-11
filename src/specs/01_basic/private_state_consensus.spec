@@ -30,7 +30,7 @@ contract SimpleStorage {
 }
 ```
 
-* Deploy a simple smart contract, enabling private state consensus, with initial value "40" in "Node1"'s default account and it's private for "Node4", named this contract as "contract14"
+* TXN1, private state consensus "true", deploys a simple smart contract with initial value "40" in "Node1"'s default account and it's private for "Node4", named this contract as "contract14"
 * "contract14"'s transaction is applied successfully in "Node1"
 * "contract14"'s transaction is applied successfully in "Node4"
 * "contract14"'s `get()` function execution in "Node1" returns "40"
@@ -78,6 +78,39 @@ contract C2  {
 
 Whereas C1 enables private state consensus and C2 does not
 
-* Deploy a C1 contract, enabling private state consensus, with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_1"
-* Deploy a C2 contract with initial value "contractC1_1" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_1"
-* Nested Contract C2 Fails To Execute "contractC2_1"'s `set()` function with new value "7" in "Node1" and it's private for "Node4"
+* TXN1, private state consensus "true", deploys a C1 contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_1"
+* TXN2, private state consensus "false", deploys a C2 contract with initial value "contractC1_1" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_1"
+* TXN3, private state consensus "true", with nested Contract C2 Fails To Execute "contractC2_1"'s `set()` function with new value "7" in "Node1" and it's private for "Node4"
+* TXN4, private state consensus "false", with nested Contract C2 Fails To Execute "contractC2_1"'s `set()` function with new value "7" in "Node1" and it's private for "Node4"
+The Quorum1 preemptive checks determine that the new transaction affects both a PSC and a non PSC contract and rejects the transaction
+
+## Transaction that attempts to use a different set of participants for a contract
+
+* TXN1, private state consensus "true", deploys a C1 contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_1"
+* TXN2, private state consensus "true", where Contract C1 executes "contractC1_1"'s `set()` function with new value "7" in "Node1" and it's private for "Node2" fails validation in tessera
+The preemptive execution on Node1 finds that TXN2 is affecting C1 (and identifies the transaction that
+created it - TXN1). Quorum1 sends TXN2 to Tessera1 with the affected transaction TXN1. Tessera1 validates that
+the recipients for TXN1 and TXN2 match. Tessera1 rejects the transaction.
+
+## Transaction that attempts to use a different set of participants for a contract (nested)
+
+* TXN1, private state consensus "true", deploys a C1 contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_1"
+* TXN2, private state consensus "true", deploys a C2 contract with initial value "contractC1_1" in "Node1"'s default account and it's private for "Node2", named this contract as "contractC2_1"
+* TXN3, private state consensus "true", where nested Contract C2 Executes "contractC2_1"'s `set()` function with new value "7" in "Node1" and it's private for "Node2"
+The preemptive execution of the TXN3 finds that both C2_1 and C1_1 contracts are affected by the transaction
+and it pushes both TXN1 and TXN2 as affected transactions whith TXN3. Tessera receives the new transaction and validates
+that all transactions TXN1, TXN2 and TXN3 have the same participants list (as all of them have have the PSC=true).
+Tessera1 rejects the transction.
+
+## Transaction that affects one PSC contract which reads from a non PSC contract
+
+Not sure we should allow this. The node which publishes the transaction will probably apply the new transaction as
+successful while the other nodes would reject it (as the state of the PSC contract would rely on different values
+for the non PSC contract).
+
+## Transaction that affects one non PSC contract which reads from a PSC contract
+
+I don't see any reason why not to allow this. Still - with no restrictions on the recipients of the non PSC contract the
+results may vary on each node.
+
+
