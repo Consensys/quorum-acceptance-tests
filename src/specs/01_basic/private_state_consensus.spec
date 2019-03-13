@@ -111,7 +111,7 @@ Transactions must be private for same set of original participants. Otherwise th
 
 * Deploy a "PSC" contract C1 with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
-* Deploy a "PSC" contract C2 with initial value "contractC1_1" in "Node1"'s default account and it's private for "Node2", named this contract as "contractC2_14"
+* Deploy a "PSC" contract C2 with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node2", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "unsuccessfully" in "Node1,Node2"
 
 ## Deny transactions sending to a nested contract with a different set of participants
