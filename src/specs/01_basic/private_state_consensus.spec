@@ -105,14 +105,16 @@ C1 is non-PSC contract and C2 is. Transactions to C1 that reads from C2 are allo
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
 * "contractC2_14"'s `get()` function execution in "Node1" returns "42"
 
-## Deny transactions creating a nested contract with a different set of participants
+## Deny transactions after creating a nested contract with a different set of participants
 
-Transactions must be private for same set of original participants. Otherwise they will be denied
+Transactions sent to a nested contract which must be private for same set of original participants. Otherwise they will be denied.
+Noted that contract creation is still a success.
 
 * Deploy a "PSC" contract C1 with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
 * Deploy a "PSC" contract C2 with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node2", named this contract as "contractC2_14"
-* "contractC2_14" is deployed "unsuccessfully" in "Node1,Node2"
+* "contractC2_14" is deployed "successfully" in "Node1,Node2"
+* Fail to execute "contractC2_14"'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
 
 ## Deny transactions sending to a nested contract with a different set of participants
 
