@@ -124,15 +124,8 @@ public class QuorumNetworkProperty {
 
         @Override
         public String toString() {
-            StringBuffer buf = new StringBuffer();
-            buf.append("Node[")
-                    .append("url: ").append(url)
-                    .append(",privacy-addess: ").append(privacyAddress)
-                    .append(",validator-address: ").append(validatorAddress)
-                    .append(",enode: ").append(enode)
-                    .append("]");
-
-            return buf.toString();
+            final String template = "Node[url: %s, privacy-address: %s, validator-address: %s, enode: %s]";
+            return String.format(template, url, privacyAddress, validatorAddress, enode);
         }
 
         public String getEnode() {

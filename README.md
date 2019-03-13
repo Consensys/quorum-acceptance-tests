@@ -7,7 +7,7 @@ Latest test reports are available:
 
 ### Prerequisites
 
-* Java 8
+* Java 8+
 * Maven 3.5.x
 * [Solidity Compiler](https://solidity.readthedocs.io/en/latest/installing-solidity.html) (make sure `solc` is installed and not `solcjs`)
   * For MacOS: use `brew`
