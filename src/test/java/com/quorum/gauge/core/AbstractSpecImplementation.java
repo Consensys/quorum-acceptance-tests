@@ -88,6 +88,29 @@ public abstract class AbstractSpecImplementation {
         return (T) v;
     }
 
+    /**
+     * Check in all Gauge Data Stores
+     *
+     * @param key
+     * @param clazz
+     * @param <T>
+     * @return
+     */
+    protected <T> T mustHaveValue(String key, Class<T> clazz) {
+        Object v = null;
+        boolean isInstance = false;
+        for (DataStore ds : new DataStore[]{DataStoreFactory.getScenarioDataStore(), DataStoreFactory.getSpecDataStore(), DataStoreFactory.getSuiteDataStore()}) {
+            v = ds.get(key);
+            if (v != null && clazz.isInstance(v)) {
+                isInstance = true;
+                break;
+            }
+        }
+        assertThat(v).as("Value for key [" + key + "] in all Gauge DataStores").isNotNull();
+        assertThat(isInstance).as("Value for key [" + key + "] of type [" + clazz.getName() + "] in all Gauge DataStores").isTrue();
+        return (T) v;
+    }
+
     protected <T> T haveValue(DataStore ds, String key, Class<T> clazz, T defaultValue) {
         Object v = ds.get(key);
         if (v == null) {
@@ -106,11 +129,11 @@ public abstract class AbstractSpecImplementation {
             }
             return Observable.just(true);
         }).retryWhen(
-                attempts -> attempts.zipWith(Observable.range(1, untilBlockHeight), (total, i) -> i)
-                        .flatMap(i -> Observable.timer(3, TimeUnit.SECONDS))
-                        .doOnCompleted(() -> {
-                            throw new RuntimeException("Timed out! Can't wait until block height is " + untilBlockHeight + " higher. Last block height was " + lastBlockHeight.get());
-                        })
+            attempts -> attempts.zipWith(Observable.range(1, untilBlockHeight), (total, i) -> i)
+                .flatMap(i -> Observable.timer(3, TimeUnit.SECONDS))
+                .doOnCompleted(() -> {
+                    throw new RuntimeException("Timed out! Can't wait until block height is " + untilBlockHeight + " higher. Last block height was " + lastBlockHeight.get());
+                })
         ).toBlocking().first();
     }
 
@@ -139,5 +162,14 @@ public abstract class AbstractSpecImplementation {
      */
     protected int numberOfQuorumNodes() {
         return networkProperty.getNodes().size();
+    }
+
+    public enum Status {
+        successfully, unsuccessfully
+    }
+
+    public enum ContractFlag {
+        PSV, // Private State Validation
+        nonPSV // non Private State Validation
     }
 }

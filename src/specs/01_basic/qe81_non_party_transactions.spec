@@ -1,6 +1,6 @@
 # Deny non-party sending private transactions
 
- Tags: basic, non-party, privacy, privacy-enhancements, qe81
+tags: basic, non-party, privacy, privacy-enhancements, qe81
 
 This is to verify that a node must not be able to send transactions to private smart contract which it is not party to.
 
@@ -66,7 +66,7 @@ contract C2  {
 
 ## Deny transactions sent to a simple contract by non-party node
 
- Tags: single, deny
+tags: single, deny
 
 * Deploy a simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract14"
 * "contract14" is deployed "successfully" in "Node1,Node4"
@@ -74,18 +74,18 @@ contract C2  {
 
 ## Privacy is maintained when non-party node trying to send a transaction to a simple contract
 
- Tags: single
+tags: single
 
 * Deploy a simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract14"
 * "contract14" is deployed "successfully" in "Node1,Node4"
-* Execute "contract14"'s `set()` function with new arbitrary value in "Node3" and it's private for "Node1"
+* Fire and forget execution of "contract14"'s `set()` function with new arbitrary value in "Node3" and it's private for "Node1"
 * "contract14"'s `get()` function execution in "Node1" returns "42"
 * "contract14"'s `get()` function execution in "Node4" returns "42"
 * "contract14"'s `get()` function execution in "Node3" returns "0"
 
-## Deny transactions sent to a simple contract by non-party node
+## Deny transactions sent to a nested contract by non-party node
 
- Tags: nested, deny
+tags: nested, deny
 
 * Deploy a C1 contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "parentContractC1_14"
 * "parentContractC1_14" is deployed "successfully" in "Node1,Node4"
@@ -95,17 +95,16 @@ contract C2  {
 
 ## Privacy is maintained when non-party node trying to send a transaction to a nested contract
 
- Tags: nested
+tags: nested
 
 * Deploy a C1 contract with initial value "30" in "Node1"'s default account and it's private for "Node4", named this contract as "parentContractC1_14"
 * "parentContractC1_14" is deployed "successfully" in "Node1,Node4"
 * Deploy a C2 contract with initial value "parentContractC1_14" in "Node1"'s default account and it's private for "Node2", named this contract as "childContractC2_12"
 * "childContractC2_12" is deployed "successfully" in "Node1,Node2"
-* Execute "childContractC2_12"'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
+* Fire and forget execution of "childContractC2_12"'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
 * "parentContractC1_14"'s `get()` function execution in "Node1" returns "30"
 * "parentContractC1_14"'s `get()` function execution in "Node4" returns "30"
 * "parentContractC1_14"'s `get()` function execution in "Node2" returns "0"
 * "childContractC2_12"'s `get()` function execution in "Node1" returns "30"
 * "childContractC2_12"'s `get()` function execution in "Node4" returns "0"
 * "childContractC2_12"'s `get()` function execution in "Node2" returns "0"
-
