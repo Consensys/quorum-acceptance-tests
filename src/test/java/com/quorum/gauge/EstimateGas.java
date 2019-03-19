@@ -41,7 +41,7 @@ public class EstimateGas extends AbstractSpecImplementation {
 
     @Step("Estimate gas for public transaction transferring some Wei from a default account in <from> to a default account in <to>")
     public void estimatePublicTransaction(QuorumNode from, QuorumNode to) {
-        EthEstimateGas estimatedValue = transactionService.estimateGasForTransaction(new Random().nextInt(10), from, to).toBlocking().first();
+        EthEstimateGas estimatedValue = transactionService.estimateGasForTransaction(new Random().nextInt(10) + 1, from, to).toBlocking().first();
 
         DataStoreFactory.getScenarioDataStore().put("estimatedValue", estimatedValue);
     }
