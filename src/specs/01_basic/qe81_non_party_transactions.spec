@@ -76,6 +76,8 @@ tags: single, deny
 
 tags: single
 
+Transactions, regardless if it succeeds or not, sent by non-party node must not change the private states of the participants
+
 * Deploy a simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract14"
 * "contract14" is deployed "successfully" in "Node1,Node4"
 * Fire and forget execution of "contract14"'s `set()` function with new arbitrary value in "Node3" and it's private for "Node1"
@@ -94,6 +96,8 @@ tags: nested, deny
 * Fail to execute "childContractC2_12"'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
 
 ## Privacy is maintained when non-party node trying to send a transaction to a nested contract
+
+Transactions, regardless if it succeeds or not, sent by non-party node must not change the private states of the participants
 
 tags: nested
 
