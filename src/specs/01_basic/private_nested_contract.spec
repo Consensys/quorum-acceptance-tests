@@ -44,36 +44,32 @@ contract C2  {
 * Deploy a C1 contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_1"
 * Deploy a C2 contract with initial value "contractC1_1" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_1"
 
-## Contracts are mined
+## Contracts are deployed successfully
 
  Tags: private, mining
 
-* Nested Contract Transaction Hash is returned for "contractC1_1"
-* Nested Contract Transaction Hash is returned for "contractC2_1"
-* Nested Contract Transaction Receipt is present in "Node1" for "contractC1_1"
-* Nested Contract Transaction Receipt is present in "Node4" for "contractC1_1"
-* Nested Contract Transaction Receipt is present in "Node1" for "contractC2_1"
-* Nested Contract Transaction Receipt is present in "Node4" for "contractC2_1"
+* "contractC1_1" is deployed "successful" in "Node1,Node4"
+* "contractC2_1" is deployed "successful" in "Node1,Node4"
 
 ## Privacy is enforced between parties
 
  Tags: private
 
-* Nested Contract C1 "contractC1_1"'s `get()` function execution in "Node1" returns "42"
-* Nested Contract C1 "contractC1_1"'s `get()` function execution in "Node4" returns "42"
-* Nested Contract C1 "contractC1_1"'s `get()` function execution in "Node3" returns "0"
-* Nested Contract C2 "contractC2_1"'s `get()` function execution in "Node1" returns "42"
-* Nested Contract C2 "contractC2_1"'s `get()` function execution in "Node4" returns "42"
-* Nested Contract C2 "contractC2_1"'s `get()` function execution in "Node3" returns "0"
+* Contract `C1`("contractC1_1")'s `get()` function execution in "Node1" returns "42"
+* Contract `C1`("contractC1_1")'s `get()` function execution in "Node4" returns "42"
+* Contract `C1`("contractC1_1")'s `get()` function execution in "Node3" returns "0"
+* Contract `C2`("contractC2_1")'s `get()` function execution in "Node1" returns "42"
+* Contract `C2`("contractC2_1")'s `get()` function execution in "Node4" returns "42"
+* Contract `C2`("contractC2_1")'s `get()` function execution in "Node3" returns "0"
 
 ## When there's an update, privacy is still enforced
 
  Tags: private
 
-* Nested Contract C2 Execute "contractC2_1"'s `set()` function with new value "5" in "Node1" and it's private for "Node4"
-* Nested Contract C1 "contractC1_1"'s `get()` function execution in "Node1" returns "5"
-* Nested Contract C1 "contractC1_1"'s `get()` function execution in "Node4" returns "5"
-* Nested Contract C1 "contractC1_1"'s `get()` function execution in "Node3" returns "0"
-* Nested Contract C2 "contractC2_1"'s `get()` function execution in "Node1" returns "5"
-* Nested Contract C2 "contractC2_1"'s `get()` function execution in "Node4" returns "5"
-* Nested Contract C2 "contractC2_1"'s `get()` function execution in "Node3" returns "0"
+* Execute contract `C2`("contractC2_1")'s `set()` function with new value "5" in "Node1" and it's private for "Node4"
+* Contract `C1`("contractC1_1")'s `get()` function execution in "Node1" returns "5"
+* Contract `C1`("contractC1_1")'s `get()` function execution in "Node4" returns "5"
+* Contract `C1`("contractC1_1")'s `get()` function execution in "Node3" returns "0"
+* Contract `C2`("contractC2_1")'s `get()` function execution in "Node1" returns "5"
+* Contract `C2`("contractC2_1")'s `get()` function execution in "Node4" returns "5"
+* Contract `C2`("contractC2_1")'s `get()` function execution in "Node3" returns "0"

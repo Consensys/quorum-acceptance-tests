@@ -70,7 +70,7 @@ public class ContractService extends AbstractService {
         Quorum client = connectionFactory().getConnection(source);
         final List<String> privateFor;
         if (null != targets) {
-            privateFor = targets.stream().map(q -> privacyService.id(q)).collect(Collectors.toList());
+            privateFor = targets.stream().filter(q -> q != null).map(q -> privacyService.id(q)).collect(Collectors.toList());
         } else {
             privateFor = null;
         }

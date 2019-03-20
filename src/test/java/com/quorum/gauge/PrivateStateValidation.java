@@ -189,4 +189,13 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
             return null;
         }).doOnError(e -> logger.debug("Got exception but will ignore. Exception is {}", e.getMessage())).toBlocking().first();
     }
+
+    @Step("Execute contract `C2`(<contractName>)'s `set()` function with new value <newValue> in <source> and it's private for <target>")
+    public void updateNewValue(String contractName, int newValue, QuorumNode source, QuorumNode target) {
+        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
+        TransactionReceipt receipt = nestedContractService.updateC2Contract(source, target, c.getContractAddress(), newValue).toBlocking().first();
+
+        assertThat(receipt.getTransactionHash()).isNotBlank();
+        assertThat(receipt.getBlockNumber()).isNotEqualTo(currentBlockNumber());
+    }
 }
