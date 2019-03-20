@@ -76,7 +76,11 @@ contract C2  {
 }
 ```
 
-## Private State is in consensus among participants
+## Private State is validated in all participants
+
+ Tags: validation
+
+We can't really verify the if participants actually validated their states. Assuming they did, their state should return the same value
 
 * Deploy a "PSV" contract `SimpleStorage` with initial value "40" in "Node1"'s default account and it's private for "Node4", named this contract as "contract14"
 * "contract14" is deployed "successfully" in "Node1,Node4"
