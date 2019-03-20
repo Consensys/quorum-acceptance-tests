@@ -48,8 +48,8 @@ contract C2  {
 
  Tags: private, mining
 
-* "contractC1_1" is deployed "successful" in "Node1,Node4"
-* "contractC2_1" is deployed "successful" in "Node1,Node4"
+* "contractC1_1" is deployed "successfully" in "Node1,Node4"
+* "contractC2_1" is deployed "successfully" in "Node1,Node4"
 
 ## Privacy is enforced between parties
 
