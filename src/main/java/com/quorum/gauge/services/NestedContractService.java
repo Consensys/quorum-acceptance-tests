@@ -20,7 +20,9 @@
 package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.ext.EnhancedClientTransactionManager;
 import com.quorum.gauge.ext.EthStorageRoot;
+import com.quorum.gauge.ext.PrivateContractFlag;
 import com.quorum.gauge.sol.C1;
 import com.quorum.gauge.sol.C2;
 import org.slf4j.Logger;
@@ -38,6 +40,8 @@ import rx.Observable;
 
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class NestedContractService extends AbstractService {
@@ -50,38 +54,48 @@ public class NestedContractService extends AbstractService {
     AccountService accountService;
 
     public Observable<? extends Contract> createC1Contract(int initialValue, QuorumNode source, QuorumNode target) {
+        return createC1Contract(initialValue, source, Arrays.asList(target), PrivateContractFlag.nonPSV);
+    }
+
+    public Observable<? extends Contract> createC1Contract(int initialValue, QuorumNode source, List<QuorumNode> target, PrivateContractFlag flag) {
         Quorum client = connectionFactory().getConnection(source);
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
-            ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
-                    client,
-                    address,
-                    null,
-                    Arrays.asList(privacyService.id(target)),
-                    DEFAULT_MAX_RETRY,
-                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+            ClientTransactionManager clientTransactionManager = new EnhancedClientTransactionManager(
+                client,
+                address,
+                null,
+                target.stream().map(n -> privacyService.id(n)).collect(Collectors.toList()),
+                flag,
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS);
             return C1.deploy(client,
-                    clientTransactionManager,
-                    BigInteger.valueOf(0),
-                    DEFAULT_GAS_LIMIT,
-                    BigInteger.valueOf(initialValue)).observable();
+                clientTransactionManager,
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT,
+                BigInteger.valueOf(initialValue)).observable();
         });
     }
 
     public Observable<? extends Contract> createC2Contract(String c1Address, QuorumNode source, QuorumNode target) {
+        return createC2Contract(c1Address, source, Arrays.asList(target), PrivateContractFlag.nonPSV);
+    }
+
+    public Observable<? extends Contract> createC2Contract(String c1Address, QuorumNode source, List<QuorumNode> target, PrivateContractFlag flag) {
         Quorum client = connectionFactory().getConnection(source);
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
-            ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
-                    client,
-                    address,
-                    null,
-                    Arrays.asList(privacyService.id(target)),
-                    DEFAULT_MAX_RETRY,
-                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+            ClientTransactionManager clientTransactionManager = new EnhancedClientTransactionManager(
+                client,
+                address,
+                null,
+                target.stream().map(n -> privacyService.id(n)).collect(Collectors.toList()),
+                flag,
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS);
             return C2.deploy(client,
-                    clientTransactionManager,
-                    BigInteger.valueOf(0),
-                    DEFAULT_GAS_LIMIT,
-                    c1Address).observable();
+                clientTransactionManager,
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT,
+                c1Address).observable();
         });
     }
 
@@ -93,8 +107,8 @@ public class NestedContractService extends AbstractService {
             address = client.ethCoinbase().send().getAddress();
             ReadonlyTransactionManager txManager = new ReadonlyTransactionManager(client, address);
             return C1.load(contractAddress, client, txManager,
-                    BigInteger.valueOf(0),
-                    DEFAULT_GAS_LIMIT).get().send().intValue();
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT).get().send().intValue();
         } catch (ContractCallException cce) {
             if (cce.getMessage().contains("Empty value (0x)")) {
                 return 0;
@@ -115,8 +129,8 @@ public class NestedContractService extends AbstractService {
             address = client.ethCoinbase().send().getAddress();
             ReadonlyTransactionManager txManager = new ReadonlyTransactionManager(client, address);
             return C2.load(contractAddress, client, txManager,
-                    BigInteger.valueOf(0),
-                    DEFAULT_GAS_LIMIT).get().send().intValue();
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT).get().send().intValue();
         } catch (ContractCallException cce) {
             if (cce.getMessage().contains("Empty value (0x)")) {
                 return 0;
@@ -133,15 +147,15 @@ public class NestedContractService extends AbstractService {
         Quorum client = connectionFactory().getConnection(source);
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
             ClientTransactionManager txManager = new ClientTransactionManager(
-                    client,
-                    address,
-                    null,
-                    Arrays.asList(privacyService.id(target)),
-                    DEFAULT_MAX_RETRY,
-                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                client,
+                address,
+                null,
+                Arrays.asList(privacyService.id(target)),
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS);
             return C1.load(contractAddress, client, txManager,
-                    BigInteger.valueOf(0),
-                    DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue)).observable();
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue)).observable();
         });
     }
 
@@ -149,24 +163,24 @@ public class NestedContractService extends AbstractService {
         Quorum client = connectionFactory().getConnection(source);
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
             ClientTransactionManager txManager = new ClientTransactionManager(
-                    client,
-                    address,
-                    null,
-                    Arrays.asList(privacyService.id(target)),
-                    DEFAULT_MAX_RETRY,
-                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                client,
+                address,
+                null,
+                Arrays.asList(privacyService.id(target)),
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS);
             return C2.load(contractAddress, client, txManager,
-                    BigInteger.valueOf(0),
-                    DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue)).observable();
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue)).observable();
         });
     }
 
     public Observable<EthStorageRoot> getStorageRoot(QuorumNode node, String contractAddress) {
         Request<String, EthStorageRoot> request = new Request<>(
-                "eth_storageRoot",
-                Arrays.asList(contractAddress),
-                connectionFactory().getWeb3jService(node),
-                EthStorageRoot.class);
+            "eth_storageRoot",
+            Arrays.asList(contractAddress),
+            connectionFactory().getWeb3jService(node),
+            EthStorageRoot.class);
         return request.observable();
     }
 }

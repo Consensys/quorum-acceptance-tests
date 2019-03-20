@@ -85,13 +85,15 @@ contract C2  {
 
 ## Deny transactions that are sent to a non-PCV nested contract executing a function in a PCV parent contract
 
+ Tags: nested
+
 C1 is PCV contract and C2 is not. Transactions to C1 that impacts C2 are not allowed
 
 * Deploy a "PSV" contract `C1` with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
 * Deploy a "nonPSV" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
-* Fail to execute "contractC2_14"'s `set()` function with new arbitrary value in "Node1" and it's private for "Node4"
+* Fail to execute contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node4"
 
 ## Deny transactions that are sent to a PCV contract reading from a non-PCV contract
 
@@ -102,7 +104,7 @@ As C2 is non-PCV contract, C1 state would be impacted and increase the possibili
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
 * Deploy a "nonPSV" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
-* Fail to execute "contractC2_14"'s `get()` function in "Node1"
+* Fail to execute contract `C2`("contractC2_14")'s `get()` function in "Node1"
 
 ## Allow transactions that are sent to a non-PCV contract reading from a PCV contract
 
@@ -112,7 +114,7 @@ C1 is non-PCV contract and C2 is. Transactions to C1 that reads from C2 are allo
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
 * Deploy a "PSV" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
-* "contractC2_14"'s `get()` function execution in "Node1" returns "42"
+* Contract `C2`("contractC2_14")'s `get()` function execution in "Node1" returns "42"
 
 ## Deny transactions after creating a nested contract with a different set of participants
 
@@ -123,7 +125,7 @@ Noted that contract creation is still a success.
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
 * Deploy a "PSV" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node2", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node2"
-* Fail to execute "contractC2_14"'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
+* Fail to execute contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
 
 ## Deny transactions sending to a nested contract with a different set of participants
 
@@ -133,7 +135,7 @@ Transactions must be private for same set of original participants. Otherwise th
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
 * Deploy a "PSV" contract `C2` with initial value "contractC1_1" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
-* Fail to execute "contractC2_14"'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
+* Fail to execute contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
 
 ## Deny transactions sending to a PCV contract that affects another PCV contract with different set of participants
 
@@ -143,4 +145,4 @@ Inter-contract message calls are only allowed if all contracts have same set of 
 * "contractC1_123" is deployed "successfully" in "Node1,Node2,Node3"
 * Deploy a "PSV" contract `C2` with initial value "contractC1_123" in "Node1"'s default account and it's private for "Node2", named this contract as "contractC2_12"
 * "contractC2_12" is deployed "successfully" in "Node1,Node2"
-* Fail to execute "contractC2_12"'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
+* Fail to execute contract `C2`("contractC2_12")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"

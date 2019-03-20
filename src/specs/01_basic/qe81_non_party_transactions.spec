@@ -70,7 +70,7 @@ tags: single, deny
 
 * Deploy a simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract14"
 * "contract14" is deployed "successfully" in "Node1,Node4"
-* Fail to execute "contract14"'s `set()` function with new arbitrary value in "Node3" and it's private for "Node1"
+* Fail to execute simple contract("contract14")'s `set()` function with new arbitrary value in "Node3" and it's private for "Node1"
 
 ## Privacy is maintained when non-party node trying to send a transaction to a simple contract
 
@@ -80,7 +80,7 @@ Transactions, regardless if it succeeds or not, sent by non-party node must not 
 
 * Deploy a simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract14"
 * "contract14" is deployed "successfully" in "Node1,Node4"
-* Fire and forget execution of "contract14"'s `set()` function with new arbitrary value in "Node3" and it's private for "Node1"
+* Fire and forget execution of simple contract("contract14")'s `set()` function with new arbitrary value in "Node3" and it's private for "Node1"
 * "contract14"'s `get()` function execution in "Node1" returns "42"
 * "contract14"'s `get()` function execution in "Node4" returns "42"
 * "contract14"'s `get()` function execution in "Node3" returns "0"
@@ -93,7 +93,7 @@ tags: nested, deny
 * "parentContractC1_14" is deployed "successfully" in "Node1,Node4"
 * Deploy a C2 contract with initial value "parentContractC1_14" in "Node1"'s default account and it's private for "Node2", named this contract as "childContractC2_12"
 * "childContractC2_12" is deployed "successfully" in "Node1,Node2"
-* Fail to execute "childContractC2_12"'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
+* Fail to execute contract `C2`("childContractC2_12")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
 
 ## Privacy is maintained when non-party node trying to send a transaction to a nested contract
 
@@ -105,10 +105,10 @@ tags: nested
 * "parentContractC1_14" is deployed "successfully" in "Node1,Node4"
 * Deploy a C2 contract with initial value "parentContractC1_14" in "Node1"'s default account and it's private for "Node2", named this contract as "childContractC2_12"
 * "childContractC2_12" is deployed "successfully" in "Node1,Node2"
-* Fire and forget execution of "childContractC2_12"'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
-* "parentContractC1_14"'s `get()` function execution in "Node1" returns "30"
-* "parentContractC1_14"'s `get()` function execution in "Node4" returns "30"
-* "parentContractC1_14"'s `get()` function execution in "Node2" returns "0"
-* "childContractC2_12"'s `get()` function execution in "Node1" returns "30"
-* "childContractC2_12"'s `get()` function execution in "Node4" returns "0"
-* "childContractC2_12"'s `get()` function execution in "Node2" returns "0"
+* Fire and forget execution of contract `C2`("childContractC2_12")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
+* Contract `C1`("parentContractC1_14")'s `get()` function execution in "Node1" returns "30"
+* Contract `C1`("parentContractC1_14")'s `get()` function execution in "Node4" returns "30"
+* Contract `C1`("parentContractC1_14")'s `get()` function execution in "Node2" returns "0"
+* Contract `C2`("childContractC2_12")'s `get()` function execution in "Node1" returns "30"
+* Contract `C2`("childContractC2_12")'s `get()` function execution in "Node4" returns "0"
+* Contract `C2`("childContractC2_12")'s `get()` function execution in "Node2" returns "0"

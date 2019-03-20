@@ -167,9 +167,4 @@ public abstract class AbstractSpecImplementation {
     public enum Status {
         successfully, unsuccessfully
     }
-
-    public enum ContractFlag {
-        PSV, // Private State Validation
-        nonPSV // non Private State Validation
-    }
 }
