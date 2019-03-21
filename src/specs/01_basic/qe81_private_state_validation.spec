@@ -87,11 +87,11 @@ We can't really verify the if participants actually validated their states. Assu
 * "contract14"'s `get()` function execution in "Node1" returns "40"
 * "contract14"'s `get()` function execution in "Node4" returns "40"
 
-## Deny transactions that are sent to a non-PCV nested contract executing a function in a PCV parent contract
+## Deny transactions that are sent to a non-PSV nested contract executing a function in a PSV parent contract
 
  Tags: nested
 
-C1 is PCV contract and C2 is not. Transactions to C1 that impacts C2 are not allowed
+C1 is PSV contract and C2 is not. Transactions to C1 that impacts C2 are not allowed
 
 * Deploy a "PSV" contract `C1` with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
@@ -99,10 +99,10 @@ C1 is PCV contract and C2 is not. Transactions to C1 that impacts C2 are not all
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
 * Fail to execute contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node4"
 
-## Deny transactions that are sent to a PCV contract reading from a non-PCV contract
+## Deny transactions that are sent to a PSV contract reading from a non-PSV contract
 
-C1 is PCV contract and C2 is not. Transactions to C1 that reads from C2 are not allowed.
-As C2 is non-PCV contract, C1 state would be impacted and increase the possibility of future transaction failures.
+C1 is PSV contract and C2 is not. Transactions to C1 that reads from C2 are not allowed.
+As C2 is non-PSV contract, C1 state would be impacted and increase the possibility of future transaction failures.
 
 * Deploy a "PSV" contract `C1` with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
@@ -110,9 +110,9 @@ As C2 is non-PCV contract, C1 state would be impacted and increase the possibili
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
 * Fail to execute contract `C2`("contractC2_14")'s `get()` function in "Node1"
 
-## Allow transactions that are sent to a non-PCV contract reading from a PCV contract
+## Allow transactions that are sent to a non-PSV contract reading from a PSV contract
 
-C1 is non-PCV contract and C2 is. Transactions to C1 that reads from C2 are allowed
+C1 is non-PSV contract and C2 is. Transactions to C1 that reads from C2 are allowed
 
 * Deploy a "nonPSV" contract `C1` with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
@@ -141,7 +141,7 @@ Transactions must be private for same set of original participants. Otherwise th
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
 * Fail to execute contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
 
-## Deny transactions sending to a PCV contract that affects another PCV contract with different set of participants
+## Deny transactions sending to a PSV contract that affects another PSV contract with different set of participants
 
 Inter-contract message calls are only allowed if all contracts have same set of participants
 
