@@ -137,7 +137,7 @@ Transactions must be private for same set of original participants. Otherwise th
 
 * Deploy a "PSV" contract `C1` with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
-* Deploy a "PSV" contract `C2` with initial value "contractC1_1" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
+* Deploy a "PSV" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
 * Fail to execute contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
 

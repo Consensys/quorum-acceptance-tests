@@ -187,7 +187,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
                 .map(o -> (TransactionReceipt) o)
                 .forEach(tr -> logger.debug(tr.getTransactionHash()));
             return null;
-        }).doOnError(e -> logger.debug("Got exception but will ignore. Exception is {}", e.getMessage())).toBlocking().first();
+        }).onExceptionResumeNext(Observable.just(null)).first().toBlocking();
     }
 
     @Step("Execute contract `C2`(<contractName>)'s `set()` function with new value <newValue> in <source> and it's private for <target>")

@@ -93,7 +93,8 @@ tags: nested, deny
 * "parentContractC1_14" is deployed "successfully" in "Node1,Node4"
 * Deploy a C2 contract with initial value "parentContractC1_14" in "Node1"'s default account and it's private for "Node2", named this contract as "childContractC2_12"
 * "childContractC2_12" is deployed "successfully" in "Node1,Node2"
-* Fail to execute contract `C2`("childContractC2_12")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
+* Fail to execute contract `C2`("childContractC2_12")'s `set()` function with new arbitrary value in "Node2" and it's private for "Node1"
+
 
 ## Privacy is maintained when non-party node trying to send a transaction to a nested contract
 
