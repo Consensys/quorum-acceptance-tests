@@ -106,16 +106,6 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
         assertThat(actualValue).isEqualTo(expectedValue);
     }
 
-    @Step("Fail to execute contract `C2`(<contractName>)'s `get()` function in <node>")
-    public void failGetExecution(String contractName, QuorumNode node) {
-        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
-
-        assertThatThrownBy(
-            () -> nestedContractService.readC2Value(node, c.getContractAddress())
-        ).as("Expected exception thrown")
-            .isNotNull();
-    }
-
     @Step("Fail to execute contract `C2`(<contractName>)'s `restoreFromC1()` function in <node> and it's private for <privateFor>")
     public void failRestoreFromC1Execution(String contractName, QuorumNode node, String privateFor) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);

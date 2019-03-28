@@ -116,9 +116,9 @@ Transactions, regardless if it succeeds or not, sent by non-party node must not 
 
 ## [Limitation] Transaction sent by a node which is party to parent and child contracts would be successful regardless the privateFor
 
- Tags: limitation
+ Tags: limitation, transaction
 
-As Node1 is party to both C1 and C2, transaction sent by Node1 (privateFor Node2) will produce successful receipt hence modify C1's state.
+As Node1 is party to both C1 and C2, transaction to C2 sent by Node1 (privateFor Node2) will produce successful receipt hence modify C1's state.
 Transaction receipt in Node2 will be marked as failure.
 
 * Deploy a C1 contract with initial value "30" in "Node1"'s default account and it's private for "Node4", named this contract as "parentContractC1_14"
@@ -128,3 +128,15 @@ Transaction receipt in Node2 will be marked as failure.
 * Fire and forget execution of contract `C2`("childContractC2_12")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
 * Transaction Receipt is "successfully" available in "Node1" for "childContractC2_12"
 * Transaction Receipt is "unsuccessfully" available in "Node2" for "childContractC2_12"
+
+## [Limitation] Read-only call sent by a node which is party to parent and child contracts would be successful
+
+ Tags: limitation, read-only
+
+As Node1 is party to both C1 and C2, a read-only call to C2 sent by Node1 will return result.
+
+* Deploy a C1 contract with initial value "123" in "Node1"'s default account and it's private for "Node4", named this contract as "parentContractC1_14"
+* "parentContractC1_14" is deployed "successfully" in "Node1,Node4"
+* Deploy a C2 contract with initial value "parentContractC1_14" in "Node1"'s default account and it's private for "Node2", named this contract as "childContractC2_12"
+* "childContractC2_12" is deployed "successfully" in "Node1,Node2"
+* Contract `C2`("childContractC2_12")'s `get()` function execution in "Node1" returns "123"

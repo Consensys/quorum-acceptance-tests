@@ -114,7 +114,6 @@ As C2 is non-PSV contract, C1 state would be impacted and increase the possibili
 * Deploy a "nonPSV" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
 * Fail to execute contract `C2`("contractC2_14")'s `restoreFromC1()` function in "Node1" and it's private for "Node4"
-* Fail to execute contract `C2`("contractC2_14")'s `get()` function in "Node1"
 
 ## Allow transactions that are sent to a non-PSV contract reading from a PSV contract
 
