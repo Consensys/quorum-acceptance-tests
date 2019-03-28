@@ -116,6 +116,18 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
             .isNotNull();
     }
 
+    @Step("Fail to execute contract `C2`(<contractName>)'s `restoreFromC1()` function in <node> and it's private for <privateFor>")
+    public void failRestoreFromC1Execution(String contractName, QuorumNode node, String privateFor) {
+        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
+
+        assertThatThrownBy(
+            () -> nestedContractService.restoreFromC1(node,
+                Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
+                c.getContractAddress()).toBlocking().first()
+        ).as("Expected exception thrown")
+            .isNotNull();
+    }
+
     @Step("Fail to execute contract `C2`(<contractName>)'s `set()` function with new arbitrary value in <node> and it's private for <privateFor>")
     public void failSetExecution(String contractName, QuorumNode node, String privateFor) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
