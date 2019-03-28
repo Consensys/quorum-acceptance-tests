@@ -31,6 +31,7 @@ import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -101,7 +102,7 @@ public class EstimateGas extends AbstractSpecImplementation {
     public void verifyEstimate(String expectedValue, String tolerance) {
         EthEstimateGas estimatedValue = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "estimatedValue", EthEstimateGas.class);
 
-        Double percentage = new Double(tolerance);
+        Double percentage = Double.valueOf(tolerance);
         try {
             assertThat(estimatedValue.getAmountUsed()).isCloseTo(new BigInteger(expectedValue), Percentage.withPercentage(percentage));
         } catch (MessageDecodingException e) {
@@ -123,7 +124,7 @@ public class EstimateGas extends AbstractSpecImplementation {
         final BigInteger estimatedGasLimit = estimatedGasResult.getAmountUsed();
 
         final TransactionReceipt receipt = contractService
-            .updateSimpleContractWithGasLimit(from, privateFor, contractAddress, estimatedGasLimit, value)
+            .updateSimpleContractWithGasLimit(from, Arrays.asList(privateFor), contractAddress, estimatedGasLimit, value)
             .toBlocking()
             .first();
 

@@ -46,8 +46,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static java.util.Collections.singletonList;
-
 @Service
 public class ContractService extends AbstractService {
     private static final Logger logger = LoggerFactory.getLogger(ContractService.class);
@@ -115,19 +113,24 @@ public class ContractService extends AbstractService {
         }
     }
 
-    public Observable<TransactionReceipt> updateSimpleContract(final QuorumNode source, final QuorumNode target,
+    public Observable<TransactionReceipt> updateSimpleContract(final QuorumNode source, List<QuorumNode> target,
                                                                final String contractAddress, final int newValue) {
         return this.updateSimpleContractWithGasLimit(source, target, contractAddress, DEFAULT_GAS_LIMIT, newValue);
     }
 
+    public Observable<TransactionReceipt> updateSimpleContract(final QuorumNode source, final QuorumNode target,
+                                                               final String contractAddress, final int newValue) {
+        return this.updateSimpleContractWithGasLimit(source, Arrays.asList(target), contractAddress, DEFAULT_GAS_LIMIT, newValue);
+    }
+
     public Observable<TransactionReceipt> updateSimpleContractWithGasLimit(final QuorumNode source,
-                                                                           final QuorumNode target,
+                                                                           final List<QuorumNode> target,
                                                                            final String contractAddress,
                                                                            final BigInteger gasLimit,
                                                                            final int newValue) {
         final Quorum client = connectionFactory().getConnection(source);
         final BigInteger value = BigInteger.valueOf(newValue);
-        final List<String> privateFor = singletonList(privacyService.id(target));
+        final List<String> privateFor = target.stream().map(q -> privacyService.id(q)).collect(Collectors.toList());
 
         return accountService.getDefaultAccountAddress(source)
             .map(address -> new ClientTransactionManager(

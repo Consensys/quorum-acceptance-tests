@@ -30,10 +30,8 @@ import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 import rx.Observable;
-import rx.schedulers.Schedulers;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -121,16 +119,14 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
     @Step("Fail to execute contract `C2`(<contractName>)'s `set()` function with new arbitrary value in <node> and it's private for <privateFor>")
     public void failSetExecution(String contractName, QuorumNode node, String privateFor) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
-        String[] participants = privateFor.split(",");
         int arbitraryValue = new Random().nextInt(100) + 1000;
 
-        List<Observable<TransactionReceipt>> receipts = Arrays.stream(participants)
-            .map(s -> QuorumNode.valueOf(s))
-            .map(target -> nestedContractService.updateC2Contract(node, target, c.getContractAddress(), arbitraryValue).subscribeOn(Schedulers.io()))
-            .collect(Collectors.toList());
-
         assertThatThrownBy(
-            () -> Observable.zip(receipts, (args) -> null).toBlocking().first()
+            () -> nestedContractService.updateC2Contract(
+                node,
+                Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
+                c.getContractAddress(),
+                arbitraryValue).toBlocking().first()
         ).as("Expected exception thrown")
             .isNotNull();
     }
@@ -138,16 +134,14 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
     @Step("Fail to execute simple contract(<contractName>)'s `set()` function with new arbitrary value in <node> and it's private for <privateFor>")
     public void failSetExecutionSimpleContract(String contractName, QuorumNode node, String privateFor) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
-        String[] participants = privateFor.split(",");
         int arbitraryValue = new Random().nextInt(100) + 1000;
 
-        List<Observable<TransactionReceipt>> receipts = Arrays.stream(participants)
-            .map(s -> QuorumNode.valueOf(s))
-            .map(target -> contractService.updateSimpleContract(node, target, c.getContractAddress(), arbitraryValue).subscribeOn(Schedulers.io()))
-            .collect(Collectors.toList());
-
         assertThatThrownBy(
-            () -> Observable.zip(receipts, (args) -> null).toBlocking().first()
+            () -> contractService.updateSimpleContract(
+                node,
+                Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
+                c.getContractAddress(),
+                arbitraryValue).toBlocking().first()
         ).as("Expected exception thrown")
             .isNotNull();
     }
@@ -155,45 +149,35 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
     @Step("Fire and forget execution of contract `C2`(<contractName>)'s `set()` function with new arbitrary value in <node> and it's private for <privateFor>")
     public void fireAndForget(String contractName, QuorumNode node, String privateFor) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
-        String[] participants = privateFor.split(",");
         int arbitraryValue = new Random().nextInt(100) + 1000;
 
-        List<Observable<TransactionReceipt>> receipts = Arrays.stream(participants)
-            .map(s -> QuorumNode.valueOf(s))
-            .map(target -> nestedContractService.updateC1Contract(node, target, c.getContractAddress(), arbitraryValue).subscribeOn(Schedulers.io()))
-            .collect(Collectors.toList());
 
-        Observable.zip(receipts, (args) -> {
-            Arrays.stream(args)
-                .map(o -> (TransactionReceipt) o)
-                .forEach(tr -> logger.debug(tr.getTransactionHash()));
-            return null;
-        }).doOnError(e -> logger.debug("Got exception but will ignore. Exception is {}", e.getMessage())).toBlocking().first();
+        nestedContractService.updateC1Contract(
+            node,
+            Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
+            c.getContractAddress(),
+            arbitraryValue).onExceptionResumeNext(Observable.just(null)).first().toBlocking();
     }
 
     @Step("Fire and forget execution of simple contract(<contractName>)'s `set()` function with new arbitrary value in <node> and it's private for <privateFor>")
     public void fireAndForgetSimpleContract(String contractName, QuorumNode node, String privateFor) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
-        String[] participants = privateFor.split(",");
         int arbitraryValue = new Random().nextInt(100) + 1000;
 
-        List<Observable<TransactionReceipt>> receipts = Arrays.stream(participants)
-            .map(s -> QuorumNode.valueOf(s))
-            .map(target -> contractService.updateSimpleContract(node, target, c.getContractAddress(), arbitraryValue).subscribeOn(Schedulers.io()))
-            .collect(Collectors.toList());
-
-        Observable.zip(receipts, (args) -> {
-            Arrays.stream(args)
-                .map(o -> (TransactionReceipt) o)
-                .forEach(tr -> logger.debug(tr.getTransactionHash()));
-            return null;
-        }).onExceptionResumeNext(Observable.just(null)).first().toBlocking();
+        contractService.updateSimpleContract(
+            node,
+            Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
+            c.getContractAddress(),
+            arbitraryValue).onExceptionResumeNext(Observable.just(null)).first().toBlocking();
     }
 
-    @Step("Execute contract `C2`(<contractName>)'s `set()` function with new value <newValue> in <source> and it's private for <target>")
-    public void updateNewValue(String contractName, int newValue, QuorumNode source, QuorumNode target) {
+    @Step("Execute contract `C2`(<contractName>)'s `set()` function with new value <newValue> in <source> and it's private for <privateFor>")
+    public void updateNewValue(String contractName, int newValue, QuorumNode source, String privateFor) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
-        TransactionReceipt receipt = nestedContractService.updateC2Contract(source, target, c.getContractAddress(), newValue).toBlocking().first();
+        TransactionReceipt receipt = nestedContractService.updateC2Contract(
+            source,
+            Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
+            c.getContractAddress(), newValue).toBlocking().first();
 
         assertThat(receipt.getTransactionHash()).isNotBlank();
         assertThat(receipt.getBlockNumber()).isNotEqualTo(currentBlockNumber());
