@@ -154,11 +154,16 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
         int arbitraryValue = new Random().nextInt(100) + 1000;
 
 
-        nestedContractService.updateC1Contract(
+        TransactionReceipt receipt = nestedContractService.updateC2Contract(
             node,
             Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
             c.getContractAddress(),
-            arbitraryValue).onExceptionResumeNext(Observable.just(null)).first().toBlocking();
+            arbitraryValue).onExceptionResumeNext(Observable.just(null)).toBlocking().first();
+        if (receipt != null) {
+            String txHashKey = contractName + "_transactionHash";
+            DataStoreFactory.getSpecDataStore().put(txHashKey, receipt.getTransactionHash());
+            DataStoreFactory.getScenarioDataStore().put(txHashKey, receipt.getTransactionHash());
+        }
     }
 
     @Step("Fire and forget execution of simple contract(<contractName>)'s `set()` function with new arbitrary value in <node> and it's private for <privateFor>")
@@ -166,11 +171,16 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         int arbitraryValue = new Random().nextInt(100) + 1000;
 
-        contractService.updateSimpleContract(
+        TransactionReceipt receipt = contractService.updateSimpleContract(
             node,
             Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
             c.getContractAddress(),
-            arbitraryValue).onExceptionResumeNext(Observable.just(null)).first().toBlocking();
+            arbitraryValue).onExceptionResumeNext(Observable.just(null)).toBlocking().first();
+        if (receipt != null) {
+            String txHashKey = contractName + "_transactionHash";
+            DataStoreFactory.getSpecDataStore().put(txHashKey, receipt.getTransactionHash());
+            DataStoreFactory.getScenarioDataStore().put(txHashKey, receipt.getTransactionHash());
+        }
     }
 
     @Step("Execute contract `C2`(<contractName>)'s `set()` function with new value <newValue> in <source> and it's private for <privateFor>")

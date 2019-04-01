@@ -80,16 +80,15 @@ public class ContractDeployment extends AbstractSpecImplementation {
                 Optional<TransactionReceipt> r = (Optional<TransactionReceipt>) receipts[i];
                 switch (status) {
                     case successfully:
-                        assertThat(r.isPresent()).as("Transaction Receipt in " + nodes[i]).isTrue();
+                        assertThat(r.isPresent() && r.get().isStatusOK()).as("Transaction Receipt in " + nodes[i]).isTrue();
                         assertThat(r.get().getBlockNumber()).as("Block Number in Transaction Receipt in " + nodes[i]).isNotEqualTo(currentBlockNumber());
                         break;
                     case unsuccessfully:
-                        assertThat(r.isPresent()).as("Transaction Receipt in " + nodes[i]).isFalse();
-                        assertThat(r.get().getBlockNumber()).as("Block Number in Transaction Receipt in " + nodes[i]).isEqualTo(currentBlockNumber());
+                        assertThat(!r.isPresent() || !r.get().isStatusOK()).as("Transaction Receipt in " + nodes[i]).isTrue();
                         break;
                 }
             }
             return true;
-        });
+        }).toBlocking().first();
     }
 }
