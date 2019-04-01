@@ -23,5 +23,4 @@ contract C2 {
     function restoreFromC1() public {
         y = c1.get();
     }
-
 }

@@ -199,4 +199,20 @@ public class NestedContractService extends AbstractService {
             EthStorageRoot.class);
         return request.observable();
     }
+
+    public Observable<TransactionReceipt> newContractC2(QuorumNode source, List<QuorumNode> target, String contractAddress, BigInteger newValue) {
+        Quorum client = connectionFactory().getConnection(source);
+        return accountService.getDefaultAccountAddress(source).flatMap(address -> {
+            ClientTransactionManager txManager = new ClientTransactionManager(
+                client,
+                address,
+                null,
+                target.stream().map(n -> privacyService.id(n)).collect(Collectors.toList()),
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS);
+            return C1.load(contractAddress, client, txManager,
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT).newContractC2(newValue).observable();
+        });
+    }
 }

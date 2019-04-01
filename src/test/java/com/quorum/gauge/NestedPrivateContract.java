@@ -21,12 +21,18 @@ package com.quorum.gauge;
 
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
+import com.thoughtworks.gauge.Gauge;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
+
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 @Service
 @SuppressWarnings("unchecked")
@@ -50,5 +56,17 @@ public class NestedPrivateContract extends AbstractSpecImplementation {
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
+    }
+
+    @Step("Execute <contractName>'s `newContractC2()` function with new value <newValue> in <source> and it's private for <target>")
+    public void callNewContractC2(String contractName, int newValue, QuorumNode source, String target) {
+        Contract c1 = mustHaveValue(contractName, Contract.class);
+
+        TransactionReceipt receipt = nestedContractService.newContractC2(
+            source,
+            Arrays.stream(target.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
+            c1.getContractAddress(),
+            BigInteger.valueOf(newValue)).toBlocking().first();
+        Gauge.writeMessage("Transaction Hash %s", receipt.getTransactionHash());
     }
 }

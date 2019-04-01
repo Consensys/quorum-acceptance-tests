@@ -31,37 +31,59 @@ Nested smart contracts
 ```
 pragma solidity ^0.5.0;
 
+import "./C2.sol";
+
 contract C1 {
 
-   uint x;
+    uint x;
 
-   function set(uint newValue) public returns (uint) {
-       x = newValue;
-       return x;
-   }
+    constructor(uint initVal) public {
+        x = initVal;
+    }
 
-   function get() public view returns (uint) {
-       return x;
-   }
+    function set(uint newValue) public returns (uint) {
+        x = newValue;
+        return x;
+    }
+
+    function get() public view returns (uint) {
+        return x;
+    }
+
+    function newContractC2(uint newValue) public {
+        C2 c = new C2(address(this));
+        // method calling C1 set function
+        c.set(newValue);
+    }
 }
 
-contract C2  {
+pragma solidity ^0.5.0;
 
-   C1 c1;
+import "./C1.sol";
 
-   constructor(address _t) public {
-       c1 = C1(_t);
-   }
+contract C2 {
 
-   function get() public view returns (uint result) {
-       return c1.get();
-   }
+    C1 c1;
+    uint y;
 
-   function set(uint _val) public {
-       c1.set(_val);
-   }
+    constructor(address _t) public {
+        c1 = C1(_t);
+    }
 
+    function get() public view returns (uint result) {
+        return c1.get();
+    }
+
+    function set(uint _val) public {
+        y = _val;
+        c1.set(_val);
+    }
+
+    function restoreFromC1() public {
+        y = c1.get();
+    }
 }
+
 ```
 
 ## Deny transactions sent to a simple contract by non-party node
@@ -113,6 +135,19 @@ Transactions, regardless if it succeeds or not, sent by non-party node must not 
 * Contract `C2`("childContractC2_12")'s `get()` function execution in "Node1" returns "30"
 * Contract `C2`("childContractC2_12")'s `get()` function execution in "Node4" returns "0"
 * Contract `C2`("childContractC2_12")'s `get()` function execution in "Node2" returns "0"
+
+## Privacy is maintained when a transaction to a contract creating another contract then in turn referencing its creator
+
+ Tags: nested-call, affected
+
+This is to make sure we capture the affected contracts correctly.
+In this scenario, contract C2 is created via `newContractC2()` call to C1, then invoking C2 function that eventually changes C1 value.
+
+* Deploy a C1 contract with initial value "5" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
+* "contractC1_14" is deployed "successfully" in "Node1,Node4"
+* Execute "contractC1_14"'s `newContractC2()` function with new value "100" in "Node1" and it's private for "Node4"
+* Contract `C1`("contractC1_14")'s `get()` function execution in "Node1" returns "100"
+* Contract `C1`("contractC1_14")'s `get()` function execution in "Node4" returns "100"
 
 ## [Limitation] Transaction sent by a node which is party to parent and child contracts would be successful regardless the privateFor
 
