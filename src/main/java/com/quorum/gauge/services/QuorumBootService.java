@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.quorum.gauge.common.QuorumNetworkConfiguration;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.ext.IstanbulPropose;
 import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -147,7 +148,7 @@ public class QuorumBootService {
             // using the current consensus to join the network
             switch (qn.config.consensus.name) {
                 case istanbul:
-                    List<Observable<IstanbulService.IstanbulPropose>> proposals = new ArrayList<>();
+                    List<Observable<IstanbulPropose>> proposals = new ArrayList<>();
                     for (QuorumNode n : qn.connectionFactory.getNetworkProperty().getNodes().keySet()) {
                         proposals.add(istanbulService.propose(n, newNode.getValue().getValidatorAddress()).subscribeOn(Schedulers.io()));
                     }
