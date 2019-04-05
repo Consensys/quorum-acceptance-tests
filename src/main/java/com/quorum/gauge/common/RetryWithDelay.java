@@ -24,11 +24,16 @@ import rx.functions.Func1;
 
 import java.util.concurrent.TimeUnit;
 
-public class RetryWithDelay implements
-        Func1<Observable<? extends Throwable>, Observable<?>> {
+/**
+ * Retry an {@link Observable} with configurable retry limit and timeout
+ * between attempts
+ */
+public class RetryWithDelay implements Func1<Observable<? extends Throwable>, Observable<?>> {
 
     private final int maxRetries;
+
     private final int retryDelayMillis;
+
     private int retryCount;
 
     public RetryWithDelay(final int maxRetries, final int retryDelayMillis) {
@@ -38,18 +43,18 @@ public class RetryWithDelay implements
     }
 
     @Override
-    public Observable<?> call(Observable<? extends Throwable> attempts) {
+    public Observable<?> call(final Observable<? extends Throwable> attempts) {
         return attempts
-                .flatMap((Func1<Throwable, Observable<?>>) throwable -> {
-                    if (++retryCount < maxRetries) {
-                        // When this Observable calls onNext, the original
-                        // Observable will be retried (i.e. re-subscribed).
-                        return Observable.timer(retryDelayMillis,
-                                TimeUnit.MILLISECONDS);
-                    }
+            .flatMap(throwable -> {
+                if (++retryCount < maxRetries) {
+                    // When this Observable calls onNext, the original
+                    // Observable will be retried
+                    return Observable.timer(retryDelayMillis, TimeUnit.MILLISECONDS);
+                }
 
-                    // Max retries hit. Just pass the error along.
-                    return Observable.error(new RuntimeException("retry timed out"));
-                });
+                // Max retries hit, just pass the error along.
+                return Observable.error(new RuntimeException("retry timed out"));
+            });
     }
+
 }

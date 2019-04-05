@@ -20,11 +20,12 @@
 package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.ext.IstanbulPropose;
+import com.quorum.gauge.ext.MinerStartStop;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.Request;
-import org.web3j.protocol.core.Response;
 import rx.Observable;
 
 import java.util.Arrays;
@@ -32,45 +33,46 @@ import java.util.Collections;
 
 @Service
 public class IstanbulService extends AbstractService {
+
     private static final Logger logger = LoggerFactory.getLogger(IstanbulService.class);
-
-    public static class MinerStartStop extends Response<String> {
-
-    }
-
-    public static class IstanbulPropose extends Response<String> {
-    }
 
     public Observable<MinerStartStop> stopMining(QuorumNode node) {
         logger.debug("Request {} to stop mining", node);
+
         Request<?, MinerStartStop> request = new Request<>(
                 "miner_stop",
                 null,
                 connectionFactory().getWeb3jService(node),
                 MinerStartStop.class
         );
+
         return request.observable();
     }
 
     public Observable<MinerStartStop> startMining(QuorumNode node) {
         logger.debug("Request {} to start mining", node);
+
         Request<?, MinerStartStop> request = new Request<>(
                 "miner_start",
-                Collections.EMPTY_LIST,
+                Collections.emptyList(),
                 connectionFactory().getWeb3jService(node),
                 MinerStartStop.class
         );
+
         return request.observable();
     }
 
     public Observable<IstanbulPropose> propose(QuorumNode node, String proposedValidatorAddress) {
         logger.debug("Node {} proposing {}", node, proposedValidatorAddress);
+
         Request<?, IstanbulPropose> request = new Request<>(
                 "istanbul_propose",
                 Arrays.asList(proposedValidatorAddress, true),
                 connectionFactory().getWeb3jService(node),
                 IstanbulPropose.class
         );
+
         return request.observable();
     }
+
 }
