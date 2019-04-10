@@ -19,8 +19,12 @@
 
 package com.quorum.gauge.services;
 
+import com.quorum.gauge.common.PrivacyFlag;
 import com.quorum.gauge.common.QuorumNode;
-import com.quorum.gauge.ext.*;
+import com.quorum.gauge.ext.EnhancedClientTransactionManager;
+import com.quorum.gauge.ext.EthSendTransactionAsync;
+import com.quorum.gauge.ext.EthStorageRoot;
+import com.quorum.gauge.ext.PrivateTransactionAsync;
 import com.quorum.gauge.sol.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,10 +65,10 @@ public class ContractService extends AbstractService {
     }
 
     public Observable<? extends Contract> createSimpleContract(int initialValue, QuorumNode source, QuorumNode target, BigInteger gas) {
-        return createSimpleContract(initialValue, source, Arrays.asList(target), gas, PrivateContractFlag.nonPSV);
+        return createSimpleContract(initialValue, source, Arrays.asList(target), gas, Arrays.asList(PrivacyFlag.Legacy));
     }
 
-    public Observable<? extends Contract> createSimpleContract(int initialValue, QuorumNode source, List<QuorumNode> targets, BigInteger gas, PrivateContractFlag flag) {
+    public Observable<? extends Contract> createSimpleContract(int initialValue, QuorumNode source, List<QuorumNode> targets, BigInteger gas, List<PrivacyFlag> flags) {
         Quorum client = connectionFactory().getConnection(source);
         final List<String> privateFor;
         if (null != targets) {
@@ -79,7 +83,7 @@ public class ContractService extends AbstractService {
                 address,
                 null,
                 privateFor,
-                flag,
+                flags,
                 DEFAULT_MAX_RETRY,
                 DEFAULT_SLEEP_DURATION_IN_MILLIS);
             return SimpleStorage.deploy(client,

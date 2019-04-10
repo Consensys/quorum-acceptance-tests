@@ -18,9 +18,9 @@
  */
 package com.quorum.gauge;
 
+import com.quorum.gauge.common.PrivacyFlag;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
-import com.quorum.gauge.ext.PrivateContractFlag;
 import com.quorum.gauge.services.AbstractService;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
@@ -44,7 +44,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
     private static final Logger logger = LoggerFactory.getLogger(PrivateStateValidation.class);
 
     @Step("Deploy a <flag> contract `SimpleStorage` with initial value <initialValue> in <source>'s default account and it's private for <privateFor>, named this contract as <contractName>")
-    public void deploySimpleContract(PrivateContractFlag flag, int initialValue, QuorumNode source, String privateFor, String contractName) {
+    public void deploySimpleContract(PrivacyFlag flag, int initialValue, QuorumNode source, String privateFor, String contractName) {
         Contract contract = contractService.createSimpleContract(
             initialValue,
             source,
@@ -52,7 +52,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
                 .map(s -> QuorumNode.valueOf(s))
                 .collect(Collectors.toList()),
             AbstractService.DEFAULT_GAS_LIMIT,
-            flag
+            Arrays.asList(flag)
         ).toBlocking().first();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
@@ -60,14 +60,14 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
     }
 
     @Step("Deploy a <flag> contract `C1` with initial value <initialValue> in <source>'s default account and it's private for <privateFor>, named this contract as <contractName>")
-    public void deployC1Contract(PrivateContractFlag flag, int initialValue, QuorumNode source, String privateFor, String contractName) {
+    public void deployC1Contract(PrivacyFlag flag, int initialValue, QuorumNode source, String privateFor, String contractName) {
         Contract contract = nestedContractService.createC1Contract(
             initialValue,
             source,
             Arrays.stream(privateFor.split(","))
                 .map(s -> QuorumNode.valueOf(s))
                 .collect(Collectors.toList()),
-            flag
+            Arrays.asList(flag)
         ).toBlocking().first();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
@@ -75,7 +75,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
     }
 
     @Step("Deploy a <flag> contract `C2` with initial value <c1ContractName> in <source>'s default account and it's private for <privateFor>, named this contract as <contractName>")
-    public void deployC2Contract(PrivateContractFlag flag, String c1ContractName, QuorumNode source, String privateFor, String contractName) {
+    public void deployC2Contract(PrivacyFlag flag, String c1ContractName, QuorumNode source, String privateFor, String contractName) {
         Contract c1 = mustHaveValue(c1ContractName, Contract.class);
         Contract contract = nestedContractService.createC2Contract(
             c1.getContractAddress(),
@@ -83,7 +83,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
             Arrays.stream(privateFor.split(","))
                 .map(s -> QuorumNode.valueOf(s))
                 .collect(Collectors.toList()),
-            flag
+            Arrays.asList(flag)
         ).toBlocking().first();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);

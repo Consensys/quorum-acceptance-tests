@@ -19,10 +19,10 @@
 
 package com.quorum.gauge.services;
 
+import com.quorum.gauge.common.PrivacyFlag;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.ext.EnhancedClientTransactionManager;
 import com.quorum.gauge.ext.EthStorageRoot;
-import com.quorum.gauge.ext.PrivateContractFlag;
 import com.quorum.gauge.sol.C1;
 import com.quorum.gauge.sol.C2;
 import org.slf4j.Logger;
@@ -54,10 +54,10 @@ public class NestedContractService extends AbstractService {
     AccountService accountService;
 
     public Observable<? extends Contract> createC1Contract(int initialValue, QuorumNode source, QuorumNode target) {
-        return createC1Contract(initialValue, source, Arrays.asList(target), PrivateContractFlag.nonPSV);
+        return createC1Contract(initialValue, source, Arrays.asList(target), Arrays.asList(PrivacyFlag.Legacy));
     }
 
-    public Observable<? extends Contract> createC1Contract(int initialValue, QuorumNode source, List<QuorumNode> target, PrivateContractFlag flag) {
+    public Observable<? extends Contract> createC1Contract(int initialValue, QuorumNode source, List<QuorumNode> target, List<PrivacyFlag> flags) {
         Quorum client = connectionFactory().getConnection(source);
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
             ClientTransactionManager clientTransactionManager = new EnhancedClientTransactionManager(
@@ -65,7 +65,7 @@ public class NestedContractService extends AbstractService {
                 address,
                 null,
                 target.stream().map(n -> privacyService.id(n)).collect(Collectors.toList()),
-                flag,
+                flags,
                 DEFAULT_MAX_RETRY,
                 DEFAULT_SLEEP_DURATION_IN_MILLIS);
             return C1.deploy(client,
@@ -77,10 +77,10 @@ public class NestedContractService extends AbstractService {
     }
 
     public Observable<? extends Contract> createC2Contract(String c1Address, QuorumNode source, QuorumNode target) {
-        return createC2Contract(c1Address, source, Arrays.asList(target), PrivateContractFlag.nonPSV);
+        return createC2Contract(c1Address, source, Arrays.asList(target), Arrays.asList(PrivacyFlag.Legacy));
     }
 
-    public Observable<? extends Contract> createC2Contract(String c1Address, QuorumNode source, List<QuorumNode> target, PrivateContractFlag flag) {
+    public Observable<? extends Contract> createC2Contract(String c1Address, QuorumNode source, List<QuorumNode> target, List<PrivacyFlag> flags) {
         Quorum client = connectionFactory().getConnection(source);
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
             ClientTransactionManager clientTransactionManager = new EnhancedClientTransactionManager(
@@ -88,7 +88,7 @@ public class NestedContractService extends AbstractService {
                 address,
                 null,
                 target.stream().map(n -> privacyService.id(n)).collect(Collectors.toList()),
-                flag,
+                flags,
                 DEFAULT_MAX_RETRY,
                 DEFAULT_SLEEP_DURATION_IN_MILLIS);
             return C2.deploy(client,

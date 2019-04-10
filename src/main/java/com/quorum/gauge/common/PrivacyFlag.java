@@ -17,9 +17,18 @@
  * under the License.
  */
 
-package com.quorum.gauge.ext;
+package com.quorum.gauge.common;
 
-public enum PrivateContractFlag {
-    PSV, // Private State Validation
-    nonPSV // non Private State Validation
+public enum PrivacyFlag {
+    Legacy(0), PartyProtection(1), StateValidation(2);
+
+    private int i;
+
+    PrivacyFlag(int i) {
+        this.i = i;
+    }
+
+    public int intValue() {
+        return this.i;
+    }
 }

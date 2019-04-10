@@ -19,6 +19,7 @@
 
 package com.quorum.gauge.ext;
 
+import com.quorum.gauge.common.PrivacyFlag;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.quorum.Quorum;
 import org.web3j.quorum.methods.request.PrivateTransaction;
@@ -36,20 +37,12 @@ import java.util.List;
  */
 public class EnhancedClientTransactionManager extends ClientTransactionManager {
 
-    private PrivateContractFlag contractFlag;
+    private List<PrivacyFlag> contractFlag;
     private Quorum quorum;
 
-    public EnhancedClientTransactionManager(Quorum quorum, String fromAddress, String privateFrom, List<String> privateFor, PrivateContractFlag contractFlag, int attempts, int sleepDuration) {
+    public EnhancedClientTransactionManager(Quorum quorum, String fromAddress, String privateFrom, List<String> privateFor, List<PrivacyFlag> contractFlag, int attempts, int sleepDuration) {
         super(quorum, fromAddress, privateFrom, privateFor, attempts, sleepDuration);
         this.quorum = quorum;
-        this.contractFlag = contractFlag;
-    }
-
-    public PrivateContractFlag getContractFlag() {
-        return contractFlag;
-    }
-
-    public void setContractFlag(PrivateContractFlag contractFlag) {
         this.contractFlag = contractFlag;
     }
 
@@ -61,19 +54,23 @@ public class EnhancedClientTransactionManager extends ClientTransactionManager {
 
     public static class EnhancedPrivateTransaction extends PrivateTransaction {
 
-        private boolean psv;
+        private int privacyFlag;
 
-        public EnhancedPrivateTransaction(String from, BigInteger nonce, BigInteger gasLimit, String to, BigInteger value, String data, String privateFrom, List<String> privateFor, PrivateContractFlag flag) {
+        public EnhancedPrivateTransaction(String from, BigInteger nonce, BigInteger gasLimit, String to, BigInteger value, String data, String privateFrom, List<String> privateFor, List<PrivacyFlag> flags) {
             super(from, nonce, gasLimit, to, value, data, privateFrom, privateFor);
-            this.psv = flag == PrivateContractFlag.PSV;
+            int flag = 0;
+            for (PrivacyFlag f : flags) {
+                flag = flag | f.intValue();
+            }
+            this.privacyFlag = flag;
         }
 
-        public boolean isPsv() {
-            return psv;
+        public int getPrivacyFlag() {
+            return privacyFlag;
         }
 
-        public void setPsv(boolean psv) {
-            this.psv = psv;
+        public void setPrivacyFlag(int privacyFlag) {
+            this.privacyFlag = privacyFlag;
         }
     }
 }

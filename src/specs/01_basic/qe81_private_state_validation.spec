@@ -87,7 +87,7 @@ contract C2  {
 
 We can't really verify the if participants actually validated their states. Assuming they did, their state should return the same value
 
-* Deploy a "PSV" contract `SimpleStorage` with initial value "40" in "Node1"'s default account and it's private for "Node4", named this contract as "contract14"
+* Deploy a "StateValidation" contract `SimpleStorage` with initial value "40" in "Node1"'s default account and it's private for "Node4", named this contract as "contract14"
 * "contract14" is deployed "successfully" in "Node1,Node4"
 * "contract14"'s `get()` function execution in "Node1" returns "40"
 * "contract14"'s `get()` function execution in "Node4" returns "40"
@@ -98,9 +98,9 @@ We can't really verify the if participants actually validated their states. Assu
 
 C1 is PSV contract and C2 is not. Transactions to C1 that impacts C2 are not allowed
 
-* Deploy a "PSV" contract `C1` with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
+* Deploy a "StateValidation" contract `C1` with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
-* Deploy a "nonPSV" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
+* Deploy a "Legacy" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
 * Fail to execute contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node4"
 
@@ -109,9 +109,9 @@ C1 is PSV contract and C2 is not. Transactions to C1 that impacts C2 are not all
 C1 is PSV contract and C2 is not. Transactions to C1 that reads from C2 are not allowed.
 As C2 is non-PSV contract, C1 state would be impacted and increase the possibility of future transaction failures.
 
-* Deploy a "PSV" contract `C1` with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
+* Deploy a "StateValidation" contract `C1` with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
-* Deploy a "nonPSV" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
+* Deploy a "Legacy" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
 * Fail to execute contract `C2`("contractC2_14")'s `restoreFromC1()` function in "Node1" and it's private for "Node4"
 
@@ -119,9 +119,9 @@ As C2 is non-PSV contract, C1 state would be impacted and increase the possibili
 
 C1 is non-PSV contract and C2 is. Transactions to C1 that reads from C2 are allowed
 
-* Deploy a "nonPSV" contract `C1` with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
+* Deploy a "Legacy" contract `C1` with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
-* Deploy a "PSV" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
+* Deploy a "StateValidation" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
 * Contract `C2`("contractC2_14")'s `get()` function execution in "Node1" returns "42"
 
@@ -130,9 +130,9 @@ C1 is non-PSV contract and C2 is. Transactions to C1 that reads from C2 are allo
 Transactions sent to a nested contract which must be private for same set of original participants. Otherwise they will be denied.
 Noted that contract creation is still a success.
 
-* Deploy a "PSV" contract `C1` with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
+* Deploy a "StateValidation" contract `C1` with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
-* Deploy a "PSV" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node2", named this contract as "contractC2_14"
+* Deploy a "StateValidation" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node2", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node2"
 * Fail to execute contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
 
@@ -140,9 +140,9 @@ Noted that contract creation is still a success.
 
 Transactions must be private for same set of original participants. Otherwise they will be denied
 
-* Deploy a "PSV" contract `C1` with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
+* Deploy a "StateValidation" contract `C1` with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
-* Deploy a "PSV" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
+* Deploy a "StateValidation" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
 * Fail to execute contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
 
@@ -150,8 +150,8 @@ Transactions must be private for same set of original participants. Otherwise th
 
 Inter-contract message calls are only allowed if all contracts have same set of participants
 
-* Deploy a "PSV" contract `C1` with initial value "100" in "Node1"'s default account and it's private for "Node2,Node3", named this contract as "contractC1_123"
+* Deploy a "StateValidation" contract `C1` with initial value "100" in "Node1"'s default account and it's private for "Node2,Node3", named this contract as "contractC1_123"
 * "contractC1_123" is deployed "successfully" in "Node1,Node2,Node3"
-* Deploy a "PSV" contract `C2` with initial value "contractC1_123" in "Node1"'s default account and it's private for "Node2", named this contract as "contractC2_12"
+* Deploy a "StateValidation" contract `C2` with initial value "contractC1_123" in "Node1"'s default account and it's private for "Node2", named this contract as "contractC2_12"
 * "contractC2_12" is deployed "successfully" in "Node1,Node2"
 * Fail to execute contract `C2`("contractC2_12")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
