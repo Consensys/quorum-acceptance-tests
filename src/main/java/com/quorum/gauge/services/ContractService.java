@@ -118,27 +118,28 @@ public class ContractService extends AbstractService {
     }
 
     public Observable<TransactionReceipt> updateSimpleContract(final QuorumNode source, List<QuorumNode> target,
-                                                               final String contractAddress, final int newValue) {
-        return this.updateSimpleContractWithGasLimit(source, target, contractAddress, DEFAULT_GAS_LIMIT, newValue);
+                                                               final String contractAddress, final int newValue, List<PrivacyFlag> flags) {
+        return this.updateSimpleContractWithGasLimit(source, target, contractAddress, DEFAULT_GAS_LIMIT, newValue, flags);
     }
 
     public Observable<TransactionReceipt> updateSimpleContract(final QuorumNode source, final QuorumNode target,
-                                                               final String contractAddress, final int newValue) {
-        return this.updateSimpleContractWithGasLimit(source, Arrays.asList(target), contractAddress, DEFAULT_GAS_LIMIT, newValue);
+                                                               final String contractAddress, final int newValue, List<PrivacyFlag> flags) {
+        return this.updateSimpleContractWithGasLimit(source, Arrays.asList(target), contractAddress, DEFAULT_GAS_LIMIT, newValue, flags);
     }
 
     public Observable<TransactionReceipt> updateSimpleContractWithGasLimit(final QuorumNode source,
                                                                            final List<QuorumNode> target,
                                                                            final String contractAddress,
                                                                            final BigInteger gasLimit,
-                                                                           final int newValue) {
+                                                                           final int newValue,
+                                                                           final List<PrivacyFlag> flags) {
         final Quorum client = connectionFactory().getConnection(source);
         final BigInteger value = BigInteger.valueOf(newValue);
         final List<String> privateFor = target.stream().map(q -> privacyService.id(q)).collect(Collectors.toList());
 
         return accountService.getDefaultAccountAddress(source)
-            .map(address -> new ClientTransactionManager(
-                client, address, null, privateFor, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
+            .map(address -> new EnhancedClientTransactionManager(
+                client, address, null, privateFor, flags, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
             ))
             .flatMap(txManager -> SimpleStorage.load(
                 contractAddress, client, txManager, BigInteger.ZERO, gasLimit).set(value).observable()

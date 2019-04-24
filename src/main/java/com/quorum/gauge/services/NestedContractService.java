@@ -143,14 +143,15 @@ public class NestedContractService extends AbstractService {
         }
     }
 
-    public Observable<TransactionReceipt> restoreFromC1(QuorumNode node, List<QuorumNode> target, String contractAddress) {
+    public Observable<TransactionReceipt> restoreFromC1(QuorumNode node, List<QuorumNode> target, String contractAddress, List<PrivacyFlag> flags) {
         Quorum client = connectionFactory().getConnection(node);
         return accountService.getDefaultAccountAddress(node).flatMap(address -> {
-            ClientTransactionManager txManager = new ClientTransactionManager(
+            EnhancedClientTransactionManager txManager = new EnhancedClientTransactionManager(
                 client,
                 address,
                 null,
                 target.stream().map(n -> privacyService.id(n)).collect(Collectors.toList()),
+                flags,
                 DEFAULT_MAX_RETRY,
                 DEFAULT_SLEEP_DURATION_IN_MILLIS);
             return C2.load(contractAddress, client, txManager,
@@ -175,14 +176,15 @@ public class NestedContractService extends AbstractService {
         });
     }
 
-    public Observable<TransactionReceipt> updateC2Contract(QuorumNode source, List<QuorumNode> target, String contractAddress, int newValue) {
+    public Observable<TransactionReceipt> updateC2Contract(QuorumNode source, List<QuorumNode> target, String contractAddress, int newValue, List<PrivacyFlag> flags) {
         Quorum client = connectionFactory().getConnection(source);
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
-            ClientTransactionManager txManager = new ClientTransactionManager(
+            EnhancedClientTransactionManager txManager = new EnhancedClientTransactionManager(
                 client,
                 address,
                 null,
                 target.stream().map(n -> privacyService.id(n)).collect(Collectors.toList()),
+                flags,
                 DEFAULT_MAX_RETRY,
                 DEFAULT_SLEEP_DURATION_IN_MILLIS);
             return C2.load(contractAddress, client, txManager,
@@ -200,14 +202,15 @@ public class NestedContractService extends AbstractService {
         return request.observable();
     }
 
-    public Observable<TransactionReceipt> newContractC2(QuorumNode source, List<QuorumNode> target, String contractAddress, BigInteger newValue) {
+    public Observable<TransactionReceipt> newContractC2(QuorumNode source, List<QuorumNode> target, String contractAddress, BigInteger newValue, List<PrivacyFlag> flags) {
         Quorum client = connectionFactory().getConnection(source);
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
-            ClientTransactionManager txManager = new ClientTransactionManager(
+            EnhancedClientTransactionManager txManager = new EnhancedClientTransactionManager(
                 client,
                 address,
                 null,
                 target.stream().map(n -> privacyService.id(n)).collect(Collectors.toList()),
+                flags,
                 DEFAULT_MAX_RETRY,
                 DEFAULT_SLEEP_DURATION_IN_MILLIS);
             return C1.load(contractAddress, client, txManager,

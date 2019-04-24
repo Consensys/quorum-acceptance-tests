@@ -18,6 +18,7 @@
  */
 package com.quorum.gauge;
 
+import com.quorum.gauge.common.PrivacyFlag;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.thoughtworks.gauge.Step;
@@ -124,7 +125,8 @@ public class EstimateGas extends AbstractSpecImplementation {
         final BigInteger estimatedGasLimit = estimatedGasResult.getAmountUsed();
 
         final TransactionReceipt receipt = contractService
-            .updateSimpleContractWithGasLimit(from, Arrays.asList(privateFor), contractAddress, estimatedGasLimit, value)
+            .updateSimpleContractWithGasLimit(from, Arrays.asList(privateFor), contractAddress, estimatedGasLimit, value,
+                Arrays.asList(PrivacyFlag.Legacy))
             .toBlocking()
             .first();
 
