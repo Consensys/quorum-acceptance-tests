@@ -92,6 +92,31 @@ We can't really verify the if participants actually validated their states. Assu
 * "contract14"'s `get()` function execution in "Node1" returns "40"
 * "contract14"'s `get()` function execution in "Node4" returns "40"
 
+
+## Transactions sent to simple contract by non-psv node without flag will result in mismatched receipts
+
+ Tags: single
+
+* Deploy a "StateValidation" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract14"
+* "contract14" is deployed "successfully" in "Node1,Node4"
+* Fire and forget execution of simple contract("contract14")'s `set()` function with new arbitrary value in "Node3" and it's private for "Node1"
+* Transaction Receipt is "unsuccessfully" available in "Node1" for "contract14"
+* Transaction Receipt is "successfully" available in "Node3" for "contract14"
+* Transaction Receipt is "successfully" available in "Node4" for "contract14"
+
+## Privacy is maintained when non-psv node trying to send a transaction to a simple contract without flag
+
+ Tags: single
+
+Transactions, regardless if it succeeds or not, sent by non-party node must not change the private states of the participants
+
+* Deploy a "StateValidation" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract14"
+* "contract14" is deployed "successfully" in "Node1,Node4"
+* Fire and forget execution of simple contract("contract14")'s `set()` function with new arbitrary value in "Node3" and it's private for "Node1"
+* "contract14"'s `get()` function execution in "Node1" returns "42"
+* "contract14"'s `get()` function execution in "Node4" returns "42"
+* "contract14"'s `get()` function execution in "Node3" returns "0"
+
 ## Deny transactions that are sent to a non-PSV nested contract executing a function in a PSV parent contract
 
  Tags: nested
@@ -102,7 +127,7 @@ C1 is PSV contract and C2 is not. Transactions to C1 that impacts C2 are not all
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
 * Deploy a "Legacy" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
-* Fail to execute contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node4"
+* Fail to execute "StateValidation" contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node4"
 
 ## Deny transactions that are sent to a PSV contract reading from a non-PSV contract
 
@@ -113,7 +138,7 @@ As C2 is non-PSV contract, C1 state would be impacted and increase the possibili
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
 * Deploy a "Legacy" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
-* Fail to execute contract `C2`("contractC2_14")'s `restoreFromC1()` function in "Node1" and it's private for "Node4"
+* Fail to execute "StateValidation" contract `C2`("contractC2_14")'s `restoreFromC1()` function in "Node1" and it's private for "Node4"
 
 ## Allow transactions that are sent to a non-PSV contract reading from a PSV contract
 
@@ -134,7 +159,7 @@ Noted that contract creation is still a success.
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
 * Deploy a "StateValidation" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node2", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node2"
-* Fail to execute contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
+* Fail to execute "StateValidation" contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
 
 ## Deny transactions sending to a nested contract with a different set of participants
 
@@ -144,7 +169,7 @@ Transactions must be private for same set of original participants. Otherwise th
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
 * Deploy a "StateValidation" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
-* Fail to execute contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
+* Fail to execute "StateValidation" contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
 
 ## Deny transactions sending to a PSV contract that affects another PSV contract with different set of participants
 
@@ -154,4 +179,4 @@ Inter-contract message calls are only allowed if all contracts have same set of 
 * "contractC1_123" is deployed "successfully" in "Node1,Node2,Node3"
 * Deploy a "StateValidation" contract `C2` with initial value "contractC1_123" in "Node1"'s default account and it's private for "Node2", named this contract as "contractC2_12"
 * "contractC2_12" is deployed "successfully" in "Node1,Node2"
-* Fail to execute contract `C2`("contractC2_12")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
+* Fail to execute "StateValidation" contract `C2`("contractC2_12")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"

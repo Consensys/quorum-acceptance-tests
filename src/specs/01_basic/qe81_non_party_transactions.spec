@@ -88,15 +88,18 @@ contract C2 {
 
 ```
 
-## Deny transactions sent to a simple contract by non-party node
+## Transactions sent to simple contract by non-party node without flag will result in mismatched receipts
 
- Tags: single, deny
+ Tags: single
 
 * Deploy a "PartyProtection" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract14"
 * "contract14" is deployed "successfully" in "Node1,Node4"
-* Fail to execute simple contract("contract14")'s `set()` function with new arbitrary value in "Node3" and it's private for "Node1"
+* Fire and forget execution of simple contract("contract14")'s `set()` function with new arbitrary value in "Node3" and it's private for "Node1"
+* Transaction Receipt is "unsuccessfully" available in "Node1" for "contract14"
+* Transaction Receipt is "successfully" available in "Node3" for "contract14"
+* Transaction Receipt is "successfully" available in "Node4" for "contract14"
 
-## Privacy is maintained when non-party node trying to send a transaction to a simple contract
+## Privacy is maintained when non-party node trying to send a transaction to a simple contract without flag
 
  Tags: single
 
@@ -109,6 +112,27 @@ Transactions, regardless if it succeeds or not, sent by non-party node must not 
 * "contract14"'s `get()` function execution in "Node4" returns "42"
 * "contract14"'s `get()` function execution in "Node3" returns "0"
 
+## Deny transactions sent to simple contract by non-party node
+
+ Tags: single, deny
+
+* Deploy a "PartyProtection" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract14"
+* "contract14" is deployed "successfully" in "Node1,Node4"
+* Fail to execute "PartyProtection" simple contract("contract14")'s `set()` function with new arbitrary value in "Node3" and it's private for "Node1"
+
+## Privacy is maintained when non-party node trying to send a transaction to a simple contract
+
+ Tags: single
+
+Transactions, regardless if it succeeds or not, sent by non-party node must not change the private states of the participants
+
+* Deploy a "PartyProtection" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract14"
+* "contract14" is deployed "successfully" in "Node1,Node4"
+* Fire and forget execution of "PartyProtection" simple contract("contract14")'s `set()` function with new arbitrary value in "Node3" and it's private for "Node1"
+* "contract14"'s `get()` function execution in "Node1" returns "42"
+* "contract14"'s `get()` function execution in "Node4" returns "42"
+* "contract14"'s `get()` function execution in "Node3" returns "0"
+
 ## Deny transactions sent to a nested contract by non-party node
 
  Tags: nested, deny
@@ -117,7 +141,7 @@ Transactions, regardless if it succeeds or not, sent by non-party node must not 
 * "parentContractC1_14" is deployed "successfully" in "Node1,Node4"
 * Deploy a "PartyProtection" C2 contract with initial value "parentContractC1_14" in "Node1"'s default account and it's private for "Node2", named this contract as "childContractC2_12"
 * "childContractC2_12" is deployed "successfully" in "Node1,Node2"
-* Fail to execute contract `C2`("childContractC2_12")'s `set()` function with new arbitrary value in "Node2" and it's private for "Node1"
+* Fail to execute "PartyProtection" contract `C2`("childContractC2_12")'s `set()` function with new arbitrary value in "Node2" and it's private for "Node1"
 
 
 ## Privacy is maintained when non-party node trying to send a transaction to a nested contract
@@ -130,7 +154,7 @@ Transactions, regardless if it succeeds or not, sent by non-party node must not 
 * "parentContractC1_14" is deployed "successfully" in "Node1,Node4"
 * Deploy a "PartyProtection" C2 contract with initial value "parentContractC1_14" in "Node1"'s default account and it's private for "Node2", named this contract as "childContractC2_12"
 * "childContractC2_12" is deployed "successfully" in "Node1,Node2"
-* Fire and forget execution of contract `C2`("childContractC2_12")'s `set()` function with new arbitrary value in "Node2" and it's private for "Node1"
+* Fire and forget execution of "PartyProtection" contract `C2`("childContractC2_12")'s `set()` function with new arbitrary value in "Node2" and it's private for "Node1"
 * Contract `C1`("parentContractC1_14")'s `get()` function execution in "Node1" returns "30"
 * Contract `C1`("parentContractC1_14")'s `get()` function execution in "Node4" returns "30"
 * Contract `C1`("parentContractC1_14")'s `get()` function execution in "Node2" returns "0"
@@ -147,7 +171,7 @@ In this scenario, contract C2 is created via `newContractC2()` call to C1, then 
 
 * Deploy a "PartyProtection" C1 contract with initial value "5" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
-* Execute "contractC1_14"'s `newContractC2()` function with new value "100" in "Node1" and it's private for "Node4"
+* Execute "PartyProtection" "contractC1_14"'s `newContractC2()` function with new value "100" in "Node1" and it's private for "Node4"
 * Contract `C1`("contractC1_14")'s `get()` function execution in "Node1" returns "100"
 * Contract `C1`("contractC1_14")'s `get()` function execution in "Node4" returns "100"
 
@@ -162,7 +186,7 @@ Transaction receipt in Node2 will be marked as failure.
 * "parentContractC1_14" is deployed "successfully" in "Node1,Node4"
 * Deploy a "PartyProtection" C2 contract with initial value "parentContractC1_14" in "Node1"'s default account and it's private for "Node2", named this contract as "childContractC2_12"
 * "childContractC2_12" is deployed "successfully" in "Node1,Node2"
-* Fire and forget execution of contract `C2`("childContractC2_12")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
+* Fire and forget execution of "PartyProtection" contract `C2`("childContractC2_12")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
 * Transaction Receipt is "successfully" available in "Node1" for "childContractC2_12"
 * Transaction Receipt is "unsuccessfully" available in "Node2" for "childContractC2_12"
 

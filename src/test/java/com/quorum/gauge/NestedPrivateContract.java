@@ -88,15 +88,16 @@ public class NestedPrivateContract extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
     }
 
-    @Step("Execute <contractName>'s `newContractC2()` function with new value <newValue> in <source> and it's private for <target>")
-    public void callNewContractC2(String contractName, int newValue, QuorumNode source, String target) {
+    @Step("Execute <privacyFlags> <contractName>'s `newContractC2()` function with new value <newValue> in <source> and it's private for <target>")
+    public void callNewContractC2(String privacyFlags, String contractName, int newValue, QuorumNode source, String target) {
         Contract c1 = mustHaveValue(contractName, Contract.class);
 
         TransactionReceipt receipt = nestedContractService.newContractC2(
             source,
             Arrays.stream(target.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
             c1.getContractAddress(),
-            BigInteger.valueOf(newValue)).toBlocking().first();
+            BigInteger.valueOf(newValue),
+            Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())).toBlocking().first();
         Gauge.writeMessage("Transaction Hash %s", receipt.getTransactionHash());
     }
 }
