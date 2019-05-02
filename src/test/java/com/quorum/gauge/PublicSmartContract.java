@@ -54,6 +54,16 @@ public class PublicSmartContract extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(contractName, c);
     }
 
+    @Step("Deploy a simple smart contract with initial value <initialValue> in <source>'s default account, named this contract as <contractName>")
+    public void setupContract(int initialValue, QuorumNode source, String contractName) {
+        saveCurrentBlockNumber();
+        logger.debug("Setting up contract from {}", source);
+        Contract contract = contractService.createSimpleContract(initialValue, source, null).toBlocking().first();
+
+        DataStoreFactory.getSpecDataStore().put(contractName, contract);
+        DataStoreFactory.getScenarioDataStore().put(contractName, contract);
+    }
+
     @Step("<contractName> is mined")
     public void verifyContractIsMined(String contractName) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);

@@ -36,43 +36,37 @@ public class IstanbulService extends AbstractService {
 
     private static final Logger logger = LoggerFactory.getLogger(IstanbulService.class);
 
-    public Observable<MinerStartStop> stopMining(QuorumNode node) {
+    public Observable<MinerStartStop> stopMining(final QuorumNode node) {
         logger.debug("Request {} to stop mining", node);
 
-        Request<?, MinerStartStop> request = new Request<>(
-                "miner_stop",
-                null,
-                connectionFactory().getWeb3jService(node),
-                MinerStartStop.class
-        );
-
-        return request.observable();
+        return new Request<>(
+            "miner_stop",
+            null,
+            connectionFactory().getWeb3jService(node),
+            MinerStartStop.class
+        ).observable();
     }
 
-    public Observable<MinerStartStop> startMining(QuorumNode node) {
+    public Observable<MinerStartStop> startMining(final QuorumNode node) {
         logger.debug("Request {} to start mining", node);
 
-        Request<?, MinerStartStop> request = new Request<>(
-                "miner_start",
-                Collections.emptyList(),
-                connectionFactory().getWeb3jService(node),
-                MinerStartStop.class
-        );
-
-        return request.observable();
+        return new Request<>(
+            "miner_start",
+            Collections.emptyList(),
+            connectionFactory().getWeb3jService(node),
+            MinerStartStop.class
+        ).observable();
     }
 
-    public Observable<IstanbulPropose> propose(QuorumNode node, String proposedValidatorAddress) {
+    public Observable<IstanbulPropose> propose(final QuorumNode node, final String proposedValidatorAddress) {
         logger.debug("Node {} proposing {}", node, proposedValidatorAddress);
 
-        Request<?, IstanbulPropose> request = new Request<>(
-                "istanbul_propose",
-                Arrays.asList(proposedValidatorAddress, true),
-                connectionFactory().getWeb3jService(node),
-                IstanbulPropose.class
-        );
-
-        return request.observable();
+        return new Request<>(
+            "istanbul_propose",
+            Arrays.asList(proposedValidatorAddress, true),
+            connectionFactory().getWeb3jService(node),
+            IstanbulPropose.class
+        ).observable();
     }
 
 }
