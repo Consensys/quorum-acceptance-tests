@@ -76,6 +76,24 @@ public class NestedContractService extends AbstractService {
         });
     }
 
+    public Observable<? extends Contract> createPublicC1Contract(int initialValue, QuorumNode source) {
+        Quorum client = connectionFactory().getConnection(source);
+        return accountService.getDefaultAccountAddress(source).flatMap(address -> {
+            ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
+                client,
+                address,
+                null,
+                null,
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS);
+            return C1.deploy(client,
+                clientTransactionManager,
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT,
+                BigInteger.valueOf(initialValue)).observable();
+        });
+    }
+
     public Observable<? extends Contract> createC2Contract(String c1Address, QuorumNode source, QuorumNode target) {
         return createC2Contract(c1Address, source, Arrays.asList(target), Arrays.asList(PrivacyFlag.Legacy));
     }

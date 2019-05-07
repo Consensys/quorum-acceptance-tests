@@ -59,6 +59,17 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
     }
 
+    @Step("Deploy a public contract `C1` with initial value <initialValue> in <source>'s default account, named this contract as <contractName>")
+    public void deployPublicC1Contract(int initialValue, QuorumNode source, String contractName) {
+        Contract contract = nestedContractService.createPublicC1Contract(
+            initialValue,
+            source
+        ).toBlocking().first();
+
+        DataStoreFactory.getSpecDataStore().put(contractName, contract);
+        DataStoreFactory.getScenarioDataStore().put(contractName, contract);
+    }
+
     @Step("Deploy a <flag> contract `C1` with initial value <initialValue> in <source>'s default account and it's private for <privateFor>, named this contract as <contractName>")
     public void deployC1Contract(PrivacyFlag flag, int initialValue, QuorumNode source, String privateFor, String contractName) {
         Contract contract = nestedContractService.createC1Contract(
@@ -117,6 +128,18 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
                 Arrays.asList(flag)).toBlocking().first()
         ).as("Expected exception thrown")
             .isNotNull();
+    }
+
+    @Step("Execute <flag> contract `C2`(<contractName>)'s `restoreFromC1()` function in <source> and it's private for <privateFor>")
+    public void succeedRestoreFromC1Execution(PrivacyFlag flag, String contractName, QuorumNode source, String privateFor) {
+        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
+        TransactionReceipt receipt = nestedContractService.restoreFromC1(
+            source,
+            Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
+            c.getContractAddress(),  Arrays.asList(flag)).toBlocking().first();
+
+        assertThat(receipt.getTransactionHash()).isNotBlank();
+        assertThat(receipt.getBlockNumber()).isNotEqualTo(currentBlockNumber());
     }
 
     @Step("Fail to execute <flag> contract `C2`(<contractName>)'s `set()` function with new arbitrary value in <node> and it's private for <privateFor>")
