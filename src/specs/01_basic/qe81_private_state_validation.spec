@@ -240,7 +240,7 @@ Failure = error response from tessera
 C1 is a public contract and C2 is PSV. Transactions to C2 that reads from C1 are allowed.
 
 * Deploy a public contract `C1` with initial value "42" in "Node1"'s default account, named this contract as "contractC1_14"
-* "contractC1_14" is deployed "successfully" in "Node1,Node2,Node4,Node7"
+* "contractC1_14" is deployed "successfully" in "Node1,Node2,Node3,Node4"
 * Deploy a "StateValidation" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
 * Execute "StateValidation" contract `C2`("contractC2_14")'s `restoreFromC1()` function in "Node1" and it's private for "Node4"
@@ -250,7 +250,7 @@ C1 is a public contract and C2 is PSV. Transactions to C2 that reads from C1 are
 C1 is a public contract and C2 is PSV. Transactions to C2 that impacts C1 are not allowed -> evm execution error
 
 * Deploy a public contract `C1` with initial value "42" in "Node1"'s default account, named this contract as "contractC1_14"
-* "contractC1_14" is deployed "successfully" in "Node1,Node2,Node4,Node7"
+* "contractC1_14" is deployed "successfully" in "Node1,Node2,Node3,Node4"
 * Deploy a "StateValidation" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
 * Fail to execute "StateValidation" contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node4"
