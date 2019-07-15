@@ -195,7 +195,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
 
     @Step("Fire and forget execution of simple contract(<contractName>)'s `set()` function with new arbitrary value in <node> and it's private for <privateFor>")
     public void fireAndForgetSimpleContractNoFlag(String contractName, QuorumNode node, String privateFor) {
-        fireAndForgetSimpleContract(PrivacyFlag.Legacy, contractName, node, privateFor);
+        fireAndForgetSimpleContract(PrivacyFlag.StandardPrivate, contractName, node, privateFor);
     }
 
     @Step("Fire and forget execution of <flag> simple contract(<contractName>)'s `set()` function with new arbitrary value in <node> and it's private for <privateFor>")
@@ -222,7 +222,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
         TransactionReceipt receipt = nestedContractService.updateC2Contract(
             source,
             Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
-            c.getContractAddress(), newValue,  Arrays.asList(PrivacyFlag.Legacy)).toBlocking().first();
+            c.getContractAddress(), newValue,  Arrays.asList(PrivacyFlag.StandardPrivate)).toBlocking().first();
 
         assertThat(receipt.getTransactionHash()).isNotBlank();
         assertThat(receipt.getBlockNumber()).isNotEqualTo(currentBlockNumber());

@@ -127,9 +127,9 @@ C1 is PSV contract and C2 is not. Transactions to C2 that impacts C1 are not all
 
 * Deploy a "StateValidation" contract `C1` with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
-* Deploy a "Legacy" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
+* Deploy a "StandardPrivate" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
-* Fail to execute "Legacy" contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node4"
+* Fail to execute "StandardPrivate" contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node4"
 * Fail to execute "StateValidation" contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node4"
 
 ## Deny transactions that are sent to a PSV nested contract executing a function in a non-PSV parent contract
@@ -140,11 +140,11 @@ C1 is non-PSV contract and C2 is PSV. Transactions to C2 that impacts C1 are not
 1st failure = flag mismtach on C2
 2nd failure = privacyMetadata not found for C1
 
-* Deploy a "Legacy" contract `C1` with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
+* Deploy a "StandardPrivate" contract `C1` with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
 * Deploy a "StateValidation" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
-* Fail to execute "Legacy" contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node4"
+* Fail to execute "StandardPrivate" contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node4"
 * Fail to execute "StateValidation" contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node4"
 
 ## Deny transactions that are sent to a non-PSV contract reading from a PSV contract and non-PSV contract gets updated
@@ -157,9 +157,9 @@ As C2 is non-PSV contract, C1 state would be impacted and increase the possibili
 
 * Deploy a "StateValidation" contract `C1` with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
-* Deploy a "Legacy" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
+* Deploy a "StandardPrivate" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
-* Fail to execute "Legacy" contract `C2`("contractC2_14")'s `restoreFromC1()` function in "Node1" and it's private for "Node4"
+* Fail to execute "StandardPrivate" contract `C2`("contractC2_14")'s `restoreFromC1()` function in "Node1" and it's private for "Node4"
 * Fail to execute "StateValidation" contract `C2`("contractC2_14")'s `restoreFromC1()` function in "Node1" and it's private for "Node4"
 
 ## Deny transactions that are sent to a PSV contract reading from a non-PSV contract and PSV contract gets updated
@@ -170,11 +170,11 @@ As C2 is a PSV contract, reading from a non-PSV contract and updating its state 
 1st failure = flag mismatch on C2
 2nd failure = privacyMetadata not found for C1
 
-* Deploy a "Legacy" contract `C1` with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
+* Deploy a "StandardPrivate" contract `C1` with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
 * Deploy a "StateValidation" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
-* Fail to execute "Legacy" contract `C2`("contractC2_14")'s `restoreFromC1()` function in "Node1" and it's private for "Node4"
+* Fail to execute "StandardPrivate" contract `C2`("contractC2_14")'s `restoreFromC1()` function in "Node1" and it's private for "Node4"
 * Fail to execute "StateValidation" contract `C2`("contractC2_14")'s `restoreFromC1()` function in "Node1" and it's private for "Node4"
 
 ## Allow transactions that are sent to a non-PSV contract reading from a PSV contract
@@ -185,7 +185,7 @@ C1 is PSV contract and C2 is not. Transactions to C2 that reads from C1 are allo
 
 * Deploy a "StateValidation" contract `C1` with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
-* Deploy a "Legacy" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
+* Deploy a "StandardPrivate" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
 * Contract `C2`("contractC2_14")'s `get()` function execution in "Node1" returns "42"
 
@@ -195,7 +195,7 @@ Tags: nested
 
 C1 is non-PSV contract and C2 is. Transactions to C2 that reads from C1 are allowed
 
-* Deploy a "Legacy" contract `C1` with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
+* Deploy a "StandardPrivate" contract `C1` with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC1_14"
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
 * Deploy a "StateValidation" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"

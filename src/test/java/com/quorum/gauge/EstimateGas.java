@@ -126,7 +126,7 @@ public class EstimateGas extends AbstractSpecImplementation {
 
         final TransactionReceipt receipt = contractService
             .updateSimpleContractWithGasLimit(from, Arrays.asList(privateFor), contractAddress, estimatedGasLimit, value,
-                Arrays.asList(PrivacyFlag.Legacy))
+                Arrays.asList(PrivacyFlag.StandardPrivate))
             .toBlocking()
             .first();
 
