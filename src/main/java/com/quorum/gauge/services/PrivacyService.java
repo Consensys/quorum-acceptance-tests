@@ -74,6 +74,10 @@ public class PrivacyService extends AbstractService {
         return matches.get(0);
     }
 
+    public String id(QuorumNode node, String name) {
+        return getQuorumNodeConfig(node).getAccountAliases().get(name);
+    }
+
     public String thirdPartyUrl(QuorumNode node) {
         return getQuorumNodeConfig(node).getThirdPartyUrl();
     }
@@ -85,5 +89,4 @@ public class PrivacyService extends AbstractService {
         }
         return nodeConfig;
     }
-
 }

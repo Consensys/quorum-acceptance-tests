@@ -24,7 +24,9 @@ import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.common.config.WalletData;
 import com.quorum.gauge.ext.filltx.FillTransactionResponse;
 import com.quorum.gauge.ext.filltx.PrivateFillTransaction;
+import com.quorum.gauge.sol.ClientReceipt;
 import com.quorum.gauge.sol.SimpleStorage;
+import com.quorum.gauge.sol.SimpleStorageDelegate;
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
@@ -65,6 +67,7 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Service
 public class RawContractService extends AbstractService {
@@ -135,6 +138,46 @@ public class RawContractService extends AbstractService {
         }
     }
 
+    public Observable<? extends Contract> createRawSimplePrivateContract(int initialValue, WalletData wallet, QuorumNode source, String sourceNamedKey, List<String> targetNamedKeys) {
+        Quorum client = connectionFactory().getConnection(source);
+        Enclave enclave = buildEnclave(source, client);
+
+        return Observable.fromCallable(() -> wallet)
+            .flatMap(walletData -> Observable.fromCallable(() -> WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath())))
+            .flatMap(cred -> Observable.just(new QuorumTransactionManager(client,
+                cred,
+                privacyService.id(source, sourceNamedKey),
+                targetNamedKeys.stream().map(privacyService::id).collect(Collectors.toList()),
+                enclave,
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS)))
+            .flatMap(qrtxm -> SimpleStorage.deploy(client,
+                qrtxm,
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT,
+                BigInteger.valueOf(initialValue))
+                .flowable().toObservable());
+    }
+
+    public Observable<TransactionReceipt> updateRawSimplePrivateContract(int newValue, String contractAddress, WalletData wallet, QuorumNode source, String sourceNamedKey, List<String> targetNamedKeys) {
+        Quorum client = connectionFactory().getConnection(source);
+        Enclave enclave = buildEnclave(source, client);
+
+        return Observable.fromCallable(() -> wallet)
+            .flatMap(walletData -> Observable.fromCallable(() -> WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath())))
+            .flatMap(cred -> Observable.just(new QuorumTransactionManager(client,
+                cred,
+                privacyService.id(source, sourceNamedKey),
+                targetNamedKeys.stream().map(privacyService::id).collect(Collectors.toList()),
+                enclave,
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS)))
+            .flatMap(qrtxm -> SimpleStorage.load(contractAddress, client,
+                qrtxm,
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue))
+                .flowable().toObservable());
+    }
 
     public Observable<? extends Contract> createRawSimplePrivateContract(int initialValue, WalletData wallet, QuorumNode source, QuorumNode target) {
         Quorum client = connectionFactory().getConnection(source);
@@ -353,4 +396,84 @@ public class RawContractService extends AbstractService {
         return client;
     }
 
+    public Observable<? extends Contract> createRawClientReceiptPrivateContract(WalletData wallet, QuorumNode source, String sourceNamedKey, List<String> targetNamedKeys) {
+        Quorum client = connectionFactory().getConnection(source);
+        Enclave enclave = buildEnclave(source, client);
+
+        return Observable.fromCallable(() -> wallet)
+            .flatMap(walletData -> Observable.fromCallable(() -> WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath())))
+            .flatMap(cred -> Observable.just(new QuorumTransactionManager(client,
+                cred,
+                privacyService.id(source, sourceNamedKey),
+                targetNamedKeys.stream().map(privacyService::id).collect(Collectors.toList()),
+                enclave,
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS)))
+            .flatMap(qrtxm -> ClientReceipt.deploy(client,
+                qrtxm,
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT)
+                .flowable().toObservable());
+    }
+
+    public Observable<TransactionReceipt> updateRawClientReceiptPrivateContract(String contractAddress, WalletData wallet, QuorumNode source, String sourceNamedKey, List<String> targetNamedKeys) {
+        Quorum client = connectionFactory().getConnection(source);
+        Enclave enclave = buildEnclave(source, client);
+
+        return Observable.fromCallable(() -> wallet)
+            .flatMap(walletData -> Observable.fromCallable(() -> WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath())))
+            .flatMap(cred -> Observable.just(new QuorumTransactionManager(client,
+                cred,
+                privacyService.id(source, sourceNamedKey),
+                targetNamedKeys.stream().map(privacyService::id).collect(Collectors.toList()),
+                enclave,
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS)))
+            .flatMap(qrtxm -> ClientReceipt.load(contractAddress, client,
+                qrtxm,
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT).deposit(new byte[32], BigInteger.ZERO)
+                .flowable().toObservable());
+    }
+
+    public Observable<? extends Contract> createRawSimpleDelegatePrivateContract(String delegateContractAddress, WalletData wallet, QuorumNode source, String sourceNamedKey, List<String> targetNamedKeys) {
+        Quorum client = connectionFactory().getConnection(source);
+        Enclave enclave = buildEnclave(source, client);
+
+        return Observable.fromCallable(() -> wallet)
+            .flatMap(walletData -> Observable.fromCallable(() -> WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath())))
+            .flatMap(cred -> Observable.just(new QuorumTransactionManager(client,
+                cred,
+                privacyService.id(source, sourceNamedKey),
+                targetNamedKeys.stream().map(privacyService::id).collect(Collectors.toList()),
+                enclave,
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS)))
+            .flatMap(qrtxm -> SimpleStorageDelegate.deploy(client,
+                qrtxm,
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT,
+                delegateContractAddress)
+                    .flowable().toObservable());
+    }
+
+    public Observable<TransactionReceipt> updateRawSimpleDelegatePrivateContract(int newValue, String contractAddress, WalletData wallet, QuorumNode source, String sourceNamedKey, List<String> targetNamedKeys) {
+        Quorum client = connectionFactory().getConnection(source);
+        Enclave enclave = buildEnclave(source, client);
+
+        return Observable.fromCallable(() -> wallet)
+            .flatMap(walletData -> Observable.fromCallable(() -> WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath())))
+            .flatMap(cred -> Observable.just(new QuorumTransactionManager(client,
+                cred,
+                privacyService.id(source, sourceNamedKey),
+                targetNamedKeys.stream().map(privacyService::id).collect(Collectors.toList()),
+                enclave,
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS)))
+            .flatMap(qrtxm -> SimpleStorageDelegate.load(contractAddress, client,
+                qrtxm,
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue))
+                    .flowable().toObservable());
+    }
 }

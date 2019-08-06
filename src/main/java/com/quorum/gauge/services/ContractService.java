@@ -35,7 +35,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.Request;
+import org.web3j.protocol.core.methods.request.EthFilter;
+import org.web3j.protocol.core.methods.response.EthLog;
+import org.web3j.protocol.core.methods.response.EthUninstallFilter;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.quorum.Quorum;
 import org.web3j.quorum.tx.ClientTransactionManager;
@@ -447,5 +451,21 @@ public class ContractService extends AbstractService {
                     throw new RuntimeException(e);
                 }
             });
+    }
+
+    public Observable<org.web3j.protocol.core.methods.response.EthFilter> newLogFilter(QuorumNode node, String contractAddress) {
+        Quorum client = connectionFactory().getConnection(node);
+        EthFilter filter = new EthFilter(DefaultBlockParameter.valueOf(BigInteger.ZERO), DefaultBlockParameter.valueOf("latest"), contractAddress);
+        return client.ethNewFilter(filter).flowable().toObservable();
+    }
+
+    public Observable<EthUninstallFilter> uninstallFilter(QuorumNode node, BigInteger filterId) {
+        Quorum client = connectionFactory().getConnection(node);
+        return client.ethUninstallFilter(filterId).flowable().toObservable();
+    }
+
+    public Observable<EthLog> getFilterLogs(QuorumNode node, BigInteger filterId) {
+        Quorum client = connectionFactory().getConnection(node);
+        return client.ethGetFilterLogs(filterId).flowable().toObservable();
     }
 }

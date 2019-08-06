@@ -1,0 +1,3 @@
+[submodule "provisioning/terraform-provider-quorum-distribution"]
+	path = provisioning/terraform-provider-quorum-distribution
+	url = git@github.com:QuorumEngineering/terraform-provider-quorum-distribution.git

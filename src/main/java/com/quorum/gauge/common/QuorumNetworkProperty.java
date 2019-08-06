@@ -32,6 +32,7 @@ import java.util.Optional;
 @Component
 @ConfigurationProperties(prefix = "quorum")
 public class QuorumNetworkProperty {
+    private String accessToken;
     private Map<QuorumNode, Node> nodes = new HashMap<>();
     private Map<String, WalletData> wallets = new HashMap<>();
     private String consensus;
@@ -124,6 +125,14 @@ public class QuorumNetworkProperty {
 
     public void setOauth2Server(OAuth2ServerProperty oauth2Server) {
         this.oauth2Server = oauth2Server;
+    }
+
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
     }
 
     public static class SocksProxy {
