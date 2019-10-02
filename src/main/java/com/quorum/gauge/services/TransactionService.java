@@ -51,6 +51,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static com.quorum.gauge.sol.SimpleStorage.FUNC_SET;
 
@@ -177,6 +178,48 @@ public class TransactionService extends AbstractService {
                     String rawHexString = (String) response.get("raw");
                     return client.ethSendRawTransaction(rawHexString).observable();
                 });
+    }
+
+    public Observable<EthSendTransaction> sendSignedPrivateTransaction(String txData, QuorumNode from, QuorumNode privateFor, String targetContract) {
+        Quorum quorumClient = connectionFactory().getConnection(from);
+
+        // sleep to allow time for previous tx to be minted so that nonce is updated
+        try {
+            TimeUnit.MILLISECONDS.sleep(100);
+        } catch (InterruptedException e) {
+            logger.error("sleep interrupted", e);
+        }
+
+        String fromAddress = accountService.getDefaultAccountAddress(from).toBlocking().first();
+
+        BigInteger transactionCount = quorumClient.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST).observable().toBlocking().first().getTransactionCount();
+
+        ExtendedPrivateTransaction tx = new ExtendedPrivateTransaction(
+            fromAddress,
+            transactionCount,
+            BigInteger.ZERO,
+            DEFAULT_GAS_LIMIT,
+            targetContract,
+            null,
+            txData,
+            null,
+            Arrays.asList(privacyService.id(privateFor))
+        );
+
+        Request<?, EthSignTransaction> request = new Request<>(
+            "eth_signTransaction",
+            Arrays.asList(tx),
+            connectionFactory().getWeb3jService(from),
+            EthSignTransaction.class
+        );
+
+        Observable<EthSignTransaction> ethSignTransaction = request.observable();
+
+        Map<String, Object> response = ethSignTransaction.toBlocking().first().getResult();
+        logger.debug("{}", response);
+        String rawHexString = (String) response.get("raw");
+
+        return quorumClient.ethSendRawPrivateTransaction(rawHexString, Arrays.asList(privacyService.id(privateFor))).observable();
     }
 
     // Invoking eth_getQuorumPayload
