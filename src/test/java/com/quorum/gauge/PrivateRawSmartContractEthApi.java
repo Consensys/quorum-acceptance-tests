@@ -22,26 +22,26 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 public class PrivateRawSmartContractEthApi extends AbstractSpecImplementation {
     private static final Logger logger = LoggerFactory.getLogger(PrivateRawSmartContractEthApi.class);
 
-    @Step("Deploy a simple smart contract with initial value <initialValue> signed using <source>'s default account and the eth_signTransaction API and it's private for <target>, name this contract as <contractName>")
-    public void setupContractUsingEthApi(int initialValue, QuorumNode source, QuorumNode target, String contractName) {
+    @Step("Deploy a simple smart contract with initial value <initialValue> signed with <apiMethod> using <source>'s default account and it's private for <target>, name this contract as <contractName>")
+    public void setupContractUsingEthApi(int initialValue, String apiMethod, QuorumNode source, QuorumNode target, String contractName) {
         saveCurrentBlockNumber();
         logger.debug("Setting up contract from {} to {}", source, target);
-        EthSendTransaction sendTransactionResponse = rawContractService.createRawSimplePrivateContractUsingEthApi(initialValue, source, target).toBlocking().first();
+        EthSendTransaction sendTransactionResponse = rawContractService.createRawSimplePrivateContractUsingEthApi(apiMethod, initialValue, source, target).toBlocking().first();
 
         DataStoreFactory.getSpecDataStore().put(contractName + "_transactionHash", sendTransactionResponse.getTransactionHash());
     }
 
-    @Step("Execute <contractName>'s `set()` function with new value <newValue> signed using <source>'s default account and the eth_signTransaction API and it's private for <target>")
-    public void updateNewValueUsingEthApi(String contractName, int newValue, QuorumNode source, QuorumNode target) {
+    @Step("Execute <contractName>'s `set()` function with new value <newValue> signed with <apiMethod> using <source>'s default account and it's private for <target>")
+    public void updateNewValueUsingEthApi(String contractName, int newValue, String apiMethod, QuorumNode source, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
-        Optional<TransactionReceipt> receipt = rawContractService.updateRawSimplePrivateContractUsingEthApi(newValue, c.getContractAddress(), source, target).toBlocking().first().getTransactionReceipt();
+        Optional<TransactionReceipt> receipt = rawContractService.updateRawSimplePrivateContractUsingEthApi(apiMethod, newValue, c.getContractAddress(), source, target).toBlocking().first().getTransactionReceipt();
 
         assertThat(receipt.isPresent()).isTrue();
         assertThat(receipt.get().getTransactionHash()).isNotBlank();
         assertThat(receipt.get().getBlockNumber()).isNotEqualTo(currentBlockNumber());
     }
 
-    @Step("Transaction Hash is returned for eth_signTransaction signed <contractName>")
+    @Step("Transaction Hash is returned for API signed <contractName>")
     public void verifyTransactionHash(String contractName) {
         String transactionHash = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName + "_transactionHash", String.class);
 

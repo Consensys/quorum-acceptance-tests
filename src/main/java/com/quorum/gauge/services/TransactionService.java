@@ -48,9 +48,7 @@ import rx.schedulers.Schedulers;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static com.quorum.gauge.sol.SimpleStorage.FUNC_SET;
@@ -180,7 +178,7 @@ public class TransactionService extends AbstractService {
                 });
     }
 
-    public Observable<EthSendTransaction> sendSignedPrivateTransaction(String txData, QuorumNode from, QuorumNode privateFor, String targetContract) {
+    public Observable<EthSendTransaction> sendSignedPrivateTransaction(String apiMethod, String txData, QuorumNode from, QuorumNode privateFor, String targetContract) {
         Quorum quorumClient = connectionFactory().getConnection(from);
 
         // sleep to allow time for previous tx to be minted so that nonce is updated
@@ -206,9 +204,15 @@ public class TransactionService extends AbstractService {
             Arrays.asList(privacyService.id(privateFor))
         );
 
+        List<Object> params = new ArrayList<>(Collections.singletonList(tx));
+        if ("personal_signTransaction".equals(apiMethod)) {
+            // add empty password
+            params.add("");
+        }
+
         Request<?, EthSignTransaction> request = new Request<>(
-            "eth_signTransaction",
-            Arrays.asList(tx),
+            apiMethod,
+            params,
             connectionFactory().getWeb3jService(from),
             EthSignTransaction.class
         );

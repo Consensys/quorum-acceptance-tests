@@ -192,7 +192,7 @@ public class RawContractService extends AbstractService {
         }
     }
 
-    public Observable<EthSendTransaction> createRawSimplePrivateContractUsingEthApi(int initialValue, QuorumNode source, QuorumNode target) {
+    public Observable<EthSendTransaction> createRawSimplePrivateContractUsingEthApi(String apiMethod, int initialValue, QuorumNode source, QuorumNode target) {
         Quorum client = connectionFactory().getConnection(source);
         Enclave enclave = buildEnclave(source, client);
 
@@ -204,10 +204,10 @@ public class RawContractService extends AbstractService {
         );
 
         String tmHash = base64ToHex(storeRawResponse.getKey());
-        return transactionService.sendSignedPrivateTransaction(tmHash, source, target, null);
+        return transactionService.sendSignedPrivateTransaction(apiMethod, tmHash, source, target, null);
     }
 
-    public Observable<EthGetTransactionReceipt> updateRawSimplePrivateContractUsingEthApi(int newValue, String contractAddress, QuorumNode source, QuorumNode target) {
+    public Observable<EthGetTransactionReceipt> updateRawSimplePrivateContractUsingEthApi(String apiMethod, int newValue, String contractAddress, QuorumNode source, QuorumNode target) {
         Quorum client = connectionFactory().getConnection(source);
         Enclave enclave = buildEnclave(source, client);
 
@@ -219,7 +219,7 @@ public class RawContractService extends AbstractService {
         );
 
         String tmHash = base64ToHex(storeRawResponse.getKey());
-        EthSendTransaction ethSendTransaction = transactionService.sendSignedPrivateTransaction(tmHash, source, target, contractAddress).toBlocking().first();
+        EthSendTransaction ethSendTransaction = transactionService.sendSignedPrivateTransaction(apiMethod, tmHash, source, target, contractAddress).toBlocking().first();
 
         logger.debug("sent tx: {}", ethSendTransaction.getTransactionHash());
 

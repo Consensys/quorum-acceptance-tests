@@ -1,6 +1,6 @@
 # Private raw smart contract when signed using the eth_signTransaction API
 
- Tags: basic, raw, ethapi-signed, private
+ Tags: basic, raw, eth-api-signed, private
 
 This is to verify that a private smart contract between 2 parties are not accessible by others.
 A simple smart contract is to store a int value and to provide `get()` and `set()` functions.
@@ -24,13 +24,13 @@ contract SimpleStorage {
 }
 ```
 
-* Deploy a simple smart contract with initial value "23" signed using "Node1"'s default account and the eth_signTransaction API and it's private for "Node4", name this contract as "contract31"
+* Deploy a simple smart contract with initial value "23" signed with "eth_signTransaction" using "Node1"'s default account and it's private for "Node4", name this contract as "contract31"
 
 ## Contract is mined
 
  Tags: raw
 
-* Transaction Hash is returned for eth_signTransaction signed "contract31"
+* Transaction Hash is returned for API signed "contract31"
 * Transaction Receipt is present in "Node1" for eth_signTransaction signed "contract31" from "Node1"
 * Transaction Receipt is present in "Node4" for eth_signTransaction signed "contract31" from "Node1"
 
@@ -61,7 +61,7 @@ contract SimpleStorage {
 
  Tags: raw
 
-* Execute "contract31"'s `set()` function with new value "5" signed using "Node1"'s default account and the eth_signTransaction API and it's private for "Node4"
+* Execute "contract31"'s `set()` function with new value "5" signed with "eth_signTransaction" using "Node1"'s default account and it's private for "Node4"
 * "contract31"'s `get()` function execution in "Node1" returns "5"
 * "contract31"'s `get()` function execution in "Node4" returns "5"
 * "contract31"'s `get()` function execution in "Node3" returns "0"
