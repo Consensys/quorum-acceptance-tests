@@ -31,8 +31,8 @@ contract SimpleStorage {
  Tags: private, mining
 
 * Transaction Hash is returned for "contract17"
-* Transaction Receipt is present in "Node1" for "contract17"
-* Transaction Receipt is present in "Node4" for "contract17"
+* Transaction Receipt is present in "Node1" for "contract17" from "Node1"
+* Transaction Receipt is present in "Node4" for "contract17" from "Node1"
 
 ## Storage Root storing private smart contracts must be the same
 
