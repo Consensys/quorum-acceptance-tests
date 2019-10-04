@@ -9,6 +9,7 @@ import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.web3j.protocol.core.Response;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
@@ -16,7 +17,7 @@ import org.web3j.tx.TransactionManager;
 
 import java.util.Optional;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Service
 public class PrivateRawSmartContractEthApi extends AbstractSpecImplementation {
@@ -27,6 +28,9 @@ public class PrivateRawSmartContractEthApi extends AbstractSpecImplementation {
         saveCurrentBlockNumber();
         logger.debug("Setting up contract from {} to {}", source, target);
         EthSendTransaction sendTransactionResponse = rawContractService.createRawSimplePrivateContractUsingEthApi(apiMethod, initialValue, source, target).toBlocking().first();
+
+        Optional<String> responseError = Optional.ofNullable(sendTransactionResponse.getError()).map(Response.Error::getMessage);
+        assertThat(responseError).as("EthSendTransaction error").isEmpty();
 
         DataStoreFactory.getSpecDataStore().put(contractName + "_transactionHash", sendTransactionResponse.getTransactionHash());
     }

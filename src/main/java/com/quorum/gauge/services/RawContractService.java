@@ -33,6 +33,7 @@ import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.Response;
 import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
@@ -53,10 +54,7 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
@@ -219,11 +217,14 @@ public class RawContractService extends AbstractService {
         );
 
         String tmHash = base64ToHex(storeRawResponse.getKey());
-        EthSendTransaction ethSendTransaction = transactionService.sendSignedPrivateTransaction(apiMethod, tmHash, source, target, contractAddress).toBlocking().first();
+        EthSendTransaction sendTransactionResponse = transactionService.sendSignedPrivateTransaction(apiMethod, tmHash, source, target, contractAddress).toBlocking().first();
 
-        logger.debug("sent tx: {}", ethSendTransaction.getTransactionHash());
+        Optional<String> responseError = Optional.ofNullable(sendTransactionResponse.getError()).map(Response.Error::getMessage);
+        responseError.ifPresent(e -> logger.error("EthSendTransaction error: {}", e));
 
-        return transactionService.getTransactionReceipt(source, ethSendTransaction.getTransactionHash())
+        logger.debug("sent tx: {}", sendTransactionResponse.getTransactionHash());
+
+        return transactionService.getTransactionReceipt(source, sendTransactionResponse.getTransactionHash())
             .map(ethGetTransactionReceipt -> {
                 if (ethGetTransactionReceipt.getTransactionReceipt().isPresent()) {
                     return ethGetTransactionReceipt;
