@@ -89,7 +89,6 @@ contract C2 {
 
 * Deploy a "PartyProtection" C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract1Extension"
 * "contract1Extension" is deployed "successfully" in "Node2,Node4"
-* Fail to execute "PartyProtection" simple contract("contract1Extension")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
 
 * "contract1Extension"'s `get()` function execution in "Node2" returns "42"
 * "contract1Extension"'s `get()` function execution in "Node4" returns "42"
@@ -101,18 +100,11 @@ contract C2 {
 * "Node2" votes "true" to extending contract "contract1Extension"
 
 * "contract1Extension"'s `get()` function execution in "Node1" returns "42"
-* Fail to execute "PartyProtection" simple contract("contract1Extension")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
-
-* "Node2" requests parties are updated for contract "contract1Extension"
-* Fire and forget execution of "PartyProtection" simple contract("contract1Extension")'s `set()` function with value "86" in "Node1" and it's private for "Node4"
-* "contract1Extension"'s `get()` function execution in "Node4" returns "86"
-* "contract1Extension"'s `get()` function execution in "Node1" returns "86"
 
 ## Extend contract but new party doesn't accept
 
 * Deploy a "PartyProtection" C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract2Extension"
 * "contract2Extension" is deployed "successfully" in "Node2,Node4"
-* Fail to execute "PartyProtection" simple contract("contract2Extension")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
 * "contract2Extension"'s `get()` function execution in "Node2" returns "42"
 * "contract2Extension"'s `get()` function execution in "Node4" returns "42"
 * "contract2Extension"'s `get()` function execution in "Node1" returns "0"
@@ -122,16 +114,11 @@ contract C2 {
 * "Node2" votes "true" to extending contract "contract2Extension"
 
 * "contract2Extension"'s `get()` function execution in "Node1" returns "0"
-* Fail to execute "PartyProtection" simple contract("contract2Extension")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
-
-* "Node2" requests parties are updated for contract "contract2Extension"
-* Fail to execute "PartyProtection" simple contract("contract2Extension")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
 
 ## Voter votes to not extend
 
 * Deploy a "PartyProtection" C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract3Extension"
 * "contract3Extension" is deployed "successfully" in "Node2,Node4"
-* Fail to execute "PartyProtection" simple contract("contract3Extension")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
 * "contract3Extension"'s `get()` function execution in "Node2" returns "42"
 * "contract3Extension"'s `get()` function execution in "Node4" returns "42"
 * "contract3Extension"'s `get()` function execution in "Node1" returns "0"
@@ -140,14 +127,11 @@ contract C2 {
 
 * "Node1" has "contract3Extension" listed in all active extensions
 
-* "Node4" votes "false" to extending contract "contract3Extension"
 * "Node2" votes "true" to extending contract "contract3Extension"
+* "Node4" votes "false" to extending contract "contract3Extension"
 
 * "contract3Extension"'s `get()` function execution in "Node1" returns "0"
-* Fail to execute "PartyProtection" simple contract("contract3Extension")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
 
-* "Node2" sees "contract3Extension" has status "DECLINED"
-* "Node2" cancels "contract3Extension"
 * "Node2" does not see "contract3Extension" listed in all active extensions
 
 ## Creator cancels contract after creating extension request

@@ -62,12 +62,11 @@ public class ExtensionService extends AbstractService {
             addressToExtend,
             privacyService.id(newParty),
             voterDefaultAddresses,
-            0,
             transactionArgs
         ).collect(Collectors.toList());
 
         final Request<?, QuorumExtendContract> request = new Request<>(
-            "quorum_extendContract",
+            "quorumExtension_extendContract",
             arguments,
             connectionFactory().getWeb3jService(node),
             QuorumExtendContract.class
@@ -93,7 +92,7 @@ public class ExtensionService extends AbstractService {
         );
 
         return new Request<>(
-            "quorum_accept",
+            "quorumExtension_accept",
             Stream.of(address, transactionArgs).collect(Collectors.toList()),
             connectionFactory().getWeb3jService(node),
             QuorumAccept.class
@@ -118,7 +117,7 @@ public class ExtensionService extends AbstractService {
         );
 
         return new Request<>(
-            "quorum_voteOnContract",
+            "quorumExtension_voteOnContract",
             Stream.of(address, vote, transactionArgs).collect(Collectors.toList()),
             connectionFactory().getWeb3jService(node),
             QuorumVoteOnContract.class
@@ -142,7 +141,7 @@ public class ExtensionService extends AbstractService {
         );
 
         return new Request<>(
-            "quorum_updateParties",
+            "quorumExtension_updateParties",
             Stream.of(address, transactionArgs).collect(Collectors.toList()),
             connectionFactory().getWeb3jService(initiator),
             QuorumUpdateParties.class
@@ -153,7 +152,7 @@ public class ExtensionService extends AbstractService {
     public Observable<QuorumActiveExtensionContracts> getExtensionContracts(final QuorumNode node) {
 
         return new Request<>(
-            "quorum_activeExtensionContracts",
+            "quorumExtension_activeExtensionContracts",
             emptyList(),
             connectionFactory().getWeb3jService(node),
             QuorumActiveExtensionContracts.class
@@ -177,7 +176,7 @@ public class ExtensionService extends AbstractService {
         );
 
         return new Request<>(
-            "quorum_cancel",
+            "quorumExtension_cancel",
             Stream.of(address, transactionArgs).collect(Collectors.toList()),
             connectionFactory().getWeb3jService(node),
             QuorumCancel.class

@@ -56,6 +56,7 @@ public class ContractExtension extends AbstractSpecImplementation {
             .toBlocking()
             .first();
 
+//        System.err.println(result.getError().getMessage());
         assertThat(result.getError()).isNull();
 
         final String transactionHash = result.getResult();
