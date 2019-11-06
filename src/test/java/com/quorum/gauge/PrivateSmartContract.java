@@ -77,8 +77,8 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(contractName + "_transactionHash", transactionHash);
     }
 
-    @Step("Transaction Receipt is present in <node> for <contractName>")
-    public void verifyTransactionReceipt(QuorumNode node, String contractName) {
+    @Step("Transaction Receipt is present in <node> for <contractName> from <node>")
+    public void verifyTransactionReceipt(QuorumNode node, String contractName, QuorumNode source) {
         String transactionHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "_transactionHash", String.class);
         Optional<TransactionReceipt> receipt = transactionService.getTransactionReceipt(node, transactionHash)
                 .map(ethGetTransactionReceipt -> {
@@ -92,6 +92,9 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
 
         assertThat(receipt.isPresent()).isTrue();
         assertThat(receipt.get().getBlockNumber()).isNotEqualTo(currentBlockNumber());
+
+        String senderAddr = accountService.getDefaultAccountAddress(source).toBlocking().first();
+        assertThat(receipt.get().getFrom()).isEqualTo(senderAddr);
     }
 
     @Step("<contractName> stored in <source> and <target> must have the same storage root")

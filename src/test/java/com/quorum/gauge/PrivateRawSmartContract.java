@@ -35,7 +35,6 @@ import org.web3j.tx.Contract;
 public class PrivateRawSmartContract extends AbstractSpecImplementation {
     private static final Logger logger = LoggerFactory.getLogger(PrivateRawSmartContract.class);
 
-
     @Step("Deploy a simple smart contract with initial value <initialValue> signed by external wallet <wallet> in <source> and it's private for <target>, name this contract as <contractName>")
     public void setupContract(int initialValue, Wallet wallet, QuorumNode source, QuorumNode target, String contractName) {
         saveCurrentBlockNumber();
