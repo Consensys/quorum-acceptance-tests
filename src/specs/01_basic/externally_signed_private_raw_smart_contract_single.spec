@@ -31,8 +31,8 @@ contract SimpleStorage {
  Tags: raw
 
 * Transaction Hash is returned for "contract31"
-* Transaction Receipt is present in "Node1" for "contract31" from "Node1"
-* Transaction Receipt is present in "Node4" for "contract31" from "Node1"
+* Transaction Receipt is present in "Node1" for "contract31" from external wallet "Wallet1"
+* Transaction Receipt is present in "Node4" for "contract31" from external wallet "Wallet1"
 
 ## Storage Root storing private smart contracts must be the same
 

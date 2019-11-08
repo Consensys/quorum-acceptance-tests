@@ -52,7 +52,7 @@ public class PrivateRawSmartContractEthApi extends AbstractSpecImplementation {
         assertThat(transactionHash).isNotBlank();
     }
 
-    @Step("Transaction Receipt is present in <node> for eth_signTransaction signed <contractName> from <node>")
+    @Step("Transaction Receipt is present in <node> for eth_signTransaction signed <contractName> from <node>'s default account")
     public void verifyTransactionReceipt(QuorumNode node, String contractName, QuorumNode source) {
         String transactionHash = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName + "_transactionHash", String.class);
         Optional<TransactionReceipt> receipt = transactionService.getTransactionReceipt(node, transactionHash)

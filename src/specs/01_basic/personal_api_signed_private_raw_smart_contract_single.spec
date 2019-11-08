@@ -26,8 +26,8 @@ contract SimpleStorage {
 
 * Deploy a simple smart contract with initial value "23" signed with "personal_signTransaction" using "Node1"'s default account and it's private for "Node4", name this contract as "contract31"
 * Transaction Hash is returned for API signed "contract31"
-* Transaction Receipt is present in "Node1" for eth_signTransaction signed "contract31" from "Node1"
-* Transaction Receipt is present in "Node4" for eth_signTransaction signed "contract31" from "Node1"
+* Transaction Receipt is present in "Node1" for eth_signTransaction signed "contract31" from "Node1"'s default account
+* Transaction Receipt is present in "Node4" for eth_signTransaction signed "contract31" from "Node1"'s default account
 
 ## Storage Root storing private smart contracts must be the same
 

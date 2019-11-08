@@ -19,7 +19,9 @@
 
 package com.quorum.gauge;
 
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.common.Wallet;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.thoughtworks.gauge.Step;
@@ -28,8 +30,15 @@ import org.assertj.core.api.AssertionsForClassTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.web3j.crypto.Credentials;
+import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
+
+import java.util.Optional;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatCode;
 
 @Service
 public class PrivateRawSmartContract extends AbstractSpecImplementation {
@@ -52,6 +61,30 @@ public class PrivateRawSmartContract extends AbstractSpecImplementation {
 
         AssertionsForClassTypes.assertThat(receipt.getTransactionHash()).isNotBlank();
         AssertionsForClassTypes.assertThat(receipt.getBlockNumber()).isNotEqualTo(currentBlockNumber());
+    }
+
+    @Step("Transaction Receipt is present in <node> for <contractName> from external wallet <wallet>")
+    public void verifyTransactionReceipt(QuorumNode node, String contractName, Wallet wallet) {
+        String transactionHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "_transactionHash", String.class);
+        Optional<TransactionReceipt> receipt = transactionService.getTransactionReceipt(node, transactionHash)
+            .map(ethGetTransactionReceipt -> {
+                if (ethGetTransactionReceipt.getTransactionReceipt().isPresent()) {
+                    return ethGetTransactionReceipt;
+                } else {
+                    throw new RuntimeException("retry");
+                }
+            }).retryWhen(new RetryWithDelay(20, 3000))
+            .toBlocking().first().getTransactionReceipt();
+
+        assertThat(receipt.isPresent()).isTrue();
+        assertThat(receipt.get().getBlockNumber()).isNotEqualTo(currentBlockNumber());
+
+        QuorumNetworkProperty.WalletData walletData = privacyService.walletData(wallet);
+        final Credentials[] credentials = new Credentials[1];
+        assertThatCode(() -> credentials[0] = WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath()))
+            .doesNotThrowAnyException();
+
+        assertThat(receipt.get().getFrom()).isEqualTo(credentials[0].getAddress());
     }
 
 }

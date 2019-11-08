@@ -58,6 +58,9 @@ public abstract class AbstractSpecImplementation {
     protected AccountService accountService;
 
     @Autowired
+    protected PrivacyService privacyService;
+
+    @Autowired
     protected OkHttpClient okHttpClient;
 
     @Autowired
