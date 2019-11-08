@@ -77,7 +77,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(contractName + "_transactionHash", transactionHash);
     }
 
-    @Step("Transaction Receipt is present in <node> for <contractName> from <node>")
+    @Step("Transaction Receipt is present in <node> for <contractName> from <node>'s default account")
     public void verifyTransactionReceipt(QuorumNode node, String contractName, QuorumNode source) {
         String transactionHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "_transactionHash", String.class);
         Optional<TransactionReceipt> receipt = transactionService.getTransactionReceipt(node, transactionHash)
