@@ -22,11 +22,11 @@ package com.quorum.gauge.services;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.ext.IstanbulPropose;
 import com.quorum.gauge.ext.MinerStartStop;
+import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.Request;
-import rx.Observable;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,7 +44,7 @@ public class IstanbulService extends AbstractService {
             null,
             connectionFactory().getWeb3jService(node),
             MinerStartStop.class
-        ).observable();
+        ).flowable().toObservable();
     }
 
     public Observable<MinerStartStop> startMining(final QuorumNode node) {
@@ -55,7 +55,7 @@ public class IstanbulService extends AbstractService {
             Collections.emptyList(),
             connectionFactory().getWeb3jService(node),
             MinerStartStop.class
-        ).observable();
+        ).flowable().toObservable();
     }
 
     public Observable<IstanbulPropose> propose(final QuorumNode node, final String proposedValidatorAddress) {
@@ -66,7 +66,7 @@ public class IstanbulService extends AbstractService {
             Arrays.asList(proposedValidatorAddress, true),
             connectionFactory().getWeb3jService(node),
             IstanbulPropose.class
-        ).observable();
+        ).flowable().toObservable();
     }
 
 }

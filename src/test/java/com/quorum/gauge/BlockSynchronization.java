@@ -27,6 +27,9 @@ import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.services.QuorumBootService;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import io.reactivex.Observable;
+import io.reactivex.Scheduler;
+import io.reactivex.functions.Function;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.WebSocket;
@@ -35,9 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.web3j.tx.Contract;
-import rx.Observable;
-import rx.Scheduler;
-import rx.functions.FuncN;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -87,7 +87,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
                     .quorum(quorum)
                     .txManager(txManager));
         }
-        QuorumBootService.QuorumNetwork quorumNetwork = quorumBootService.createQuorumNetwork(newNetwork).toBlocking().first();
+        QuorumBootService.QuorumNetwork quorumNetwork = quorumBootService.createQuorumNetwork(newNetwork).blockingFirst();
 
         DataStoreFactory.getScenarioDataStore().put("networkName", id);
         DataStoreFactory.getScenarioDataStore().put("network_" + id, quorumNetwork);
@@ -107,7 +107,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
                         .doAfterTerminate(() -> Context.clear())
                         .subscribeOn(scheduler));
             }
-            BigInteger blockNumber = Observable.zip(allObservableContracts, args -> utilService.getCurrentBlockNumber().toBlocking().first()).toBlocking().first().getBlockNumber();
+            BigInteger blockNumber = Observable.zip(allObservableContracts, args -> utilService.getCurrentBlockNumber().blockingFirst()).blockingFirst().getBlockNumber();
             DataStoreFactory.getScenarioDataStore().put("latestBlockHeightName", blockNumber);
         } finally {
             Context.clear();
@@ -124,7 +124,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         QuorumBootService.QuorumNetwork qn = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "network_" + id, QuorumBootService.QuorumNetwork.class);
         try {
             Context.setConnectionFactory(qn.connectionFactory);
-            QuorumNode actualNodeName = quorumBootService.addNode(qn, "gcmode", gcmode).toBlocking().first();
+            QuorumNode actualNodeName = quorumBootService.addNode(qn, "gcmode", gcmode).blockingFirst();
             assertThat(actualNodeName).isEqualTo(nodeName);
         } finally {
             Context.clear();
@@ -148,7 +148,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
                         return ethBlockNumber.getBlockNumber();
                     })
                     .retryWhen(new RetryWithDelay(20, 3000))
-                    .toBlocking().first();
+                    .blockingFirst();
 
             // if timed out happens, the block height was not synced
         } finally {
@@ -166,7 +166,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         for (Observable<Response> res : quorumBootService.stopNodes(qn)) {
             parallelObservables.add(res.subscribeOn(scheduler));
         }
-        Observable.zip(parallelObservables, (FuncN<Object>) args -> {
+        Observable.zip(parallelObservables, (Function<Object[], Object>) args -> {
             for (Object o : args) {
                 Response res = (Response) o;
                 assertThat(res.code()).as(res.message()).isEqualTo(200);
@@ -184,7 +184,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         for (Observable<Response> res : quorumBootService.startNodes(qn)) {
             parallelObservables.add(res.subscribeOn(scheduler));
         }
-        Observable.zip(parallelObservables, (FuncN<Object>) args -> {
+        Observable.zip(parallelObservables, (Function<Object[], Object>) args -> {
             for (Object o : args) {
                 Response res = (Response) o;
                 assertThat(res.code()).isEqualTo(200);
@@ -202,7 +202,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         for (QuorumNode node : qn.connectionFactory.getNetworkProperty().getNodes().keySet()) {
             blockHeightObservables.add(utilService.getCurrentBlockNumberFrom(node).flatMap(ethBlockNumber -> Observable.just(ethBlockNumber.getBlockNumber())).subscribeOn(scheduler));
         }
-        Observable.zip(blockHeightObservables, (FuncN<Object>) args -> {
+        Observable.zip(blockHeightObservables, (Function<Object[], Object>) args -> {
             for (Object o : args) {
                 BigInteger blockHeight = (BigInteger) o;
                 assertThat(blockHeight).isNotEqualTo(BigInteger.ZERO);
@@ -237,7 +237,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
             });
             latch.await(30, TimeUnit.SECONDS);
             // save the current block number
-            BigInteger currentBlockNumber = utilService.getCurrentBlockNumber().toBlocking().first().getBlockNumber();
+            BigInteger currentBlockNumber = utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber();
             DataStoreFactory.getScenarioDataStore().put("blocknumber", currentBlockNumber);
         } catch (InterruptedException e) {
             fail("Timed out! Can't see " + expectedLogMsg + " from " + nodeName + " logs");

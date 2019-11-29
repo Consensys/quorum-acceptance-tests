@@ -50,7 +50,7 @@ public class ExecutionHooks {
         if (context.getCurrentSpecification().getTags().contains("isolate")) {
             return;
         }
-        BigInteger currentBlockNumber = utilService.getCurrentBlockNumber().toBlocking().first().getBlockNumber();
+        BigInteger currentBlockNumber = utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber();
         DataStoreFactory.getScenarioDataStore().put("blocknumber", currentBlockNumber);
     }
 

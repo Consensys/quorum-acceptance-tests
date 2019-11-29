@@ -20,10 +20,10 @@
 package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNode;
+import io.reactivex.Observable;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
-import rx.Observable;
 
 @Service
 public class AccountService extends AbstractService {
@@ -32,12 +32,13 @@ public class AccountService extends AbstractService {
         return connectionFactory()
                 .getConnection(node)
                 .ethAccounts()
-                .observable()
-                .flatMap(ethAccounts -> Observable.from(ethAccounts.getAccounts()));
+                .flowable()
+                .toObservable()
+                .flatMap(ethAccounts -> Observable.fromIterable(ethAccounts.getAccounts()));
     }
 
     public Observable<String> getDefaultAccountAddress(QuorumNode node) {
-        return getAccountAddresses(node).first();
+        return Observable.just(getAccountAddresses(node).blockingFirst());
     }
 
     public Observable<EthGetBalance> getDefaultAccountBalance(QuorumNode node) {
@@ -45,7 +46,8 @@ public class AccountService extends AbstractService {
             .flatMap(s -> connectionFactory()
                 .getConnection(node)
                 .ethGetBalance(s, DefaultBlockParameterName.LATEST)
-                .observable()
+                .flowable()
+                .toObservable()
             );
     }
 

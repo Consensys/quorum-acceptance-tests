@@ -53,7 +53,7 @@ import org.web3j.quorum.tx.QuorumTransactionManager;
 import org.web3j.tx.Contract;
 import org.web3j.tx.RawTransactionManager;
 import org.web3j.utils.Numeric;
-import rx.Observable;
+import io.reactivex.Observable;
 
 import java.io.File;
 import java.io.IOException;
@@ -97,7 +97,7 @@ public class RawContractService extends AbstractService {
                     qrtxm,
                     BigInteger.valueOf(0),
                     DEFAULT_GAS_LIMIT,
-                    BigInteger.valueOf(initialValue)).observable();
+                    BigInteger.valueOf(initialValue)).flowable().toObservable();
 
         } catch (IOException e) {
             logger.error("RawTransaction- public", e);
@@ -124,7 +124,7 @@ public class RawContractService extends AbstractService {
             return SimpleStorage.load(contractAddress, web3j,
                     qrtxm,
                     BigInteger.valueOf(0),
-                    DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue)).observable();
+                    DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue)).flowable().toObservable();
 
         } catch (IOException e) {
             logger.error("RawTransaction- public", e);
@@ -156,7 +156,7 @@ public class RawContractService extends AbstractService {
                     qrtxm,
                     BigInteger.valueOf(0),
                     DEFAULT_GAS_LIMIT,
-                    BigInteger.valueOf(initialValue)).observable();
+                    BigInteger.valueOf(initialValue)).flowable().toObservable();
 
         } catch (IOException e) {
             logger.error("RawTransaction - private", e);
@@ -186,7 +186,7 @@ public class RawContractService extends AbstractService {
             return SimpleStorage.load(contractAddress, client,
                     qrtxm,
                     BigInteger.valueOf(0),
-                    DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue)).observable();
+                    DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue)).flowable().toObservable();
 
         } catch (IOException e) {
             logger.error("RawTransaction - private", e);
@@ -224,7 +224,7 @@ public class RawContractService extends AbstractService {
         );
 
         String tmHash = base64ToHex(storeRawResponse.getKey());
-        EthSendTransaction sendTransactionResponse = transactionService.sendSignedPrivateTransaction(apiMethod, tmHash, source, target, contractAddress).toBlocking().first();
+        EthSendTransaction sendTransactionResponse = transactionService.sendSignedPrivateTransaction(apiMethod, tmHash, source, target, contractAddress).blockingFirst();
 
         Optional<String> responseError = Optional.ofNullable(sendTransactionResponse.getError()).map(Response.Error::getMessage);
         responseError.ifPresent(e -> logger.error("EthSendTransaction error: {}", e));

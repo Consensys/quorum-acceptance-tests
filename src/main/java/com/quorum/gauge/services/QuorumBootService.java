@@ -27,14 +27,14 @@ import com.quorum.gauge.common.QuorumNetworkConfiguration;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.ext.IstanbulPropose;
+import io.reactivex.schedulers.Schedulers;
 import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import rx.Observable;
-import rx.schedulers.Schedulers;
+import io.reactivex.Observable;
 
 import java.io.IOException;
 import java.util.*;
@@ -140,7 +140,7 @@ public class QuorumBootService {
                         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                         .readValue(response.body().byteStream(), new TypeReference<Map<QuorumNode, QuorumNetworkProperty.Node>>() {
                         });
-                return Observable.from(newNodes.entrySet()).first();
+                return Observable.just(Observable.fromIterable(newNodes.entrySet()).blockingFirst());
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -158,7 +158,7 @@ public class QuorumBootService {
                     for (QuorumNode n : qn.connectionFactory.getNetworkProperty().getNodes().keySet()) {
                         peers.add(raftService.addPeer(n, newNode.getValue().getEnode()));
                     }
-                    return Observable.from(peers).flatMap(raftAddPeerObservable -> raftAddPeerObservable.flatMap(raftAddPeer -> Observable.defer(() -> {
+                    return Observable.fromIterable(peers).flatMap(raftAddPeerObservable -> raftAddPeerObservable.flatMap(raftAddPeer -> Observable.defer(() -> {
                         try {
                             Map<String, Object> body = new HashMap<>();
                             body.put("target", "quorum");

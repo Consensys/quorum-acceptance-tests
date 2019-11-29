@@ -37,7 +37,7 @@ public class PublicRawSmartContract extends AbstractSpecImplementation {
 
     @Step("Deploy `SimpleStorage` public smart contract with initial value <initialValue> signed by external wallet <wallet> on node <node>, name this contract as <contractName>")
     public void deployClientReceiptSmartContract(Integer initialValue, Wallet wallet, QuorumNode node, String contractName) {
-        Contract c = rawContractService.createRawSimplePublicContract(initialValue, wallet, node).toBlocking().first();
+        Contract c = rawContractService.createRawSimplePublicContract(initialValue, wallet, node).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, c);
         DataStoreFactory.getScenarioDataStore().put(contractName, c);
@@ -46,7 +46,7 @@ public class PublicRawSmartContract extends AbstractSpecImplementation {
     @Step("Execute <contractName>'s `set()` function with new value <newValue> signed by external wallet <wallet> in <source>")
     public void updateNewValue(String contractName, int newValue, Wallet wallet, QuorumNode source) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
-        TransactionReceipt receipt = rawContractService.updateRawSimplePublicContract(source, wallet, c.getContractAddress(), newValue).toBlocking().first();
+        TransactionReceipt receipt = rawContractService.updateRawSimplePublicContract(source, wallet, c.getContractAddress(), newValue).blockingFirst();
 
         AssertionsForClassTypes.assertThat(receipt.getTransactionHash()).isNotBlank();
         AssertionsForClassTypes.assertThat(receipt.getBlockNumber()).isNotEqualTo(currentBlockNumber());

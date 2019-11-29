@@ -24,10 +24,12 @@ import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.thoughtworks.gauge.Gauge;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import io.reactivex.Observable;
+import io.reactivex.functions.Predicate;
+import io.reactivex.schedulers.Schedulers;
 import org.springframework.stereotype.Service;
+import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
-import rx.Observable;
-import rx.schedulers.Schedulers;
 
 import java.math.BigInteger;
 import java.util.Optional;
@@ -50,7 +52,7 @@ public class ValueTransferPublicTransaction extends AbstractSpecImplementation {
                     return true;
                 })
                 .flatMap( r -> transactionService.sendPublicTransaction(value, from, to))
-                .toBlocking().first().getTransactionHash();
+                .blockingFirst().getTransactionHash();
         Gauge.writeMessage("Transaction Hash: %s", txHash);
         DataStoreFactory.getScenarioDataStore().put("tx_hash", txHash);
     }
@@ -59,11 +61,14 @@ public class ValueTransferPublicTransaction extends AbstractSpecImplementation {
     public void verifyTransactionHash() {
         String txHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "tx_hash", String.class);
         // if the transaction is accepted, its receipt must be available in any node
+        Predicate<? super EthGetTransactionReceipt> isReceiptPresent
+            = ethGetTransactionReceipt -> ethGetTransactionReceipt.getTransactionReceipt().isPresent();
+
         Optional<TransactionReceipt> receipt = transactionService.getTransactionReceipt(QuorumNode.Node1, txHash)
                 .repeatWhen(completed -> completed.delay(2, TimeUnit.SECONDS))
-                .takeUntil(ethGetTransactionReceipt -> ethGetTransactionReceipt.getTransactionReceipt().isPresent())
+                .takeUntil(isReceiptPresent)
                 .timeout(10, TimeUnit.SECONDS)
-                .toBlocking().last().getTransactionReceipt();
+                .blockingLast().getTransactionReceipt();
 
         assertThat(receipt.isPresent()).isTrue();
         assertThat(receipt.get().getBlockNumber()).isNotEqualTo(currentBlockNumber());
@@ -72,7 +77,7 @@ public class ValueTransferPublicTransaction extends AbstractSpecImplementation {
     @Step("In <node>, the default account's balance is now less than its previous balance")
     public void verifyLesserBalance(QuorumNode node) {
         BigInteger prevBalance = mustHaveValue(DataStoreFactory.getScenarioDataStore(), String.format("%s_balance", node), BigInteger.class);
-        BigInteger actualBalance = accountService.getDefaultAccountBalance(node).toBlocking().first().getBalance();
+        BigInteger actualBalance = accountService.getDefaultAccountBalance(node).blockingFirst().getBalance();
 
         assertThat(actualBalance).isLessThan(prevBalance);
     }
@@ -80,7 +85,7 @@ public class ValueTransferPublicTransaction extends AbstractSpecImplementation {
     @Step("In <node>, the default account's balance is now greater than its previous balance")
     public void verifyMoreBalance(QuorumNode node) {
         BigInteger prevBalance = mustHaveValue(DataStoreFactory.getScenarioDataStore(), String.format("%s_balance", node), BigInteger.class);
-        BigInteger actualBalance = accountService.getDefaultAccountBalance(node).toBlocking().first().getBalance();
+        BigInteger actualBalance = accountService.getDefaultAccountBalance(node).blockingFirst().getBalance();
 
         assertThat(actualBalance).isGreaterThan(prevBalance);
     }
@@ -96,8 +101,8 @@ public class ValueTransferPublicTransaction extends AbstractSpecImplementation {
                     DataStoreFactory.getScenarioDataStore().put(String.format("%s_balance", to), toBalance.getBalance());
                     return true;
                 })
-                .flatMap( r -> transactionService.sendSignedPublicTransaction(value, from, to))
-                .toBlocking().first().getTransactionHash();
+                .flatMap(r -> transactionService.sendSignedPublicTransaction(value, from, to))
+                .blockingFirst().getTransactionHash();
 
         DataStoreFactory.getScenarioDataStore().put("tx_hash", txHash);
     }

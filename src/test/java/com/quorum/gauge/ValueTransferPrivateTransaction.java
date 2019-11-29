@@ -35,14 +35,14 @@ public class ValueTransferPrivateTransaction extends AbstractSpecImplementation 
 
     @Step("Send some Wei from a default account in <from> to a default account in <to> in a private transaction")
     public void sendTransaction(QuorumNode from, QuorumNode to) {
-        Response.Error err = transactionService.sendPrivateTransaction(new Random().nextInt(10), from, to).toBlocking().first().getError();
+        Response.Error err = transactionService.sendPrivateTransaction(new Random().nextInt(10), from, to).blockingFirst().getError();
 
         DataStoreFactory.getScenarioDataStore().put("error", err);
     }
 
     @Step("Send some Wei from a default account in <from> to a default account in <to> in a signed private transaction")
     public void sendSignedTransaction(QuorumNode from, QuorumNode to) {
-        Response.Error err = transactionService.sendSignedPrivateTransaction(new Random().nextInt(10), from, to).toBlocking().first().getError();
+        Response.Error err = transactionService.sendSignedPrivateTransaction(new Random().nextInt(10), from, to).blockingFirst().getError();
 
         DataStoreFactory.getScenarioDataStore().put("error", err);
     }

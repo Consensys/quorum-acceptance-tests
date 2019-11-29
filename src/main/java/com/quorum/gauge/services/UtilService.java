@@ -27,7 +27,7 @@ import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.methods.response.EthBlockNumber;
 import org.web3j.protocol.core.methods.response.NetPeerCount;
 import org.web3j.protocol.core.methods.response.Transaction;
-import rx.Observable;
+import io.reactivex.Observable;
 
 import java.util.List;
 
@@ -40,7 +40,7 @@ public class UtilService extends AbstractService {
 
     public Observable<EthBlockNumber> getCurrentBlockNumberFrom(QuorumNode node) {
         Web3j client = connectionFactory().getWeb3jConnection(node);
-        return client.ethBlockNumber().observable();
+        return client.ethBlockNumber().flowable().toObservable();
     }
 
     public List<Transaction> getPendingTransactions(QuorumNode node) {
@@ -51,7 +51,7 @@ public class UtilService extends AbstractService {
                 PendingTransaction.class
         );
 
-        return request.observable().toBlocking().first().getTransactions();
+        return request.flowable().toObservable().blockingFirst().getTransactions();
     }
 
     /**
@@ -60,7 +60,7 @@ public class UtilService extends AbstractService {
      */
     public int getNumberOfNodes(QuorumNode node) {
         Web3j client = connectionFactory().getWeb3jConnection(node);
-        NetPeerCount peerCount = client.netPeerCount().observable().toBlocking().first();
+        NetPeerCount peerCount = client.netPeerCount().flowable().toObservable().blockingFirst();
 
         return peerCount.getQuantity().intValue();
     }

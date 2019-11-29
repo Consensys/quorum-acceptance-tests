@@ -19,8 +19,8 @@
 
 package com.quorum.gauge.common;
 
-import rx.Observable;
-import rx.functions.Func1;
+import io.reactivex.Observable;
+import io.reactivex.functions.Function;
 
 import java.util.concurrent.TimeUnit;
 
@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
  * Retry an {@link Observable} with configurable retry limit and timeout
  * between attempts
  */
-public class RetryWithDelay implements Func1<Observable<? extends Throwable>, Observable<?>> {
+public class RetryWithDelay implements Function<Observable<? extends Throwable>, Observable<?>> {
 
     private final int maxRetries;
 
@@ -43,7 +43,7 @@ public class RetryWithDelay implements Func1<Observable<? extends Throwable>, Ob
     }
 
     @Override
-    public Observable<?> call(final Observable<? extends Throwable> attempts) {
+    public Observable<?> apply(final Observable<? extends Throwable> attempts) {
         return attempts
             .flatMap(throwable -> {
                 if (++retryCount < maxRetries) {

@@ -48,7 +48,7 @@ public class PrivateRawSmartContract extends AbstractSpecImplementation {
     public void setupContract(int initialValue, Wallet wallet, QuorumNode source, QuorumNode target, String contractName) {
         saveCurrentBlockNumber();
         logger.debug("Setting up contract from {} to {}", source, target);
-        Contract contract = rawContractService.createRawSimplePrivateContract(initialValue, wallet, source, target).toBlocking().first();
+        Contract contract = rawContractService.createRawSimplePrivateContract(initialValue, wallet, source, target).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
@@ -57,7 +57,7 @@ public class PrivateRawSmartContract extends AbstractSpecImplementation {
     @Step("Execute <contractName>'s `set()` function with new value <newValue> signed by external wallet <wallet> in <source> and it's private for <target>")
     public void updateNewValue(String contractName, int newValue, Wallet wallet, QuorumNode source, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
-        TransactionReceipt receipt = rawContractService.updateRawSimplePrivateContract(newValue, c.getContractAddress(), wallet, source, target).toBlocking().first();
+        TransactionReceipt receipt = rawContractService.updateRawSimplePrivateContract(newValue, c.getContractAddress(), wallet, source, target).blockingFirst();
 
         AssertionsForClassTypes.assertThat(receipt.getTransactionHash()).isNotBlank();
         AssertionsForClassTypes.assertThat(receipt.getBlockNumber()).isNotEqualTo(currentBlockNumber());
@@ -74,7 +74,7 @@ public class PrivateRawSmartContract extends AbstractSpecImplementation {
                     throw new RuntimeException("retry");
                 }
             }).retryWhen(new RetryWithDelay(20, 3000))
-            .toBlocking().first().getTransactionReceipt();
+            .blockingFirst().getTransactionReceipt();
 
         assertThat(receipt.isPresent()).isTrue();
         assertThat(receipt.get().getBlockNumber()).isNotEqualTo(currentBlockNumber());
