@@ -28,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.abi.FunctionEncoder;
-import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
@@ -338,8 +337,8 @@ public class TransactionService extends AbstractService {
         //create the encoded smart contract call
         Function function = new Function(
                 FUNC_SET,
-                Arrays.<org.web3j.abi.datatypes.Type>asList(new org.web3j.abi.datatypes.generated.Uint256(99)),
-                Collections.<TypeReference<?>>emptyList());
+                Arrays.asList(new org.web3j.abi.datatypes.generated.Uint256(99)),
+                Collections.emptyList());
         String data = FunctionEncoder.encode(function);
 
         return client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST)
@@ -370,8 +369,8 @@ public class TransactionService extends AbstractService {
         //create the encoded smart contract call
         Function function = new Function(
                 FUNC_SET,
-                Arrays.<org.web3j.abi.datatypes.Type>asList(new org.web3j.abi.datatypes.generated.Uint256(99)),
-                Collections.<TypeReference<?>>emptyList());
+                Arrays.asList(new org.web3j.abi.datatypes.generated.Uint256(99)),
+                Collections.emptyList());
         String data = FunctionEncoder.encode(function);
 
         return client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST)

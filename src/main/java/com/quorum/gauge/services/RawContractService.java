@@ -31,9 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
 import org.web3j.abi.FunctionEncoder;
-import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Function;
-import org.web3j.abi.datatypes.Type;
 import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.WalletUtils;
@@ -255,7 +253,7 @@ public class RawContractService extends AbstractService {
             throw new RuntimeException(e);
         }
 
-        final String encodedConstructor = FunctionEncoder.encodeConstructor(Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(initialValue)));
+        final String encodedConstructor = FunctionEncoder.encodeConstructor(Arrays.asList(new org.web3j.abi.datatypes.generated.Uint256(initialValue)));
         final String constructorWithArgs = binary + encodedConstructor;
 
         return Base64.getEncoder().encodeToString(
@@ -266,8 +264,8 @@ public class RawContractService extends AbstractService {
     private String base64SimpleStorageSetBytecode(int newValue) {
         final Function function = new Function(
             SimpleStorage.FUNC_SET,
-            Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(newValue)),
-            Collections.<TypeReference<?>>emptyList());
+            Arrays.asList(new org.web3j.abi.datatypes.generated.Uint256(newValue)),
+            Collections.emptyList());
 
         final String encodedSet = FunctionEncoder.encode(function);
 
@@ -285,14 +283,12 @@ public class RawContractService extends AbstractService {
         String thirdPartyURL = privacyService.thirdPartyUrl(source);
         if (thirdPartyURL.endsWith("ipc")){
             EnclaveService enclaveService = new EnclaveService("http://localhost", 12345, getIPCHttpClient(thirdPartyURL));
-            Enclave enclave = new Constellation(enclaveService, client);
-            return enclave;
+            return new Constellation(enclaveService, client);
         } else {
             URI uri = URI.create(thirdPartyURL);
             String enclaveUrl = uri.getScheme() + "://" + uri.getHost();
             EnclaveService enclaveService = new EnclaveService(enclaveUrl, uri.getPort(), httpClient);
-            Enclave enclave = new Tessera(enclaveService, client);
-            return enclave;
+            return new Tessera(enclaveService, client);
         }
     }
 
