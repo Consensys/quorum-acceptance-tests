@@ -62,7 +62,7 @@ public class QuorumNetworkConfiguration {
     }
 
     public String toYAML() {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         buf.append("# This is auto generated configuration").append((System.getProperty("line.separator")));
         buf.append("name: ").append(this.name).append(System.getProperty("line.separator"));
         buf.append("consensus: ").append(System.getProperty("line.separator"));
