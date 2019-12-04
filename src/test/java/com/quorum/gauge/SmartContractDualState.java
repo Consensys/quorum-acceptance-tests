@@ -33,7 +33,6 @@ import org.web3j.tx.exceptions.ContractCallException;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @Service
-@SuppressWarnings("unchecked")
 public class SmartContractDualState extends AbstractSpecImplementation {
     private static final Logger logger = LoggerFactory.getLogger(SmartContractDualState.class);
 
@@ -111,7 +110,7 @@ public class SmartContractDualState extends AbstractSpecImplementation {
     public void setStoreContractValueInPrivate(String contractNameKey, String methodName, QuorumNode node, int value, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey, Contract.class);
         String contractName = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey + "Type", String.class);
-        logger.debug(" contract address is:{}", contractNameKey, c.getContractAddress());
+        logger.debug("{} contract address is:{}", contractNameKey, c.getContractAddress());
         TransactionReceipt tr = contractService.setGenericStoreContractSetValue(node, c.getContractAddress(), contractName, methodName, value, true, target).toBlocking().first();
         logger.debug("{} {} {}, txHash = {}", contractNameKey, contractName, methodName, tr.getTransactionHash());
 
