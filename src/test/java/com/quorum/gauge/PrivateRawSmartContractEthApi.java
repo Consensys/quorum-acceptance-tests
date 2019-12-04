@@ -27,7 +27,7 @@ public class PrivateRawSmartContractEthApi extends AbstractSpecImplementation {
     public void setupContractUsingEthApi(int initialValue, String apiMethod, QuorumNode source, QuorumNode target, String contractName) {
         saveCurrentBlockNumber();
         logger.debug("Setting up contract from {} to {}", source, target);
-        EthSendTransaction sendTransactionResponse = rawContractService.createRawSimplePrivateContractUsingEthApi(apiMethod, initialValue, source, target).toBlocking().first();
+        EthSendTransaction sendTransactionResponse = rawContractService.createRawSimplePrivateContractUsingEthApi(apiMethod, initialValue, source, target).blockingFirst();
 
         Optional<String> responseError = Optional.ofNullable(sendTransactionResponse.getError()).map(Response.Error::getMessage);
         assertThat(responseError).as("EthSendTransaction error").isEmpty();
@@ -38,7 +38,7 @@ public class PrivateRawSmartContractEthApi extends AbstractSpecImplementation {
     @Step("Execute <contractName>'s `set()` function with new value <newValue> signed with <apiMethod> using <source>'s default account and it's private for <target>")
     public void updateNewValueUsingEthApi(String contractName, int newValue, String apiMethod, QuorumNode source, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
-        Optional<TransactionReceipt> receipt = rawContractService.updateRawSimplePrivateContractUsingEthApi(apiMethod, newValue, c.getContractAddress(), source, target).toBlocking().first().getTransactionReceipt();
+        Optional<TransactionReceipt> receipt = rawContractService.updateRawSimplePrivateContractUsingEthApi(apiMethod, newValue, c.getContractAddress(), source, target).blockingFirst().getTransactionReceipt();
 
         assertThat(receipt.isPresent()).isTrue();
         assertThat(receipt.get().getTransactionHash()).isNotBlank();
@@ -63,12 +63,12 @@ public class PrivateRawSmartContractEthApi extends AbstractSpecImplementation {
                     throw new RuntimeException("retry");
                 }
             }).retryWhen(new RetryWithDelay(20, 3000))
-            .toBlocking().first().getTransactionReceipt();
+            .blockingFirst().getTransactionReceipt();
 
         assertThat(receipt.isPresent()).isTrue();
         assertThat(receipt.get().getBlockNumber()).isNotEqualTo(currentBlockNumber());
 
-        String senderAddr = accountService.getDefaultAccountAddress(source).toBlocking().first();
+        String senderAddr = accountService.getDefaultAccountAddress(source).blockingFirst();
         assertThat(receipt.get().getFrom()).isEqualTo(senderAddr);
 
         if (DataStoreFactory.getSpecDataStore().get(contractName) == null) {

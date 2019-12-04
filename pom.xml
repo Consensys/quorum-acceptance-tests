@@ -16,23 +16,28 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
         <generated.sol.dir>${project.build.directory}/generate-sources/sol</generated.sol.dir>
+
         <!-- only run non-advanced test cases. This property is from gauge-maven-plugin configuration -->
         <CONSENSUS>TBD</CONSENSUS>
         <tags>(basic || basic-${CONSENSUS}) &amp;&amp; !advanced</tags>
+
         <!-- dependencies -->
         <web3j-quorum.version>4.0.6</web3j-quorum.version>
         <commons-lang.version>2.6</commons-lang.version>
+
         <!-- there's an issue with code gen in web3j 3.5.0-->
-        <web3j.version>3.4.0</web3j.version>
+        <web3j.version>4.2.0</web3j.version>
         <gauge-java.version>0.7.1</gauge-java.version>
+
         <!-- plugins -->
         <gauge-maven-plugin.version>1.4.1</gauge-maven-plugin.version>
-        <web3j-maven-plugin.version>0.3.5</web3j-maven-plugin.version>
+        <web3j-maven-plugin.version>4.2.0</web3j-maven-plugin.version>
         <builder-maven-plugin.version>3.0.0</builder-maven-plugin.version>
         <maven-site-plugin.version>3.7.1</maven-site-plugin.version>
         <maven-project-info-reports-plugin.version>3.0.0</maven-project-info-reports-plugin.version>
         <github.site-maven-plugin.version>0.12</github.site-maven-plugin.version>
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.web3j</groupId>
@@ -166,6 +171,7 @@
     </build>
 
     <profiles>
+
         <profile>
             <id>travis</id>
             <activation>
@@ -268,5 +274,6 @@
                 </plugins>
             </build>
         </profile>
+
     </profiles>
 </project>

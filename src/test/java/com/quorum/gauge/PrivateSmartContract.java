@@ -27,6 +27,9 @@ import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.ext.EthGetQuorumPayload;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import io.reactivex.Observable;
+import io.reactivex.Scheduler;
+import io.reactivex.schedulers.Schedulers;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.WebSocket;
@@ -40,9 +43,6 @@ import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
 import org.web3j.protocol.core.methods.response.EthLog;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
-import rx.Observable;
-import rx.Scheduler;
-import rx.schedulers.Schedulers;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -61,7 +61,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     public void setupContract(int initialValue, QuorumNode source, QuorumNode target, String contractName) {
         saveCurrentBlockNumber();
         logger.debug("Setting up contract from {} to {}", source, target);
-        Contract contract = contractService.createSimpleContract(initialValue, source, target).toBlocking().first();
+        Contract contract = contractService.createSimpleContract(initialValue, source, target).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
@@ -88,12 +88,12 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
                         throw new RuntimeException("retry");
                     }
                 }).retryWhen(new RetryWithDelay(20, 3000))
-                .toBlocking().first().getTransactionReceipt();
+                .blockingFirst().getTransactionReceipt();
 
         assertThat(receipt.isPresent()).isTrue();
         assertThat(receipt.get().getBlockNumber()).isNotEqualTo(currentBlockNumber());
 
-        String senderAddr = accountService.getDefaultAccountAddress(source).toBlocking().first();
+        String senderAddr = accountService.getDefaultAccountAddress(source).blockingFirst();
         assertThat(receipt.get().getFrom()).isEqualTo(senderAddr);
     }
 
@@ -128,7 +128,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     @Step("Execute <contractName>'s `set()` function with new value <newValue> in <source> and it's private for <target>")
     public void updateNewValue(String contractName, int newValue, QuorumNode source, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
-        TransactionReceipt receipt = contractService.updateSimpleContract(source, target, c.getContractAddress(), newValue).toBlocking().first();
+        TransactionReceipt receipt = contractService.updateSimpleContract(source, target, c.getContractAddress(), newValue).blockingFirst();
 
         assertThat(receipt.getTransactionHash()).isNotBlank();
         assertThat(receipt.getBlockNumber()).isNotEqualTo(currentBlockNumber());
@@ -148,7 +148,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
                 tmp.add((Contract) o);
             }
             return tmp;
-        }).toBlocking().first();
+        }).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(String.format("%s_source_contract", source), contracts);
         DataStoreFactory.getSpecDataStore().put(String.format("%s_target_contract", target), contracts);
@@ -188,7 +188,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
                 }
             }
             return count;
-        }).toBlocking().first();
+        }).blockingFirst();
 
         assertThat(actualCount).isEqualTo(expectedCount);
     }
@@ -196,7 +196,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     @Step("<contractName>'s payload is retrievable from <node>")
     public void verifyPrivateContractPayloadIsAccessible(String contractName, QuorumNode node) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
-        EthGetQuorumPayload payload = transactionService.getPrivateTransactionPayload(node, c.getTransactionReceipt().get().getTransactionHash()).toBlocking().first();
+        EthGetQuorumPayload payload = transactionService.getPrivateTransactionPayload(node, c.getTransactionReceipt().get().getTransactionHash()).blockingFirst();
 
         assertThat(payload.getResult()).isNotEqualTo("0x");
     }
@@ -204,7 +204,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     @Step("<contractName>'s payload is not retrievable from <node>")
     public void verifyPrivateContractPayloadIsNotAccessible(String contractName, QuorumNode node) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
-        EthGetQuorumPayload payload = transactionService.getPrivateTransactionPayload(node, c.getTransactionReceipt().get().getTransactionHash()).toBlocking().first();
+        EthGetQuorumPayload payload = transactionService.getPrivateTransactionPayload(node, c.getTransactionReceipt().get().getTransactionHash()).blockingFirst();
 
         assertThat(payload.getResult()).isEqualTo("0x");
     }
@@ -259,7 +259,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         try {
             waitForWebSocket.await();
 
-            contractService.createClientReceiptContractAsync(initialValue, source, sourceAccount, target, callbackUrl).toBlocking().first();
+            contractService.createClientReceiptContractAsync(initialValue, source, sourceAccount, target, callbackUrl).blockingFirst();
 
             waitForCallback.await(20, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
@@ -284,7 +284,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
 
     @Step("Deploy `ClientReceipt` smart contract from a default account in <source> and it's private for <target>, named this contract as <contractName>")
     public void deployClientReceiptSmartContract(QuorumNode source, QuorumNode target, String contractName) {
-        Contract c = contractService.createClientReceiptPrivateSmartContract(source, target).toBlocking().first();
+        Contract c = contractService.createClientReceiptPrivateSmartContract(source, target).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, c);
         DataStoreFactory.getScenarioDataStore().put(contractName, c);
@@ -301,7 +301,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
             observables.add(contractService.updateClientReceiptPrivate(source, target, c.getContractAddress(), BigInteger.ZERO)
                     .subscribeOn(scheduler));
         }
-        List<TransactionReceipt> receipts = Observable.zip(observables, objects -> Observable.from(objects).map(o -> (TransactionReceipt) o).toList().toBlocking().first()).toBlocking().first();
+        List<TransactionReceipt> receipts = Observable.zip(observables, objects -> Observable.fromArray(objects).map(o -> (TransactionReceipt) o).toList().blockingGet()).blockingFirst();
 
         DataStoreFactory.getScenarioDataStore().put("receipts", receipts);
     }
@@ -318,7 +318,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
                 observables.add(contractService.updateClientReceiptPrivate(source, target, c.getContractAddress(), BigInteger.ZERO).subscribeOn(Schedulers.io()));
             }
         }
-        List<TransactionReceipt> receipts = Observable.zip(observables, objects -> Observable.from(objects).map(o -> (TransactionReceipt) o).toList().toBlocking().first()).toBlocking().first();
+        List<TransactionReceipt> receipts = Observable.zip(observables, objects -> Observable.fromArray(objects).map(o -> (TransactionReceipt) o).toList().blockingGet()).blockingFirst();
 
         DataStoreFactory.getScenarioDataStore().put("receipts", receipts);
     }
@@ -327,7 +327,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     public void verifyLogEvents(QuorumNode node, String contractName, int expectedEventCount) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
 
-        EthLog ethLog = transactionService.getLogsUsingFilter(node, c.getContractAddress()).toBlocking().first();
+        EthLog ethLog = transactionService.getLogsUsingFilter(node, c.getContractAddress()).blockingFirst();
         List<EthLog.LogResult> logResults = ethLog.getLogs();
 
         assertThat(logResults.size()).as("Log Event Count").isEqualTo(expectedEventCount);
@@ -347,7 +347,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
                 allObservableContracts.add(contractService.createSimpleContract(arbitraryValue, source, targetNode).subscribeOn(Schedulers.io()));
             }
         }
-        BigInteger blockNumber = Observable.zip(allObservableContracts, args -> utilService.getCurrentBlockNumber().toBlocking().first()).toBlocking().first().getBlockNumber();
+        BigInteger blockNumber = Observable.zip(allObservableContracts, args -> utilService.getCurrentBlockNumber().blockingFirst()).blockingFirst().getBlockNumber();
         assertThat(blockNumber).isNotEqualTo(currentBlockNumber());
     }
 }

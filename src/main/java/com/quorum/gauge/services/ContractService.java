@@ -24,6 +24,7 @@ import com.quorum.gauge.ext.EthSendTransactionAsync;
 import com.quorum.gauge.ext.EthStorageRoot;
 import com.quorum.gauge.ext.PrivateTransactionAsync;
 import com.quorum.gauge.sol.*;
+import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +39,6 @@ import org.web3j.tx.Contract;
 import org.web3j.tx.ReadonlyTransactionManager;
 import org.web3j.tx.TransactionManager;
 import org.web3j.tx.exceptions.ContractCallException;
-import rx.Observable;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -84,7 +84,7 @@ public class ContractService extends AbstractService {
                     clientTransactionManager,
                     BigInteger.valueOf(0),
                     gas,
-                    BigInteger.valueOf(initialValue)).observable();
+                    BigInteger.valueOf(initialValue)).flowable().toObservable();
         });
     }
 
@@ -130,7 +130,7 @@ public class ContractService extends AbstractService {
                 client, address, null, privateFor, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
             ))
             .flatMap(txManager -> SimpleStorage.load(
-                contractAddress, client, txManager, BigInteger.ZERO, gasLimit).set(value).observable()
+                contractAddress, client, txManager, BigInteger.ZERO, gasLimit).set(value).flowable().toObservable()
             );
     }
 
@@ -140,7 +140,7 @@ public class ContractService extends AbstractService {
                 Arrays.asList(contractAddress),
                 connectionFactory().getWeb3jService(node),
                 EthStorageRoot.class);
-        return request.observable();
+        return request.flowable().toObservable();
     }
 
     public Observable<? extends Contract> createClientReceiptSmartContract(QuorumNode node) {
@@ -156,7 +156,7 @@ public class ContractService extends AbstractService {
                             client,
                             txManager,
                             BigInteger.valueOf(0),
-                            DEFAULT_GAS_LIMIT).observable();
+                            DEFAULT_GAS_LIMIT).flowable().toObservable();
                 });
     }
 
@@ -220,7 +220,7 @@ public class ContractService extends AbstractService {
     public Observable<TransactionReceipt> setGenericStoreContractSetValue(QuorumNode node, String contractAddress, String contractName, String methodName, int value, boolean isPrivate, QuorumNode target) {
         Quorum client = connectionFactory().getConnection(node);
 
-        String fromAddress = accountService.getDefaultAccountAddress(node).toBlocking().first();
+        String fromAddress = accountService.getDefaultAccountAddress(node).blockingFirst();
         TransactionManager txManager;
         if (isPrivate) {
             txManager = new ClientTransactionManager(
@@ -244,15 +244,15 @@ public class ContractService extends AbstractService {
                         case "seta":
                             return Storea.load(contractAddress, client, txManager,
                                     BigInteger.valueOf(0),
-                                    DEFAULT_GAS_LIMIT).seta(BigInteger.valueOf(value)).observable();
+                                    DEFAULT_GAS_LIMIT).seta(BigInteger.valueOf(value)).flowable().toObservable();
                         case "setb":
                             return Storea.load(contractAddress, client, txManager,
                                     BigInteger.valueOf(0),
-                                    DEFAULT_GAS_LIMIT).setb(BigInteger.valueOf(value)).observable();
+                                    DEFAULT_GAS_LIMIT).setb(BigInteger.valueOf(value)).flowable().toObservable();
                         case "setc":
                             return Storea.load(contractAddress, client, txManager,
                                     BigInteger.valueOf(0),
-                                    DEFAULT_GAS_LIMIT).setc(BigInteger.valueOf(value)).observable();
+                                    DEFAULT_GAS_LIMIT).setc(BigInteger.valueOf(value)).flowable().toObservable();
                         default:
                             throw new Exception("invalid method name " + methodName + " for contract " + contractName);
 
@@ -262,11 +262,11 @@ public class ContractService extends AbstractService {
                         case "setb":
                             return Storeb.load(contractAddress, client, txManager,
                                     BigInteger.valueOf(0),
-                                    DEFAULT_GAS_LIMIT).setb(BigInteger.valueOf(value)).observable();
+                                    DEFAULT_GAS_LIMIT).setb(BigInteger.valueOf(value)).flowable().toObservable();
                         case "setc":
                             return Storeb.load(contractAddress, client, txManager,
                                     BigInteger.valueOf(0),
-                                    DEFAULT_GAS_LIMIT).setc(BigInteger.valueOf(value)).observable();
+                                    DEFAULT_GAS_LIMIT).setc(BigInteger.valueOf(value)).flowable().toObservable();
                         default:
                             throw new Exception("invalid method name " + methodName + " for contract " + contractName);
                     }
@@ -275,7 +275,7 @@ public class ContractService extends AbstractService {
                         case "setc":
                             return Storec.load(contractAddress, client, txManager,
                                     BigInteger.valueOf(0),
-                                    DEFAULT_GAS_LIMIT).setc(BigInteger.valueOf(value)).observable();
+                                    DEFAULT_GAS_LIMIT).setc(BigInteger.valueOf(value)).flowable().toObservable();
                         default:
                             throw new Exception("invalid method name " + methodName + " for contract " + contractName);
                     }
@@ -291,7 +291,7 @@ public class ContractService extends AbstractService {
     public Observable<? extends Contract> createGenericStoreContract(QuorumNode node, String contractName, int initalValue, String dpContractAddress, boolean isPrivate, QuorumNode target) {
         Quorum client = connectionFactory().getConnection(node);
 
-        String fromAddress = accountService.getDefaultAccountAddress(node).toBlocking().first();
+        String fromAddress = accountService.getDefaultAccountAddress(node).blockingFirst();
         TransactionManager transactionManager;
         if (isPrivate) {
             transactionManager = new ClientTransactionManager(
@@ -314,20 +314,20 @@ public class ContractService extends AbstractService {
                         client,
                         transactionManager,
                         BigInteger.valueOf(0),
-                        DEFAULT_GAS_LIMIT, BigInteger.valueOf(initalValue), dpContractAddress).observable();
+                        DEFAULT_GAS_LIMIT, BigInteger.valueOf(initalValue), dpContractAddress).flowable().toObservable();
 
             case "storeb":
                 return Storeb.deploy(
                         client,
                         transactionManager,
                         BigInteger.valueOf(0),
-                        DEFAULT_GAS_LIMIT, BigInteger.valueOf(initalValue), dpContractAddress).observable();
+                        DEFAULT_GAS_LIMIT, BigInteger.valueOf(initalValue), dpContractAddress).flowable().toObservable();
             case "storec":
                 return Storec.deploy(
                         client,
                         transactionManager,
                         BigInteger.valueOf(0),
-                        DEFAULT_GAS_LIMIT, BigInteger.valueOf(initalValue)).observable();
+                        DEFAULT_GAS_LIMIT, BigInteger.valueOf(initalValue)).flowable().toObservable();
             default:
                 throw new RuntimeException("invalid contract name " + contractName);
         }
@@ -347,7 +347,7 @@ public class ContractService extends AbstractService {
             return ClientReceipt.deploy(client,
                     clientTransactionManager,
                     BigInteger.valueOf(0),
-                    DEFAULT_GAS_LIMIT).observable();
+                    DEFAULT_GAS_LIMIT).flowable().toObservable();
         });
     }
 
@@ -361,7 +361,7 @@ public class ContractService extends AbstractService {
                             DEFAULT_MAX_RETRY,
                             DEFAULT_SLEEP_DURATION_IN_MILLIS);
                     return ClientReceipt.load(contractAddress, client, txManager, BigInteger.valueOf(0), DEFAULT_GAS_LIMIT)
-                            .deposit(new byte[32], value).observable();
+                            .deposit(new byte[32], value).flowable().toObservable();
                 });
     }
 
@@ -377,7 +377,7 @@ public class ContractService extends AbstractService {
                     DEFAULT_SLEEP_DURATION_IN_MILLIS);
             return ClientReceipt.load(contractAddress, client, txManager,
                     BigInteger.valueOf(0),
-                    DEFAULT_GAS_LIMIT).deposit(new byte[32], value).observable();
+                    DEFAULT_GAS_LIMIT).deposit(new byte[32], value).flowable().toObservable();
         });
     }
 
@@ -407,7 +407,7 @@ public class ContractService extends AbstractService {
                                 connectionFactory().getWeb3jService(source),
                                 EthSendTransactionAsync.class
                         );
-                        return request.observable();
+                        return request.flowable().toObservable();
                     } catch (IOException e) {
                         logger.error("Unable to construct transaction arguments", e);
                         throw new RuntimeException(e);

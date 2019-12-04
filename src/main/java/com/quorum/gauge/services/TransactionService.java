@@ -23,6 +23,7 @@ import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.ext.EthGetQuorumPayload;
 import com.quorum.gauge.ext.EthSignTransaction;
 import com.quorum.gauge.ext.ExtendedPrivateTransaction;
+import io.reactivex.schedulers.Schedulers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,8 +43,7 @@ import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.quorum.Quorum;
 import org.web3j.quorum.methods.request.PrivateTransaction;
 import org.web3j.tx.Contract;
-import rx.Observable;
-import rx.schedulers.Schedulers;
+import io.reactivex.Observable;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -65,7 +65,7 @@ public class TransactionService extends AbstractService {
 
     public Observable<EthGetTransactionReceipt> getTransactionReceipt(QuorumNode node, String transactionHash) {
         Quorum client = connectionFactory().getConnection(node);
-        return client.ethGetTransactionReceipt(transactionHash).observable();
+        return client.ethGetTransactionReceipt(transactionHash).flowable().toObservable();
     }
 
     public Observable<EthSendTransaction> sendPublicTransaction(int value, QuorumNode from, QuorumNode to) {
@@ -78,7 +78,7 @@ public class TransactionService extends AbstractService {
                     String fromAddress = l.get(0);
                     String toAddress = l.get(1);
                     return client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST)
-                            .observable()
+                            .flowable().toObservable()
                             .flatMap(ethGetTransactionCount -> {
                                 Transaction tx = Transaction.createEtherTransaction(fromAddress,
                                         ethGetTransactionCount.getTransactionCount(),
@@ -86,7 +86,7 @@ public class TransactionService extends AbstractService {
                                         DEFAULT_GAS_LIMIT,
                                         toAddress,
                                         BigInteger.valueOf(value));
-                                return client.ethSendTransaction(tx).observable();
+                                return client.ethSendTransaction(tx).flowable().toObservable();
                             });
                 });
     }
@@ -97,7 +97,8 @@ public class TransactionService extends AbstractService {
                 accountService.getDefaultAccountAddress(from).subscribeOn(Schedulers.io()),
                 accountService.getDefaultAccountAddress(to).subscribeOn(Schedulers.io()),
                 (fromAddress, toAddress) -> {
-                    BigInteger transactionCount = client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST).observable().toBlocking().first().getTransactionCount();
+                    BigInteger transactionCount = client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST)
+                        .flowable().toObservable().blockingFirst().getTransactionCount();
                     return Transaction.createEtherTransaction(fromAddress,
                             transactionCount,
                             BigInteger.ZERO,
@@ -112,13 +113,13 @@ public class TransactionService extends AbstractService {
                             connectionFactory().getWeb3jService(from),
                             EthSignTransaction.class
                     );
-                    return request.observable();
+                    return request.flowable().toObservable();
                 })
                 .flatMap(ethSignTransaction -> {
                     Map<String, Object> response = ethSignTransaction.getResult();
                     logger.debug("{}", response);
                     String rawHexString = (String) response.get("raw");
-                    return client.ethSendRawTransaction(rawHexString).observable();
+                    return client.ethSendRawTransaction(rawHexString).flowable().toObservable();
                 });
     }
 
@@ -138,7 +139,7 @@ public class TransactionService extends AbstractService {
                         null,
                         Arrays.asList(privacyService.id(to))
                 ))
-                .flatMap(tx -> client.ethSendTransaction(tx).observable());
+                .flatMap(tx -> client.ethSendTransaction(tx).flowable().toObservable());
     }
 
     public Observable<EthSendTransaction> sendSignedPrivateTransaction(int value, QuorumNode from, QuorumNode to) {
@@ -147,7 +148,8 @@ public class TransactionService extends AbstractService {
                 accountService.getDefaultAccountAddress(from).subscribeOn(Schedulers.io()),
                 accountService.getDefaultAccountAddress(to).subscribeOn(Schedulers.io()),
                 (fromAddress, toAddress) -> {
-                    BigInteger transactionCount = client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST).observable().toBlocking().first().getTransactionCount();
+                    BigInteger transactionCount = client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST)
+                        .flowable().toObservable().blockingFirst().getTransactionCount();
                     return new ExtendedPrivateTransaction(
                             fromAddress,
                             transactionCount,
@@ -167,13 +169,13 @@ public class TransactionService extends AbstractService {
                             connectionFactory().getWeb3jService(from),
                             EthSignTransaction.class
                     );
-                    return request.observable();
+                    return request.flowable().toObservable();
                 })
                 .flatMap(ethSignTransaction -> {
                     Map<String, Object> response = ethSignTransaction.getResult();
                     logger.debug("{}", response);
                     String rawHexString = (String) response.get("raw");
-                    return client.ethSendRawTransaction(rawHexString).observable();
+                    return client.ethSendRawTransaction(rawHexString).flowable().toObservable();
                 });
     }
 
@@ -187,9 +189,10 @@ public class TransactionService extends AbstractService {
             logger.error("sleep interrupted", e);
         }
 
-        String fromAddress = accountService.getDefaultAccountAddress(from).toBlocking().first();
+        String fromAddress = accountService.getDefaultAccountAddress(from).blockingFirst();
 
-        BigInteger transactionCount = quorumClient.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST).observable().toBlocking().first().getTransactionCount();
+        BigInteger transactionCount = quorumClient.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST)
+            .flowable().toObservable().blockingFirst().getTransactionCount();
 
         ExtendedPrivateTransaction tx = new ExtendedPrivateTransaction(
             fromAddress,
@@ -216,19 +219,19 @@ public class TransactionService extends AbstractService {
             EthSignTransaction.class
         );
 
-        Observable<EthSignTransaction> ethSignTransaction = request.observable();
+        Observable<EthSignTransaction> ethSignTransaction = request.flowable().toObservable();
 
-        Map<String, Object> response = ethSignTransaction.toBlocking().first().getResult();
+        Map<String, Object> response = ethSignTransaction.blockingFirst().getResult();
         logger.debug("{}", response);
         String rawHexString = (String) response.get("raw");
 
-        return quorumClient.ethSendRawPrivateTransaction(rawHexString, Arrays.asList(privacyService.id(privateFor))).observable();
+        return quorumClient.ethSendRawPrivateTransaction(rawHexString, Arrays.asList(privacyService.id(privateFor))).flowable().toObservable();
     }
 
     // Invoking eth_getQuorumPayload
     public Observable<EthGetQuorumPayload> getPrivateTransactionPayload(QuorumNode node, String transactionHash) {
         Web3j client = connectionFactory().getWeb3jConnection(node);
-        return client.ethGetTransactionByHash(transactionHash).observable()
+        return client.ethGetTransactionByHash(transactionHash).flowable().toObservable()
                 .flatMap(ethTransaction -> Observable.just(ethTransaction.getTransaction().orElseThrow(() -> new RuntimeException("no such transaction")).getInput()))
                 .flatMap(payloadHash -> {
                     Request<?, EthGetQuorumPayload> request = new Request<>(
@@ -237,7 +240,7 @@ public class TransactionService extends AbstractService {
                             connectionFactory().getWeb3jService(node),
                             EthGetQuorumPayload.class
                     );
-                    return request.observable();
+                    return request.flowable().toObservable();
                 });
     }
 
@@ -246,7 +249,7 @@ public class TransactionService extends AbstractService {
         Web3j client = connectionFactory().getWeb3jConnection(node);
         EthFilter filter = new EthFilter(DefaultBlockParameter.valueOf(BigInteger.ZERO), DefaultBlockParameter.valueOf("latest"), contractAddress);
 
-        return client.ethGetLogs(filter).observable();
+        return client.ethGetLogs(filter).flowable().toObservable();
     }
 
     public Observable<EthEstimateGas> estimateGasForTransaction(int value, QuorumNode from, QuorumNode to) {
@@ -259,7 +262,7 @@ public class TransactionService extends AbstractService {
                     String fromAddress = l.get(0);
                     String toAddress = l.get(1);
                     return client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST)
-                            .observable()
+                        .flowable().toObservable()
                             .flatMap(ethGetTransactionCount -> {
                                 Transaction tx = Transaction.createEtherTransaction(fromAddress,
                                         ethGetTransactionCount.getTransactionCount(),
@@ -267,7 +270,7 @@ public class TransactionService extends AbstractService {
                                         DEFAULT_GAS_LIMIT,
                                         toAddress,
                                         BigInteger.valueOf(value));
-                                return client.ethEstimateGas(tx).observable();
+                                return client.ethEstimateGas(tx).flowable().toObservable();
                             });
                 });
     }
@@ -284,7 +287,7 @@ public class TransactionService extends AbstractService {
 
         String data = c.getContractBinary();
         return client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST)
-                .observable()
+            .flowable().toObservable()
                 .flatMap(ethGetTransactionCount -> {
                     Transaction tx = Transaction.createContractTransaction(fromAddress,
                             ethGetTransactionCount.getTransactionCount(),
@@ -292,7 +295,7 @@ public class TransactionService extends AbstractService {
                             DEFAULT_GAS_LIMIT,
                             BigInteger.ZERO,
                             data);
-                    return client.ethEstimateGas(tx).observable();
+                    return client.ethEstimateGas(tx).flowable().toObservable();
                 });
     }
 
@@ -308,7 +311,7 @@ public class TransactionService extends AbstractService {
 
         String data = c.getContractBinary();
         return client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST)
-                .observable()
+            .flowable().toObservable()
                 .flatMap(ethGetTransactionCount -> {
                     Transaction tx = new PrivateTransaction(
                             fromAddress,
@@ -320,7 +323,7 @@ public class TransactionService extends AbstractService {
                             null,
                             Arrays.asList(privacyService.id(privateFor))
                     );
-                    return client.ethEstimateGas(tx).observable();
+                    return client.ethEstimateGas(tx).flowable().toObservable();
                 });
     }
 
@@ -342,7 +345,7 @@ public class TransactionService extends AbstractService {
         String data = FunctionEncoder.encode(function);
 
         return client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST)
-                .observable()
+            .flowable().toObservable()
                 .flatMap(ethGetTransactionCount -> {
                     Transaction tx = Transaction.createFunctionCallTransaction(
                             fromAddress,
@@ -352,7 +355,7 @@ public class TransactionService extends AbstractService {
                             c.getContractAddress(),
                             BigInteger.ZERO,
                             data);
-                    return client.ethEstimateGas(tx).observable();
+                    return client.ethEstimateGas(tx).flowable().toObservable();
                 });
     }
 
@@ -374,7 +377,7 @@ public class TransactionService extends AbstractService {
         String data = FunctionEncoder.encode(function);
 
         return client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST)
-                .observable()
+            .flowable().toObservable()
                 .flatMap(ethGetTransactionCount -> {
                     Transaction tx = new PrivateTransaction(
                             fromAddress,
@@ -386,7 +389,7 @@ public class TransactionService extends AbstractService {
                             null,
                             Arrays.asList(privacyService.id(privateFor))
                     );
-                    return client.ethEstimateGas(tx).observable();
+                    return client.ethEstimateGas(tx).flowable().toObservable();
                 });
     }
 

@@ -118,7 +118,7 @@ public class RaftGasUsage extends AbstractSpecImplementation {
      */
     private void createContract(int gas, QuorumNode source, QuorumNode target, String contractName) {
         try {
-            Contract contract = contractService.createSimpleContract(42, source, target, BigInteger.valueOf(gas)).toBlocking().first();
+            Contract contract = contractService.createSimpleContract(42, source, target, BigInteger.valueOf(gas)).blockingFirst();
             DataStoreFactory.getScenarioDataStore().put(contractName,
                     new CreationResult(CreationResult.CreationResultTypes.success, contract, source, ""));
         } catch (RuntimeException e) {
