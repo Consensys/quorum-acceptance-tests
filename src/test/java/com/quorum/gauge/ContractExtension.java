@@ -52,7 +52,7 @@ public class ContractExtension extends AbstractSpecImplementation {
         final Contract existingContract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
 
         final QuorumExtendContract result = extensionService
-            .initiateContractExtension(creator, existingContract.getContractAddress(), newNode, voters, privacyFlag)
+            .initiateContractExtension(creator, existingContract.getContractAddress(), newNode, new ArrayList<>(allNodes), privacyFlag)
             .toBlocking()
             .first();
 
@@ -82,8 +82,8 @@ public class ContractExtension extends AbstractSpecImplementation {
         final String contractAddress = mustHaveValue(store, contractName + "extensionAddress", String.class);
         final Set<QuorumNode> allNodes = mustHaveValue(store, "extensionAllNodes", Set.class);
 
-        final QuorumAccept result = this.extensionService
-            .acceptExtension(contractAddress, newNode, allNodes, privacyFlag)
+        final QuorumVoteOnContract result = this.extensionService
+            .voteOnExtension(newNode, true, contractAddress, allNodes, privacyFlag)
             .toBlocking()
             .first();
 
