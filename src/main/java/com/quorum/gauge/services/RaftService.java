@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.Response;
-import rx.Observable;
+import io.reactivex.Observable;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -46,7 +46,7 @@ public class RaftService extends AbstractService {
                 connectionFactory().getWeb3jService(node),
                 RaftService.RaftAddPeer.class
         );
-        return request.observable().map(raftAddPeer -> {
+        return request.flowable().toObservable().map(raftAddPeer -> {
             raftAddPeer.setNode(node);
             return raftAddPeer;
         });
@@ -58,7 +58,7 @@ public class RaftService extends AbstractService {
                 null,
                 connectionFactory().getWeb3jService(node),
                 RaftCluster.class);
-        return request.observable();
+        return request.flowable().toObservable();
     }
 
     /**
@@ -71,7 +71,7 @@ public class RaftService extends AbstractService {
                 null,
                 connectionFactory().getWeb3jService(node),
                 RaftLeader.class);
-        RaftLeader response = request.observable().toBlocking().first();
+        RaftLeader response = request.flowable().toObservable().blockingFirst();
         String leaderEnode = response.getResult();
         logger.debug("Retrieved leader enode: {}", leaderEnode);
 
@@ -84,7 +84,7 @@ public class RaftService extends AbstractService {
                     NodeInfo.class
             );
 
-            NodeInfo nodeInfo = nodeInfoRequest.observable().toBlocking().first();
+            NodeInfo nodeInfo = nodeInfoRequest.flowable().toObservable().blockingFirst();
             String thisEnode = nodeInfo.getEnode();
             logger.debug("Retrieved enode info: {}", thisEnode);
             if (thisEnode.contains(leaderEnode)) {

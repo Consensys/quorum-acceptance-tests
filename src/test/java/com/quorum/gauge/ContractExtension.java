@@ -8,8 +8,10 @@ import com.quorum.gauge.services.ExtensionService;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStore;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import io.reactivex.functions.Predicate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 
@@ -53,8 +55,7 @@ public class ContractExtension extends AbstractSpecImplementation {
 
         final QuorumExtendContract result = extensionService
             .initiateContractExtension(creator, existingContract.getContractAddress(), newNode, new ArrayList<>(allNodes), privacyFlag)
-            .toBlocking()
-            .first();
+            .blockingFirst();
 
 //        System.err.println(result.getError().getMessage());
         assertThat(result.getError()).isNull();
@@ -84,8 +85,7 @@ public class ContractExtension extends AbstractSpecImplementation {
 
         final QuorumVoteOnContract result = this.extensionService
             .voteOnExtension(newNode, true, contractAddress, allNodes, privacyFlag)
-            .toBlocking()
-            .first();
+            .blockingFirst();
 
         assertThat(result.getError()).isNull();
 
@@ -105,8 +105,7 @@ public class ContractExtension extends AbstractSpecImplementation {
 
         final QuorumVoteOnContract voteResult = this.extensionService
             .voteOnExtension(node, vote, contractAddress, allNodes, privacyFlag)
-            .toBlocking()
-            .first();
+            .blockingFirst();
 
         assertThat(voteResult.getError()).isNull();
 
@@ -129,8 +128,7 @@ public class ContractExtension extends AbstractSpecImplementation {
 
         final QuorumUpdateParties result = this.extensionService
             .updateParties(node, contractAddress, allNodes, privacyFlag)
-            .toBlocking()
-            .first();
+            .blockingFirst();
 
         assertThat(result.getError()).isNull();
 
@@ -149,8 +147,7 @@ public class ContractExtension extends AbstractSpecImplementation {
 
         final QuorumActiveExtensionContracts result = this.extensionService
             .getExtensionContracts(node)
-            .toBlocking()
-            .first();
+            .blockingFirst();
 
         final Optional<Map<Object, Object>> first = result.getResult()
             .stream()
@@ -168,8 +165,7 @@ public class ContractExtension extends AbstractSpecImplementation {
 
         final QuorumActiveExtensionContracts result = this.extensionService
             .getExtensionContracts(node)
-            .toBlocking()
-            .first();
+            .blockingFirst();
 
         final Optional<Map<Object, Object>> first = result.getResult()
             .stream()
@@ -187,8 +183,7 @@ public class ContractExtension extends AbstractSpecImplementation {
 
         final QuorumActiveExtensionContracts result = this.extensionService
             .getExtensionContracts(node)
-            .toBlocking()
-            .first();
+            .blockingFirst();
 
         final Optional<Map<Object, Object>> first = result.getResult()
             .stream()
@@ -209,8 +204,7 @@ public class ContractExtension extends AbstractSpecImplementation {
 
         final QuorumCancel result = this.extensionService
             .cancelExtension(node, contractAddress, allNodes, privacyFlag)
-            .toBlocking()
-            .first();
+            .blockingFirst();
 
         assertThat(result.getError()).isNull();
 
@@ -221,10 +215,9 @@ public class ContractExtension extends AbstractSpecImplementation {
         return transactionService
             .getTransactionReceipt(node, transactionHash)
             .repeatWhen(completed -> completed.delay(2, SECONDS))
-            .takeUntil(ethGetTransactionReceipt -> ethGetTransactionReceipt.getTransactionReceipt().isPresent())
+            .takeUntil((Predicate<? super EthGetTransactionReceipt>) ethGetTransactionReceipt -> ethGetTransactionReceipt.getTransactionReceipt().isPresent())
             .timeout(10, SECONDS)
-            .toBlocking()
-            .last()
+            .blockingFirst()
             .getTransactionReceipt();
     }
 

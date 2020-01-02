@@ -43,7 +43,7 @@ public class NestedPrivateContract extends AbstractSpecImplementation {
     @Step("Deploy a C1 contract with initial value <initialValue> in <source>'s default account and it's private for <target>, named this contract as <contractName>")
     public void setupC1Contract(int initialValue, QuorumNode source, QuorumNode target, String contractName) {
         logger.debug("Setting up contract from {} to {}", source, target);
-        Contract contract = nestedContractService.createC1Contract(initialValue, source, target).toBlocking().first();
+        Contract contract = nestedContractService.createC1Contract(initialValue, source, target).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
@@ -57,7 +57,7 @@ public class NestedPrivateContract extends AbstractSpecImplementation {
             source,
             Arrays.asList(target),
             Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())
-        ).toBlocking().first();
+        ).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
@@ -67,7 +67,7 @@ public class NestedPrivateContract extends AbstractSpecImplementation {
     public void setupC2Contract(String c1Address, QuorumNode source, QuorumNode target, String contractName) {
         logger.debug("Setting up contract from {} to {}", source, target);
         Contract c1 = (Contract) DataStoreFactory.getSpecDataStore().get(c1Address);
-        Contract contract = nestedContractService.createC2Contract(c1.getContractAddress(), source, target).toBlocking().first();
+        Contract contract = nestedContractService.createC2Contract(c1.getContractAddress(), source, target).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
@@ -82,7 +82,7 @@ public class NestedPrivateContract extends AbstractSpecImplementation {
             source,
             Arrays.asList(target),
             Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())
-        ).toBlocking().first();
+        ).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
@@ -97,7 +97,7 @@ public class NestedPrivateContract extends AbstractSpecImplementation {
             Arrays.stream(target.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
             c1.getContractAddress(),
             BigInteger.valueOf(newValue),
-            Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())).toBlocking().first();
+            Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())).blockingFirst();
         Gauge.writeMessage("Transaction Hash %s", receipt.getTransactionHash());
     }
 }

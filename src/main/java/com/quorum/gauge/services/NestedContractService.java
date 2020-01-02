@@ -25,6 +25,7 @@ import com.quorum.gauge.ext.EnhancedClientTransactionManager;
 import com.quorum.gauge.ext.EthStorageRoot;
 import com.quorum.gauge.sol.C1;
 import com.quorum.gauge.sol.C2;
+import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +37,6 @@ import org.web3j.quorum.tx.ClientTransactionManager;
 import org.web3j.tx.Contract;
 import org.web3j.tx.ReadonlyTransactionManager;
 import org.web3j.tx.exceptions.ContractCallException;
-import rx.Observable;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -72,7 +72,7 @@ public class NestedContractService extends AbstractService {
                 clientTransactionManager,
                 BigInteger.valueOf(0),
                 DEFAULT_GAS_LIMIT,
-                BigInteger.valueOf(initialValue)).observable();
+                BigInteger.valueOf(initialValue)).flowable().toObservable();
         });
     }
 
@@ -90,7 +90,7 @@ public class NestedContractService extends AbstractService {
                 clientTransactionManager,
                 BigInteger.valueOf(0),
                 DEFAULT_GAS_LIMIT,
-                BigInteger.valueOf(initialValue)).observable();
+                BigInteger.valueOf(initialValue)).flowable().toObservable();
         });
     }
 
@@ -113,7 +113,7 @@ public class NestedContractService extends AbstractService {
                 clientTransactionManager,
                 BigInteger.valueOf(0),
                 DEFAULT_GAS_LIMIT,
-                c1Address).observable();
+                c1Address).flowable().toObservable();
         });
     }
 
@@ -174,7 +174,7 @@ public class NestedContractService extends AbstractService {
                 DEFAULT_SLEEP_DURATION_IN_MILLIS);
             return C2.load(contractAddress, client, txManager,
                 BigInteger.valueOf(0),
-                DEFAULT_GAS_LIMIT).restoreFromC1().observable();
+                DEFAULT_GAS_LIMIT).restoreFromC1().flowable().toObservable();
         });
     }
 
@@ -190,7 +190,7 @@ public class NestedContractService extends AbstractService {
                 DEFAULT_SLEEP_DURATION_IN_MILLIS);
             return C1.load(contractAddress, client, txManager,
                 BigInteger.valueOf(0),
-                DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue)).observable();
+                DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue)).flowable().toObservable();
         });
     }
 
@@ -207,7 +207,7 @@ public class NestedContractService extends AbstractService {
                 DEFAULT_SLEEP_DURATION_IN_MILLIS);
             return C2.load(contractAddress, client, txManager,
                 BigInteger.valueOf(0),
-                DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue)).observable();
+                DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue)).flowable().toObservable();
         });
     }
 
@@ -217,7 +217,7 @@ public class NestedContractService extends AbstractService {
             Arrays.asList(contractAddress),
             connectionFactory().getWeb3jService(node),
             EthStorageRoot.class);
-        return request.observable();
+        return request.flowable().toObservable();
     }
 
     public Observable<TransactionReceipt> newContractC2(QuorumNode source, List<QuorumNode> target, String contractAddress, BigInteger newValue, List<PrivacyFlag> flags) {
@@ -233,7 +233,7 @@ public class NestedContractService extends AbstractService {
                 DEFAULT_SLEEP_DURATION_IN_MILLIS);
             return C1.load(contractAddress, client, txManager,
                 BigInteger.valueOf(0),
-                DEFAULT_GAS_LIMIT).newContractC2(newValue).observable();
+                DEFAULT_GAS_LIMIT).newContractC2(newValue).flowable().toObservable();
         });
     }
 }

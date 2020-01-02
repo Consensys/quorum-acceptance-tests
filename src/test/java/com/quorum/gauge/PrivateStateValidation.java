@@ -24,12 +24,12 @@ import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.services.AbstractService;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
-import rx.Observable;
 
 import java.util.Arrays;
 import java.util.Random;
@@ -53,7 +53,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
                 .collect(Collectors.toList()),
             AbstractService.DEFAULT_GAS_LIMIT,
             Arrays.asList(flag)
-        ).toBlocking().first();
+        ).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
@@ -64,7 +64,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
         Contract contract = nestedContractService.createPublicC1Contract(
             initialValue,
             source
-        ).toBlocking().first();
+        ).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
@@ -79,7 +79,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
                 .map(s -> QuorumNode.valueOf(s))
                 .collect(Collectors.toList()),
             Arrays.asList(flag)
-        ).toBlocking().first();
+        ).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
@@ -95,7 +95,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
                 .map(s -> QuorumNode.valueOf(s))
                 .collect(Collectors.toList()),
             Arrays.asList(flag)
-        ).toBlocking().first();
+        ).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
@@ -125,7 +125,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
             () -> nestedContractService.restoreFromC1(node,
                 Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
                 c.getContractAddress(),
-                Arrays.asList(flag)).toBlocking().first()
+                Arrays.asList(flag)).blockingFirst()
         ).as("Expected exception thrown")
             .isNotNull();
     }
@@ -136,7 +136,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
         TransactionReceipt receipt = nestedContractService.restoreFromC1(
             source,
             Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
-            c.getContractAddress(),  Arrays.asList(flag)).toBlocking().first();
+            c.getContractAddress(),  Arrays.asList(flag)).blockingFirst();
 
         assertThat(receipt.getTransactionHash()).isNotBlank();
         assertThat(receipt.getBlockNumber()).isNotEqualTo(currentBlockNumber());
@@ -153,7 +153,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
                 Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
                 c.getContractAddress(),
                 arbitraryValue,
-                Arrays.asList(flag)).toBlocking().first()
+                Arrays.asList(flag)).blockingFirst()
         ).as("Expected exception thrown")
             .isNotNull();
     }
@@ -169,7 +169,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
                 Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
                 c.getContractAddress(),
                 arbitraryValue,
-                Arrays.asList(flag)).toBlocking().first()
+                Arrays.asList(flag)).blockingFirst()
         ).as("Expected exception thrown")
             .isNotNull();
     }
@@ -185,7 +185,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
             Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
             c.getContractAddress(),
             arbitraryValue,
-            Arrays.asList(flag)).onExceptionResumeNext(Observable.just(null)).toBlocking().first();
+            Arrays.asList(flag)).onExceptionResumeNext(Observable.just(null)).blockingFirst();
         if (receipt != null) {
             String txHashKey = contractName + "_transactionHash";
             DataStoreFactory.getSpecDataStore().put(txHashKey, receipt.getTransactionHash());
@@ -208,7 +208,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
             Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
             c.getContractAddress(),
             arbitraryValue,
-            Arrays.asList(flag)).onExceptionResumeNext(Observable.just(null)).toBlocking().first();
+            Arrays.asList(flag)).onExceptionResumeNext(Observable.just(null)).blockingFirst();
         if (receipt != null) {
             String txHashKey = contractName + "_transactionHash";
             DataStoreFactory.getSpecDataStore().put(txHashKey, receipt.getTransactionHash());
@@ -226,7 +226,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
             Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
             c.getContractAddress(),
             arbitraryValue,
-            Arrays.asList(flag)).onExceptionResumeNext(Observable.just(null)).toBlocking().first();
+            Arrays.asList(flag)).onExceptionResumeNext(Observable.just(null)).blockingFirst();
         if (receipt != null) {
             String txHashKey = contractName + "_transactionHash";
             DataStoreFactory.getSpecDataStore().put(txHashKey, receipt.getTransactionHash());
@@ -240,7 +240,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
         TransactionReceipt receipt = nestedContractService.updateC2Contract(
             source,
             Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
-            c.getContractAddress(), newValue,  Arrays.asList(PrivacyFlag.Legacy)).toBlocking().first();
+            c.getContractAddress(), newValue,  Arrays.asList(PrivacyFlag.Legacy)).blockingFirst();
 
         assertThat(receipt.getTransactionHash()).isNotBlank();
         assertThat(receipt.getBlockNumber()).isNotEqualTo(currentBlockNumber());

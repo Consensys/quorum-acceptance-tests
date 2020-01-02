@@ -43,14 +43,14 @@ public class EstimateGas extends AbstractSpecImplementation {
 
     @Step("Estimate gas for public transaction transferring some Wei from a default account in <from> to a default account in <to>")
     public void estimatePublicTransaction(QuorumNode from, QuorumNode to) {
-        EthEstimateGas estimatedValue = transactionService.estimateGasForTransaction(new Random().nextInt(10) + 1, from, to).toBlocking().first();
+        EthEstimateGas estimatedValue = transactionService.estimateGasForTransaction(new Random().nextInt(10) + 1, from, to).blockingFirst();
 
         DataStoreFactory.getScenarioDataStore().put("estimatedValue", estimatedValue);
     }
 
     @Step("Deploy `SimpleContract` public smart contract from a default account in <from>")
     public void createContract(QuorumNode from) {
-        Contract c = contractService.createSimpleContract(0, from, null).toBlocking().first();
+        Contract c = contractService.createSimpleContract(0, from, null).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put("publicContract1", c);
     }
@@ -59,7 +59,7 @@ public class EstimateGas extends AbstractSpecImplementation {
     public void estimatePublicContract(QuorumNode from) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), "publicContract1", Contract.class);
 
-        EthEstimateGas estimatedValue = transactionService.estimateGasForPublicContract(from, c).toBlocking().first();
+        EthEstimateGas estimatedValue = transactionService.estimateGasForPublicContract(from, c).blockingFirst();
 
         DataStoreFactory.getScenarioDataStore().put("estimatedValue", estimatedValue);
     }
@@ -68,7 +68,7 @@ public class EstimateGas extends AbstractSpecImplementation {
     public void estimatePublicContractCall(QuorumNode from) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), "publicContract1", Contract.class);
 
-        EthEstimateGas estimatedValue = transactionService.estimateGasForPublicContractCall(from, c).toBlocking().first();
+        EthEstimateGas estimatedValue = transactionService.estimateGasForPublicContractCall(from, c).blockingFirst();
 
         DataStoreFactory.getScenarioDataStore().put("estimatedValue", estimatedValue);
     }
@@ -76,7 +76,7 @@ public class EstimateGas extends AbstractSpecImplementation {
 
     @Step("Deploy `SimpleContract` private smart contract from a default account in <from> and private for <privateFor>")
     public void createPrivateContract(QuorumNode from, QuorumNode privateFor) {
-        Contract c = contractService.createSimpleContract(0, from, privateFor).toBlocking().first();
+        Contract c = contractService.createSimpleContract(0, from, privateFor).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put("privateContract1", c);
     }
@@ -85,7 +85,7 @@ public class EstimateGas extends AbstractSpecImplementation {
     public void estimatePrivateContract(QuorumNode from, QuorumNode privateFor) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), "privateContract1", Contract.class);
 
-        EthEstimateGas estimatedValue = transactionService.estimateGasForPrivateContract(from, privateFor, c).toBlocking().first();
+        EthEstimateGas estimatedValue = transactionService.estimateGasForPrivateContract(from, privateFor, c).blockingFirst();
 
         DataStoreFactory.getScenarioDataStore().put("estimatedValue", estimatedValue);
     }
@@ -94,7 +94,7 @@ public class EstimateGas extends AbstractSpecImplementation {
     public void estimatePrivateContractCall(QuorumNode from, QuorumNode privateFor) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), "privateContract1", Contract.class);
 
-        EthEstimateGas estimatedValue = transactionService.estimateGasForPrivateContractCall(from, privateFor, c).toBlocking().first();
+        EthEstimateGas estimatedValue = transactionService.estimateGasForPrivateContractCall(from, privateFor, c).blockingFirst();
 
         DataStoreFactory.getScenarioDataStore().put("estimatedValue", estimatedValue);
     }
@@ -125,10 +125,8 @@ public class EstimateGas extends AbstractSpecImplementation {
         final BigInteger estimatedGasLimit = estimatedGasResult.getAmountUsed();
 
         final TransactionReceipt receipt = contractService
-            .updateSimpleContractWithGasLimit(from, Arrays.asList(privateFor), contractAddress, estimatedGasLimit, value,
-                Arrays.asList(PrivacyFlag.Legacy))
-            .toBlocking()
-            .first();
+            .updateSimpleContractWithGasLimit(from, Arrays.asList(privateFor), contractAddress, estimatedGasLimit, value, Arrays.asList(PrivacyFlag.Legacy))
+            .blockingFirst();
 
         assertThat(receipt.getStatus()).isEqualTo("0x1");
     }

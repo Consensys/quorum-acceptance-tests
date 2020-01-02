@@ -1,9 +1,9 @@
-# Verify privacy between <nodeSource> and <nodeTarget> excluding <arbitraryNode> when using a simple smart contract 
+# Verify privacy between <nodeSource> and <nodeTarget> excluding <arbitraryNode> when using a simple smart contract
 
 * Deploy a simple smart contract with initial value "123" in <nodeSource>'s default account and it's private for <nodeTarget>, named this contract as "arbitraryContract1"
 * Transaction Hash is returned for "arbitraryContract1"
-* Transaction Receipt is present in <nodeSource> for "arbitraryContract1"
-* Transaction Receipt is present in <nodeTarget> for "arbitraryContract1"
+* Transaction Receipt is present in <nodeSource> for "arbitraryContract1" from <nodeSource>'s default account
+* Transaction Receipt is present in <nodeTarget> for "arbitraryContract1" from <nodeSource>'s default account
 * "arbitraryContract1" stored in <nodeSource> and <nodeTarget> must have the same storage root
 * "arbitraryContract1" stored in <nodeSource> and "Node3" must not have the same storage root
 * "arbitraryContract1"'s `get()` function execution in <nodeSource> returns "123"

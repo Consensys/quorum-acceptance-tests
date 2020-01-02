@@ -26,12 +26,12 @@ import com.thoughtworks.gauge.ContinueOnFailure;
 import com.thoughtworks.gauge.Gauge;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import io.reactivex.Observable;
+import io.reactivex.schedulers.Schedulers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import rx.Observable;
-import rx.schedulers.Schedulers;
 
 import java.math.BigInteger;
 import java.util.Collections;
@@ -64,13 +64,13 @@ public class Istanbul extends AbstractSpecImplementation {
 
         Gauge.writeMessage(String.format("Stopping %d validators from total of %d validators", numOfValidatorsToStop, totalNodesLive));
 
-        List<QuorumNode> nodes = Observable.from(QuorumNode.values()).take(totalNodesConfigured).toList().toBlocking().first();
+        List<QuorumNode> nodes = Observable.fromArray(QuorumNode.values()).take(totalNodesConfigured).toList().blockingGet();
         Collections.shuffle(nodes);
         List<QuorumNode> stoppedNodes = nodes.subList(0, numOfValidatorsToStop);
-        BigInteger lastBlockNumber = Observable.from(stoppedNodes)
+        BigInteger lastBlockNumber = Observable.fromIterable(stoppedNodes)
                 .flatMap(node -> istanbulService.stopMining(node).subscribeOn(Schedulers.io()))
                 .flatMap(s -> utilService.getCurrentBlockNumber())
-                .toBlocking().last().getBlockNumber();
+                .blockingLast().getBlockNumber();
 
         DataStoreFactory.getScenarioDataStore().put("stoppedNodes", stoppedNodes);
         DataStoreFactory.getScenarioDataStore().put("lastBlockNumber", lastBlockNumber);
@@ -81,7 +81,7 @@ public class Istanbul extends AbstractSpecImplementation {
     public void verifyConsensusStopped() {
         BigInteger lastBlockNumber = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "lastBlockNumber", BigInteger.class);
         // wait for 10 seconds and get the block number
-        BigInteger newBlockNumber = Observable.timer(10, TimeUnit.SECONDS).flatMap(x -> utilService.getCurrentBlockNumber()).toBlocking().first().getBlockNumber();
+        BigInteger newBlockNumber = Observable.timer(10, TimeUnit.SECONDS).flatMap(x -> utilService.getCurrentBlockNumber()).blockingFirst().getBlockNumber();
 
         assertThat(newBlockNumber).isEqualTo(lastBlockNumber);
     }
@@ -89,8 +89,8 @@ public class Istanbul extends AbstractSpecImplementation {
     @Step("Resume the stopped validators")
     public void startValidators() {
         List<QuorumNode> nodes = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "stoppedNodes", List.class);
-        Observable.from(nodes)
+        Observable.fromIterable(nodes)
                 .flatMap(node -> istanbulService.startMining(node).subscribeOn(Schedulers.io()))
-                .toBlocking().first();
+                .blockingFirst();
     }
 }

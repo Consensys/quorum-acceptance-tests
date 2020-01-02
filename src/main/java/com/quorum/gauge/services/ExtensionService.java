@@ -4,12 +4,11 @@ import com.quorum.gauge.common.PrivacyFlag;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.ext.EnhancedClientTransactionManager;
 import com.quorum.gauge.ext.contractextension.*;
+import io.reactivex.Observable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.Request;
 import org.web3j.quorum.methods.request.PrivateTransaction;
-import rx.Observable;
-import rx.observables.BlockingObservable;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -43,8 +42,7 @@ public class ExtensionService extends AbstractService {
         final List<String> voterDefaultAddresses = voters
             .stream()
             .map(accountService::getDefaultAccountAddress)
-            .map(Observable::toBlocking)
-            .map(BlockingObservable::first)
+            .map(Observable::blockingFirst)
             .collect(Collectors.toList());
 
         final List<String> privateFor = Stream
@@ -55,7 +53,7 @@ public class ExtensionService extends AbstractService {
             .collect(Collectors.toList());
 
         final EnhancedClientTransactionManager.EnhancedPrivateTransaction transactionArgs = new EnhancedClientTransactionManager.EnhancedPrivateTransaction(
-            accountService.getDefaultAccountAddress(node).toBlocking().first(),
+            accountService.getDefaultAccountAddress(node).blockingFirst(),
             null, null, null, BigInteger.ZERO, null, null, privateFor, singletonList(privacyFlag)
         );
 
@@ -73,7 +71,7 @@ public class ExtensionService extends AbstractService {
             QuorumExtendContract.class
         );
 
-        return request.observable();
+        return request.flowable().toObservable();
     }
 
     public Observable<QuorumVoteOnContract> voteOnExtension(final QuorumNode node,
@@ -88,7 +86,7 @@ public class ExtensionService extends AbstractService {
             .collect(Collectors.toList());
 
         final PrivateTransaction transactionArgs = new EnhancedClientTransactionManager.EnhancedPrivateTransaction(
-            accountService.getDefaultAccountAddress(node).toBlocking().first(),
+            accountService.getDefaultAccountAddress(node).blockingFirst(),
             null, BigInteger.valueOf(4700000), null, BigInteger.ZERO, null, null, privateFor, singletonList(privacyFlag)
         );
 
@@ -97,7 +95,7 @@ public class ExtensionService extends AbstractService {
             Stream.of(address, vote, transactionArgs).collect(Collectors.toList()),
             connectionFactory().getWeb3jService(node),
             QuorumVoteOnContract.class
-        ).observable();
+        ).flowable().toObservable();
     }
 
     public Observable<QuorumUpdateParties> updateParties(final QuorumNode initiator,
@@ -112,7 +110,7 @@ public class ExtensionService extends AbstractService {
             .collect(Collectors.toList());
 
         final PrivateTransaction transactionArgs = new EnhancedClientTransactionManager.EnhancedPrivateTransaction(
-            accountService.getDefaultAccountAddress(initiator).toBlocking().first(),
+            accountService.getDefaultAccountAddress(initiator).blockingFirst(),
             null, null, null, BigInteger.ZERO, null, null, privateFor, singletonList(privacyFlag)
         );
 
@@ -121,7 +119,7 @@ public class ExtensionService extends AbstractService {
             Stream.of(address, transactionArgs).collect(Collectors.toList()),
             connectionFactory().getWeb3jService(initiator),
             QuorumUpdateParties.class
-        ).observable();
+        ).flowable().toObservable();
 
     }
 
@@ -132,7 +130,7 @@ public class ExtensionService extends AbstractService {
             emptyList(),
             connectionFactory().getWeb3jService(node),
             QuorumActiveExtensionContracts.class
-        ).observable();
+        ).flowable().toObservable();
 
     }
 
@@ -147,7 +145,7 @@ public class ExtensionService extends AbstractService {
             .collect(Collectors.toList());
 
         final PrivateTransaction transactionArgs = new EnhancedClientTransactionManager.EnhancedPrivateTransaction(
-            accountService.getDefaultAccountAddress(node).toBlocking().first(),
+            accountService.getDefaultAccountAddress(node).blockingFirst(),
             null, null, null, BigInteger.ZERO, null, null, privateFor, singletonList(privacyFlag)
         );
 
@@ -156,7 +154,7 @@ public class ExtensionService extends AbstractService {
             Stream.of(address, transactionArgs).collect(Collectors.toList()),
             connectionFactory().getWeb3jService(node),
             QuorumCancel.class
-        ).observable();
+        ).flowable().toObservable();
 
     }
 

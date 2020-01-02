@@ -24,13 +24,13 @@ import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.services.*;
 import com.thoughtworks.gauge.datastore.DataStore;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import io.reactivex.Observable;
+import io.reactivex.Scheduler;
+import io.reactivex.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import rx.Observable;
-import rx.Scheduler;
-import rx.schedulers.Schedulers;
 
 import java.math.BigInteger;
 import java.util.concurrent.Executor;
@@ -61,6 +61,9 @@ public abstract class AbstractSpecImplementation {
     protected AccountService accountService;
 
     @Autowired
+    protected PrivacyService privacyService;
+
+    @Autowired
     protected OkHttpClient okHttpClient;
 
     @Autowired
@@ -77,7 +80,7 @@ public abstract class AbstractSpecImplementation {
     }
 
     protected void saveCurrentBlockNumber() {
-        BigInteger blockNumber = utilService.getCurrentBlockNumber().toBlocking().first().getBlockNumber();
+        BigInteger blockNumber = utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber();
         DataStoreFactory.getScenarioDataStore().put("blocknumber", blockNumber);
     }
 
@@ -129,12 +132,12 @@ public abstract class AbstractSpecImplementation {
             }
             return Observable.just(true);
         }).retryWhen(
-            attempts -> attempts.zipWith(Observable.range(1, untilBlockHeight), (total, i) -> i)
-                .flatMap(i -> Observable.timer(3, TimeUnit.SECONDS))
-                .doOnCompleted(() -> {
-                    throw new RuntimeException("Timed out! Can't wait until block height is " + untilBlockHeight + " higher. Last block height was " + lastBlockHeight.get());
-                })
-        ).toBlocking().first();
+                attempts -> attempts.zipWith(Observable.range(1, untilBlockHeight), (total, i) -> i)
+                        .flatMap(i -> Observable.timer(3, TimeUnit.SECONDS))
+                        .doOnComplete(() -> {
+                            throw new RuntimeException("Timed out! Can't wait until block height is " + untilBlockHeight + " higher. Last block height was " + lastBlockHeight.get());
+                        })
+        ).blockingFirst();
     }
 
     // created a fixed thread pool executor and inject quorum connection factory into the scheduled thread

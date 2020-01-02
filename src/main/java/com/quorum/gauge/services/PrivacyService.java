@@ -23,11 +23,19 @@ import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.common.Wallet;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 @Service
 public class PrivacyService extends AbstractService {
     public String id(QuorumNode node) {
-        return getQuorumNodeConfig(node).getPrivacyAddress();
+        String privacyAddress = getQuorumNodeConfig(node).getPrivacyAddress();
+        if (StringUtils.isEmpty(privacyAddress)) {
+            if (getQuorumNodeConfig(node).getNamedPrivacyAddress().isEmpty()) {
+                throw new RuntimeException("no privacy address is configured");
+            }
+            privacyAddress = getQuorumNodeConfig(node).getNamedPrivacyAddress().values().iterator().next();
+        }
+        return privacyAddress;
     }
 
     public String thirdPartyUrl(QuorumNode node) {

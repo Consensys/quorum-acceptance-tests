@@ -1,6 +1,6 @@
-# Private raw smart contract when signed externally
+# Private raw smart contract when signed using the personal_signTransaction API
 
- Tags: basic, raw, externally-signed, private
+ Tags: basic, raw, personal-api-signed, private
 
 This is to verify that a private smart contract between 2 parties are not accessible by others.
 A simple smart contract is to store a int value and to provide `get()` and `set()` functions.
@@ -24,15 +24,10 @@ contract SimpleStorage {
 }
 ```
 
-* Deploy a simple smart contract with initial value "23" signed by external wallet "Wallet1" in "Node1" and it's private for "Node4", name this contract as "contract31"
-
-## Contract is mined
-
- Tags: raw
-
-* Transaction Hash is returned for "contract31"
-* Transaction Receipt is present in "Node1" for "contract31" from external wallet "Wallet1"
-* Transaction Receipt is present in "Node4" for "contract31" from external wallet "Wallet1"
+* Deploy a simple smart contract with initial value "23" signed with "personal_signTransaction" using "Node1"'s default account and it's private for "Node4", name this contract as "contract31"
+* Transaction Hash is returned for API signed "contract31"
+* Transaction Receipt is present in "Node1" for eth_signTransaction signed "contract31" from "Node1"'s default account
+* Transaction Receipt is present in "Node4" for eth_signTransaction signed "contract31" from "Node1"'s default account
 
 ## Storage Root storing private smart contracts must be the same
 
@@ -61,7 +56,7 @@ contract SimpleStorage {
 
  Tags: raw
 
-* Execute "contract31"'s `set()` function with new value "5" signed by external wallet "Wallet8" in "Node1" and it's private for "Node4"
+* Execute "contract31"'s `set()` function with new value "5" signed with "personal_signTransaction" using "Node1"'s default account and it's private for "Node4"
 * "contract31"'s `get()` function execution in "Node1" returns "5"
 * "contract31"'s `get()` function execution in "Node4" returns "5"
 * "contract31"'s `get()` function execution in "Node3" returns "0"

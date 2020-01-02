@@ -40,16 +40,14 @@ public abstract class AbstractService {
     protected QuorumNodeConnectionFactory connectionFactory() {
         if (Context.getConnectionFactory() == null) {
             return connectionFactory;
-        } else {
-            return Context.getConnectionFactory();
         }
+        return Context.getConnectionFactory();
     }
 
     protected QuorumNetworkProperty networkProperty() {
         if (Context.getNetworkProperty() == null) {
             return networkProperty;
-        } else {
-            return Context.getNetworkProperty();
         }
+        return Context.getNetworkProperty();
     }
 }

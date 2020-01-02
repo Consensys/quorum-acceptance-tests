@@ -24,15 +24,15 @@ import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import io.reactivex.Scheduler;
+import io.reactivex.functions.Function;
+import io.reactivex.schedulers.Schedulers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
-import rx.Observable;
-import rx.Scheduler;
-import rx.functions.FuncN;
-import rx.schedulers.Schedulers;
+import io.reactivex.Observable;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -48,7 +48,7 @@ public class PublicSmartContract extends AbstractSpecImplementation {
 
     @Step("Deploy `ClientReceipt` smart contract from a default account in <node>, named this contract as <contractName>")
     public void deployClientReceiptSmartContract(QuorumNode node, String contractName) {
-        Contract c = contractService.createClientReceiptSmartContract(node).toBlocking().first();
+        Contract c = contractService.createClientReceiptSmartContract(node).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, c);
         DataStoreFactory.getScenarioDataStore().put(contractName, c);
@@ -58,7 +58,7 @@ public class PublicSmartContract extends AbstractSpecImplementation {
     public void setupContract(int initialValue, QuorumNode source, String contractName) {
         saveCurrentBlockNumber();
         logger.debug("Setting up contract from {}", source);
-        Contract contract = contractService.createSimpleContract(initialValue, source, null).toBlocking().first();
+        Contract contract = contractService.createSimpleContract(initialValue, source, null).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
@@ -80,7 +80,7 @@ public class PublicSmartContract extends AbstractSpecImplementation {
         for (int i = 0; i < count; i++) {
             observables.add(contractService.updateClientReceipt(node, c.getContractAddress(), BigInteger.TEN).subscribeOn(scheduler));
         }
-        List<TransactionReceipt> receipts = Observable.zip(observables, objects -> Observable.from(objects).map(o -> (TransactionReceipt) o).toList().toBlocking().first()).toBlocking().first();
+        List<TransactionReceipt> receipts = Observable.zip(observables, objects -> Observable.fromArray(objects).map(o -> (TransactionReceipt) o).toList().blockingGet()).blockingFirst();
 
         DataStoreFactory.getScenarioDataStore().put("receipts", receipts);
     }
@@ -106,7 +106,7 @@ public class PublicSmartContract extends AbstractSpecImplementation {
 
         AtomicInteger actualTxCount = new AtomicInteger();
         AtomicInteger actualEventCount = new AtomicInteger();
-        Observable.zip(receiptsInNode, (FuncN<Void>) args -> {
+        Observable.zip(receiptsInNode, args -> {
             for (Object o : args) {
                 TransactionReceipt r = (TransactionReceipt) o;
                 assertThat(r.isStatusOK()).isTrue();
@@ -114,8 +114,10 @@ public class PublicSmartContract extends AbstractSpecImplementation {
                 actualTxCount.getAndIncrement();
                 actualEventCount.addAndGet(r.getLogs().size());
             }
-            return null;
-        }).toBlocking().first();
+            // Observable.zip complains when it receives a null result,
+            // but we dont care about the real result so return a dummy instead
+            return new Object();
+        }).blockingFirst();
 
         assertThat(actualTxCount.get()).as("Transaction Count").isEqualTo(expectedTxCount);
         assertThat(actualEventCount.get()).as("Log Event Count").isEqualTo(expectedEventCount);
@@ -138,8 +140,7 @@ public class PublicSmartContract extends AbstractSpecImplementation {
             logger.warn("[Travis] Current block height = {}, targetBlockHeight = {}", currentBlockHeight.intValue(), targetBlockHeight);
             currentBlockHeight = Observable.zip(contractObservables, args -> args.length)
                     .flatMap(i -> utilService.getCurrentBlockNumber())
-                    .toBlocking()
-                    .first()
+                    .blockingFirst()
                     .getBlockNumber();
         }
     }
