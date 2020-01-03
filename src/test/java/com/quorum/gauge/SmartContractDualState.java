@@ -127,7 +127,7 @@ public class SmartContractDualState extends AbstractSpecImplementation {
             logger.debug("{} {} {}, txHash = {}", contractNameKey, contractName, methodName, tr.getTransactionHash());
         } catch (Exception txe) {
             logger.debug("expected exception", txe);
-            assertThat(txe).hasMessageContaining("Error processing transaction request");
+            assertThat(txe).hasMessageContaining("Transaction has failed with status: 0x0");
         }
     }
 
