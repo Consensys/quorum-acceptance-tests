@@ -8,18 +8,16 @@ import com.quorum.gauge.services.ExtensionService;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStore;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
-import io.reactivex.functions.Predicate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Service
@@ -214,11 +212,12 @@ public class ContractExtension extends AbstractSpecImplementation {
     private Optional<TransactionReceipt> getTransactionReceipt(final QuorumNode node, final String transactionHash) {
         return transactionService
             .getTransactionReceipt(node, transactionHash)
-            .repeatWhen(completed -> completed.delay(2, SECONDS))
-            .takeUntil((Predicate<? super EthGetTransactionReceipt>) ethGetTransactionReceipt -> ethGetTransactionReceipt.getTransactionReceipt().isPresent())
-            .timeout(10, SECONDS)
-            .blockingFirst()
+            .repeatWhen(completed -> completed.delay(2, TimeUnit.SECONDS))
+            .takeUntil(ethGetTransactionReceipt -> {
+                return ethGetTransactionReceipt.getTransactionReceipt().isPresent();
+            })
+            .timeout(30, TimeUnit.SECONDS)
+            .blockingLast()
             .getTransactionReceipt();
     }
-
 }
