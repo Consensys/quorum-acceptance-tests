@@ -72,6 +72,50 @@ public class ContractExtension extends AbstractSpecImplementation {
         Thread.sleep(1000);
 
     }
+    @Step("Create a <privacyFlag> extension to <newNode> from <creator> with only <voters> as voters for contract <contractName>")
+        public void createNewContractExtensionInvalidProposition(final PrivacyFlag privacyFlag,
+                                                          final QuorumNode newNode,
+                                                          final QuorumNode creator,
+                                                          final String allVoters,
+                                                          final String contractName) throws InterruptedException {
+
+            DataStoreFactory.getScenarioDataStore().put("privacyFlag", privacyFlag);
+
+            final List<QuorumNode> voters = Stream
+                .of(allVoters.split(","))
+                .map(QuorumNode::valueOf)
+                .collect(Collectors.toList());
+
+            final Set<QuorumNode> allNodes = voters.stream().collect(Collectors.toSet());
+
+            /*final Set<QuorumNode> allNodes = Stream
+                .concat(voters.stream(), Stream.of(newNode, creator))
+                .collect(Collectors.toSet());*/
+            DataStoreFactory.getScenarioDataStore().put("extensionAllNodes", allNodes);
+
+            final Contract existingContract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
+
+            final QuorumExtendContract result = extensionService
+                .initiateContractExtension(creator, existingContract.getContractAddress(), newNode, new ArrayList<>(allNodes), privacyFlag)
+                .blockingFirst();
+
+    //        System.err.println(result.getError().getMessage());
+            assertThat(result.getError()).isNull();
+
+            final String transactionHash = result.getResult();
+
+            final Optional<TransactionReceipt> transactionReceipt = this.getTransactionReceipt(creator, transactionHash);
+
+            assertThat(transactionReceipt.isPresent()).isTrue();
+            assertThat(transactionReceipt.get().getStatus()).isEqualTo("0x1");
+
+            final String contractAddress = transactionReceipt.get().getContractAddress();
+
+            DataStoreFactory.getScenarioDataStore().put(contractName + "extensionAddress", contractAddress);
+
+            Thread.sleep(1000);
+
+        }
 
     @Step("<newNode> accepts the offer to extend the contract <contractName>")
     public void acceptContractExtension(final QuorumNode newNode, final String contractName) {

@@ -140,3 +140,51 @@ contract C2 {
 * "Node1" has "contract4Extension" listed in all active extensions
 * "Node2" cancels "contract4Extension"
 * "Node1" does not see "contract4Extension" listed in all active extensions
+
+## Extend a contract to a new party - extending contract after initial state change
+
+* Deploy a "PartyProtection" C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract4Extension"
+* "contract4Extension" is deployed "successfully" in "Node2,Node4"
+* "contract4Extension"'s `get()` function execution in "Node2" returns "42"
+* "contract4Extension"'s `get()` function execution in "Node4" returns "42"
+* "contract4Extension"'s `get()` function execution in "Node1" returns "0"
+
+* Execute "contract4Extension"'s `set()` function with new value "129" in "Node2" and it's private for "Node4"
+* "contract4Extension"'s `get()` function execution in "Node2" returns "129"
+* "contract4Extension"'s `get()` function execution in "Node4" returns "129"
+* "contract4Extension"'s `get()` function execution in "Node1" returns "0"
+
+* Execute "contract4Extension"'s `set()` function with new value "999" in "Node2" and it's private for "Node4"
+* "contract4Extension"'s `get()` function execution in "Node2" returns "999"
+* "contract4Extension"'s `get()` function execution in "Node4" returns "999"
+* "contract4Extension"'s `get()` function execution in "Node1" returns "0"
+
+* Create a "PartyProtection" extension to "Node1" from "Node2" with "Node2,Node4" as voters for contract "contract4Extension"
+* "Node1" accepts the offer to extend the contract "contract4Extension"
+* "Node4" votes "true" to extending contract "contract4Extension"
+
+* "contract4Extension"'s `get()` function execution in "Node2" returns "8520679"
+* "contract4Extension"'s `get()` function execution in "Node4" returns "999"
+* "contract4Extension"'s `get()` function execution in "Node1" returns "8520679"
+
+## Extend a contract to a new party - state corruption for initiator when recepient voter account is not given
+* Deploy a "PartyProtection" C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract5Extension"
+* "contract5Extension" is deployed "successfully" in "Node2,Node4"
+* "contract5Extension"'s `get()` function execution in "Node2" returns "42"
+* "contract5Extension"'s `get()` function execution in "Node4" returns "42"
+* "contract5Extension"'s `get()` function execution in "Node1" returns "0"
+
+* Execute "contract5Extension"'s `set()` function with new value "129" in "Node2" and it's private for "Node4"
+* "contract5Extension"'s `get()` function execution in "Node2" returns "129"
+* "contract5Extension"'s `get()` function execution in "Node4" returns "129"
+* "contract5Extension"'s `get()` function execution in "Node1" returns "0"
+
+* Execute "contract5Extension"'s `set()` function with new value "999" in "Node2" and it's private for "Node4"
+* "contract5Extension"'s `get()` function execution in "Node2" returns "999"
+* "contract5Extension"'s `get()` function execution in "Node4" returns "999"
+* "contract5Extension"'s `get()` function execution in "Node1" returns "0"
+
+* Create a "PartyProtection" extension to "Node1" from "Node2" with only "Node2,Node4" as voters for contract "contract5Extension"
+* "Node4" votes "true" to extending contract "contract5Extension"
+* "contract5Extension"'s `get()` function execution in "Node2" returns "8520679"
+
