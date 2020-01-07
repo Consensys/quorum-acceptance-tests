@@ -97,6 +97,7 @@ contract C2 {
 * Create a "PartyProtection" extension to "Node1" from "Node2" with "Node2,Node4" as voters for contract "contract1Extension"
 * "Node1" accepts the offer to extend the contract "contract1Extension"
 * "Node4" votes "true" to extending contract "contract1Extension"
+* "Node2" votes "true" to extending contract "contract1Extension"
 
 * "contract1Extension"'s `get()` function execution in "Node1" returns "42"
 
@@ -112,6 +113,7 @@ contract C2 {
 * "Node4" votes "true" to extending contract "contract2Extension"
 
 * "contract2Extension"'s `get()` function execution in "Node1" returns "0"
+* "Node2" cancels "contract2Extension"
 
 ## Voter votes to not extend
 
@@ -162,6 +164,7 @@ contract C2 {
 * Create a "PartyProtection" extension to "Node1" from "Node2" with "Node2,Node4" as voters for contract "contract4Extension"
 * "Node1" accepts the offer to extend the contract "contract4Extension"
 * "Node4" votes "true" to extending contract "contract4Extension"
+* "Node2" votes "true" to extending contract "contract4Extension"
 
 * "contract4Extension"'s `get()` function execution in "Node2" returns "999"
 * "contract4Extension"'s `get()` function execution in "Node4" returns "999"
@@ -186,6 +189,7 @@ contract C2 {
 
 * Create a "PartyProtection" extension to "Node1" from "Node2" with only "Node2,Node4" as voters for contract "contract5Extension"
 * "Node4" votes "true" to extending contract "contract5Extension"
+* "Node2" votes "true" to extending contract "contract5Extension"
 * "contract5Extension"'s `get()` function execution in "Node2" returns "999"
 * "contract5Extension"'s `get()` function execution in "Node4" returns "999"
 * "contract5Extension"'s `get()` function execution in "Node1" returns "0"
