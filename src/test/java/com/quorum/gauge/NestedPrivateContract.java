@@ -100,4 +100,14 @@ public class NestedPrivateContract extends AbstractSpecImplementation {
             Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())).blockingFirst();
         Gauge.writeMessage("Transaction Hash %s", receipt.getTransactionHash());
     }
+
+    @Step("Wait for <seconds> Seconds")
+    public void waitForSomeSeconds(int seconds) {
+        try {
+            logger.debug("wating for {} seconds", seconds);
+            Thread.sleep(seconds * 1000);
+            logger.debug("wait is over");
+        } catch (InterruptedException e) {
+        }
+    }
 }
