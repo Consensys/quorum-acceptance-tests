@@ -264,4 +264,36 @@ public class ContractExtension extends AbstractSpecImplementation {
             .blockingLast()
             .getTransactionReceipt();
     }
+
+    @Step("Wait for <contractName> to disappear from active extension in <node>")
+    public void extensionCompleted(final String contractName, final QuorumNode node) {
+
+        final Contract contract = mustHaveValue(contractName, Contract.class);
+
+        int count = 0;
+
+        while (true) {
+            count++;
+            final QuorumActiveExtensionContracts result = this.extensionService
+                .getExtensionContracts(node)
+                .blockingFirst();
+
+            final Optional<Map<Object, Object>> first = result.getResult()
+                .stream()
+                .filter(contractStatus -> contractStatus.containsValue(contract.getContractAddress()))
+                .findFirst();
+            if ((!first.isPresent()) || (count > 25)) {
+                break;
+            }
+            else {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+    }
+
 }
