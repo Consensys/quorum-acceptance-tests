@@ -1,18 +1,23 @@
 package com.quorum.gauge;
 
 import com.quorum.gauge.common.PrivacyFlag;
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
+import com.quorum.gauge.ext.NodeInfo;
 import com.quorum.gauge.ext.contractextension.*;
 import com.quorum.gauge.services.ExtensionService;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStore;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import io.reactivex.Observable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -265,6 +270,7 @@ public class ContractExtension extends AbstractSpecImplementation {
             .getTransactionReceipt();
     }
 
+
     @Step("Wait for <contractName> to disappear from active extension in <node>")
     public void extensionCompleted(final String contractName, final QuorumNode node) {
 
@@ -293,6 +299,28 @@ public class ContractExtension extends AbstractSpecImplementation {
                 }
             }
         }
+
+        final DataStore store = DataStoreFactory.getScenarioDataStore();
+
+        final String contractAddress = mustHaveValue(store, contractName + "extensionAddress", String.class);
+        String status = extensionService.getExtensionStatus(node, contractAddress);
+        int i = 0;
+        if (!status.equals("DONE")) {
+            while (true){
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                i++;
+                status = extensionService.getExtensionStatus(node, contractAddress);
+                if ((i > 25) || status.equals("DONE"))  {
+                    break;
+                }
+
+            }
+        }
+
 
     }
 

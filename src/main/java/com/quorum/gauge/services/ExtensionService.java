@@ -1,8 +1,11 @@
 package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.PrivacyFlag;
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.ext.EnhancedClientTransactionManager;
+import com.quorum.gauge.ext.NodeInfo;
+import com.quorum.gauge.ext.RaftLeader;
 import com.quorum.gauge.ext.contractextension.*;
 import io.reactivex.Observable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +15,7 @@ import org.web3j.quorum.methods.request.PrivateTransaction;
 
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -91,7 +95,7 @@ public class ExtensionService extends AbstractService {
         );
 
         return new Request<>(
-            "quorumExtension_voteOnContract",
+            "quorumExtension_approveContractExtension",
             Stream.of(address, vote, transactionArgs).collect(Collectors.toList()),
             connectionFactory().getWeb3jService(node),
             QuorumVoteOnContract.class
@@ -150,11 +154,43 @@ public class ExtensionService extends AbstractService {
         );
 
         return new Request<>(
-            "quorumExtension_cancel",
+            "quorumExtension_cancelExtension",
             Stream.of(address, transactionArgs).collect(Collectors.toList()),
             connectionFactory().getWeb3jService(node),
             QuorumCancel.class
         ).flowable().toObservable();
+
+    }
+
+    public String getConsensusUsed(QuorumNode node) {
+        Map<QuorumNode, QuorumNetworkProperty.Node> nodes = connectionFactory().getNetworkProperty().getNodes();
+        Request<?, NodeInfo> nodeInfoRequest = new Request<>(
+            "admin_nodeInfo",
+            null,
+            connectionFactory().getWeb3jService(node),
+            NodeInfo.class
+        );
+
+        NodeInfo nodeInfo = nodeInfoRequest.flowable().toObservable().blockingFirst();
+        String consensus = nodeInfo.getConsensus();
+        return consensus;
+    }
+
+    public String getExtensionStatus(final QuorumNode node,
+                                                    final String address) {
+
+        final List<Object> arguments = Stream.of(
+            address
+        ).collect(Collectors.toList());
+
+        Request<?, QuorumGetExtensionStatus> extensionInfo = new Request<>(
+            "quorumExtension_getExtensionStatus",
+            arguments,
+            connectionFactory().getWeb3jService(node),
+            QuorumGetExtensionStatus.class
+        );
+        return extensionInfo.flowable().toObservable().blockingFirst().getResult();
+
 
     }
 
