@@ -193,3 +193,32 @@ contract C2 {
 * "contract6Extension"'s `get()` function execution in "Node2" returns "999"
 * "contract6Extension"'s `get()` function execution in "Node4" returns "999"
 * "contract6Extension"'s `get()` function execution in "Node1" returns "0"
+
+## Re-extend an alraedy extende contract - state change should not happen
+* Deploy a "PartyProtection" C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract7Extension"
+* "contract7Extension" is deployed "successfully" in "Node2,Node4"
+* "contract7Extension"'s `get()` function execution in "Node2" returns "42"
+* "contract7Extension"'s `get()` function execution in "Node4" returns "42"
+* "contract7Extension"'s `get()` function execution in "Node1" returns "0"
+
+* Create a "PartyProtection" extension to "Node1" from "Node2" with "Node2,Node4" as voters for contract "contract7Extension"
+* "Node1" accepts the offer to extend the contract "contract7Extension"
+* "Node4" votes "true" to extending contract "contract7Extension"
+* Wait for "contract7Extension" to disappear from active extension in "Node1"
+* "contract7Extension"'s `get()` function execution in "Node2" returns "42"
+* "contract7Extension"'s `get()` function execution in "Node4" returns "42"
+* "contract7Extension"'s `get()` function execution in "Node1" returns "42"
+
+* Execute "contract7Extension"'s `set()` function with new value "999" in "Node2" and it's private for "Node4"
+* "contract7Extension"'s `get()` function execution in "Node2" returns "999"
+* "contract7Extension"'s `get()` function execution in "Node4" returns "999"
+* "contract7Extension"'s `get()` function execution in "Node1" returns "42"
+
+* Create a "PartyProtection" extension to "Node1" from "Node2" with "Node2,Node4" as voters for contract "contract7Extension"
+* "Node1" accepts the offer to extend the contract "contract7Extension"
+* "Node4" votes "true" to extending contract "contract7Extension"
+* Wait for "contract7Extension" to disappear from active extension in "Node1"
+* "contract7Extension"'s `get()` function execution in "Node2" returns "999"
+* "contract7Extension"'s `get()` function execution in "Node4" returns "999"
+* "contract7Extension"'s `get()` function execution in "Node1" returns "42"
+
