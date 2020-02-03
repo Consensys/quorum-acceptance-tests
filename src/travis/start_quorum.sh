@@ -1,7 +1,8 @@
 #!/bin/bash
 
 TERRAFORM_CMD=${TERRAFORM_CMD:-terraform}
-
+# Read all IPs that travis VMs might have to allow access to Cloud VM
+export TF_VAR_access_bastion_cidr_blocks="[$(dig +short nat.travisci.net | sed -e 's/$/\/32\"/g' | sed -e 's/^/\"/g' | paste -s -d, -)]"
 echo "Provisioning Quorum Network"
 pushd ${QUORUM_CLOUD_TEMPLATES_DIR}/_terraform_init > /dev/null
 ${TERRAFORM_CMD} init > /dev/null
