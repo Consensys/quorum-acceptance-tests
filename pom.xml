@@ -27,7 +27,7 @@
 
         <!-- there's an issue with code gen in web3j 3.5.0-->
         <web3j.version>4.2.0</web3j.version>
-        <gauge-java.version>0.7.1</gauge-java.version>
+        <gauge-java.version>0.7.4</gauge-java.version>
 
         <!-- plugins -->
         <gauge-maven-plugin.version>1.4.1</gauge-maven-plugin.version>
@@ -48,7 +48,6 @@
             <groupId>com.thoughtworks.gauge</groupId>
             <artifactId>gauge-java</artifactId>
             <version>${gauge-java.version}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

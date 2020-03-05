@@ -20,6 +20,7 @@
 package com.quorum.gauge.core;
 
 import com.quorum.gauge.common.Context;
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.services.QuorumBootService;
 import com.quorum.gauge.services.UtilService;
 import com.thoughtworks.gauge.*;
@@ -38,6 +39,9 @@ import java.math.BigInteger;
 @Service
 public class ExecutionHooks {
     private static Logger logger = LoggerFactory.getLogger(ExecutionHooks.class);
+
+    @Autowired
+    QuorumNetworkProperty networkProperty;
 
     @Autowired
     UtilService utilService;
@@ -83,6 +87,11 @@ public class ExecutionHooks {
         }
         QuorumBootService.QuorumNetwork quorumNetwork = (QuorumBootService.QuorumNetwork) DataStoreFactory.getScenarioDataStore().get("network_" + networkName);
         Context.setConnectionFactory(quorumNetwork.connectionFactory);
+    }
+
+    @BeforeSuite
+    public void setNetworkProperties() {
+        DataStoreFactory.getSuiteDataStore().put("networkProperties", networkProperty);
     }
 
     @AfterStep(tags = "network-setup")
