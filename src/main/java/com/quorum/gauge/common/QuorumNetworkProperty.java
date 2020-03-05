@@ -66,6 +66,14 @@ public class QuorumNetworkProperty {
         this.wallets = wallets;
     }
 
+    public Map<String, Node> getNodesAsString() {
+        Map<String, Node> converted = new HashMap<>();
+        for (Map.Entry<QuorumNode, Node> quorumNodeNodeEntry : nodes.entrySet()) {
+            converted.put(quorumNodeNodeEntry.getKey().name(), quorumNodeNodeEntry.getValue());
+        }
+        return converted;
+    }
+
     public static class SocksProxy {
         private String host;
         private int port;
