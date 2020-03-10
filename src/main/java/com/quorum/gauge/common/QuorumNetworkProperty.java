@@ -20,6 +20,7 @@
 package com.quorum.gauge.common;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.quorum.gauge.common.config.WalletData;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -30,7 +31,7 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "quorum")
 public class QuorumNetworkProperty {
     private Map<QuorumNode, Node> nodes = new HashMap<>();
-    private Map<Wallet, WalletData> wallets = new HashMap<>();
+    private Map<String, WalletData> wallets = new HashMap<>();
     private SocksProxy socksProxy;
     private String bootEndpoint;
 
@@ -58,11 +59,11 @@ public class QuorumNetworkProperty {
         this.bootEndpoint = bootEndpoint;
     }
 
-    public Map<Wallet, WalletData> getWallets() {
+    public Map<String, WalletData> getWallets() {
         return wallets;
     }
 
-    public void setWallets(Map<Wallet, WalletData> wallets) {
+    public void setWallets(final Map<String, WalletData> wallets) {
         this.wallets = wallets;
     }
 
@@ -150,29 +151,6 @@ public class QuorumNetworkProperty {
 
         public void setThirdPartyUrl(String thirdPartyUrl) {
             this.thirdPartyUrl = thirdPartyUrl;
-        }
-    }
-
-    public static class WalletData {
-        @JsonProperty("path")
-        private String walletPath;
-        @JsonProperty("pass")
-        private String walletPass;
-
-        public String getWalletPath() {
-            return walletPath;
-        }
-
-        public void setWalletPath(String walletPath) {
-            this.walletPath = walletPath;
-        }
-
-        public String getWalletPass() {
-            return walletPass;
-        }
-
-        public void setWalletPass(String walletPass) {
-            this.walletPass = walletPass;
         }
     }
 }

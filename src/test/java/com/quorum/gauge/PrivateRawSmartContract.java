@@ -19,10 +19,9 @@
 
 package com.quorum.gauge;
 
-import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.common.RetryWithDelay;
-import com.quorum.gauge.common.Wallet;
+import com.quorum.gauge.common.config.WalletData;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
@@ -45,7 +44,7 @@ public class PrivateRawSmartContract extends AbstractSpecImplementation {
     private static final Logger logger = LoggerFactory.getLogger(PrivateRawSmartContract.class);
 
     @Step("Deploy a simple smart contract with initial value <initialValue> signed by external wallet <wallet> in <source> and it's private for <target>, name this contract as <contractName>")
-    public void setupContract(int initialValue, Wallet wallet, QuorumNode source, QuorumNode target, String contractName) {
+    public void setupContract(int initialValue, WalletData wallet, QuorumNode source, QuorumNode target, String contractName) {
         saveCurrentBlockNumber();
         logger.debug("Setting up contract from {} to {}", source, target);
         Contract contract = rawContractService.createRawSimplePrivateContract(initialValue, wallet, source, target).blockingFirst();
@@ -55,7 +54,7 @@ public class PrivateRawSmartContract extends AbstractSpecImplementation {
     }
 
     @Step("Execute <contractName>'s `set()` function with new value <newValue> signed by external wallet <wallet> in <source> and it's private for <target>")
-    public void updateNewValue(String contractName, int newValue, Wallet wallet, QuorumNode source, QuorumNode target) {
+    public void updateNewValue(String contractName, int newValue, WalletData wallet, QuorumNode source, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         TransactionReceipt receipt = rawContractService.updateRawSimplePrivateContract(newValue, c.getContractAddress(), wallet, source, target).blockingFirst();
 
@@ -64,7 +63,7 @@ public class PrivateRawSmartContract extends AbstractSpecImplementation {
     }
 
     @Step("Transaction Receipt is present in <node> for <contractName> from external wallet <wallet>")
-    public void verifyTransactionReceipt(QuorumNode node, String contractName, Wallet wallet) {
+    public void verifyTransactionReceipt(QuorumNode node, String contractName, WalletData wallet) {
         String transactionHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "_transactionHash", String.class);
         Optional<TransactionReceipt> receipt = transactionService.getTransactionReceipt(node, transactionHash)
             .map(ethGetTransactionReceipt -> {
@@ -79,9 +78,8 @@ public class PrivateRawSmartContract extends AbstractSpecImplementation {
         assertThat(receipt.isPresent()).isTrue();
         assertThat(receipt.get().getBlockNumber()).isNotEqualTo(currentBlockNumber());
 
-        QuorumNetworkProperty.WalletData walletData = privacyService.walletData(wallet);
         final Credentials[] credentials = new Credentials[1];
-        assertThatCode(() -> credentials[0] = WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath()))
+        assertThatCode(() -> credentials[0] = WalletUtils.loadCredentials(wallet.getWalletPass(), wallet.getWalletPath()))
             .doesNotThrowAnyException();
 
         assertThat(receipt.get().getFrom()).isEqualTo(credentials[0].getAddress());
