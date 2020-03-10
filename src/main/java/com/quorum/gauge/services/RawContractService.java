@@ -19,11 +19,11 @@
 
 package com.quorum.gauge.services;
 
-import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.common.RetryWithDelay;
-import com.quorum.gauge.common.Wallet;
+import com.quorum.gauge.common.config.WalletData;
 import com.quorum.gauge.sol.SimpleStorage;
+import io.reactivex.Observable;
 import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +51,6 @@ import org.web3j.quorum.tx.QuorumTransactionManager;
 import org.web3j.tx.Contract;
 import org.web3j.tx.RawTransactionManager;
 import org.web3j.utils.Numeric;
-import io.reactivex.Observable;
 
 import java.io.File;
 import java.io.IOException;
@@ -78,12 +77,11 @@ public class RawContractService extends AbstractService {
     @Autowired
     OkHttpClient httpClient;
 
-    public Observable<? extends Contract> createRawSimplePublicContract(int initialValue, Wallet wallet, QuorumNode source) {
+    public Observable<? extends Contract> createRawSimplePublicContract(int initialValue, WalletData wallet, QuorumNode source) {
         Web3j web3j = connectionFactory().getWeb3jConnection(source);
 
         try {
-            QuorumNetworkProperty.WalletData walletData = privacyService.walletData(wallet);
-            Credentials credentials = WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath());
+            Credentials credentials = WalletUtils.loadCredentials(wallet.getWalletPass(), wallet.getWalletPath());
 
             RawTransactionManager qrtxm = new RawTransactionManager(
                     web3j,
@@ -106,12 +104,11 @@ public class RawContractService extends AbstractService {
         }
     }
 
-    public Observable<TransactionReceipt> updateRawSimplePublicContract(QuorumNode source, Wallet wallet, String contractAddress, int newValue) {
+    public Observable<TransactionReceipt> updateRawSimplePublicContract(QuorumNode source, WalletData wallet, String contractAddress, int newValue) {
         Web3j web3j = connectionFactory().getWeb3jConnection(source);
 
         try {
-            QuorumNetworkProperty.WalletData walletData = privacyService.walletData(wallet);
-            Credentials credentials = WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath());
+            Credentials credentials = WalletUtils.loadCredentials(wallet.getWalletPass(), wallet.getWalletPath());
 
             RawTransactionManager qrtxm = new RawTransactionManager(
                     web3j,
@@ -134,13 +131,12 @@ public class RawContractService extends AbstractService {
     }
 
 
-    public Observable<? extends Contract> createRawSimplePrivateContract(int initialValue, Wallet wallet, QuorumNode source, QuorumNode target) {
+    public Observable<? extends Contract> createRawSimplePrivateContract(int initialValue, WalletData wallet, QuorumNode source, QuorumNode target) {
         Quorum client = connectionFactory().getConnection(source);
         Enclave enclave = buildEnclave(source, client);
 
         try {
-            QuorumNetworkProperty.WalletData walletData = privacyService.walletData(wallet);
-            Credentials credentials = WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath());
+            Credentials credentials = WalletUtils.loadCredentials(wallet.getWalletPass(), wallet.getWalletPath());
 
             QuorumTransactionManager qrtxm = new QuorumTransactionManager(client,
                     credentials,
@@ -165,13 +161,12 @@ public class RawContractService extends AbstractService {
         }
     }
 
-    public Observable<TransactionReceipt> updateRawSimplePrivateContract(int newValue, String contractAddress, Wallet wallet, QuorumNode source, QuorumNode target) {
+    public Observable<TransactionReceipt> updateRawSimplePrivateContract(int newValue, String contractAddress, WalletData wallet, QuorumNode source, QuorumNode target) {
         Quorum client = connectionFactory().getConnection(source);
         Enclave enclave = buildEnclave(source, client);
 
         try {
-            QuorumNetworkProperty.WalletData walletData = privacyService.walletData(wallet);
-            Credentials credentials = WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath());
+            Credentials credentials = WalletUtils.loadCredentials(wallet.getWalletPass(), wallet.getWalletPath());
 
             QuorumTransactionManager qrtxm = new QuorumTransactionManager(client,
                     credentials,
