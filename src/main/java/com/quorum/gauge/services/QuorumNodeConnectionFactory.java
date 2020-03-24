@@ -45,12 +45,20 @@ public class QuorumNodeConnectionFactory {
         return Web3j.build(getWeb3jService(node));
     }
 
+    public Web3j getWeb3jConnection(QuorumNetworkProperty.Node node) {
+        return Web3j.build(getWeb3jService(node));
+    }
+
     public Web3jService getWeb3jService(QuorumNode node) {
         QuorumNetworkProperty.Node nodeConfig = networkProperty.getNodes().get(node);
         if (nodeConfig == null) {
             throw new IllegalArgumentException("Can't find node " + node + " in the configuration");
         }
-        return new HttpService(nodeConfig.getUrl(), okHttpClient, false);
+        return getWeb3jService(nodeConfig);
+    }
+
+    public Web3jService getWeb3jService(QuorumNetworkProperty.Node node) {
+        return new HttpService(node.getUrl(), okHttpClient, false);
     }
 
     public QuorumNetworkProperty getNetworkProperty() {

@@ -14,8 +14,6 @@ env:
         - TF_VAR_is_igw_subnets=false
         - TF_VAR_subnet_ids="[\"subnet-4c30c605\",\"subnet-4c30c605\",\"subnet-09263334\",\"subnet-5236300a\"]"
         - TF_VAR_bastion_public_subnet_id="subnet-3a8d8707"
-        - TF_VAR_access_bastion_cidr_blocks="[$(dig +short nat.travisci.net | sed -e 's/$/\/32\"/g' | sed -e 's/^/\"/g' | paste -s -d, -)]"
-        # - TF_VAR_access_bastion_cidr_blocks="[\"$(curl -s ipecho.net/plain)/32\"]"
         # AWS Configuration
         - secure: "SXNLe/u/hd+PqzLFQ23cwwsXCN14oK3wpubc03MTIJrQwYeJiXin1f9UosvMM1WTS//bHxyTVHF1skWMES82AcCXBJgLzv0K2iymLCuJS7OvQwXdtiiXroxeFUDfbYgfXn6isgASIy74oNcybh5efQThV01S4dOmCkpUwaMfslJtYxReEcm9tvm3+TGKXbO9mN1ulQE0vOcB4EDXZWIvFBamKA+ytGKL1g9z2eBiCzhZdXSkF7u+s1oaBFYVYE5VLiCrBZN7VtGQcjJY3zzbZZUagM140Ip6es7ZKNa9KFlLjPe/fLnLuET/3ybCLoRbiMESwpV2JYefNarivL/zHu2I9KW0X8p+zPFdWXqGUakpaZYPgaTaomyES4e20d/09eNx5swHsTsF8GzSrBlEtC615mOPCWRSs4J8++BO9ry/yVzYpBqo1/g8OFJP6NhIVoPCxJ72KshmanKlmPa6UA7igKh6szeVYgTf7dWmFqhirJw3ovkovhf2gjrWGAAdkA915miGiVIG43nBDRqqzmA6ul6xjWBG81DuHu8VOrOK3C94aalaepwg3Fb1ofcLvS3phj02ovuWL6YwJ6ZUslVpJk8p3ZXJQFAyiO3kWkUL9avTLyVTueyUBNY1Cl0GkuBX7BCReeLgyQy+WZtnxVw0TBJeOVcwYTHGWPQ6zxw="
         - secure: "Lc1lX3K8LEIPX+qzs/UTGn74jEEVop5Pw7zJHsFBUGasW8kY8o94lGN0JNJ9wUFNjxNjkIB/wrIzF4LF+lBTIyINsUONqVHRyDISj5Dlt9Mtig426oiy7USuKgohfp2ub2HV9Jr8xtCCLWExJvT6NRP6c2j28UEYEEPJowV0c5kf0C597gDKrZZ9ZRgK82kQpbG3fM0MnJXUHUt11eeIZofaHyPYJ54fr1u9D5iN8vxUYOv+5XQqRxo1yneyxtNycAIRdh6HLXZeNg5AGUWUQYNpy4FLs8Vz8b+XyIS7r7nrcsLesRIMmbrJQkvWNd7V+4AsBJReD8xHWf7TatRFVTLZTidBO+oflLGkLzVmpxAFv1iUHpudftYy4bZllN+MImK//0EpP0wuj22j6Dkoc+UvanE/KdUPVYp7MM7YW9zRQlY24PlLlxtfdla9bLD1UVA/atThGTyCz44e/GoZaZm+i/SEjUcX4Havk8FJfSJSaZ+MNgeKksJpF/PbFLTQx/IKzUjK46pSYV5nFULE/0UBRx7xinhnHxeb3Rh/hZWjMCqHfK3tbRMvG0Kwx0L/wBv71FIQK50+jjv0J3xfDQgBlePRfnop5YIoUwIdc0y9Kmljb6DP75EkQJ1VFGCt62JwY0HkZIDGKBYflTZh55TcfVHwJXx/M7sXTapSJXk="
@@ -40,7 +38,7 @@ cache:
 before_install:
     - sudo wget https://github.com/ethereum/solidity/releases/download/v0.5.4/solc-static-linux -O /usr/local/bin/solc
     - sudo chmod +x /usr/local/bin/solc
-    - wget https://github.com/getgauge/gauge/releases/download/v1.0.4/gauge-1.0.4-linux.x86_64.zip -O gauge.zip -q
+    - wget https://github.com/getgauge/gauge/releases/download/v1.0.7/gauge-1.0.7-linux.x86_64.zip -O gauge.zip -q
     - sudo unzip -o gauge.zip -d /usr/local/bin
     - wget https://releases.hashicorp.com/terraform/0.11.11/terraform_0.11.11_linux_amd64.zip -O terraform.zip -q
     - unzip terraform.zip

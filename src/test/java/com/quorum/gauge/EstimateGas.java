@@ -18,6 +18,7 @@
  */
 package com.quorum.gauge;
 
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.thoughtworks.gauge.Step;
@@ -54,7 +55,7 @@ public class EstimateGas extends AbstractSpecImplementation {
     }
 
     @Step("Estimate gas for deploying `SimpleContract` public smart contract from a default account in <from>")
-    public void estimatePublicContract(QuorumNode from) {
+    public void estimatePublicContract(QuorumNetworkProperty.Node from) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), "publicContract1", Contract.class);
 
         EthEstimateGas estimatedValue = transactionService.estimateGasForPublicContract(from, c).blockingFirst();
