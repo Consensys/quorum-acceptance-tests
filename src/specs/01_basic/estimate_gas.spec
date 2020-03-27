@@ -14,9 +14,14 @@ EstimateGas api call should return valid 'close' estimate of required gas.
 ## Estimate gas required to create public smart contract
 
 * Estimate gas for deploying `SimpleContract` public smart contract from a default account in "Node1"
-* Gas estimate "95532" is returned within "10" percent
+* Gas estimate "95544" is returned within "10" percent
 
 ## Estimate gas required to call a public smart contract
 
 * Estimate gas for calling the `SimpleContract` public smart contract from a default account in "Node1"
-* Gas estimate "41639" is returned within "10" percent
+* Gas estimate "45261" is returned within "10" percent
+
+## Estimate gas required for zero value public transaction
+
+* Estimate gas for public transaction transferring zero Wei from a default account in "Node1" to a default account in "Node2"
+* Gas estimate "25352" is returned within "10" percent
