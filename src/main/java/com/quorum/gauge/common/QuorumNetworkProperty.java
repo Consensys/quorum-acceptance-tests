@@ -25,6 +25,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Component
@@ -99,6 +100,7 @@ public class QuorumNetworkProperty {
     public static class Node {
         @JsonProperty("privacy-address")
         private String privacyAddress;
+        private Map<String, String> privacyAddressAliases = new LinkedHashMap<>();
         private String url;
         @JsonProperty("third-party-url")
         private String thirdPartyUrl;
@@ -151,6 +153,14 @@ public class QuorumNetworkProperty {
 
         public void setThirdPartyUrl(String thirdPartyUrl) {
             this.thirdPartyUrl = thirdPartyUrl;
+        }
+
+        public Map<String, String> getPrivacyAddressAliases() {
+            return privacyAddressAliases;
+        }
+
+        public void setPrivacyAddressAliases(Map<String, String> privacyAddressAliases) {
+            this.privacyAddressAliases = privacyAddressAliases;
         }
     }
 }

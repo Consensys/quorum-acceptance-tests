@@ -22,12 +22,47 @@ package com.quorum.gauge.services;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class PrivacyService extends AbstractService {
 
     public String id(QuorumNode node) {
-        return getQuorumNodeConfig(node).getPrivacyAddress();
+        QuorumNetworkProperty.Node quorumNodeConfig = getQuorumNodeConfig(node);
+        String v = quorumNodeConfig.getPrivacyAddress();
+        if (StringUtils.isEmpty(v)) {
+            if (quorumNodeConfig.getPrivacyAddressAliases().isEmpty()) {
+                throw new RuntimeException("no privacy address is defined for node: " + node);
+            }
+            v = quorumNodeConfig.getPrivacyAddressAliases().values().iterator().next();
+        }
+        return v;
+    }
+
+    public String id(QuorumNetworkProperty.Node node, String alias) {
+        if (node.getPrivacyAddressAliases().containsKey(alias)) {
+            return node.getPrivacyAddressAliases().get(alias);
+        }
+        throw new RuntimeException("private address alias not found: " + alias);
+    }
+
+    public String id(String alias) {
+        List<String> matches = new ArrayList<>();
+        for (QuorumNetworkProperty.Node node : networkProperty().getNodes().values()) {
+            if (node.getPrivacyAddressAliases().containsKey(alias)) {
+                matches.add(node.getPrivacyAddressAliases().get(alias));
+            }
+        }
+        if (matches.size() == 0) {
+            throw new RuntimeException("private address alias not found: " + alias);
+        }
+        if (matches.size() > 1) {
+            throw new RuntimeException("there are " + matches.size() + " nodes having this privacy address alias: " + alias);
+        }
+        return matches.get(0);
     }
 
     public String thirdPartyUrl(QuorumNode node) {
@@ -41,4 +76,5 @@ public class PrivacyService extends AbstractService {
         }
         return nodeConfig;
     }
+
 }
