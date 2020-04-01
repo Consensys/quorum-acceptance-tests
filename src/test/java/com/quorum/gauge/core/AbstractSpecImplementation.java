@@ -84,6 +84,9 @@ public abstract class AbstractSpecImplementation {
     @Autowired
     protected GraphQLService graphQLService;
 
+    @Autowired
+    protected OAuth2Service oAuth2Service;
+
     protected BigInteger currentBlockNumber() {
         return mustHaveValue(DataStoreFactory.getScenarioDataStore(), "blocknumber", BigInteger.class);
     }
@@ -149,9 +152,10 @@ public abstract class AbstractSpecImplementation {
         ).blockingFirst();
     }
 
-    // created a fixed thread pool executor and inject quorum connection factory into the scheduled thread
-    protected Scheduler networkAwaredScheduler(int threadCount) {
+    // created a fixed thread pool executor and inject ThreadLocal values into the scheduled thread
+    protected Scheduler threadLocalDelegateScheduler(int threadCount) {
         QuorumNodeConnectionFactory connectionFactory = Context.getConnectionFactory();
+        String accessToken = Context.retrieveAccessToken();
         Executor executor = Executors.newFixedThreadPool(Math.min(threadCount, 100), new ThreadFactory() {
             private int count = 0;
 
@@ -161,6 +165,7 @@ public abstract class AbstractSpecImplementation {
                     @Override
                     public void run() {
                         Context.setConnectionFactory(connectionFactory);
+                        Context.storeAccessToken(accessToken);
                         super.run();
                     }
                 };

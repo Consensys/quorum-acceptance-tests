@@ -24,15 +24,14 @@ import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import io.reactivex.Observable;
 import io.reactivex.Scheduler;
-import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
-import io.reactivex.Observable;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -111,7 +110,7 @@ public class PublicSmartContract extends AbstractSpecImplementation {
     public void excuteDesposit(String contractName, int count, QuorumNode node) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         List<Observable<TransactionReceipt>> observables = new ArrayList<>();
-        Scheduler scheduler = networkAwaredScheduler(count);
+        Scheduler scheduler = threadLocalDelegateScheduler(count);
         for (int i = 0; i < count; i++) {
             observables.add(contractService.updateClientReceipt(node, c.getContractAddress(), BigInteger.TEN).subscribeOn(scheduler));
         }
@@ -125,7 +124,7 @@ public class PublicSmartContract extends AbstractSpecImplementation {
         List<TransactionReceipt> originalReceipts = (List<TransactionReceipt>) DataStoreFactory.getScenarioDataStore().get("receipts");
 
         List<Observable<TransactionReceipt>> receiptsInNode = new ArrayList<>();
-        Scheduler scheduler = networkAwaredScheduler(expectedTxCount);
+        Scheduler scheduler = threadLocalDelegateScheduler(expectedTxCount);
         for (TransactionReceipt r : originalReceipts) {
             receiptsInNode.add(transactionService.getTransactionReceipt(node, r.getTransactionHash())
                     .map(tr -> {

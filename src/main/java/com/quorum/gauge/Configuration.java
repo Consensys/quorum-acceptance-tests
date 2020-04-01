@@ -20,10 +20,13 @@
 package com.quorum.gauge;
 
 
+import com.quorum.gauge.common.Context;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.services.SocksProxyEmbeddedServer;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.logging.HttpLoggingInterceptor;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,6 +60,18 @@ public class Configuration {
         builder.readTimeout(5, TimeUnit.MINUTES);
         builder.writeTimeout(5, TimeUnit.MINUTES);
         builder.connectTimeout(5, TimeUnit.MINUTES);
+        if (networkProperty.getOauth2Server() != null) {
+            builder.addInterceptor(chain -> {
+                String token = Context.retrieveAccessToken();
+                if (StringUtils.isEmpty(token)) {
+                    return chain.proceed(chain.request());
+                }
+                Request request = chain.request().newBuilder()
+                        .addHeader("Authorization", token)
+                        .build();
+                return chain.proceed(request);
+            });
+        }
         Logger httpLogger = LoggerFactory.getLogger(Configuration.class.getPackageName() + ".HttpLogger");
         if (httpLogger.isDebugEnabled()) {
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor(httpLogger::debug);

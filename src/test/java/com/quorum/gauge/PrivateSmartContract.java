@@ -194,7 +194,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         if (targetContracts != null) {
             contracts.addAll(targetContracts);
         }
-        Scheduler scheduler = networkAwaredScheduler(contracts.size());
+        Scheduler scheduler = threadLocalDelegateScheduler(contracts.size());
         List<Observable<EthGetTransactionReceipt>> allObservableReceipts = new ArrayList<>();
         for (Contract c : contracts) {
             String txHash = c.getTransactionReceipt().orElseThrow(() -> new RuntimeException("no receipt for contract")).getTransactionHash();
@@ -325,7 +325,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     @Step("Execute <contractName>'s `deposit()` function <count> times with arbitrary id and value from <source>. And it's private for <target>")
     public void executeDeposit(String contractName, int count, QuorumNode source, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
-        Scheduler scheduler = networkAwaredScheduler(count);
+        Scheduler scheduler = threadLocalDelegateScheduler(count);
         List<Observable<TransactionReceipt>> observables = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             observables.add(contractService.updateClientReceiptPrivate(source, target, c.getContractAddress(), BigInteger.ZERO)
