@@ -224,7 +224,6 @@ public class BlockSynchronization extends AbstractSpecImplementation {
                 .blockingSubscribe();
     }
 
-
     @Step("Verify node <node> has the block height greater or equal to <latestBlockHeightName>")
     public void verifyBlockHeightGreaterThanOrEqualTo(Node node, String latestBlockHeightName) {
         verifyBlockHeight(node, latestBlockHeightName, ">=");
@@ -255,7 +254,6 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(name, currentBlockNumber);
     }
 
-
     @Step("Stop all nodes in the network <id>")
     public void stopAllNodes(String id) {
         NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
@@ -263,7 +261,6 @@ public class BlockSynchronization extends AbstractSpecImplementation {
                 .flatMap(infraService::stopResource)
                 .blockingSubscribe();
     }
-
 
     @Step("Start all nodes in the network <id>")
     public void startAllNodes(String id) {

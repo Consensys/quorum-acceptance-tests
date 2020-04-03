@@ -72,7 +72,9 @@ public class QuorumNetworkProperty {
     }
 
     public Node getNode(String nodeName) {
-        return Optional.ofNullable(nodes.get(QuorumNode.valueOf(nodeName))).orElseThrow(() -> new RuntimeException("no such node with name: " + nodeName));
+        Node node = Optional.ofNullable(nodes.get(QuorumNode.valueOf(nodeName))).orElseThrow(() -> new RuntimeException("no such node with name: " + nodeName));
+        node.setName(nodeName);
+        return node;
     }
 
     public DockerInfrastructureProperty getDockerInfrastructure() {
@@ -198,6 +200,7 @@ public class QuorumNetworkProperty {
         private String thirdPartyUrl;
         private String istanbulValidatorId;
         private String enodeUrl;
+        private String graphqlUrl;
 
         public String getPrivacyAddress() {
             return privacyAddress;
@@ -251,6 +254,14 @@ public class QuorumNetworkProperty {
 
         public void setPrivacyAddressAliases(Map<String, String> privacyAddressAliases) {
             this.privacyAddressAliases = privacyAddressAliases;
+        }
+
+        public String getGraphqlUrl() {
+            return graphqlUrl;
+        }
+
+        public void setGraphqlUrl(String graphqlUrl) {
+            this.graphqlUrl = graphqlUrl;
         }
 
         public String getName() {

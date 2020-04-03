@@ -80,9 +80,9 @@ public interface InfrastructureService {
         private boolean startFresh;
         private String quorumVersionKey;
         private String tesseraVersionKey;
-        private String additionalGethArgs;
+        private GethArgBuilder additionalGethArgsBuilder;
 
-        private NodeAttributes(String node) { this.node = node; this.startFresh = false; }
+        private NodeAttributes(String node) { this.node = node; this.startFresh = false;this.additionalGethArgsBuilder = GethArgBuilder.newBuilder(); }
         public static NodeAttributes forNode(String node) {
             return new NodeAttributes(node);
         }
@@ -99,7 +99,7 @@ public interface InfrastructureService {
             return this;
         }
         public NodeAttributes withAdditionalGethArgs(GethArgBuilder builder) {
-            this.additionalGethArgs = builder.toString();
+            this.additionalGethArgsBuilder = builder;
             return this;
         }
 
@@ -119,7 +119,9 @@ public interface InfrastructureService {
             return tesseraVersionKey;
         }
 
-        public String getAdditionalGethArgs() { return additionalGethArgs; }
+        public String getAdditionalGethArgs() { return additionalGethArgsBuilder.toString(); }
+
+        public GethArgBuilder getAdditionalGethArgsBuilder() { return additionalGethArgsBuilder; }
     }
     class NetworkResources extends ConcurrentHashMap<String, Vector<String>> {
         public synchronized void add(String nodeName, String resourceId) {

@@ -38,6 +38,13 @@ public class GethArgBuilder {
         return new GethArgBuilder();
     }
 
+    public GethArgBuilder overrideWith(GethArgBuilder anotherBuilder) {
+        for (Map.Entry<String, String> entry : anotherBuilder.args.entrySet()) {
+            args.put(entry.getKey(), entry.getValue());
+        }
+        return this;
+    }
+
     public String toString() {
         StringBuilder builder = new StringBuilder();
         for (String argName : args.keySet()) {
@@ -83,6 +90,20 @@ public class GethArgBuilder {
             args.remove("--raftjoinexisting");
         } else {
             args.put("--raftjoinexisting", String.valueOf(raftId));
+        }
+        return this;
+    }
+
+    /**
+     * Add/remove {@code --allow-insecure-unlock}
+     * @since Geth 1.9.7
+     * @return
+     */
+    public GethArgBuilder allowInsecureUnlock(boolean yes) {
+        if (yes) {
+            args.put("--allow-insecure-unlock", "");
+        } else {
+            args.remove("--allow-insecure-unlock");
         }
         return this;
     }

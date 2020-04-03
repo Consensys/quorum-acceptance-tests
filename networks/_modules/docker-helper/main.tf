@@ -7,11 +7,13 @@ locals {
 
   geth_networking = [for idx in local.node_indices :
     {
+      image = var.geth.container.image
       port = {
-        http = { internal = var.geth.container.port.http, external = var.geth.host.port.http_start + idx }
-        ws   = { internal = var.geth.container.port.ws, external = var.geth.host.port.ws_start == -1 ? -1 : var.geth.host.port.ws_start + idx }
-        p2p  = var.geth.container.port.p2p
-        raft = var.geth.container.port.raft
+        http    = { internal = var.geth.container.port.http, external = var.geth.host.port.http_start + idx }
+        ws      = var.geth.container.port.ws == -1 ? null : { internal = var.geth.container.port.ws, external = var.geth.host.port.ws_start + idx }
+        graphql = var.geth.container.port.graphql == -1 ? null : { internal = var.geth.container.port.graphql, external = var.geth.host.port.graphql_start + idx }
+        p2p     = var.geth.container.port.p2p
+        raft    = var.geth.container.port.raft
       }
       ip = {
         private = cidrhost(local.container_network_cidr, idx + 1 + 10)
@@ -21,6 +23,7 @@ locals {
   ]
   tm_networking = [for idx in local.node_indices :
     {
+      image = var.tessera.container.image
       port = {
         thirdparty = { internal = var.tessera.container.port.thirdparty, external = var.tessera.host.port.thirdparty_start + idx }
         p2p        = var.tessera.container.port.p2p

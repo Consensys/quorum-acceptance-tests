@@ -32,10 +32,10 @@ module "helper" {
   geth = {
     container = {
       image = var.quorum_docker_image
-      port  = { raft = 50400, p2p = 21000, http = 8545, ws = -1 }
+      port  = { raft = 50400, p2p = 21000, http = 8545, ws = -1, graphql = 8547 }
     }
     host = {
-      port = { http_start = 22000, ws_start = -1 }
+      port = { http_start = 22000, ws_start = -1, graphql_start = 8001 }
     }
   }
   tessera = {
@@ -63,8 +63,6 @@ module "docker" {
   source = "../_modules/docker"
 
   consensus       = module.helper.consensus
-  geth            = module.helper.geth_docker_config
-  tessera         = module.helper.tessera_docker_config
   geth_networking = module.helper.geth_networking
   tm_networking   = module.helper.tm_networking
   network_cidr    = module.helper.network_cidr

@@ -6,10 +6,11 @@ variable "network_name" {
 variable "geth_networking" {
   type = list(object({
     port = object({
-      http = object({ internal = number, external = number })
-      ws   = object({ internal = number, external = number })
-      p2p  = number
-      raft = number
+      http    = object({ internal = number, external = number })
+      ws      = object({ internal = number, external = number })
+      graphql = object({ internal = number, external = number })
+      p2p     = number
+      raft    = number
     })
     ip = object({ private = string, public = string })
   }))
@@ -68,6 +69,6 @@ variable "exclude_initial_nodes" {
 }
 
 variable "non_validator_nodes" {
-  default = []
+  default     = []
   description = "Exclude nodes (0-based index) as validators. Default all nodes are validators"
 }

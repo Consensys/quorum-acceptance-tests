@@ -29,6 +29,7 @@ import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.okhttp.OkHttpDockerCmdExecFactory;
 import com.google.common.collect.ImmutableMap;
+import com.quorum.gauge.common.GethArgBuilder;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNetworkProperty.DockerInfrastructureProperty.DockerContainerProperty;
 import io.reactivex.Observable;
@@ -62,8 +63,8 @@ public class DockerInfrastructureService
         implements InfrastructureService, InitializingBean, DisposableBean {
     private static final Logger logger = LoggerFactory.getLogger(DockerInfrastructureService.class);
 
-    private Map<String, String> quorumDockerImageMap = new HashMap<>();
-    private Map<String, String> tesseraDockerImageMap = new HashMap<>();
+    private Map<String, QuorumImageConfig> quorumDockerImageCatalog = new HashMap<>();
+    private Map<String, String> tesseraDockerImageCatalog = new HashMap<>();
     private QuorumNetworkProperty.DockerInfrastructureProperty infraProperty;
     private DockerClient dockerClient;
 
@@ -76,11 +77,11 @@ public class DockerInfrastructureService
         infraProperty = networkProperty().getDockerInfrastructure();
         dockerClient = DockerClientImpl.getInstance(configBuilder.build())
                 .withDockerCmdExecFactory(new OkHttpDockerCmdExecFactory());
-        quorumDockerImageMap = ImmutableMap.of(
-        "v2.5.0", "quorumengineering/quorum:2.5.0",
-        "v1.9.7-upgrade", "docker.pkg.github.com/quorumengineering/quorum/quorum:v1.9.7-upgrade"
+        quorumDockerImageCatalog = ImmutableMap.of(
+        "v2.5.0", new QuorumImageConfig("quorumengineering/quorum:2.5.0", GethArgBuilder.newBuilder()),
+        "latest", new QuorumImageConfig("quorumengineering/quorum:latest", GethArgBuilder.newBuilder().allowInsecureUnlock(true))
         );
-        tesseraDockerImageMap =  ImmutableMap.of(
+        tesseraDockerImageCatalog =  ImmutableMap.of(
         "latest", "quorumengineering/tessera:latest"
         );
     }
@@ -96,9 +97,16 @@ public class DockerInfrastructureService
     @Override
     public Observable<Boolean> startNode(NodeAttributes attributes, ResourceCreationCallback callback) {
         DockerContainerProperty p = infraProperty.getNodes().get(attributes.getNode());
+        String quorumImage = "";
+        if (quorumDockerImageCatalog.containsKey(attributes.getQuorumVersionKey())) {
+            QuorumImageConfig quorumImageConfig = quorumDockerImageCatalog.get(attributes.getQuorumVersionKey());
+            attributes.withAdditionalGethArgs(attributes.getAdditionalGethArgsBuilder().overrideWith(quorumImageConfig.getArgBuilder()));
+            quorumImage = quorumImageConfig.getImage();
+        }
+        String tesseraImage = tesseraDockerImageCatalog.getOrDefault(attributes.getTesseraVersionKey(), "");
         return Observable.zip(
-                startContainerFromTemplate(p.getQuorumContainerId(), attributes, quorumDockerImageMap.get(attributes.getQuorumVersionKey()), callback).subscribeOn(Schedulers.io()),
-                startContainerFromTemplate(p.getTesseraContainerId(), attributes, tesseraDockerImageMap.get(attributes.getTesseraVersionKey()), callback).subscribeOn(Schedulers.io()),
+                startContainerFromTemplate(p.getQuorumContainerId(), attributes, quorumImage, callback).subscribeOn(Schedulers.io()),
+                startContainerFromTemplate(p.getTesseraContainerId(), attributes, tesseraImage, callback).subscribeOn(Schedulers.io()),
                 (q, t) -> q && t);
     }
 
@@ -391,6 +399,25 @@ public class DockerInfrastructureService
     @Override
     public void destroy() throws Exception {
         dockerClient.close();
+    }
+
+    static class QuorumImageConfig {
+        private String image;
+        private GethArgBuilder argBuilder;
+
+        QuorumImageConfig(String image, GethArgBuilder argBuilder) {
+            this.image = image;
+            this.argBuilder = argBuilder;
+        }
+
+        public String getImage() {
+            return image;
+        }
+
+        public GethArgBuilder getArgBuilder() {
+            return argBuilder;
+        }
+
     }
 
     public static class BasicContainerState {

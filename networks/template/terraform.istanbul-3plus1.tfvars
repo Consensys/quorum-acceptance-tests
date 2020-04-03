@@ -6,3 +6,4 @@ number_of_nodes       = 4
 exclude_initial_nodes = [3]
 consensus             = "istanbul"
 network_name          = "template-istanbul"
+addtional_geth_args   = "--allow-insecure-unlock"

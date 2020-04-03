@@ -1,6 +1,7 @@
 
 resource "docker_container" "ethstats" {
-  image    = docker_image.ethstats.name
+  depends_on = [docker_image.local, docker_image.registry]
+  image    = var.ethstats.container.image.name
   name     = format("%s-ethstats", var.network_name)
   hostname = "ethstats"
   ports {

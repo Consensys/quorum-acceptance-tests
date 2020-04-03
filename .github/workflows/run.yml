@@ -49,6 +49,8 @@ jobs:
           - 'validator-management && networks/template::istanbul-3plus1'
           - 'basic || basic-raft || (advanced && raft) || networks/plugins::raft'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul'
+          - 'migration && networks/template::raft-4nodes'
+          - 'migration && networks/template::istanbul-4nodes'
     runs-on: ubuntu-latest
     env:
       TEST_REPORT_DIR: target/gauge/reports/xml-report
