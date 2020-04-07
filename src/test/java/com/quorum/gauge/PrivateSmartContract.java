@@ -21,10 +21,12 @@ package com.quorum.gauge;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.quorum.gauge.common.PrivacyFlag;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.ext.EthGetQuorumPayload;
+import com.quorum.gauge.services.AbstractService;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import io.reactivex.Observable;
@@ -49,6 +51,7 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -62,6 +65,22 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         saveCurrentBlockNumber();
         logger.debug("Setting up contract from {} to {}", source, target);
         Contract contract = contractService.createSimpleContract(initialValue, source, target).blockingFirst();
+
+        DataStoreFactory.getSpecDataStore().put(contractName, contract);
+        DataStoreFactory.getScenarioDataStore().put(contractName, contract);
+    }
+
+    @Step("Deploy a <privacyFlags> simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target>, named this contract as <contractName>")
+    public void setupContract(String privacyFlags, int initialValue, QuorumNode source, QuorumNode target, String contractName) {
+        saveCurrentBlockNumber();
+        logger.debug("Setting up contract from {} to {}", source, target);
+        Contract contract = contractService.createSimpleContract(
+            initialValue,
+            source,
+            Arrays.asList(target),
+            AbstractService.DEFAULT_GAS_LIMIT,
+            Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())
+        ).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
@@ -128,7 +147,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     @Step("Execute <contractName>'s `set()` function with new value <newValue> in <source> and it's private for <target>")
     public void updateNewValue(String contractName, int newValue, QuorumNode source, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
-        TransactionReceipt receipt = contractService.updateSimpleContract(source, target, c.getContractAddress(), newValue).blockingFirst();
+        TransactionReceipt receipt = contractService.updateSimpleContract(source, target, c.getContractAddress(), newValue, Arrays.asList(PrivacyFlag.StandardPrivate)).blockingFirst();
 
         assertThat(receipt.getTransactionHash()).isNotBlank();
         assertThat(receipt.getBlockNumber()).isNotEqualTo(currentBlockNumber());
@@ -349,5 +368,18 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         }
         BigInteger blockNumber = Observable.zip(allObservableContracts, args -> utilService.getCurrentBlockNumber().blockingFirst()).blockingFirst().getBlockNumber();
         assertThat(blockNumber).isNotEqualTo(currentBlockNumber());
+    }
+
+    @Step("Fail to execute <contractName>'s `set()` function with new value <newValue> in <source> and it's private for <target>")
+    public void updateSimpleContractFail(String contractName, int newValue, QuorumNode source, QuorumNode target) {
+        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
+        TransactionReceipt receipt = null;
+        try {
+            receipt = contractService.updateSimpleContract(source, target, c.getContractAddress(), newValue, Arrays.asList(PrivacyFlag.StandardPrivate)).blockingFirst();
+            // if no exception, receipt must have status 0x0
+            assertThat(receipt.isStatusOK()).as("Transaction Receipt Status").isFalse();
+        } catch (Exception e) {
+            // expected an exception to be thrown
+        }
     }
 }
