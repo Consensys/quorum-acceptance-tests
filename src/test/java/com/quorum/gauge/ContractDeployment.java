@@ -24,12 +24,11 @@ import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import io.reactivex.schedulers.Schedulers;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
-import rx.Observable;
-import rx.functions.FuncN;
-import rx.schedulers.Schedulers;
+import io.reactivex.Observable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,7 +74,7 @@ public class ContractDeployment extends AbstractSpecImplementation {
                 .map(ethReceipt -> ethReceipt.getTransactionReceipt())
                 .subscribeOn(Schedulers.io()));
         }
-        Observable.zip(receiptObsevables, (FuncN<Object>) receipts -> {
+        Observable.zip(receiptObsevables, receipts -> {
             for (int i = 0; i < receipts.length; i++) {
                 Optional<TransactionReceipt> r = (Optional<TransactionReceipt>) receipts[i];
                 switch (status) {
@@ -89,6 +88,6 @@ public class ContractDeployment extends AbstractSpecImplementation {
                 }
             }
             return true;
-        }).toBlocking().first();
+        }).blockingFirst();
     }
 }
