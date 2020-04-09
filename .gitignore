@@ -28,3 +28,10 @@ src/site/resources/reports
 env/travis-*/
 
 **/.DS_Store
+
+**/.terraform
+**/terraform.d
+**/terraform.tfstate*
+**/build
+**/terraform.tfvars
+env/run-local/user.properties

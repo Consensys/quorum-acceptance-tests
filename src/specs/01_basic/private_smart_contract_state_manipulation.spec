@@ -1,6 +1,6 @@
 # State manipulation in private smart contract
 
- Tags: basic
+ Tags: basic, manipulation
 
 A simple smart contract is to store a int value and to provide `get()` and `set()` functions.
 ```

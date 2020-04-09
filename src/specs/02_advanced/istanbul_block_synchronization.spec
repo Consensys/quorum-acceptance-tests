@@ -1,6 +1,6 @@
 # Block synchronization when using Istanbul BFT consensus
 
-  Tags: advanced-1.8.12, sync, isolate, network-cleanup-required, istanbul
+  Tags: networks/template::istanbul-3plus1, pre-condition/no-record-blocknumber, gcmode, block-sync
 
   Geth 1.8.12 introduces `--gcmode=full/archive`. This controls trie pruning which is enabled by default on all `--syncmode`.
   Setting `--gcmode=archive` would retain all historical data.
@@ -13,22 +13,19 @@
       |istanbul3 |non-permissioned |istanbul |full   |
       |istanbul4 |non-permissioned |istanbul |archive|
 
-  `quorum-tools` is needed in order to run this specification with command `qctl quorum boot`. `boot-endpoint` in `application-local.yml` must be configured accordingly
-
 ## Verify block synchronization
 
-  Tags: add, start, stop, network-setup
+  Tags: post-condition/datadir-cleanup, post-condition/network-cleanup
 
   This scenario is run against each row of data in the table above
 
-* Start a <networkType> Quorum Network, named it <id>, with "3" nodes with <gcmode> `gcmode` using <consensus> consensus
+* Start a <networkType> Quorum Network, named it <id>, consisting of "Node1,Node2,Node3" with <gcmode> `gcmode` using <consensus> consensus
 * Blocks are synced when adding new node "Node4" with <gcmode> `gcmode` to network <id>
 * "Node4" is able to seal new blocks
 * Verify privacy between "Node1" and "Node4" excluding "Node3" when using a simple smart contract
+* Record the current block number, named it as "blockHeightBeforeStart"
 * Stop all nodes in the network <id>
 * Start all nodes in the network <id>
-* Verify block heights in all nodes are the same in the network <id>
+* Verify block heights in all nodes are greater or equals to "blockHeightBeforeStart" in the network <id>
 * Verify privacy between "Node1" and "Node4" excluding "Node3" when using a simple smart contract
 
----
-Clean up the network is done via execution hook which is setup for `network-cleanup-required` tag

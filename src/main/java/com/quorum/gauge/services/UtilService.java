@@ -19,15 +19,16 @@
 
 package com.quorum.gauge.services;
 
+import com.quorum.gauge.common.QuorumNetworkProperty.Node;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.ext.PendingTransaction;
+import io.reactivex.Observable;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.methods.response.EthBlockNumber;
 import org.web3j.protocol.core.methods.response.NetPeerCount;
 import org.web3j.protocol.core.methods.response.Transaction;
-import io.reactivex.Observable;
 
 import java.util.List;
 
@@ -36,6 +37,10 @@ public class UtilService extends AbstractService {
 
     public Observable<EthBlockNumber> getCurrentBlockNumber() {
         return getCurrentBlockNumberFrom(QuorumNode.Node1);
+    }
+
+    public Observable<EthBlockNumber> getCurrentBlockNumberFrom(Node node) {
+        return getCurrentBlockNumberFrom(QuorumNode.valueOf(node.getName()));
     }
 
     public Observable<EthBlockNumber> getCurrentBlockNumberFrom(QuorumNode node) {
@@ -64,5 +69,4 @@ public class UtilService extends AbstractService {
 
         return peerCount.getQuantity().intValue();
     }
-
 }

@@ -19,18 +19,18 @@
 
 package com.quorum.gauge.services;
 
-import com.quorum.gauge.common.QuorumNetworkProperty;
+import com.quorum.gauge.common.QuorumNetworkProperty.Node;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.ext.NodeInfo;
 import com.quorum.gauge.ext.RaftCluster;
 import com.quorum.gauge.ext.RaftLeader;
+import io.reactivex.Observable;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.Response;
-import io.reactivex.Observable;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -38,6 +38,10 @@ import java.util.Map;
 @Service
 public class RaftService extends AbstractService {
     private static final Logger logger = LoggerFactory.getLogger(RaftService.class);
+
+    public Observable<RaftAddPeer> addPeer(String existingNode, String enodeUrl) {
+        return addPeer(QuorumNode.valueOf(existingNode), enodeUrl);
+    }
 
     public Observable<RaftAddPeer> addPeer(QuorumNode node, String enode) {
         Request<?, RaftService.RaftAddPeer> request = new Request<>(
@@ -75,7 +79,7 @@ public class RaftService extends AbstractService {
         String leaderEnode = response.getResult();
         logger.debug("Retrieved leader enode: {}", leaderEnode);
 
-        Map<QuorumNode, QuorumNetworkProperty.Node> nodes = connectionFactory().getNetworkProperty().getNodes();
+        Map<QuorumNode, Node> nodes = connectionFactory().getNetworkProperty().getNodes();
         for (QuorumNode nodeId : nodes.keySet()) {
             Request<?, NodeInfo> nodeInfoRequest = new Request<>(
                     "admin_nodeInfo",
