@@ -108,6 +108,8 @@ public class QuorumNetworkProperty {
         private String validatorAddress;
         @JsonProperty("enode-address")
         private String enode;
+        @JsonProperty("graphql-url")
+        private String graphqlUrl;
 
         public String getPrivacyAddress() {
             return privacyAddress;
@@ -161,6 +163,14 @@ public class QuorumNetworkProperty {
 
         public void setPrivacyAddressAliases(Map<String, String> privacyAddressAliases) {
             this.privacyAddressAliases = privacyAddressAliases;
+        }
+
+        public String getGraphqlUrl() {
+            return graphqlUrl;
+        }
+
+        public void setGraphqlUrl(String graphqlUrl) {
+            this.graphqlUrl = graphqlUrl;
         }
     }
 }
