@@ -108,7 +108,6 @@ public class QuorumNetworkProperty {
         private String validatorAddress;
         @JsonProperty("enode-address")
         private String enode;
-        @JsonProperty("graphql-url")
         private String graphqlUrl;
 
         public String getPrivacyAddress() {

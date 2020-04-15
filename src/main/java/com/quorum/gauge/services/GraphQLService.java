@@ -2,18 +2,14 @@ package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
+import io.reactivex.Observable;
+import okhttp3.*;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.HttpClientBuilder;
-
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
@@ -21,28 +17,31 @@ import java.io.InputStreamReader;
 public class GraphQLService extends AbstractService {
     private static final Logger logger = LoggerFactory.getLogger(GraphQLService.class);
 
-    public int getBlockNumber(QuorumNode node) {
+    @Autowired
+    OkHttpClient httpClient;
+
+    public Observable<Integer> getBlockNumber(QuorumNode node) {
         String query = "{ \"query\": \"{ block { number } }\" }";
         JSONObject jsonObject = executeGraphQL(node, query);
         if (jsonObject != null) {
             int blockNumber = Integer.decode(((JSONObject)((JSONObject)jsonObject.get("data")).get("block")).get("number").toString());
             logger.debug("GraphQL block number response: " + blockNumber);
-            return blockNumber;
+            return Observable.just(blockNumber);
         }
         logger.debug("Invalid GraphQL block number response");
-        return -1;
+        return Observable.just(-1);
     }
 
-    public Boolean getIsPrivate(QuorumNode node, String hash) {
+    public Observable<Boolean> getIsPrivate(QuorumNode node, String hash) {
         String query = "{ \"query\": \"{ transaction(hash: \\\"" + hash + "\\\") { isPrivate } }\" }";
         JSONObject jsonObject = executeGraphQL(node, query);
-        return Boolean.parseBoolean(((JSONObject)((JSONObject)jsonObject.get("data")).get("transaction")).get("isPrivate").toString());
+        return Observable.just(Boolean.parseBoolean(((JSONObject)((JSONObject)jsonObject.get("data")).get("transaction")).get("isPrivate").toString()));
     }
 
-    public String getPrivatePayload(QuorumNode node, String hash) {
+    public Observable<String> getPrivatePayload(QuorumNode node, String hash) {
         String query = "{ \"query\": \"{ transaction(hash: \\\"" + hash + "\\\") { privateInputData } }\" }";
         JSONObject jsonObject = executeGraphQL(node, query);
-        return ((JSONObject)((JSONObject)jsonObject.get("data")).get("transaction")).get("privateInputData").toString();
+        return Observable.just(((JSONObject)((JSONObject)jsonObject.get("data")).get("transaction")).get("privateInputData").toString());
     }
 
     private String graphqlUrl(QuorumNode node) {
@@ -54,15 +53,16 @@ public class GraphQLService extends AbstractService {
     }
 
     private JSONObject executeGraphQL(QuorumNode node, String query) {
-        StringEntity entity = new StringEntity(query,
-            ContentType.APPLICATION_JSON);
-        HttpClient httpClient = HttpClientBuilder.create().build();
-        HttpPost request = new HttpPost(graphqlUrl(node));
-        request.setEntity(entity);
-
+        RequestBody body = RequestBody.create(
+            MediaType.parse("application/json"), query);
+        Request request = new Request.Builder()
+            .url(graphqlUrl(node))
+            .post(body)
+            .build();
+        Call call = httpClient.newCall(request);
         try {
-            HttpResponse response = httpClient.execute(request);
-            InputStream responseBody = response.getEntity().getContent();
+            Response response = call.execute();
+            InputStream responseBody = response.body().byteStream();
             JSONParser jsonParser = new JSONParser();
             JSONObject jsonObject = (JSONObject)jsonParser.parse(
                 new InputStreamReader(responseBody, "UTF-8"));

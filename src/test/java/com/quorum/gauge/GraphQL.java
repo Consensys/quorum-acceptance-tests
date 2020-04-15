@@ -19,14 +19,14 @@ public class GraphQL extends AbstractSpecImplementation {
         assertThat(graphQLService.getBlockNumber(node)).isEqualTo(currentBlockHeight);
     }
 
-    @Step("Get isPrivate field for <contractName>'s contract deployment transaction using GraphQL query from <node> and it should should equal to <isPrivate>")
+    @Step("Get isPrivate field for <contractName>'s contract deployment transaction using GraphQL query from <node> and it should equal to <isPrivate>")
     public void GetIsPrivate(String contractName, QuorumNode node, Boolean isPrivate) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         String transactionHash = c.getTransactionReceipt().orElseThrow(() -> new RuntimeException("no transaction receipt for contract")).getTransactionHash();
         assertThat(graphQLService.getIsPrivate(node, transactionHash)).isEqualTo(isPrivate);
     }
 
-    @Step("Get privateInputData field for <contractName>'s contract deployment transaction using GraphQL query from <node> and it should should be the same as eth_getQuorumPayload")
+    @Step("Get privateInputData field for <contractName>'s contract deployment transaction using GraphQL query from <node> and it should be the same as eth_getQuorumPayload")
     public void GetPrivateInputData(String contractName, QuorumNode node) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         String transactionHash = c.getTransactionReceipt().orElseThrow(() -> new RuntimeException("no transaction receipt for contract")).getTransactionHash();
