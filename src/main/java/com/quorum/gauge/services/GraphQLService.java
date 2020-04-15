@@ -1,17 +1,16 @@
 package com.quorum.gauge.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import io.reactivex.Observable;
 import okhttp3.*;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.util.Map;
 
 @Service
 public class GraphQLService extends AbstractService {
@@ -22,9 +21,9 @@ public class GraphQLService extends AbstractService {
 
     public Observable<Integer> getBlockNumber(QuorumNode node) {
         String query = "{ \"query\": \"{ block { number } }\" }";
-        JSONObject jsonObject = executeGraphQL(node, query);
+        Map<String, Object> jsonObject = executeGraphQL(node, query);
         if (jsonObject != null) {
-            int blockNumber = Integer.decode(((JSONObject)((JSONObject)jsonObject.get("data")).get("block")).get("number").toString());
+            int blockNumber = Integer.decode(((Map<String, Object>)((Map<String, Object>)jsonObject.get("data")).get("block")).get("number").toString());
             logger.debug("GraphQL block number response: " + blockNumber);
             return Observable.just(blockNumber);
         }
@@ -34,14 +33,14 @@ public class GraphQLService extends AbstractService {
 
     public Observable<Boolean> getIsPrivate(QuorumNode node, String hash) {
         String query = "{ \"query\": \"{ transaction(hash: \\\"" + hash + "\\\") { isPrivate } }\" }";
-        JSONObject jsonObject = executeGraphQL(node, query);
-        return Observable.just(Boolean.parseBoolean(((JSONObject)((JSONObject)jsonObject.get("data")).get("transaction")).get("isPrivate").toString()));
+        Map<String, Object> jsonObject = executeGraphQL(node, query);
+        return Observable.just(Boolean.parseBoolean(((Map<String, Object>)((Map<String, Object>)jsonObject.get("data")).get("transaction")).get("isPrivate").toString()));
     }
 
     public Observable<String> getPrivatePayload(QuorumNode node, String hash) {
         String query = "{ \"query\": \"{ transaction(hash: \\\"" + hash + "\\\") { privateInputData } }\" }";
-        JSONObject jsonObject = executeGraphQL(node, query);
-        return Observable.just(((JSONObject)((JSONObject)jsonObject.get("data")).get("transaction")).get("privateInputData").toString());
+        Map<String, Object> jsonObject = executeGraphQL(node, query);
+        return Observable.just(((Map<String, Object>)((Map<String, Object>)jsonObject.get("data")).get("transaction")).get("privateInputData").toString());
     }
 
     private String graphqlUrl(QuorumNode node) {
@@ -52,7 +51,7 @@ public class GraphQLService extends AbstractService {
         return nodeConfig.getGraphqlUrl();
     }
 
-    private JSONObject executeGraphQL(QuorumNode node, String query) {
+    private Map<String, Object> executeGraphQL(QuorumNode node, String query) {
         RequestBody body = RequestBody.create(
             MediaType.parse("application/json"), query);
         Request request = new Request.Builder()
@@ -63,10 +62,7 @@ public class GraphQLService extends AbstractService {
         try {
             Response response = call.execute();
             InputStream responseBody = response.body().byteStream();
-            JSONParser jsonParser = new JSONParser();
-            JSONObject jsonObject = (JSONObject)jsonParser.parse(
-                new InputStreamReader(responseBody, "UTF-8"));
-            return jsonObject;
+            return new ObjectMapper().readValue(responseBody, Map.class);
         } catch (Exception e) {
             e.printStackTrace();
         }
