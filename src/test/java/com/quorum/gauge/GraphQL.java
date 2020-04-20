@@ -16,14 +16,14 @@ public class GraphQL extends AbstractSpecImplementation {
     @Step("Get block number from <node> graphql and it should equal to <snapshotName>")
     public void getCurrentBlockNumber(QuorumNode node, String snapshotName) {
         int currentBlockHeight = ((BigInteger) DataStoreFactory.getScenarioDataStore().get(snapshotName)).intValue();
-        assertThat(graphQLService.getBlockNumber(node).blockingFirst().intValue()).isEqualTo(currentBlockHeight);
+        assertThat(graphQLService.getBlockNumber(node).blockingGet().intValue()).isEqualTo(currentBlockHeight);
     }
 
     @Step("Get isPrivate field for <contractName>'s contract deployment transaction using GraphQL query from <node> and it should equal to <isPrivate>")
     public void GetIsPrivate(String contractName, QuorumNode node, Boolean isPrivate) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         String transactionHash = c.getTransactionReceipt().orElseThrow(() -> new RuntimeException("no transaction receipt for contract")).getTransactionHash();
-        assertThat(graphQLService.getIsPrivate(node, transactionHash).blockingFirst().booleanValue()).isEqualTo(isPrivate);
+        assertThat(graphQLService.getIsPrivate(node, transactionHash).blockingGet().booleanValue()).isEqualTo(isPrivate);
     }
 
     @Step("Get privateInputData field for <contractName>'s contract deployment transaction using GraphQL query from <node> and it should be the same as eth_getQuorumPayload")
@@ -31,6 +31,6 @@ public class GraphQL extends AbstractSpecImplementation {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         String transactionHash = c.getTransactionReceipt().orElseThrow(() -> new RuntimeException("no transaction receipt for contract")).getTransactionHash();
         EthGetQuorumPayload payload = transactionService.getPrivateTransactionPayload(node, transactionHash).blockingFirst();
-        assertThat(graphQLService.getPrivatePayload(node, transactionHash).blockingFirst()).isEqualTo(payload.getResult());
+        assertThat(graphQLService.getPrivatePayload(node, transactionHash).blockingGet()).isEqualTo(payload.getResult());
     }
 }
