@@ -28,6 +28,7 @@ import java.math.BigInteger;
 public abstract class AbstractService {
 
     BigInteger DEFAULT_GAS_LIMIT = new BigInteger("47b760", 16);
+    BigInteger DEFAULT_PERMISSIONS_GAS_LIMIT = new BigInteger("8C6180", 16);
     int DEFAULT_SLEEP_DURATION_IN_MILLIS = 2000;
     int DEFAULT_MAX_RETRY = 30;
 

@@ -81,6 +81,8 @@ resource "local_file" "genesis-file" {
       "homesteadBlock": 0,
       "byzantiumBlock": 0,
       "constantinopleBlock":0,
+      "istanbulBlock":0,
+      "petersburgBlock":0,
       "chainId": ${random_integer.network_id.result},
       "eip150Block": 0,
       "eip155Block": 0,

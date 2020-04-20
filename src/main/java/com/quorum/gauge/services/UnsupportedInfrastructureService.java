@@ -69,6 +69,11 @@ public class UnsupportedInfrastructureService implements InfrastructureService, 
     }
 
     @Override
+    public Observable<String> copyFile(String resourceId, String filePath, String modifier) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public Observable<Boolean> isGeth(String resourceId) {
         throw new UnsupportedOperationException();
     }

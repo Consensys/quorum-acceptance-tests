@@ -159,6 +159,34 @@ public class DockerInfrastructureService
         );
     }
 
+
+    @Override
+    public Observable<String> copyFile(String resourceId, String filePath, String modifier){
+        String str = modifier;
+        InputStream is = null;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        TarArchiveOutputStream taos = new TarArchiveOutputStream(baos);
+        TarArchiveEntry entry = new TarArchiveEntry(new File(filePath).getName());
+        entry.setSize(str.length());
+        entry.setMode(TarArchiveEntry.DEFAULT_FILE_MODE);
+        try {
+            taos.putArchiveEntry(entry);
+            IOUtils.copy(new ByteArrayInputStream(str.getBytes()), taos);
+            taos.closeArchiveEntry();
+            taos.finish();
+            taos.close();
+            baos.close();
+            is = new ByteArrayInputStream(baos.toByteArray());
+            dockerClient.copyArchiveToContainerCmd(resourceId)
+                .withTarInputStream(is)
+                .withRemotePath(new File(filePath).getParent())
+                .exec();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return Observable.just(resourceId);
+    }
+
     /**
      * Read content of the give file, call the modifier to get the new content and write back to the file
      *

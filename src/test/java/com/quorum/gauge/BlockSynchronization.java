@@ -90,6 +90,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
                     .blockingSubscribe();
         } finally {
             DataStoreFactory.getScenarioDataStore().put("networkResources", networkResources);
+            DataStoreFactory.getSpecDataStore().put("networkResources", networkResources);
         }
         DataStoreFactory.getScenarioDataStore().put("nodes_" + id, nodes);
         DataStoreFactory.getScenarioDataStore().put("args_" + id, additionalGethArgs);
@@ -260,7 +261,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
 
     @Step("Stop all nodes in the network <id>")
     public void stopAllNodes(String id) {
-        NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
+        NetworkResources networkResources = mustHaveValue(DataStoreFactory.getSpecDataStore(), "networkResources", NetworkResources.class);
         Observable.fromIterable(networkResources.allResourceIds())
                 .flatMap(infraService::stopResource)
                 .blockingSubscribe();
@@ -268,7 +269,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
 
     @Step("Start all nodes in the network <id>")
     public void startAllNodes(String id) {
-        NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
+        NetworkResources networkResources = mustHaveValue(DataStoreFactory.getSpecDataStore(), "networkResources", NetworkResources.class);
         // start all nodes
         Observable.fromIterable(networkResources.allResourceIds())
                 .flatMap(infraService::startResource)
@@ -414,6 +415,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
                     .blockingSubscribe();
         } finally {
             DataStoreFactory.getScenarioDataStore().put("networkResources", networkResources);
+            DataStoreFactory.getSpecDataStore().put("networkResources", networkResources);
         }
         DataStoreFactory.getScenarioDataStore().put("nodes_" + id, nodes);
         DataStoreFactory.getScenarioDataStore().put("args_" + id, additionalGethArgs);

@@ -51,6 +51,7 @@ jobs:
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul'
           - 'migration && networks/template::raft-4nodes'
           - 'migration && networks/template::istanbul-4nodes'
+          - 'permissions && networks/template::raft-3plus1'
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout'

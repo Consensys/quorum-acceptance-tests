@@ -57,6 +57,8 @@ public interface InfrastructureService {
      */
     Observable<String> modifyFile(String resourceId, String filePath, FileContentModifier modifier);
 
+    Observable<String> copyFile(String resourceId, String filePath, String modifier);
+
     Observable<Boolean> isGeth(String resourceId);
 
     Observable<Boolean> deleteDatadirs(NetworkResources networkResources);
