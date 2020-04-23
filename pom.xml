@@ -19,13 +19,15 @@
 
         <!-- only run non-advanced test cases. This property is from gauge-maven-plugin configuration -->
         <tags>basic</tags>
+        <!-- Gauge environment being used -->
+        <env>run-local</env>
 
         <!-- dependencies -->
         <web3j-quorum.version>4.0.6</web3j-quorum.version>
         <commons-lang.version>2.6</commons-lang.version>
         <docker-java.version>3.2.1</docker-java.version>
-
-        <!-- there's an issue with code gen in web3j 3.5.0-->
+        <apache-sshd.version>2.4.0</apache-sshd.version>
+        <i2p-eddsa.version>0.3.0</i2p-eddsa.version>
         <web3j.version>4.2.0</web3j.version>
         <gauge-java.version>0.7.4</gauge-java.version>
 
@@ -88,9 +90,29 @@
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-xml</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.sshd</groupId>
+            <artifactId>sshd-core</artifactId>
+            <version>${apache-sshd.version}</version>
+        </dependency>
+        <dependency>
+            <!-- this is to support SSHClient using Apache SSHD when connecting to openssh asking for eddsa  -->
+            <groupId>net.i2p.crypto</groupId>
+            <artifactId>eddsa</artifactId>
+            <version>${i2p-eddsa.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>3.0.0</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -191,14 +213,11 @@
         <profile>
             <id>auto</id>
             <properties>
-                <!-- Gauge environment being used -->
-                <env>run-local</env>
-                <!-- ignore Terraform apply -->
-                <auto.skipApply>false</auto.skipApply>
-                <!-- ignore wait utility which checks for network being healthy -->
-                <auto.skipWait>false</auto.skipWait>
                 <!-- run Terraform destory after test -->
-                <auto.forceDestroy>false</auto.forceDestroy>
+                <network.forceDestroy>false</network.forceDestroy>
+
+                <!-- enable remote infrastructure. Will be set to true if profile `infra` is activated -->
+                <infra.enabled>false</infra.enabled>
                 <!--
                 This value is to differentiate between multiple `mvn` runs.
                 Github Actions need to inject different values for different runs so
@@ -236,39 +255,100 @@
                                     <failOnError>true</failOnError>
                                     <exportAntProperties>false</exportAntProperties>
                                     <target name="Check required tools and display their info">
-                                        <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
                                         <ant antfile="${basedir}/src/main/ant/helper.xml"
                                             target="tools"/>
                                     </target>
                                 </configuration>
                             </execution>
                             <execution>
-                                <id>extract-network-from-tags</id>
+                                <id>extract</id>
                                 <goals><goal>run</goal></goals>
                                 <phase>process-test-resources</phase>
                                 <configuration>
                                     <exportAntProperties>true</exportAntProperties>
-                                    <target name="Extract network location and profile from tags"
-                                            unless="auto.usingNetwork" if="tags">
+                                    <target name="Extract network location and profile">
                                         <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
-                                        <echo message="Tags: ${tags}" />
-                                        <propertyregex property="auto.usingNetwork"
-                                                       input="${tags}"
-                                                       regexp="(networks/[a-zA-Z-_\.]+)::([0-9a-zA-Z-_\.]+)"
-                                                       select="\1"
-                                                       casesensitive="false"
-                                                       defaultValue="networks/typical"/>
-                                        <propertyregex property="auto.networkProfile"
-                                                       input="${tags}"
-                                                       regexp="(networks/[a-zA-Z-_\.]+)::([0-9a-zA-Z-_\.]+)"
-                                                       select="\2"
-                                                       casesensitive="false"
-                                                       defaultValue="istanbul"/>
-                                        <condition property="skipDestroy" value="false" else="true">
-                                            <istrue value="${auto.forceDestroy}"/>
+                                        <macrodef name="parser">
+                                            <attribute name="raw" default="undefined" />
+                                            <attribute name="prefix" default="networks" />
+                                            <attribute name="folderPropertyName" />
+                                            <attribute name="defaultFolder" default="target/tf-scratchpad" />
+                                            <attribute name="profilePropertyName" />
+                                            <attribute name="defaultProfile" default="undefined" />
+                                            <sequential>
+                                                <mkdir dir="@{defaultFolder}" />
+                                                <local name="folder_extract" />
+                                                <local name="profile_extract" />
+                                                <local name="silent" />
+                                                <echo message="Extract from: @{raw}" level="info" />
+                                                <propertyregex property="folder_extract"
+                                                               input="@{raw}"
+                                                               regexp="(@{prefix}/[0-9a-zA-Z-_\.]+)::([0-9a-zA-Z-_\.]+)"
+                                                               select="\1"
+                                                               casesensitive="false"
+                                                               defaultValue="@{defaultFolder}"/>
+                                                <propertyregex property="profile_extract"
+                                                               input="@{raw}"
+                                                               regexp="(@{prefix}/[0-9a-zA-Z-_\.]+)::([0-9a-zA-Z-_\.]+)"
+                                                               select="\2"
+                                                               casesensitive="false"
+                                                               defaultValue="@{defaultProfile}"/>
+                                                <property name="@{folderPropertyName}" value="${folder_extract}" />
+                                                <property name="@{profilePropertyName}" value="${profile_extract}" />
+                                                <if>
+                                                    <not><equals arg1="${profile_extract}" arg2="undefined" /></not>
+                                                    <then>
+                                                        <touch file="${folder_extract}/terraform.${profile_extract}.tfvars" mkdirs="true" />
+                                                    </then>
+                                                </if>
+                                                <echo level="info" message="@{folderPropertyName}=${folder_extract}" />
+                                                <echo level="info" message="@{profilePropertyName}=${profile_extract}" />
+                                                <exec executable="terraform" dir="${folder_extract}"
+                                                      failonerror="false" failifexecutionfails="false">
+                                                    <arg line="workspace new ${profile_extract}"/>
+                                                </exec>
+                                            </sequential>
+                                        </macrodef>
+                                        <local name="networkRaw" />
+                                        <condition property="networkRaw" value="${network.target}" else="${tags}">
+                                            <isset property="network.target" />
                                         </condition>
-                                        <echo message="Network location: '${auto.usingNetwork}' with profile '${auto.networkProfile}'"/>
-                                        <echo message="Auto-destroying network: ${auto.forceDestroy}"/>
+                                        <parser raw="${networkRaw}" prefix="networks"
+                                                folderPropertyName="network.folder"
+                                                profilePropertyName="network.profile"/>
+                                        <condition property="network.skipDestroy" value="true" else="false">
+                                            <or>
+                                                <isfalse value="${network.forceDestroy}"/>
+                                                <equals arg1="${network.profile}" arg2="undefined" />
+                                            </or>
+                                        </condition>
+                                        <condition property="network.skipApply" value="true" else="false">
+                                            <equals arg1="${network.profile}" arg2="undefined" />
+                                        </condition>
+                                        <condition property="network.skipWait" value="true" else="false">
+                                            <equals arg1="${network.profile}" arg2="undefined" />
+                                        </condition>
+                                        <echo level="info" message="Auto-destroying network: ${network.forceDestroy}"/>
+                                        <condition property="infra.disabled" value="false" else="true">
+                                            <istrue value="${infra.enabled}"/>
+                                        </condition>
+                                        <if>
+                                            <equals arg1="${infra.enabled}" arg2="true"/>
+                                            <then>
+                                                <parser raw="${infra.target}" prefix="networks/_infra"
+                                                        folderPropertyName="infra.folder"
+                                                        profilePropertyName="infra.profile"/>
+                                                <condition property="infra.skipDestroy" value="false" else="true">
+                                                    <istrue value="${infra.forceDestroy}"/>
+                                                </condition>
+                                                <echo level="info" message="Auto-destroying infra: ${infra.forceDestroy}"/>
+                                            </then>
+                                            <else>
+                                                <property name="infra.skipDestroy" value="true" />
+                                                <property name="infra.skipApply" value="true" />
+                                                <property name="infra.skipWait" value="true" />
+                                            </else>
+                                        </if>
                                     </target>
                                 </configuration>
                             </execution>
@@ -279,65 +359,115 @@
                         <artifactId>exec-maven-plugin</artifactId>
                         <executions>
                             <execution>
-                                <id>terraform-init</id>
+                                <id>infra.terraform-init</id>
                                 <goals><goal>exec</goal></goals>
                                 <phase>process-test-resources</phase>
                                 <configuration>
-                                    <skip>${auto.skipApply}</skip>
+                                    <skip>${infra.skipApply}</skip>
                                     <commandlineArgs>init</commandlineArgs>
+                                    <workingDirectory>${infra.folder}</workingDirectory>
                                 </configuration>
                             </execution>
                             <execution>
-                                <id>terraform-apply</id>
+                                <id>infra.terraform-workspace</id>
                                 <goals><goal>exec</goal></goals>
                                 <phase>process-test-resources</phase>
                                 <configuration>
-                                    <skip>${auto.skipApply}</skip>
-                                    <commandlineArgs>apply --auto-approve -var-file terraform.${auto.networkProfile}.tfvars</commandlineArgs>
+                                    <skip>${infra.skipApply}</skip>
+                                    <commandlineArgs>workspace select ${infra.profile}</commandlineArgs>
+                                    <workingDirectory>${infra.folder}</workingDirectory>
                                 </configuration>
                             </execution>
                             <execution>
-                                <!-- this execution is to populate Gauge environment -->
-                                <id>terraform-output-for-gauge</id>
+                                <id>infra.terraform-apply</id>
                                 <goals><goal>exec</goal></goals>
                                 <phase>process-test-resources</phase>
                                 <configuration>
-                                    <commandlineArgs>output environments</commandlineArgs>
-                                    <outputFile>${basedir}/env/${env}/user.properties</outputFile>
+                                    <skip>${infra.skipApply}</skip>
+                                    <commandlineArgs>apply --auto-approve -var-file terraform.${infra.profile}.tfvars -var tfvars_outdir='${basedir}/${network.folder}' -var properties_outdir='${project.build.outputDirectory}' -var run_on='${env}'</commandlineArgs>
+                                    <workingDirectory>${infra.folder}</workingDirectory>
                                 </configuration>
                             </execution>
                             <execution>
-                                <id>terraform-output-for-wait-execution</id>
+                                <id>infra.wait</id>
                                 <goals><goal>exec</goal></goals>
                                 <phase>process-test-resources</phase>
                                 <configuration>
-                                    <commandlineArgs>output properties</commandlineArgs>
-                                    <outputFile>${project.build.directory}/wait.properties</outputFile>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>wait</id>
-                                <goals><goal>exec</goal></goals>
-                                <phase>process-test-resources</phase>
-                                <configuration>
-                                    <skip>${auto.skipWait}</skip>
+                                    <skip>${infra.skipWait}</skip>
                                     <executable>java</executable>
                                     <arguments>
                                         <argument>-classpath</argument>
                                         <classpath/>
                                         <argument>com.quorum.gauge.DockerWaitMain</argument>
-                                        <argument>${project.build.directory}/wait.properties</argument>
+                                        <argument>infra</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>network.terraform-init</id>
+                                <goals><goal>exec</goal></goals>
+                                <phase>process-test-resources</phase>
+                                <configuration>
+                                    <skip>${network.skipApply}</skip>
+                                    <commandlineArgs>init</commandlineArgs>
+                                    <workingDirectory>${network.folder}</workingDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>network.terraform-workspace</id>
+                                <goals><goal>exec</goal></goals>
+                                <phase>process-test-resources</phase>
+                                <configuration>
+                                    <skip>${network.skipApply}</skip>
+                                    <commandlineArgs>workspace select ${network.profile}</commandlineArgs>
+                                    <workingDirectory>${network.folder}</workingDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>network.terraform-apply</id>
+                                <goals><goal>exec</goal></goals>
+                                <phase>process-test-resources</phase>
+                                <configuration>
+                                    <skip>${network.skipApply}</skip>
+                                    <commandlineArgs>apply --auto-approve -var-file terraform.${network.profile}.tfvars -var properties_outdir='${project.build.outputDirectory}' -var gauge_env_outdir='${basedir}/env/${env}'</commandlineArgs>
+                                    <workingDirectory>${network.folder}</workingDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>network.wait</id>
+                                <goals><goal>exec</goal></goals>
+                                <phase>process-test-resources</phase>
+                                <configuration>
+                                    <skip>${network.skipWait}</skip>
+                                    <executable>java</executable>
+                                    <arguments>
+                                        <argument>-classpath</argument>
+                                        <classpath/>
+                                        <argument>com.quorum.gauge.DockerWaitMain</argument>
+                                        <argument>network</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
                             <execution>
                                 <!-- this execution is run after Gauge test -->
-                                <id>terraform-destroy</id>
+                                <id>network.terraform-destroy</id>
                                 <goals><goal>exec</goal></goals>
                                 <phase>test</phase>
                                 <configuration>
-                                    <skip>${skipDestroy}</skip>
-                                    <commandlineArgs>destroy --auto-approve -var-file terraform.${auto.networkProfile}.tfvars</commandlineArgs>
+                                    <skip>${network.skipDestroy}</skip>
+                                    <commandlineArgs>destroy --auto-approve -var-file terraform.${network.profile}.tfvars</commandlineArgs>
+                                    <workingDirectory>${network.folder}</workingDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <!-- this execution is run after Gauge test -->
+                                <id>infra.terraform-destroy</id>
+                                <goals><goal>exec</goal></goals>
+                                <phase>test</phase>
+                                <configuration>
+                                    <skip>${infra.skipDestroy}</skip>
+                                    <commandlineArgs>destroy --auto-approve -var-file terraform.${infra.profile}.tfvars</commandlineArgs>
+                                    <workingDirectory>${infra.folder}</workingDirectory>
                                 </configuration>
                             </execution>
                             <execution>
@@ -354,11 +484,22 @@
                         </executions>
                         <configuration>
                             <executable>terraform</executable>
-                            <workingDirectory>${auto.usingNetwork}</workingDirectory>
                         </configuration>
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+        <profile>
+            <id>infra</id>
+            <activation>
+                <property>
+                    <name>infra.target</name>
+                </property>
+            </activation>
+            <properties>
+                <infra.enabled>true</infra.enabled>
+                <infra.forceDestroy>false</infra.forceDestroy>
+            </properties>
         </profile>
     </profiles>
 </project>

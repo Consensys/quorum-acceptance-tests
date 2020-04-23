@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<project>
+<project name="helper">
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
     <target name="tools">
         <!-- this calls target exec to run the command -->
         <foreach param="cmdRaw" trim="true" target="exec"
@@ -10,7 +11,7 @@
                        regexp="([^\s]+)\s+([^\s+]+)" select="\1"/>
         <propertyregex property="arg"  input="${cmdRaw}"
                        regexp="([^\s]+)\s+([^\s+]+)" select="\2"/>
-        <echo message="$ ${cmdRaw}"/>
+        <echo level="info" message="$ ${cmdRaw}"/>
         <exec executable="${cmd}"><arg line="${arg}"/></exec>
     </target>
 </project>

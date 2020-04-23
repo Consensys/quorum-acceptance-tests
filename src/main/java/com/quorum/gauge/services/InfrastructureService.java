@@ -123,7 +123,7 @@ public interface InfrastructureService {
         public String getAdditionalGethArgs() { return additionalGethArgs; }
     }
     class NetworkResources extends ConcurrentHashMap<String, Vector<String>> {
-        public void add(String nodeName, String resourceId) {
+        public synchronized void add(String nodeName, String resourceId) {
             Vector<String> resources = super.get(nodeName);
             if (CollectionUtils.isEmpty(resources)) {
                 resources = new Vector<>();

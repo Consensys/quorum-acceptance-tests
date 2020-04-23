@@ -96,7 +96,7 @@ public class QuorumNetworkProperty {
      */
     public Duration getConsensusGracePeriod() {
         Duration duration = Duration.ofSeconds(15);
-        switch (getConsensus()) {
+        switch (Optional.ofNullable(getConsensus()).orElse("")) {
             case "raft":
                 duration = Duration.ofSeconds(30);
                 break;
@@ -108,6 +108,11 @@ public class QuorumNetworkProperty {
     }
 
     public static class SocksProxy {
+        /**
+         * This configuration allows to create a proxy server that supports dynamic port forwarding
+         */
+        private SSHTunneling tunnel;
+
         private String host;
         private int port;
 
@@ -125,6 +130,62 @@ public class QuorumNetworkProperty {
 
         public void setPort(int port) {
             this.port = port;
+        }
+
+        public SSHTunneling getTunnel() {
+            return tunnel;
+        }
+
+        public void setTunnel(SSHTunneling tunnel) {
+            this.tunnel = tunnel;
+        }
+
+        public static class SSHTunneling {
+            private boolean enabled;
+            private boolean autoStart;
+            private String user;
+            private String host;
+            private String privateKeyFile;
+
+            public String getUser() {
+                return user;
+            }
+
+            public void setUser(String user) {
+                this.user = user;
+            }
+
+            public String getHost() {
+                return host;
+            }
+
+            public void setHost(String host) {
+                this.host = host;
+            }
+
+            public boolean isEnabled() {
+                return enabled;
+            }
+
+            public void setEnabled(boolean enabled) {
+                this.enabled = enabled;
+            }
+
+            public String getPrivateKeyFile() {
+                return privateKeyFile;
+            }
+
+            public void setPrivateKeyFile(String privateKeyFile) {
+                this.privateKeyFile = privateKeyFile;
+            }
+
+            public boolean isAutoStart() {
+                return autoStart;
+            }
+
+            public void setAutoStart(boolean autoStart) {
+                this.autoStart = autoStart;
+            }
         }
     }
 

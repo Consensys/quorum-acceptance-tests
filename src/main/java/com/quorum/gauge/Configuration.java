@@ -21,6 +21,7 @@ package com.quorum.gauge;
 
 
 import com.quorum.gauge.common.QuorumNetworkProperty;
+import com.quorum.gauge.services.SocksProxyEmbeddedServer;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import org.slf4j.Logger;
@@ -34,6 +35,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @org.springframework.context.annotation.Configuration
@@ -44,7 +46,7 @@ public class Configuration {
     QuorumNetworkProperty networkProperty;
 
     @Bean
-    public OkHttpClient okHttpClient() {
+    public OkHttpClient okHttpClient(Optional<SocksProxyEmbeddedServer> socksProxyEmbeddedServer) {
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
         builder.readTimeout(5, TimeUnit.MINUTES);
         builder.writeTimeout(5, TimeUnit.MINUTES);
@@ -57,8 +59,20 @@ public class Configuration {
         }
         QuorumNetworkProperty.SocksProxy socksProxyConfig = networkProperty.getSocksProxy();
         if (socksProxyConfig != null) {
-            logger.info("Configured SOCKS Proxy ({}:{}) for HTTPClient", socksProxyConfig.getHost(), socksProxyConfig.getPort());
-            builder.proxy(new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(socksProxyConfig.getHost(), socksProxyConfig.getPort())));
+            InetSocketAddress address = null;
+            if (socksProxyEmbeddedServer.isPresent()) {
+                if (socksProxyEmbeddedServer.get().isStarted()) {
+                    address = new InetSocketAddress(socksProxyEmbeddedServer.get().getListenerAddress(), socksProxyEmbeddedServer.get().getListenerPort());
+                } else {
+                    logger.warn("SocksProxy tunneling is configured but not started");
+                }
+            } else {
+                address = new InetSocketAddress(socksProxyConfig.getHost(), socksProxyConfig.getPort());
+            }
+            if (address != null) {
+                logger.info("Configured SOCKS Proxy ({}) for HTTPClient", address);
+                builder.proxy(new Proxy(Proxy.Type.SOCKS, address));
+            }
         }
         // configure to ignore SSL
         try {

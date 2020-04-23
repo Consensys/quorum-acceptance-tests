@@ -6,18 +6,29 @@ on:
     paths-ignore:
       - '**.md'
       - '.gitignore'
+    branches:
+      - '**'
   push:
     paths-ignore:
       - '**.md'
       - '.gitignore'
     branches:
+      - 'master'
       - 'gh-*'
+      - 'dev-*'
 env:
   JAVA_VERSION: 11
   TERRAFORM_VERSION: 0.12.24
   SOLC_VERSION: 0.5.4
   GAUGE_VERSION: 1.0.8
   TERRAFORM_PROVIDER_QUORUM_VERSION: 1.0.0-beta.1
+  INFRA_FOLDER: 'networks/_infra/aws-ec2'
+  INFRA_PROFILE: '${{ secrets.AWS_REGION }}'
+  AWS_ACCESS_KEY_ID: '${{ secrets.AWS_ACCESS_KEY_ID }}'
+  AWS_SECRET_ACCESS_KEY: '${{ secrets.AWS_SECRET_ACCESS_KEY }}'
+  # Terraform variables for infra provisioning
+  TF_VAR_vpc_id: '${{ secrets.AWS_VPC_ID }}'
+  TF_VAR_public_subnet_id: '${{ secrets.AWS_PUBLIC_SUBNET_ID }}'
   BIN_DIR: bin
 jobs:
   run:
@@ -86,31 +97,29 @@ jobs:
         id: setup
         run: |
           ${{ env.BIN_DIR }}/gauge install
-          gaugeEnv=run-${{ github.run_id }}
+          gaugeEnv=GithubActions-workflow-${{ github.run_number }}
           mkdir -p env/$gaugeEnv
+          useAWS=true
+          mvnArg="-Dinfra.target=${{ env.INFRA_FOLDER }}::${{ env.INFRA_PROFILE }}"
+          if [ "${{ env.AWS_ACCESS_KEY_ID }}" == "" ] || [ "${{ github.event_name }}" == "pull_request" ]; then
+            useAWS=false
+            mvnArg=""
+          fi
           echo "::add-path::$(pwd)/${{ env.BIN_DIR }}"
           echo "::set-output name=gauge-env::$gaugeEnv"
+          echo "::set-output name=useAWS::$useAWS"
+          echo "::set-output name=mvnArg::$mvnArg"
       - name: 'Run tests'
         env:
-          TF_VAR_output_dir: ${{ github.workspace }}/tf
+          TF_VAR_output_dir: ${{ runner.temp }}
           #MAVEN_OPTS: -Xmx512m -XX:MaxPermSize=128m
           #LOGGING_LEVEL_COM_QUORUM_GAUGE: DEBUG
         run: |
           mvn clean test \
               -Pauto \
-              -Dtags="${{ matrix.tag }}" \
+              -Dtags="${{ matrix.tag }}" ${{ steps.setup.outputs.mvnArg }} \
               -Denv=${{ steps.setup.outputs.gauge-env }} \
               -Dauto.jobid=${{ steps.keys.outputs.tag }}
-      - name: 'Display debugging info if tests failed'
-        if: failure()
-        run: |
-          ls -l tf/*/**
-          docker ps -a
-          for c in `docker ps -a --format {{.Names}}`; do
-            echo "---> START OF $c"
-            docker logs $c
-            echo "<--- END OF $c"
-          done
       - name: 'Read test report'
         if: always()
         run: |
@@ -129,12 +138,22 @@ jobs:
             echo "::error file=$(_jq '.file'),line=$(_jq '.line'),col=$(_jq '.col')::$(_jq '.message')"
           done
           cat ${{ env.TEST_REPORT_DIR}}/summary.txt
-      - name: Upload test report
+      - name: 'Display debug when failure happens'
+        if: failure() && steps.setup.outputs.useAWS == 'true'
+        working-directory: ${{ env.INFRA_FOLDER }}
+        run: |
+          terraform show
+      - name: 'Upload test report'
         if: always()
         uses: actions/upload-artifact@v1
         with:
           name: testreport-${{ steps.keys.outputs.tag }}
           path: ${{ env.TEST_REPORT_DIR }}
+      - name: 'Destroy AWS infrastructure'
+        if: always() && steps.setup.outputs.useAWS == 'true'
+        # we don't care about containers running on the remote VM
+        run: |
+          mvn exec:exec@infra.terraform-destroy -Pauto -Dinfra.folder="${{ env.INFRA_FOLDER }}" -Dinfra.profile="${{ env.INFRA_PROFILE }}"
   notify:
     if: always() && github.event_name != 'pull_request'
     name: Notify
@@ -172,9 +191,14 @@ jobs:
           gitref_path=${gitref_path/refs\/tags/tree}  # for refs/tags/v1.0.0
           gitref_path=${gitref_path#refs\/}             # for refs/pull/123/merge
           gitref_path=${gitref_path%/merge}           # for refs/pull/123/merge
+          run_on="AWS"
+          if [ "${{ env.AWS_ACCESS_KEY_ID }}" == "" ]; then
+            run_on="GithubActionsVM"
+          fi
           echo "::set-output name=reports::$reports"
           echo "::set-output name=summary::$summary"
           echo "::set-output name=gitref-path::$gitref_path"
+          echo "::set-output name=run-on::$run_on"
       - name: 'Prepare Slack message'
         id: status
         uses: actions/github-script@0.8.0
@@ -291,7 +315,7 @@ jobs:
                     type: "section",
                     text: {
                         type: "mrkdwn",
-                        text: status_icon_func(workflow_status) + " *${{ github.workflow }}* <" + wf_run.data.html_url + "|#${{ github.run_number }}>\n:zap: " + job_blocks.length + "   " + summary_text + "   :stopwatch: " + date_diff_func(new Date(wf_run.data.created_at), new Date(wf_run.data.updated_at))
+                        text: status_icon_func(workflow_status) + " *${{ github.workflow }}* (ran on ${{ steps.report.outputs.run-on }}) <" + wf_run.data.html_url + "|#${{ github.run_number }}>\n:zap: " + job_blocks.length + "   " + summary_text + "   :stopwatch: " + date_diff_func(new Date(wf_run.data.created_at), new Date(wf_run.data.updated_at))
                     }
                 },
                 {
@@ -327,7 +351,52 @@ jobs:
                 blocks: [].concat(header_blocks, job_blocks)
             }
             return slack_msg
+      - name: 'Prepare a short Slack message'
+        if: failure()
+        uses: actions/github-script@0.8.0
+        with:
+          script: |
+            ////////////////////////////////////
+            // retrieve workflow run data
+            ////////////////////////////////////
+            const wf_run = await github.actions.getWorkflowRun({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: ${{ github.run_id }}
+            })
+            var date_diff_func = function(start, end) {
+                var duration = end - start
+                // format the duration
+                var delta = duration / 1000
+                var days = Math.floor(delta / 86400)
+                delta -= days * 86400
+                var hours = Math.floor(delta / 3600) % 24
+                delta -= hours * 3600
+                var minutes = Math.floor(delta / 60) % 60
+                delta -= minutes * 60
+                var seconds = Math.floor(delta % 60)
+                var format_func = function(v, text, check) {
+                    if (v <= 0 && check) {
+                        return ""
+                    } else {
+                        return v + text
+                    }
+                }
+                return format_func(days, "d", true) + format_func(hours, "h", true) + format_func(minutes, "m", true) + format_func(seconds, "s", false)
+            }
+            var slack_msg = {
+                blocks: [
+                  {
+                      type: "section",
+                      text: {
+                          type: "mrkdwn",
+                          text: ":skull_and_crossbones: *${{ github.workflow }}* <" + wf_run.data.html_url + "|#${{ github.run_number }}>\n:stopwatch: " + date_diff_func(new Date(wf_run.data.created_at), new Date(wf_run.data.updated_at))
+                      }
+                  }
+                ]
+            }
+            return slack_msg
       - name: 'Send to Slack'
-        if: success()
+        if: always()
         run: |
           curl -X POST ${{ secrets.SLACK_WEBHOOK_URL}} -H "Content-type: application/json" --data '${{ steps.status.outputs.result }}'

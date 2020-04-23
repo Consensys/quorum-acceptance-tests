@@ -19,20 +19,38 @@
 
 package com.quorum.gauge;
 
+import com.quorum.gauge.services.SocksProxyEmbeddedServer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.SpringApplication;
+import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Profile;
 
 @SpringBootApplication
-@ComponentScan(excludeFilters = {
-        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = CommandLineRunner.class)
-})
 @EnableConfigurationProperties
-public class Main {
+@Profile("DebugSocksProxyEmbeddedServer")
+public class DebugSocksProxyEmbeddedServer implements CommandLineRunner {
+    private static final Logger logger = LoggerFactory.getLogger(DebugSocksProxyEmbeddedServer.class);
+
     public static void main(String[] args) {
-        SpringApplication.run(Main.class, args);
+        new SpringApplicationBuilder(DebugSocksProxyEmbeddedServer.class)
+                .web(WebApplicationType.NONE)
+                .lazyInitialization(true)
+                .profiles("DebugSocksProxyEmbeddedServer")
+                .run(args)
+                .close();
+    }
+
+    @Autowired
+    SocksProxyEmbeddedServer server;
+
+    @Override
+    public void run(String... args) throws Exception {
+        logger.info("Server started: {}", server.isStarted());
+        Thread.sleep(Integer.MAX_VALUE);
     }
 }
