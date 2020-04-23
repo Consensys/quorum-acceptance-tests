@@ -43,15 +43,15 @@ With built-in provisioning feature:
     ```
 * Force destroy the network after running tests:
     ```
-    mvn clean test -Pauto -Dtags="basic || basic-raft || networks/typical::raft" -Dauto.forceDestroy=true
+    mvn clean test -Pauto -Dtags="basic || basic-raft || networks/typical::raft" -Dnetwork.forceDestroy=true
     ```
 * Start the network without running tests:
     ```
-    mvn process-test-resources -Pauto -Dauto.usingNetwork="networks/typical" -Dauto.networkProfile=raft
+    mvn process-test-resources -Pauto -Dnetwork.target="networks/typical::raft"
     ```
 * Destroy the network:
     ```
-    mvn exec:exec@terraform-destroy -Pauto -Dauto.usingNetwork="networks/typical" -Dauto.networkProfile=raft
+    mvn exec:exec@network.terraform-destroy -Pauto -Dnetwork.folder="networks/typical" -Dnetwork.profile=raft
     ```
 
 ### With existing `quorum-examples` network
@@ -59,6 +59,19 @@ With built-in provisioning feature:
 ```
 SPRING_PROFILES_ACTIVE=local.7nodes mvn clean test -Dtags="basic || basic-raft || networks/typical::raft"
 ```
+
+## Remote Docker
+
+:information_source: Because Docker Java SDK [doesn't support SSH transport](https://github.com/docker-java/docker-java/issues/1130) hence we need to open TCP endpoint. 
+
+`networks/_utils/aws-ec2` provides Terraform configuration in order to spin off an EC2 instance with remote Docker API
+support.
+
+E.g.: in order to start `networks/typical` in the remote Docker:
+```
+mvn process-test-resources -Pauto -Dnetwork.target="networks/typical::raft" -Dinfra.target="networks/_utils/aws-ec2::us-east-1"
+```
+
 
 ## Logging
 

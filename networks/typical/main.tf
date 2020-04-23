@@ -1,7 +1,12 @@
+provider "docker" {
+  host = var.remote_docker_config == null ? null : var.remote_docker_config.docker_host
+}
+
 locals {
   number_of_nodes = 4
   node_indices    = range(local.number_of_nodes)
 }
+
 module "helper" {
   source  = "trung/ignite/quorum//modules/docker-helper"
   version = "1.0.0-rc.2"
@@ -56,22 +61,6 @@ module "docker" {
   network_id         = module.network.network_id
   node_keys_hex      = module.network.node_keys_hex
   password_file_name = module.network.password_file_name
-  geth_datadirs      = module.network.data_dirs
-  tessera_datadirs   = module.network.tm_dirs
-}
-
-resource "local_file" "docker" {
-  filename = format("%s/application-docker.yml", module.network.generated_dir)
-  content  = <<YML
-quorum:
-  consensus: ${var.consensus}
-  docker-infrastructure:
-    enabled: true
-    nodes:
-%{for idx in local.node_indices~}
-      Node${idx + 1}:
-        quorum-container-id: ${element(module.docker.quorum_containers, idx)}
-        tessera-container-id: ${element(module.docker.tessera_containers, idx)}
-%{endfor~}
-YML
+  geth_datadirs      = var.remote_docker_config == null ? module.network.data_dirs : split(",", join("", null_resource.scp[*].triggers.data_dirs))
+  tessera_datadirs   = var.remote_docker_config == null ? module.network.tm_dirs : split(",", join("", null_resource.scp[*].triggers.tm_dirs))
 }

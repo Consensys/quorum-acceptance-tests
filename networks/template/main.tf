@@ -1,8 +1,6 @@
-locals {
-  node_indices = range(var.number_of_nodes)
-}
-
 provider "docker" {
+  host = var.remote_docker_config == null ? null : var.remote_docker_config.docker_host
+
   dynamic "registry_auth" {
     for_each = var.docker_registry
     content {
@@ -11,6 +9,10 @@ provider "docker" {
       password = registry_auth.value["password"]
     }
   }
+}
+
+locals {
+  node_indices = range(var.number_of_nodes)
 }
 
 module "helper" {
@@ -68,8 +70,8 @@ module "docker" {
   network_id            = module.network.network_id
   node_keys_hex         = module.network.node_keys_hex
   password_file_name    = module.network.password_file_name
-  geth_datadirs         = module.network.data_dirs
-  tessera_datadirs      = module.network.tm_dirs
+  geth_datadirs         = var.remote_docker_config == null ? module.network.data_dirs : split(",", join("", null_resource.scp[*].triggers.data_dirs))
+  tessera_datadirs      = var.remote_docker_config == null ? module.network.tm_dirs : split(",", join("", null_resource.scp[*].triggers.tm_dirs))
   exclude_initial_nodes = module.network.exclude_initial_nodes
   start_quorum          = false
   start_tessera         = false
@@ -84,20 +86,4 @@ resource "docker_image" "pull" {
   count         = length(var.docker_images)
   name          = data.docker_registry_image.pull[count.index].name
   pull_triggers = [data.docker_registry_image.pull[count.index].sha256_digest]
-}
-
-resource "local_file" "docker" {
-  filename = format("%s/application-docker.yml", module.network.generated_dir)
-  content  = <<YML
-quorum:
-  consensus: ${var.consensus}
-  docker-infrastructure:
-    enabled: true
-    nodes:
-%{for idx in local.node_indices~}
-      Node${idx + 1}:
-        quorum-container-id: ${element(module.docker.quorum_containers, idx)}
-        tessera-container-id: ${element(module.docker.tessera_containers, idx)}
-%{endfor~}
-YML
 }

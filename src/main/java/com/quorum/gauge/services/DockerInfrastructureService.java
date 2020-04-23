@@ -23,12 +23,8 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.command.HealthState;
-import com.github.dockerjava.api.command.InspectContainerCmd;
 import com.github.dockerjava.api.command.InspectContainerResponse;
-import com.github.dockerjava.api.model.ContainerConfig;
-import com.github.dockerjava.api.model.ContainerNetwork;
-import com.github.dockerjava.api.model.Frame;
-import com.github.dockerjava.api.model.HostConfig;
+import com.github.dockerjava.api.model.*;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.okhttp.OkHttpDockerCmdExecFactory;
@@ -270,9 +266,11 @@ public class DockerInfrastructureService
                .map(id -> {
                    for (int i = 1; i <= 30; i++) {
                        BasicContainerState state = new BasicContainerState(dockerClient.inspectContainerCmd(id).exec());
-                       logger.debug("Waiting attempt {} for container {}, status = {}, health = {}", i, state.getContainerName(), state.getStatus(), state.getHealthStatus());
+                       logger.debug("Waiting attempt {} for container {}({}), status = {}, health = {}", i, state.getContainerName(), StringUtils.substring(state.getContainerId(), 0, 12), state.getStatus(), state.getHealthStatus());
                        if (state.isDead()) {
                           return false;
+                       } else if (!state.isOnGoing()) {
+                           return true;
                        } else {
                            Thread.sleep(3000);
                        }
@@ -303,9 +301,8 @@ public class DockerInfrastructureService
 
     private Observable<Boolean> startContainerFromTemplate(String templateContainerId, NodeAttributes attr, String image, ResourceCreationCallback callback) {
         return Observable.just(templateContainerId)
-                .map(dockerClient::inspectContainerCmd)
-                .map(InspectContainerCmd::exec)
-                .map(res -> {
+                .map(id -> {
+                    InspectContainerResponse res = dockerClient.inspectContainerCmd(id).exec();
                     if (!StringUtils.equalsIgnoreCase("created", res.getState().getStatus())) {
                         throw new IllegalStateException("Container " + res.getName() + " status must be 'created' in order to be a template");
                     }
@@ -332,7 +329,6 @@ public class DockerInfrastructureService
                     if (StringUtils.isBlank(image)) {
                         containerImage = res.getConfig().getImage();
                     }
-                    logger.debug("{}: env = {}", containerImage, env);
                     Map<String, String> labels = res.getConfig().getLabels();
                     labels.put("ClonedFromContainerId", templateContainerId);
                     labels.put("ClonedFromContainerName", res.getName());
@@ -349,14 +345,12 @@ public class DockerInfrastructureService
                             .withAliases(aliases)
                             .withLabels(labels)
                             .exec();
-                    return cRes;
-                })
-                .map(res -> dockerClient.startContainerCmd(res.getId()))
-                .map(cmd -> {
-                    cmd.exec();
-                    String containerId = cmd.getContainerId();
-                    callback.onCreate(containerId);
-                    return containerId;
+                    String newContainerId = cRes.getId();
+                    logger.debug("Created container {}", StringUtils.substring(newContainerId, 0, 12));
+                    dockerClient.startContainerCmd(newContainerId).exec();
+                    callback.onCreate(newContainerId);
+                    logger.debug("Started container {}", StringUtils.substring(newContainerId, 0, 12));
+                    return newContainerId;
                 })
                 .map(id -> this.wait(id).blockingFirst());
     }
@@ -365,6 +359,33 @@ public class DockerInfrastructureService
         return Observable.just(containerId)
                 .map(id -> dockerClient.inspectContainerCmd(id).exec())
                 .map(s -> new BasicContainerState(containerId, s.getName(), s.getState().getStatus(), s.getState().getHealth().getStatus()));
+    }
+
+    public Observable<Info> info() {
+        return Observable.just(dockerClient.infoCmd().exec());
+    }
+
+    /**
+     * @param containerId
+     * @param writer caller must call close()
+     * @throws InterruptedException
+     */
+    public void streamLogs(String containerId, Writer writer) throws InterruptedException {
+        dockerClient.logContainerCmd(containerId)
+                .withStdOut(true)
+                .withStdErr(true)
+                .withTailAll()
+                .withFollowStream(false)
+                .exec(new ResultCallback.Adapter<>(){
+                    @Override
+                    public void onNext(Frame object) {
+                        try {
+                            writer.write(object.toString());
+                        } catch (IOException e) {
+                            onError(e);
+                        }
+                    }
+                }).awaitCompletion();
     }
 
     @Override

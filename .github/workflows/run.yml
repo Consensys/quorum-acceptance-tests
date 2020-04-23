@@ -1,23 +1,27 @@
-name: Run Acceptance Tests
+name: Run Acceptance Tests (AWS)
 on:
   schedule:
     - cron: '0 12 * * *'
-  pull_request:
-    paths-ignore:
-      - '**.md'
-      - '.gitignore'
   push:
     paths-ignore:
       - '**.md'
       - '.gitignore'
     branches:
       - 'gh-*'
+      - 'dev-*'
 env:
   JAVA_VERSION: 11
   TERRAFORM_VERSION: 0.12.24
   SOLC_VERSION: 0.5.4
   GAUGE_VERSION: 1.0.8
   TERRAFORM_PROVIDER_QUORUM_VERSION: 1.0.0-beta.1
+  INFRA_FOLDER: 'networks/_utils/aws-ec2'
+  INFRA_PROFILE: '${{ secrets.AWS_REGION }}'
+  AWS_ACCESS_KEY_ID: '${{ secrets.AWS_ACCESS_KEY_ID }}'
+  AWS_SECRET_ACCESS_KEY: '${{ secrets.AWS_SECRET_ACCESS_KEY }}'
+  # Terraform variables for infra provisioning
+  TF_VAR_vpc_id: '${{ secrets.AWS_VPC_ID }}'
+  TF_VAR_public_subnet_id: '${{ secrets.AWS_PUBLIC_SUBNET_ID }}'
   BIN_DIR: bin
 jobs:
   run:
@@ -27,11 +31,11 @@ jobs:
       matrix:
         tag:
           - 'basic || basic-raft || (advanced && raft) || networks/typical::raft'
-          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
-          - 'gcmode && block-sync && networks/template::raft-3plus1'
-          - 'gcmode && block-sync && networks/template::istanbul-3plus1'
-          - 'basic || basic-raft || (advanced && raft) || networks/plugins::raft'
-          - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul'
+          #- 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
+          #- 'gcmode && block-sync && networks/template::raft-3plus1'
+          #- 'gcmode && block-sync && networks/template::istanbul-3plus1'
+          #- 'basic || basic-raft || (advanced && raft) || networks/plugins::raft'
+          #- 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul'
     runs-on: ubuntu-latest
     env:
       TEST_REPORT_DIR: target/gauge/reports/xml-report
@@ -86,13 +90,13 @@ jobs:
         id: setup
         run: |
           ${{ env.BIN_DIR }}/gauge install
-          gaugeEnv=run-${{ github.run_id }}
+          gaugeEnv=GithubActions-workflow-${{ github.run_id }}
           mkdir -p env/$gaugeEnv
           echo "::add-path::$(pwd)/${{ env.BIN_DIR }}"
           echo "::set-output name=gauge-env::$gaugeEnv"
       - name: 'Run tests'
         env:
-          TF_VAR_output_dir: ${{ github.workspace }}/tf
+          TF_VAR_output_dir: ${{ runner.temp }}
           #MAVEN_OPTS: -Xmx512m -XX:MaxPermSize=128m
           #LOGGING_LEVEL_COM_QUORUM_GAUGE: DEBUG
         run: |
@@ -100,17 +104,8 @@ jobs:
               -Pauto \
               -Dtags="${{ matrix.tag }}" \
               -Denv=${{ steps.setup.outputs.gauge-env }} \
+              -Dinfra.target=${{ env.INFRA_FOLDER }}::${{ env.INFRA_PROFILE }} \
               -Dauto.jobid=${{ steps.keys.outputs.tag }}
-      - name: 'Display debugging info if tests failed'
-        if: failure()
-        run: |
-          ls -l tf/*/**
-          docker ps -a
-          for c in `docker ps -a --format {{.Names}}`; do
-            echo "---> START OF $c"
-            docker logs $c
-            echo "<--- END OF $c"
-          done
       - name: 'Read test report'
         if: always()
         run: |
@@ -129,14 +124,19 @@ jobs:
             echo "::error file=$(_jq '.file'),line=$(_jq '.line'),col=$(_jq '.col')::$(_jq '.message')"
           done
           cat ${{ env.TEST_REPORT_DIR}}/summary.txt
-      - name: Upload test report
+      - name: 'Upload test report'
         if: always()
         uses: actions/upload-artifact@v1
         with:
           name: testreport-${{ steps.keys.outputs.tag }}
           path: ${{ env.TEST_REPORT_DIR }}
+      - name: 'Destroy AWS infrastructure'
+        if: success() # when failure, we need to debug so keep the infra
+        # we don't care about containers running on the remote VM
+        run: |
+          mvn exec:exec@infra.terraform-destroy -Pauto -Dinfra.folder="${{ env.INFRA_FOLDER }}" -Dinfra.profile="${{ env.INFRA_PROFILE }}"
   notify:
-    if: always() && github.event_name != 'pull_request'
+    if: always()
     name: Notify
     needs:
       - run
