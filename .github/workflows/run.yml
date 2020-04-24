@@ -115,7 +115,8 @@ jobs:
           #MAVEN_OPTS: -Xmx512m -XX:MaxPermSize=128m
           #LOGGING_LEVEL_COM_QUORUM_GAUGE: DEBUG
         run: |
-          mvn clean test \
+          mvn --no-transfer-progress -B \
+              clean test \
               -Pauto \
               -Dtags="${{ matrix.tag }}" ${{ steps.setup.outputs.mvnArg }} \
               -Denv=${{ steps.setup.outputs.gauge-env }} \
@@ -153,7 +154,11 @@ jobs:
         if: always() && steps.setup.outputs.useAWS == 'true'
         # we don't care about containers running on the remote VM
         run: |
-          mvn exec:exec@infra.terraform-destroy -Pauto -Dinfra.folder="${{ env.INFRA_FOLDER }}" -Dinfra.profile="${{ env.INFRA_PROFILE }}"
+          mvn --no-transfer-progress -B \
+            exec:exec@infra.terraform-destroy \
+            -Pauto \
+            -Dinfra.folder="${{ env.INFRA_FOLDER }}" \
+            -Dinfra.profile="${{ env.INFRA_PROFILE }}"
   notify:
     if: always() && github.event_name != 'pull_request'
     name: Notify
@@ -352,6 +357,7 @@ jobs:
             }
             return slack_msg
       - name: 'Prepare a short Slack message'
+        id: short_status
         if: failure()
         uses: actions/github-script@0.8.0
         with:
@@ -399,4 +405,8 @@ jobs:
       - name: 'Send to Slack'
         if: always()
         run: |
-          curl -X POST ${{ secrets.SLACK_WEBHOOK_URL}} -H "Content-type: application/json" --data '${{ steps.status.outputs.result }}'
+          if [ "${{ steps.status.outputs.result }}" != "" ]; then
+            curl -X POST ${{ secrets.SLACK_WEBHOOK_URL}} -H "Content-type: application/json" --data '${{ steps.status.outputs.result }}'
+          else
+            curl -X POST ${{ secrets.SLACK_WEBHOOK_URL}} -H "Content-type: application/json" --data '${{ steps.short_status.outputs.result }}'
+          fi
