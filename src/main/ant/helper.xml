@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="helper">
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+    <target name="tools">
+        <!-- this calls target exec to run the command -->
+        <foreach param="cmdRaw" trim="true" target="exec"
+            list="mvn --version,terraform version,solc --version,gauge --version,docker version,docker info"/>
+    </target>
+    <target name="exec">
+        <propertyregex property="cmd"  input="${cmdRaw}"
+                       regexp="([^\s]+)\s+([^\s+]+)" select="\1"/>
+        <propertyregex property="arg"  input="${cmdRaw}"
+                       regexp="([^\s]+)\s+([^\s+]+)" select="\2"/>
+        <echo level="info" message="$ ${cmdRaw}"/>
+        <exec executable="${cmd}"><arg line="${arg}"/></exec>
+    </target>
+</project>
