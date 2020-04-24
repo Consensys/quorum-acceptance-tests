@@ -128,16 +128,16 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         return nodesLessN.get(rand.nextInt(nodesLessN.size()));
     }
 
-    @Step("Add new node with <gcmode> `gcmode`, named it <newNode>, and join the network <id>")
-    public void addNewNode(String gcmode, Node newNode, String id) {
+    @Step("Add new node with <gcmode> `gcmode`, named it <newNode>, and join the network <id> as <nodeType>")
+    public void addNewNode(String gcmode, Node newNode, String id, String nodeType) {
         GethArgBuilder additionalGethArgs = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "args_" + id, GethArgBuilder.class);
         NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
         switch (networkProperty.getConsensus()) {
             case "raft":
-                raftService.addPeer(networkResources.aNodeName(), newNode.getEnodeUrl())
+                raftService.addPeer(networkResources.aNodeName(), newNode.getEnodeUrl(), nodeType)
                         .doOnNext(res -> {
                             Response.Error err = Optional.ofNullable(res.getError()).orElse(new Response.Error());
-                            assertThat(err.getMessage()).as("raft.addPeer must succeed").isBlank();
+                            assertThat(err.getMessage()).as("raft.add"+nodeType+" must succeed").isBlank();
                         })
                         .map(Response::getResult)
                         .flatMap(raftId -> infraService.startNode(

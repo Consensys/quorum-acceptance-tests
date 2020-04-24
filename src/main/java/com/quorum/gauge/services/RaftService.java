@@ -39,13 +39,14 @@ import java.util.Map;
 public class RaftService extends AbstractService {
     private static final Logger logger = LoggerFactory.getLogger(RaftService.class);
 
-    public Observable<RaftAddPeer> addPeer(String existingNode, String enodeUrl) {
-        return addPeer(QuorumNode.valueOf(existingNode), enodeUrl);
+    public Observable<RaftAddPeer> addPeer(String existingNode, String enodeUrl, String nodeType) {
+        return addPeer(QuorumNode.valueOf(existingNode), enodeUrl, nodeType);
     }
 
-    public Observable<RaftAddPeer> addPeer(QuorumNode node, String enode) {
+    public Observable<RaftAddPeer> addPeer(QuorumNode node, String enode, String nodeType) {
+        String rpcMethod = nodeType == "peer" ? "raft_addPeer" : "raft_addLearner";
         Request<?, RaftService.RaftAddPeer> request = new Request<>(
-                "raft_addPeer",
+                rpcMethod,
                 Arrays.asList(StringEscapeUtils.unescapeJavaScript(enode)),
                 connectionFactory().getWeb3jService(node),
                 RaftService.RaftAddPeer.class
