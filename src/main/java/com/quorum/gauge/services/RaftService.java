@@ -44,7 +44,7 @@ public class RaftService extends AbstractService {
     }
 
     public Observable<RaftAddPeer> addPeer(QuorumNode node, String enode, String nodeType) {
-        String rpcMethod = nodeType == "peer" ? "raft_addPeer" : "raft_addLearner";
+        String rpcMethod = nodeType.equals("peer") ? "raft_addPeer" : "raft_addLearner";
         Request<?, RaftService.RaftAddPeer> request = new Request<>(
                 rpcMethod,
                 Arrays.asList(StringEscapeUtils.unescapeJavaScript(enode)),
@@ -54,6 +54,19 @@ public class RaftService extends AbstractService {
         return request.flowable().toObservable().map(raftAddPeer -> {
             raftAddPeer.setNode(node);
             return raftAddPeer;
+        });
+    }
+
+    public Observable<RaftPromoteLearner> promoteToPeer(String frmNode, Integer learnerRaftId) {
+        Request<?, RaftService.RaftPromoteLearner> request = new Request<>(
+            "raft_promoteToPeer",
+            Arrays.asList(learnerRaftId.intValue()),
+            connectionFactory().getWeb3jService(QuorumNode.valueOf(frmNode)),
+            RaftService.RaftPromoteLearner.class
+        );
+        return request.flowable().toObservable().map(rf -> {
+            rf.setNode(QuorumNode.valueOf(frmNode));
+            return rf;
         });
     }
 
@@ -104,6 +117,19 @@ public class RaftService extends AbstractService {
         private QuorumNode node;
 
         // node that perform addPeer
+        public QuorumNode getNode() {
+            return node;
+        }
+
+        public void setNode(QuorumNode node) {
+            this.node = node;
+        }
+    }
+
+    public static class RaftPromoteLearner extends Response<Boolean> {
+        private QuorumNode node;
+
+        // node that perform promoteToPeer
         public QuorumNode getNode() {
             return node;
         }

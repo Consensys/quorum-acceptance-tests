@@ -1,0 +1,5 @@
+# Blocks are synced when promoting learner node <nodeName> in network <networkName>
+
+* Promote learner node <nodeName> from node "Node1", in the network <networkName>
+* Send some transactions to create blocks in network <networkName> and capture the latest block height as "latestBlockHeight"
+* Verify node <nodeName> has the block height greater or equal to "latestBlockHeight"

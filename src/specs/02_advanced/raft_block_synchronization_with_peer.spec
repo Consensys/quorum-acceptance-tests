@@ -1,4 +1,4 @@
-# Block synchronization when using Raft consensus
+# Block synchronization when using Raft consensus and add a peer node
 
   Tags: networks/template::raft-3plus1, pre-condition/no-record-blocknumber, gcmode, block-sync
 
@@ -12,10 +12,6 @@
       |raft2 |permissioned     |raft     |archive| peer     |
       |raft3 |non-permissioned |raft     |full   | peer     |
       |raft4 |non-permissioned |raft     |archive| peer     |
-      |raft5 |permissioned     |raft     |full   | learner  |
-      |raft6 |permissioned     |raft     |archive| learner  |
-      |raft7 |non-permissioned |raft     |full   | learner  |
-      |raft8 |non-permissioned |raft     |archive| learner  |
 
 ## Verify block synchronization
 

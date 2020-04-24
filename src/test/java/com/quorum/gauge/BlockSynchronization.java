@@ -138,6 +138,8 @@ public class BlockSynchronization extends AbstractSpecImplementation {
                         .doOnNext(res -> {
                             Response.Error err = Optional.ofNullable(res.getError()).orElse(new Response.Error());
                             assertThat(err.getMessage()).as("raft.add"+nodeType+" must succeed").isBlank();
+                            if(nodeType.equals("learner"))
+                                DataStoreFactory.getScenarioDataStore().put(newNode.getName()+"_raftId", res.getResult());
                         })
                         .map(Response::getResult)
                         .flatMap(raftId -> infraService.startNode(
@@ -175,6 +177,25 @@ public class BlockSynchronization extends AbstractSpecImplementation {
                     Thread.sleep(duration.toMillis());
                 })
                 .blockingSubscribe();
+    }
+
+  @Step("Promote learner node <newNode> from node <fromNode>, in the network <networkName>")
+    public void promoteLearnerNode(Node newNode, Node fromNode, String id) {
+        GethArgBuilder additionalGethArgs = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "args_" + id, GethArgBuilder.class);
+        NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
+        Integer raftId = mustHaveValue(DataStoreFactory.getScenarioDataStore(), newNode.getName() + "_raftId", Integer.class);
+        switch (networkProperty.getConsensus()) {
+            case "raft":
+                raftService.promoteToPeer(fromNode.getName(), raftId)
+                        .doOnNext(res -> {
+                            Response.Error err = Optional.ofNullable(res.getError()).orElse(new Response.Error());
+                            assertThat(err.getMessage()).as("raft.promoteToPeer must succeed").isBlank();
+                            assertThat(res.getResult()).isTrue();
+                        }).blockingSubscribe();
+                break;
+            default:
+                throw new UnsupportedOperationException(networkProperty.getConsensus() + " not supported yet");
+        }
     }
 
     @Step("Verify node <node> has the block height greater or equal to <latestBlockHeightName>")
