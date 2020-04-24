@@ -1,3 +1,4 @@
+![Run Acceptance Tests](https://github.com/jpmorganchase/quorum-acceptance-tests/workflows/Run%20Acceptance%20Tests/badge.svg?branch=master)
 
 ## Prerequisites
 
@@ -54,6 +55,23 @@ With built-in provisioning feature:
     mvn exec:exec@network.terraform-destroy -Pauto -Dnetwork.folder="networks/typical" -Dnetwork.profile=raft
     ```
 
+Below is the summary of various parameters:
+
+| Parameters | Description |
+|------------|-------------|
+| `-Dnetwork.target="<folder>::<profile"` | Shorthand to specify the Terraform folder and profile being used to create Quorum Network |
+| `-Dnetwork.folder="<folder>"` | Terraform folder being used to create Quorum Network |
+| `-Dnetwork.profile="<profile>"` | Terraform workspace and `terraform.<profile>.tfvars` being used |
+| `-Dnetwork.forceDestroy="true" or "false"` | Destroy the Quorum Network after test completed. Default is `false` |
+| `-Dnetwork.skipApply="true" or "false"` | Don't create Quorum Network. Default is `false` |
+| `-Dnetwork.skipWait="true" or "false"` | Don't perform health check and wait for Quorum Network. Default is `false` |
+| `-Dinfra.target="<folder>::<profile"` | Shorthand to specify the Terraform folder and profile being used to create an infrastructure to host Docker Engine |
+| `-Dinfra.folder="<folder>"` | Terraform folder being used to create the infrastructure |
+| `-Dinfra.profile="<profile>"` | Terraform workspace and `terraform.<profile>.tfvars` being used |
+| `-Dinfra.forceDestroy="true" or "false"` | Destroy the infrastructure after test completed. Default is `false` |
+| `-Dinfra.skipApply="true" or "false"` | Don't create the infrastructure. Default is `false` |
+| `-Dinfra.skipWait="true" or "false"` | Don't perform health check and wait for Quorum Network. Default is `false` |
+
 ### With existing `quorum-examples` network
 
 ```
@@ -67,10 +85,13 @@ SPRING_PROFILES_ACTIVE=local.7nodes mvn clean test -Dtags="basic || basic-raft |
 `networks/_infra/aws-ec2` provides Terraform configuration in order to spin off an EC2 instance with remote Docker API
 support.
 
-E.g.: in order to start `networks/typical` in the remote Docker:
-```
-mvn process-test-resources -Pauto -Dnetwork.target="networks/typical::raft" -Dinfra.target="networks/_infra/aws-ec2::us-east-1"
-```
+E.g.: To start `networks/typical` with remote Docker infrastructure:
+
+- Make sure you have the right AWS credentials in your environment
+- Run: 
+    ```
+    mvn process-test-resources -Pauto -Dnetwork.target="networks/typical::raft" -Dinfra.target="networks/_infra/aws-ec2::us-east-1"
+    ```
 
 
 ## Logging
