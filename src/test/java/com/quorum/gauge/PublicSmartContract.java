@@ -64,6 +64,20 @@ public class PublicSmartContract extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
     }
 
+    @Step("Deploy a simple smart contract from <source>, verify it does not get mined")
+    public void setupContractFailsToBeMined(QuorumNode source) {
+        saveCurrentBlockNumber();
+        logger.debug("Setting up contract from {}", source);
+        Contract contract = null;
+        try {
+            contract = contractService.createSimpleContract(5, source, null).blockingFirst();
+        }catch(Exception ex){
+            logger.info("excetion while deploying contract " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        assertThat(contract).isNull();
+    }
+
     @Step("<contractName> is mined")
     public void verifyContractIsMined(String contractName) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);

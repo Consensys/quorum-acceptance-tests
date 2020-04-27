@@ -1,6 +1,6 @@
 # Block synchronization when using Raft consensus and add a learner node
 
-  Tags: networks/template::raft-3plus1, pre-condition/no-record-blocknumber, gcmode, block-sync
+  Tags: networks/template::raft-3plus1-learner-add-promote, pre-condition/no-record-blocknumber, gcmode, block-sync
 
   Geth 1.8.12 introduces `--gcmode=full/archive`. This controls trie pruning which is enabled by default on all `--syncmode`.
   Setting `--gcmode=archive` would retain all historical data.
@@ -8,10 +8,7 @@
   This specification is to describe the expection w.r.t block synchronization for Quorum Network to function based on the following permutations
 
       |id    |networkType      |consensus|gcmode | nodeType |
-      |raft5 |permissioned     |raft     |full   | learner  |
       |raft6 |permissioned     |raft     |archive| learner  |
-      |raft7 |non-permissioned |raft     |full   | learner  |
-      |raft8 |non-permissioned |raft     |archive| learner  |
 
 ## Verify block synchronization
 
