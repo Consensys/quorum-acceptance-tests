@@ -20,6 +20,7 @@
 package com.quorum.gauge;
 
 import com.quorum.gauge.common.GethArgBuilder;
+import com.quorum.gauge.common.NodeType;
 import com.quorum.gauge.common.QuorumNetworkProperty.Node;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.services.InfrastructureService;
@@ -129,16 +130,17 @@ public class BlockSynchronization extends AbstractSpecImplementation {
     }
 
     @Step("Add new node with <gcmode> `gcmode`, named it <newNode>, and join the network <id> as <nodeType>")
-    public void addNewNode(String gcmode, Node newNode, String id, String nodeType) {
+    public void addNewNode(String gcmode, Node newNode, String id, String ndType) {
         GethArgBuilder additionalGethArgs = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "args_" + id, GethArgBuilder.class);
         NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
+        NodeType nodeType = NodeType.valueOf(ndType);
         switch (networkProperty.getConsensus()) {
             case "raft":
                 raftService.addPeer(networkResources.aNodeName(), newNode.getEnodeUrl(), nodeType)
                         .doOnNext(res -> {
                             Response.Error err = Optional.ofNullable(res.getError()).orElse(new Response.Error());
-                            assertThat(err.getMessage()).as("raft.add"+nodeType+" must succeed").isBlank();
-                            if(nodeType.equals("learner"))
+                            assertThat(err.getMessage()).as("raft.add"+nodeType.name()+" must succeed").isBlank();
+                            if(nodeType == NodeType.learner)
                                 DataStoreFactory.getScenarioDataStore().put(newNode.getName()+"_raftId", res.getResult());
                         })
                         .map(Response::getResult)

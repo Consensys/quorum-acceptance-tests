@@ -19,6 +19,7 @@
 
 package com.quorum.gauge.services;
 
+import com.quorum.gauge.common.NodeType;
 import com.quorum.gauge.common.QuorumNetworkProperty.Node;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.ext.NodeInfo;
@@ -39,12 +40,12 @@ import java.util.Map;
 public class RaftService extends AbstractService {
     private static final Logger logger = LoggerFactory.getLogger(RaftService.class);
 
-    public Observable<RaftAddPeer> addPeer(String existingNode, String enodeUrl, String nodeType) {
+    public Observable<RaftAddPeer> addPeer(String existingNode, String enodeUrl, NodeType nodeType) {
         return addPeer(QuorumNode.valueOf(existingNode), enodeUrl, nodeType);
     }
 
-    public Observable<RaftAddPeer> addPeer(QuorumNode node, String enode, String nodeType) {
-        String rpcMethod = nodeType.equals("peer") ? "raft_addPeer" : "raft_addLearner";
+    public Observable<RaftAddPeer> addPeer(QuorumNode node, String enode, NodeType nodeType) {
+        String rpcMethod = nodeType == NodeType.peer ? "raft_addPeer" : "raft_addLearner";
         Request<?, RaftService.RaftAddPeer> request = new Request<>(
                 rpcMethod,
                 Arrays.asList(StringEscapeUtils.unescapeJavaScript(enode)),
