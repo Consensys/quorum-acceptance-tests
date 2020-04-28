@@ -41,6 +41,8 @@ jobs:
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
           - 'gcmode && block-sync && networks/template::raft-3plus1'
           - 'gcmode && block-sync && networks/template::istanbul-3plus1'
+          - 'learner-add-promote && networks/template::istanbul-3plus1'
+          - 'learner-quorum && networks/template::istanbul-3plus1'
           - 'basic || basic-raft || (advanced && raft) || networks/plugins::raft'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul'
     runs-on: ubuntu-latest
