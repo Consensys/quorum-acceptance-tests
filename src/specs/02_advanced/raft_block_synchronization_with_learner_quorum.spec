@@ -1,4 +1,4 @@
-# Block synchronization when using Raft consensus. Add a learner node and promote it. And test if raft's quorum is affected when nodes are stopped
+# Block synchronization when using Raft consensus. Verify raft's quorum with learner node.
 
   Tags: networks/template::raft-3plus1, learner-quorum, pre-condition/no-record-blocknumber
 
