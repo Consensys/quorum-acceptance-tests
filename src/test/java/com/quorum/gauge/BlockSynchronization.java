@@ -196,21 +196,6 @@ public class BlockSynchronization extends AbstractSpecImplementation {
 
 
     @Step("Verify node <node> has the block height greater or equal to <latestBlockHeightName>")
-    public void verifyBlockHeight(Node node, String latestBlockHeightName) {
-        BigInteger lastBlockHeight = mustHaveValue(DataStoreFactory.getScenarioDataStore(), latestBlockHeightName, BigInteger.class);
-        BigInteger currentBlockHeight = utilService.getCurrentBlockNumberFrom(node).blockingFirst().getBlockNumber();
-
-        assertThat(currentBlockHeight).isGreaterThanOrEqualTo(lastBlockHeight);
-    }
-
-    @Step("Record the current block number, named it as <name>")
-    public void recordCurrentBlockNumber(String name) {
-        BigInteger currentBlockNumber = utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber();
-        logger.debug("Current block number = {}", currentBlockNumber);
-        DataStoreFactory.getScenarioDataStore().put(name, currentBlockNumber);
-    }
-
-    @Step("Verify node <node> has the block height greater or equal to <latestBlockHeightName>")
     public void verifyBlockHeightGreaterThanOrEqualTo(Node node, String latestBlockHeightName) {
         verifyBlockHeight(node, latestBlockHeightName, ">=");
     }
