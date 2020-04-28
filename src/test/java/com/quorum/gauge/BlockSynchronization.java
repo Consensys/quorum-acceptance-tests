@@ -195,23 +195,6 @@ public class BlockSynchronization extends AbstractSpecImplementation {
             .blockingSubscribe();
     }
 
-    @Step("Promote learner node <newNode> from node <fromNode>, in the network <networkName>")
-    public void promoteLearnerNode(Node newNode, Node fromNode, String id) {
-        Integer raftId = mustHaveValue(DataStoreFactory.getScenarioDataStore(), newNode.getName() + "_raftId", Integer.class);
-        switch (networkProperty.getConsensus()) {
-            case "raft":
-                raftService.promoteToPeer(fromNode.getName(), raftId)
-                    .doOnNext(res -> {
-                        Response.Error err = Optional.ofNullable(res.getError()).orElse(new Response.Error());
-                        assertThat(err.getMessage()).as("raft.promoteToPeer must succeed").isBlank();
-                        assertThat(res.getResult()).isTrue();
-                    }).blockingSubscribe();
-                break;
-            default:
-                throw new UnsupportedOperationException(networkProperty.getConsensus() + " not supported yet");
-        }
-    }
-
     @Step("Verify node <node> has the block height greater or equal to <latestBlockHeightName>")
     public void verifyBlockHeightGreaterThanOrEqualTo(Node node, String latestBlockHeightName) {
         verifyBlockHeight(node, latestBlockHeightName, ">=");
@@ -220,26 +203,6 @@ public class BlockSynchronization extends AbstractSpecImplementation {
     @Step("Verify node <node> has the block height less than or equal to <latestBlockHeightName>")
     public void verifyBlockHeightLessThanOrEqualTo(Node node, String latestBlockHeightName) {
         verifyBlockHeight(node, latestBlockHeightName, "<=");
-    }
-
-    @Step("Save block height <latestBlockHeightName> as <newBlockHeightName>")
-    public void saveBlockHeightAs(String latestBlockHeightName, String newBlockHeightName) {
-        BigInteger lastBlockHeight = mustHaveValue(DataStoreFactory.getScenarioDataStore(), latestBlockHeightName, BigInteger.class);
-        DataStoreFactory.getScenarioDataStore().put(newBlockHeightName, lastBlockHeight);
-    }
-
-    @Step("Verify block height <bhName1> is greater than <bhName2>")
-    public void compareBlockHeightsGreaterThan(String bhName1, String bhName2) {
-        BigInteger lastBlockHeight1 = mustHaveValue(DataStoreFactory.getScenarioDataStore(), bhName1, BigInteger.class);
-        BigInteger lastBlockHeight2 = mustHaveValue(DataStoreFactory.getScenarioDataStore(), bhName2, BigInteger.class);
-        assertThat(lastBlockHeight1).isGreaterThan(lastBlockHeight2);
-    }
-
-    @Step("Verify block height <bhName1> is equal to <bhName2>")
-    public void compareBlockHeightsEqualTo(String bhName1, String bhName2) {
-        BigInteger lastBlockHeight1 = mustHaveValue(DataStoreFactory.getScenarioDataStore(), bhName1, BigInteger.class);
-        BigInteger lastBlockHeight2 = mustHaveValue(DataStoreFactory.getScenarioDataStore(), bhName2, BigInteger.class);
-        assertThat(lastBlockHeight1).isEqualTo(lastBlockHeight2);
     }
 
     public void verifyBlockHeight(Node node, String latestBlockHeightName, String comparison) {
@@ -271,58 +234,6 @@ public class BlockSynchronization extends AbstractSpecImplementation {
             .blockingSubscribe();
     }
 
-    @Step("Stop node <nodeName> in the network <id>")
-    public void stopNode(Node nodeName, String id) {
-        NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
-        String resourceId = networkResources.getResourceId(nodeName.getName());
-        assertThat(resourceId).isNotNull();
-        infraService.stopResource(resourceId).doOnNext(ok -> {
-            assertThat(ok).as("Node must be stopped").isTrue();
-        }).doOnComplete(() -> {
-            Duration duration = Duration.ofSeconds(5);
-            logger.debug("Waiting {}s for node to be up completely...", duration.toSeconds());
-            Thread.sleep(duration.toMillis());
-        }).blockingSubscribe();
-        logger.debug("Docker ps - After stopping node {} resource id {}", nodeName, resourceId);
-        dockerPs();
-        logger.debug("-----------------------------------");
-    }
-
-    public void dockerPs(){
-        try {
-            Process process = Runtime.getRuntime().exec(
-                "docker ps --filter name=template-raft-node");
-            StringBuilder output = new StringBuilder();
-
-            BufferedReader reader = new BufferedReader(
-                new InputStreamReader(process.getInputStream()));
-
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line + "\n");
-            }
-
-            int exitVal = process.waitFor();
-            if (exitVal == 0) {
-                logger.debug("Success!");
-                logger.debug(output.toString());
-            }
-        }catch(Exception ex){}
-    }
-
-    @Step("Start node <nodeName> in the network <id>")
-    public void startNode(Node nodeName, String id) {
-        NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
-        String resourceId = networkResources.getResourceId(nodeName.getName());
-        assertThat(resourceId).isNotNull();
-        infraService.startResource(resourceId).doOnNext(ok -> {
-            assertThat(ok).as("Node must be up").isTrue();
-        }).doOnComplete(() -> {
-            Duration duration = Duration.ofSeconds(5);
-            logger.debug("Waiting {}s for node to be up completely...", duration.toSeconds());
-            Thread.sleep(duration.toMillis());
-        }).blockingSubscribe();
-    }
 
     @Step("Start all nodes in the network <id>")
     public void startAllNodes(String id) {
@@ -373,4 +284,95 @@ public class BlockSynchronization extends AbstractSpecImplementation {
 
         assertThat(found).as(expectedLogMsg).isTrue();
     }
+
+    @Step("Promote learner node <newNode> from node <fromNode>, in the network <networkName>")
+    public void promoteLearnerNode(Node newNode, Node fromNode, String id) {
+        Integer raftId = mustHaveValue(DataStoreFactory.getScenarioDataStore(), newNode.getName() + "_raftId", Integer.class);
+        switch (networkProperty.getConsensus()) {
+            case "raft":
+                raftService.promoteToPeer(fromNode.getName(), raftId)
+                    .doOnNext(res -> {
+                        Response.Error err = Optional.ofNullable(res.getError()).orElse(new Response.Error());
+                        assertThat(err.getMessage()).as("raft.promoteToPeer must succeed").isBlank();
+                        assertThat(res.getResult()).isTrue();
+                    }).blockingSubscribe();
+                break;
+            default:
+                throw new UnsupportedOperationException(networkProperty.getConsensus() + " not supported yet");
+        }
+    }
+
+    @Step("Stop node <nodeName> in the network <id>")
+    public void stopNode(Node nodeName, String id) {
+        NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
+        String resourceId = networkResources.getResourceId(nodeName.getName());
+        assertThat(resourceId).isNotNull();
+        infraService.stopResource(resourceId).doOnNext(ok -> {
+            assertThat(ok).as("Node must be stopped").isTrue();
+        }).doOnComplete(() -> {
+            Duration duration = Duration.ofSeconds(10);
+            logger.debug("Waiting {}s for node to be up completely...", duration.toSeconds());
+            Thread.sleep(duration.toMillis());
+        }).blockingSubscribe();
+        logger.debug("Docker ps - After stopping node {} resource id {}", nodeName, resourceId);
+        dockerPs();
+        logger.debug("-----------------------------------");
+    }
+
+    public void dockerPs(){
+        try {
+            Process process = Runtime.getRuntime().exec(
+                "docker ps --filter name=template-raft-node");
+            StringBuilder output = new StringBuilder();
+
+            BufferedReader reader = new BufferedReader(
+                new InputStreamReader(process.getInputStream()));
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.append(line + "\n");
+            }
+
+            int exitVal = process.waitFor();
+            if (exitVal == 0) {
+                logger.debug("Success!");
+                logger.debug(output.toString());
+            }
+        }catch(Exception ex){}
+    }
+
+    @Step("Start node <nodeName> in the network <id>")
+    public void startNode(Node nodeName, String id) {
+        NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
+        String resourceId = networkResources.getResourceId(nodeName.getName());
+        assertThat(resourceId).isNotNull();
+        infraService.startResource(resourceId).doOnNext(ok -> {
+            assertThat(ok).as("Node must be up").isTrue();
+        }).doOnComplete(() -> {
+            Duration duration = Duration.ofSeconds(10);
+            logger.debug("Waiting {}s for node to be up completely...", duration.toSeconds());
+            Thread.sleep(duration.toMillis());
+        }).blockingSubscribe();
+    }
+
+    @Step("Save block height <latestBlockHeightName> as <newBlockHeightName>")
+    public void saveBlockHeightAs(String latestBlockHeightName, String newBlockHeightName) {
+        BigInteger lastBlockHeight = mustHaveValue(DataStoreFactory.getScenarioDataStore(), latestBlockHeightName, BigInteger.class);
+        DataStoreFactory.getScenarioDataStore().put(newBlockHeightName, lastBlockHeight);
+    }
+
+    @Step("Verify block height <bhName1> is greater than <bhName2>")
+    public void compareBlockHeightsGreaterThan(String bhName1, String bhName2) {
+        BigInteger lastBlockHeight1 = mustHaveValue(DataStoreFactory.getScenarioDataStore(), bhName1, BigInteger.class);
+        BigInteger lastBlockHeight2 = mustHaveValue(DataStoreFactory.getScenarioDataStore(), bhName2, BigInteger.class);
+        assertThat(lastBlockHeight1).isGreaterThan(lastBlockHeight2);
+    }
+
+    @Step("Verify block height <bhName1> is equal to <bhName2>")
+    public void compareBlockHeightsEqualTo(String bhName1, String bhName2) {
+        BigInteger lastBlockHeight1 = mustHaveValue(DataStoreFactory.getScenarioDataStore(), bhName1, BigInteger.class);
+        BigInteger lastBlockHeight2 = mustHaveValue(DataStoreFactory.getScenarioDataStore(), bhName2, BigInteger.class);
+        assertThat(lastBlockHeight1).isEqualTo(lastBlockHeight2);
+    }
+
 }

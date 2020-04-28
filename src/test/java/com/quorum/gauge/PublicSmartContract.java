@@ -72,7 +72,7 @@ public class PublicSmartContract extends AbstractSpecImplementation {
         try {
             contractService.createSimpleContract(5, source, null).blockingFirst();
         } catch (Exception ex) {
-            logger.debug("excetion while deploying contract " + ex.getMessage());
+            logger.debug("exception while deploying contract:{} msg:{}", ex.getMessage(), txFailedMsg);
             if (ex.getMessage().indexOf(txFailedMsg) >= 0) {
                 failed = true;
             }
@@ -109,15 +109,15 @@ public class PublicSmartContract extends AbstractSpecImplementation {
         Scheduler scheduler = networkAwaredScheduler(expectedTxCount);
         for (TransactionReceipt r : originalReceipts) {
             receiptsInNode.add(transactionService.getTransactionReceipt(node, r.getTransactionHash())
-                .map(tr -> {
-                    if (tr.getTransactionReceipt().isPresent()) {
-                        return tr.getTransactionReceipt().get();
-                    } else {
-                        throw new RuntimeException("retry");
-                    }
-                })
-                .retryWhen(new RetryWithDelay(20, 3000))
-                .subscribeOn(scheduler));
+                    .map(tr -> {
+                        if (tr.getTransactionReceipt().isPresent()) {
+                            return tr.getTransactionReceipt().get();
+                        } else {
+                            throw new RuntimeException("retry");
+                        }
+                    })
+                    .retryWhen(new RetryWithDelay(20, 3000))
+                    .subscribeOn(scheduler));
         }
 
         AtomicInteger actualTxCount = new AtomicInteger();
@@ -155,9 +155,9 @@ public class PublicSmartContract extends AbstractSpecImplementation {
             // to tell Travis not to kill the CI
             logger.warn("[Travis] Current block height = {}, targetBlockHeight = {}", currentBlockHeight.intValue(), targetBlockHeight);
             currentBlockHeight = Observable.zip(contractObservables, args -> args.length)
-                .flatMap(i -> utilService.getCurrentBlockNumber())
-                .blockingFirst()
-                .getBlockNumber();
+                    .flatMap(i -> utilService.getCurrentBlockNumber())
+                    .blockingFirst()
+                    .getBlockNumber();
         }
     }
 }
