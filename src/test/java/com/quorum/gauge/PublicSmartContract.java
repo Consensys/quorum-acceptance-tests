@@ -66,16 +66,18 @@ public class PublicSmartContract extends AbstractSpecImplementation {
 
     @Step("Deploy a simple smart contract from <source>, verify it does not get mined")
     public void setupContractFailsToBeMined(QuorumNode source) {
-        saveCurrentBlockNumber();
         logger.debug("Setting up contract from {}", source);
-        Contract contract = null;
+        String txFailedMsg = "Transaction receipt was not generated after";
+        boolean failed = false;
         try {
-            contract = contractService.createSimpleContract(5, source, null).blockingFirst();
-        }catch(Exception ex){
-            logger.info("excetion while deploying contract " + ex.getMessage());
-            ex.printStackTrace();
+            contractService.createSimpleContract(5, source, null).blockingFirst();
+        } catch (Exception ex) {
+            logger.debug("excetion while deploying contract " + ex.getMessage());
+            if (ex.getMessage().indexOf(txFailedMsg) >= 0) {
+                failed = true;
+            }
         }
-        assertThat(contract).isNull();
+        assertThat(failed).isTrue();
     }
 
     @Step("<contractName> is mined")
@@ -107,15 +109,15 @@ public class PublicSmartContract extends AbstractSpecImplementation {
         Scheduler scheduler = networkAwaredScheduler(expectedTxCount);
         for (TransactionReceipt r : originalReceipts) {
             receiptsInNode.add(transactionService.getTransactionReceipt(node, r.getTransactionHash())
-                    .map(tr -> {
-                        if (tr.getTransactionReceipt().isPresent()) {
-                            return tr.getTransactionReceipt().get();
-                        } else {
-                            throw new RuntimeException("retry");
-                        }
-                    })
-                    .retryWhen(new RetryWithDelay(20, 3000))
-                    .subscribeOn(scheduler));
+                .map(tr -> {
+                    if (tr.getTransactionReceipt().isPresent()) {
+                        return tr.getTransactionReceipt().get();
+                    } else {
+                        throw new RuntimeException("retry");
+                    }
+                })
+                .retryWhen(new RetryWithDelay(20, 3000))
+                .subscribeOn(scheduler));
         }
 
         AtomicInteger actualTxCount = new AtomicInteger();
@@ -153,9 +155,9 @@ public class PublicSmartContract extends AbstractSpecImplementation {
             // to tell Travis not to kill the CI
             logger.warn("[Travis] Current block height = {}, targetBlockHeight = {}", currentBlockHeight.intValue(), targetBlockHeight);
             currentBlockHeight = Observable.zip(contractObservables, args -> args.length)
-                    .flatMap(i -> utilService.getCurrentBlockNumber())
-                    .blockingFirst()
-                    .getBlockNumber();
+                .flatMap(i -> utilService.getCurrentBlockNumber())
+                .blockingFirst()
+                .getBlockNumber();
         }
     }
 }

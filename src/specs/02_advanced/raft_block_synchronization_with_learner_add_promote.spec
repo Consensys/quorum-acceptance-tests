@@ -1,16 +1,15 @@
-# Block synchronization when using Raft consensus and add a learner node
+# Block synchronization when using Raft consensus - add/promote learner node
 
-  Tags: networks/template::raft-3plus1-learner-add-promote, pre-condition/no-record-blocknumber, gcmode, block-sync
+  Tags: networks/template::raft-3plus1, learner-add-promote, pre-condition/no-record-blocknumber
 
-  Geth 1.8.12 introduces `--gcmode=full/archive`. This controls trie pruning which is enabled by default on all `--syncmode`.
-  Setting `--gcmode=archive` would retain all historical data.
-
-  This specification is to describe the expection w.r.t block synchronization for Quorum Network to function based on the following permutations
+  Raft consensus supports learner node from Quorum 2.5.0 onwards.
+  Learner node does not take part in Raft's consensus until it is promoted to a peer node.
+  This spec verifies block synching in learner node once it is added and after it is promoted to a peer node.
 
       |id    |networkType      |consensus|gcmode | nodeType |
       |raft6 |permissioned     |raft     |archive| learner  |
 
-## Verify block synchronization
+## Verify block synchronization - add/promote learner node
 
   Tags: post-condition/datadir-cleanup, post-condition/network-cleanup
 

@@ -1,0 +1,12 @@
+# Blocks are not synced when stopping node <promotedNode> and <peerNode> in network <networkName> after learner node is promoted
+
+* Stop node <promotedNode> in the network <networkName>
+* Send some transactions to create blocks in network <networkName> from "Node1,Node2" and capture the latest block height as "latestBlockHeight"
+* Verify node <peerNode> has the block height greater or equal to "latestBlockHeight"
+* Verify node "Node2" has the block height greater or equal to "latestBlockHeight"
+* Save block height "latestBlockHeight" as "BlockHeight2"
+* Stop node <peerNode> in the network <networkName>
+* Deploy a simple smart contract from "Node1", verify it does not get mined
+* Record the current block number, named it as "blockHeightAfterTxn"
+* Verify block height "blockHeightAfterTxn" is equal to "BlockHeight2"
+* Verify node "Node2" has the block height less than or equal to "blockHeightAfterTxn"
