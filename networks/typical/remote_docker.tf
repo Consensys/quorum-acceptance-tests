@@ -20,7 +20,14 @@ resource "null_resource" "scp" {
     ]
   }
   provisioner "file" {
-    source      = module.network.generated_dir
+    /*
+     https://www.terraform.io/docs/provisioners/file.html#directory-uploads
+     > If the source, however, is /foo/ (a trailing slash is present), and the destination is /tmp,
+       then the contents of /foo will be uploaded directly into /tmp.
+
+     In our case, /tmp/typical-raft/ -> /tmp/typical-raft
+    */
+    source      = "${trimsuffix(module.network.generated_dir, "/")}/"
     destination = module.network.generated_dir
   }
 }

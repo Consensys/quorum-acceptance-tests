@@ -8,8 +8,7 @@ locals {
 }
 
 module "helper" {
-  source  = "trung/ignite/quorum//modules/docker-helper"
-  version = "1.0.0-rc.2"
+  source  = "../_modules/docker-helper"
 
   consensus       = var.consensus
   number_of_nodes = local.number_of_nodes
@@ -34,8 +33,7 @@ module "helper" {
 }
 
 module "network" {
-  source  = "trung/ignite/quorum"
-  version = "1.0.0-rc.2"
+  source  = "../_modules/ignite"
 
   concensus       = module.helper.consensus
   network_name    = var.network_name
@@ -45,8 +43,7 @@ module "network" {
 }
 
 module "docker" {
-  source  = "trung/ignite/quorum//modules/docker"
-  version = "1.0.0-rc.2"
+  source  = "../_modules/docker"
 
   consensus       = module.helper.consensus
   geth            = module.helper.geth_docker_config

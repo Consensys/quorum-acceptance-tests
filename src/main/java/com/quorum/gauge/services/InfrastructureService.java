@@ -72,11 +72,9 @@ public interface InfrastructureService {
     interface ResourceCreationCallback {
         void onCreate(String resourceId);
     }
-
     interface FileContentModifier {
         String modify(String content);
     }
-
     class NodeAttributes {
         private String node;
         private boolean startFresh;
@@ -84,30 +82,22 @@ public interface InfrastructureService {
         private String tesseraVersionKey;
         private String additionalGethArgs;
 
-        private NodeAttributes(String node) {
-            this.node = node;
-            this.startFresh = false;
-        }
-
+        private NodeAttributes(String node) { this.node = node; this.startFresh = false; }
         public static NodeAttributes forNode(String node) {
             return new NodeAttributes(node);
         }
-
         public NodeAttributes withFreshStart() {
             this.startFresh = true;
             return this;
         }
-
         public NodeAttributes withQuorumVersionKey(String versionKey) {
             this.quorumVersionKey = versionKey;
             return this;
         }
-
         public NodeAttributes withTesseraVersionKey(String versionKey) {
             this.tesseraVersionKey = versionKey;
             return this;
         }
-
         public NodeAttributes withAdditionalGethArgs(GethArgBuilder builder) {
             this.additionalGethArgs = builder.toString();
             return this;
@@ -129,11 +119,8 @@ public interface InfrastructureService {
             return tesseraVersionKey;
         }
 
-        public String getAdditionalGethArgs() {
-            return additionalGethArgs;
-        }
+        public String getAdditionalGethArgs() { return additionalGethArgs; }
     }
-
     class NetworkResources extends ConcurrentHashMap<String, Vector<String>> {
         public synchronized void add(String nodeName, String resourceId) {
             Vector<String> resources = super.get(nodeName);
@@ -143,9 +130,16 @@ public interface InfrastructureService {
             }
             resources.add(resourceId);
         }
-
         public Set<String> getNodeNames() {
             return super.keySet();
+        }
+        public String aNodeName() {
+            return this.getNodeNames().stream().findFirst().orElseThrow(() -> new RuntimeException("no nodes available"));
+        }
+        public List<String> allResourceIds() {
+            return super.values().stream()
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
         }
 
         public String getResourceId(String nodeName) {
@@ -154,18 +148,7 @@ public interface InfrastructureService {
             }
             return null;
         }
-
-        public String aNodeName() {
-            return this.getNodeNames().stream().findFirst().orElseThrow(() -> new RuntimeException("no nodes available"));
-        }
-
-        public List<String> allResourceIds() {
-            return super.values().stream()
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
-        }
     }
-
     class JSONListModifier<T> implements FileContentModifier {
         private T additionalElement;
 
@@ -181,8 +164,7 @@ public interface InfrastructureService {
         public String modify(String content) {
             ObjectMapper m = new ObjectMapper();
             try {
-                List<T> data = m.readValue(content, new TypeReference<>() {
-                });
+                List<T> data = m.readValue(content, new TypeReference<>() {});
                 data.add(additionalElement);
                 return m.writeValueAsString(data);
             } catch (JsonProcessingException e) {

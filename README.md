@@ -64,12 +64,12 @@ SPRING_PROFILES_ACTIVE=local.7nodes mvn clean test -Dtags="basic || basic-raft |
 
 :information_source: Because Docker Java SDK [doesn't support SSH transport](https://github.com/docker-java/docker-java/issues/1130) hence we need to open TCP endpoint. 
 
-`networks/_utils/aws-ec2` provides Terraform configuration in order to spin off an EC2 instance with remote Docker API
+`networks/_infra/aws-ec2` provides Terraform configuration in order to spin off an EC2 instance with remote Docker API
 support.
 
 E.g.: in order to start `networks/typical` in the remote Docker:
 ```
-mvn process-test-resources -Pauto -Dnetwork.target="networks/typical::raft" -Dinfra.target="networks/_utils/aws-ec2::us-east-1"
+mvn process-test-resources -Pauto -Dnetwork.target="networks/typical::raft" -Dinfra.target="networks/_infra/aws-ec2::us-east-1"
 ```
 
 

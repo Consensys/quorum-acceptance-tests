@@ -272,7 +272,7 @@
                                             <attribute name="raw" default="undefined" />
                                             <attribute name="prefix" default="networks" />
                                             <attribute name="folderPropertyName" />
-                                            <attribute name="defaultFolder" default="${project.build.directory}/tf-scratchpad" />
+                                            <attribute name="defaultFolder" default="target/tf-scratchpad" />
                                             <attribute name="profilePropertyName" />
                                             <attribute name="defaultProfile" default="undefined" />
                                             <sequential>
@@ -335,7 +335,7 @@
                                         <if>
                                             <equals arg1="${infra.enabled}" arg2="true"/>
                                             <then>
-                                                <parser raw="${infra.target}" prefix="networks/_utils"
+                                                <parser raw="${infra.target}" prefix="networks/_infra"
                                                         folderPropertyName="infra.folder"
                                                         profilePropertyName="infra.profile"/>
                                                 <condition property="infra.skipDestroy" value="false" else="true">
@@ -384,7 +384,7 @@
                                 <phase>process-test-resources</phase>
                                 <configuration>
                                     <skip>${infra.skipApply}</skip>
-                                    <commandlineArgs>apply --auto-approve -var-file terraform.${infra.profile}.tfvars -var tfvars_outdir='${basedir}/${network.folder}' -var properties_outdir='${project.build.outputDirectory}' -var run_on='${auto.jobid}'</commandlineArgs>
+                                    <commandlineArgs>apply --auto-approve -var-file terraform.${infra.profile}.tfvars -var tfvars_outdir='${basedir}/${network.folder}' -var properties_outdir='${project.build.outputDirectory}' -var run_on='${env}'</commandlineArgs>
                                     <workingDirectory>${infra.folder}</workingDirectory>
                                 </configuration>
                             </execution>

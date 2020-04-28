@@ -37,4 +37,4 @@ env/travis-*/
 **/terraform.auto.tfvars
 env/run-local/user.properties
 **/ephemeral-*.pem
-networks/_utils/**/terraform.*.tfvars
+networks/_infra/**/terraform.*.tfvars
