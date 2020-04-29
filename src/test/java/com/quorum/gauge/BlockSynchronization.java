@@ -304,52 +304,29 @@ public class BlockSynchronization extends AbstractSpecImplementation {
 
     @Step("Stop node <nodeName> in the network <id>")
     public void stopNode(Node nodeName, String id) {
+        // stops only the geth process of that node
         NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
-        String resourceId = networkResources.getResourceId(nodeName.getName());
+        String resourceId = networkResources.getResourceId(nodeName.getName()).stream().filter(i -> infraService.isGeth(i).blockingFirst()).findFirst().get();
         assertThat(resourceId).isNotNull();
         infraService.stopResource(resourceId).doOnNext(ok -> {
             assertThat(ok).as("Node must be stopped").isTrue();
         }).doOnComplete(() -> {
-            Duration duration = Duration.ofSeconds(10);
-            logger.debug("Waiting {}s for node to be up completely...", duration.toSeconds());
+            Duration duration = Duration.ofSeconds(5);
+            logger.debug("Waiting {}s for node {} to be stopped completely...", duration.toSeconds(), nodeName.getName());
             Thread.sleep(duration.toMillis());
         }).blockingSubscribe();
-        logger.debug("Docker ps - After stopping node {} resource id {}", nodeName, resourceId);
-        dockerPs();
-        logger.debug("-----------------------------------");
-    }
-
-    public void dockerPs(){
-        try {
-            Process process = Runtime.getRuntime().exec(
-                "docker ps --filter name=template-raft-node");
-            StringBuilder output = new StringBuilder();
-
-            BufferedReader reader = new BufferedReader(
-                new InputStreamReader(process.getInputStream()));
-
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line + "\n");
-            }
-
-            int exitVal = process.waitFor();
-            if (exitVal == 0) {
-                logger.debug("Success!");
-                logger.debug(output.toString());
-            }
-        }catch(Exception ex){}
     }
 
     @Step("Start node <nodeName> in the network <id>")
     public void startNode(Node nodeName, String id) {
+        // starts only the geth process of the node
         NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
-        String resourceId = networkResources.getResourceId(nodeName.getName());
+        String resourceId = networkResources.getResourceId(nodeName.getName()).stream().filter(i -> infraService.isGeth(i).blockingFirst()).findFirst().get();
         assertThat(resourceId).isNotNull();
         infraService.startResource(resourceId).doOnNext(ok -> {
             assertThat(ok).as("Node must be up").isTrue();
         }).doOnComplete(() -> {
-            Duration duration = Duration.ofSeconds(10);
+            Duration duration = Duration.ofSeconds(5);
             logger.debug("Waiting {}s for node to be up completely...", duration.toSeconds());
             Thread.sleep(duration.toMillis());
         }).blockingSubscribe();

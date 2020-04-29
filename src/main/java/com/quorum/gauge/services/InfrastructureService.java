@@ -142,11 +142,11 @@ public interface InfrastructureService {
                 .collect(Collectors.toList());
         }
 
-        public String getResourceId(String nodeName) {
+        public Vector<String> getResourceId(String nodeName) {
             if (containsKey(nodeName)) {
-                return get(nodeName).firstElement();
+                return get(nodeName);
             }
-            return null;
+            return new Vector<>();
         }
     }
     class JSONListModifier<T> implements FileContentModifier {
