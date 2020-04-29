@@ -80,6 +80,25 @@ public class PublicSmartContract extends AbstractSpecImplementation {
         assertThat(failed).isTrue();
     }
 
+    @Step("Deploy a simple smart contract from <source>, verify it gets mined")
+    public void setupContractGetsMined(QuorumNode source) {
+        logger.debug("Setting up contract from {}", source);
+        String txFailedMsg = "Transaction receipt was not generated after";
+        boolean failed = false;
+        Contract c = null;
+        try {
+            c = contractService.createSimpleContract(5, source, null).blockingFirst();
+        } catch (Exception ex) {
+            logger.debug("exception while deploying contract:{} msg:{}", ex.getMessage(), txFailedMsg);
+            if (ex.getMessage().indexOf(txFailedMsg) >= 0) {
+                failed = true;
+            }
+        }
+        assertThat(failed).isFalse();
+        assertThat(c).isNotNull();
+        assertThat(c.getContractAddress()).isNotNull();
+    }
+
     @Step("<contractName> is mined")
     public void verifyContractIsMined(String contractName) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);

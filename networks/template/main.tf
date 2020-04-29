@@ -13,7 +13,7 @@ provider "docker" {
 
 locals {
   node_indices = range(var.number_of_nodes)
-  more_args = join("", [
+  more_args = join(" ", [
     "--allow-insecure-unlock" # since 1.9.7 upgrade
   ])
 }

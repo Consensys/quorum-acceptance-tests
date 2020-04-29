@@ -1,6 +1,6 @@
 # Block synchronization when using Raft consensus. Verify raft's quorum with learner node.
 
-  Tags: networks/template::raft-3plus1, learner-quorum, pre-condition/no-record-blocknumber
+  Tags: networks/template::raft-3plus1, learner-quorum, pre-condition/no-record-blocknumber, learner-peer-management
 
   Raft consensus supports learner node from Quorum 2.5.0 onwards.
   Learner node does not take part in Raft's consensus until it is promoted to a peer node.

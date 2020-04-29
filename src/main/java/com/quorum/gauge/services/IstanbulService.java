@@ -20,6 +20,7 @@
 package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.ext.IstanbulNodeAddress;
 import com.quorum.gauge.ext.IstanbulPropose;
 import com.quorum.gauge.ext.MinerStartStop;
 import io.reactivex.Observable;
@@ -58,14 +59,24 @@ public class IstanbulService extends AbstractService {
         ).flowable().toObservable();
     }
 
-    public Observable<IstanbulPropose> propose(final QuorumNode node, final String proposedValidatorAddress) {
+    public Observable<IstanbulPropose> propose(final QuorumNode node, final String proposedValidatorAddress, boolean vote) {
         logger.debug("Node {} proposing {}", node, proposedValidatorAddress);
 
         return new Request<>(
             "istanbul_propose",
-            Arrays.asList(proposedValidatorAddress, true),
+            Arrays.asList(proposedValidatorAddress, vote),
             connectionFactory().getWeb3jService(node),
             IstanbulPropose.class
+        ).flowable().toObservable();
+    }
+
+    public Observable<IstanbulNodeAddress> nodeAddress(final QuorumNode node) {
+        logger.debug("node address of node {}", node);
+        return new Request<>(
+            "istanbul_nodeAddress",
+            Arrays.asList(),
+            connectionFactory().getWeb3jService(node),
+            IstanbulNodeAddress.class
         ).flowable().toObservable();
     }
 

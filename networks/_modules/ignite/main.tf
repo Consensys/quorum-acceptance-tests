@@ -27,6 +27,7 @@ locals {
   )
   istanbul_validators = merge(
     { for id in local.node_indices : id => "true" }, // default to true for all
+    { for id in var.exclude_initial_nodes : id => "false" },
     { for id in var.non_validator_nodes : id => "false" }
   )
 }
