@@ -2,6 +2,9 @@ locals {
   standard_apis = "admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,${var.consensus}"
   plugin_apis   = [for k, v in var.plugins : "plugin@${k}" if v.expose_api]
   apis          = "${local.standard_apis},${join(",", local.plugin_apis)}"
+  more_args = join("", [
+    "--allow-insecure-unlock" # since 1.9.7 upgrade
+  ])
 
   node_indices = range(var.number_of_nodes)
 
@@ -22,7 +25,7 @@ provider "docker" {
 }
 
 module "helper" {
-  source  = "../_modules/docker-helper"
+  source = "../_modules/docker-helper"
 
   consensus       = var.consensus
   number_of_nodes = var.number_of_nodes
@@ -47,7 +50,7 @@ module "helper" {
 }
 
 module "network" {
-  source  = "../_modules/ignite"
+  source = "../_modules/ignite"
 
   concensus       = module.helper.consensus
   network_name    = var.network_name
@@ -57,7 +60,7 @@ module "network" {
 }
 
 module "docker" {
-  source  = "../_modules/docker"
+  source = "../_modules/docker"
 
   consensus       = module.helper.consensus
   geth            = module.helper.geth_docker_config
@@ -75,8 +78,8 @@ module "docker" {
   geth_datadirs      = var.remote_docker_config == null ? module.network.data_dirs : split(",", join("", null_resource.scp[*].triggers.data_dirs))
   tessera_datadirs   = var.remote_docker_config == null ? module.network.tm_dirs : split(",", join("", null_resource.scp[*].triggers.tm_dirs))
 
-  # provide additional geth args for plugin here
-  additional_geth_args = format("--rpcapi %s --plugins file://%s/plugin-settings.json", local.apis, "/data/qdata")
+  # provide additional geth args
+  additional_geth_args = format("--rpcapi %s --plugins file://%s/plugin-settings.json %s", local.apis, "/data/qdata", local.more_args)
 }
 
 resource "local_file" "plugin-settings" {

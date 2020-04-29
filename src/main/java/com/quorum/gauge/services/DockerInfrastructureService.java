@@ -380,7 +380,7 @@ public class DockerInfrastructureService
                     @Override
                     public void onNext(Frame object) {
                         try {
-                            writer.write(object.toString());
+                            writer.write(object.toString() + "\n");
                         } catch (IOException e) {
                             onError(e);
                         }
