@@ -34,9 +34,8 @@ public class FillTransaction extends AbstractSpecImplementation {
     @Step("Deploy Simple Storage contract using fillTransaction api with an initial value of <initValue> called from <from> private for <to>. Name this contract as <contractName>")
     public void sendFillTransaction(int initValue, QuorumNode from, QuorumNode to, String contractName) {
         com.quorum.gauge.ext.FillTx.FillTransaction filledTx = rawContractService.fillTransaction(from, to, initValue).blockingFirst().getResponseObject();
-        logger.debug("filled tx after call is {}", filledTx);
         if (filledTx == null) {
-            // possible that tessera is older version which is leading to test case failure. skipp
+            // possible that tessera is older version which is leading to test case failure. skip
             // further filltx tests.
             DataStoreFactory.getSpecDataStore().put("skipFillTXTests", true);
         } else {
