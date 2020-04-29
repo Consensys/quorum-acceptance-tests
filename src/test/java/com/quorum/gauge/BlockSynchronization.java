@@ -20,6 +20,7 @@
 package com.quorum.gauge;
 
 import com.quorum.gauge.common.GethArgBuilder;
+import com.quorum.gauge.common.NodeType;
 import com.quorum.gauge.common.QuorumNetworkProperty.Node;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.services.InfrastructureService;
@@ -39,6 +40,8 @@ import org.web3j.protocol.core.Response;
 import org.web3j.protocol.core.methods.response.EthBlockNumber;
 import org.web3j.tx.Contract;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -90,9 +93,16 @@ public class BlockSynchronization extends AbstractSpecImplementation {
     @Step("Send some transactions to create blocks in network <id> and capture the latest block height as <latestBlockHeightName>")
     public void sendSomeTransactions(String id, String latestBlockHeightName) {
         List<Node> nodes = (List<Node>) mustHaveValue(DataStoreFactory.getScenarioDataStore(), "nodes_" + id, List.class);
-        int threadsPerNode = 5;
-        int txCount = 20;
-        int txCountPerNode = (int) Math.round(Math.ceil((double)txCount / nodes.size()));
+        sendSomeTransactionFromNodes(nodes, latestBlockHeightName, 5, 20);
+    }
+
+    @Step("Send some transactions to create blocks in network <id> from <nodes> and capture the latest block height as <latestBlockHeightName>")
+    public void sendSomeTransactionsFromNodes(String id, List<Node> nodes, String latestBlockHeightName) {
+        sendSomeTransactionFromNodes(nodes, latestBlockHeightName, 1, 4);
+    }
+
+    public void sendSomeTransactionFromNodes(List<Node> nodes, String latestBlockHeightName, int threadsPerNode, int txCount) {
+        int txCountPerNode = (int) Math.round(Math.ceil((double) txCount / nodes.size()));
         if (txCountPerNode < threadsPerNode) {
             threadsPerNode = txCountPerNode;
         }
@@ -100,18 +110,19 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         // fire 5 public and 5 private txs
         for (Node n : nodes) {
             parallelSender.add(sendTxs(n, txCountPerNode, threadsPerNode, null)
-                    .subscribeOn(Schedulers.io()));
+                .subscribeOn(Schedulers.io()));
             parallelSender.add(sendTxs(n, txCountPerNode, threadsPerNode, randomNode(nodes, n))
-                    .subscribeOn(Schedulers.io()));
+                .subscribeOn(Schedulers.io()));
         }
         Observable.zip(parallelSender, oks -> true)
-                .doOnComplete(() -> {
-                    BigInteger currentBlockNumber = utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber();
-                    logger.debug("Current block number = {}", currentBlockNumber);
-                    DataStoreFactory.getScenarioDataStore().put(latestBlockHeightName, currentBlockNumber);
-                })
-                .blockingSubscribe();
+            .doOnComplete(() -> {
+                BigInteger currentBlockNumber = utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber();
+                logger.debug("Current block number = {}", currentBlockNumber);
+                DataStoreFactory.getScenarioDataStore().put(latestBlockHeightName, currentBlockNumber);
+            })
+            .blockingSubscribe();
     }
+
 
     private Observable<? extends Contract> sendTxs(Node n, int txCountPerNode, int threadsPerNode,  Node target) {
         return Observable.range(0, txCountPerNode)
@@ -123,37 +134,43 @@ public class BlockSynchronization extends AbstractSpecImplementation {
     }
 
     private Node randomNode(List<Node> nodes, Node n) {
+        if (nodes.size() == 1) {
+            return nodes.get(0);
+        }
         List<Node> nodesLessN = nodes.stream().filter(s -> !n.getName().equalsIgnoreCase(s.getName())).collect(Collectors.toList());
         Random rand = new Random();
         return nodesLessN.get(rand.nextInt(nodesLessN.size()));
     }
 
-    @Step("Add new node with <gcmode> `gcmode`, named it <newNode>, and join the network <id>")
-    public void addNewNode(String gcmode, Node newNode, String id) {
+    @Step("Add new node with <gcmode> `gcmode`, named it <newNode>, and join the network <id> as <nodeType>")
+    public void addNewNode(String gcmode, Node newNode, String id, String ndType) {
         GethArgBuilder additionalGethArgs = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "args_" + id, GethArgBuilder.class);
         NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
+        NodeType nodeType = NodeType.valueOf(ndType);
         switch (networkProperty.getConsensus()) {
             case "raft":
-                raftService.addPeer(networkResources.aNodeName(), newNode.getEnodeUrl())
-                        .doOnNext(res -> {
-                            Response.Error err = Optional.ofNullable(res.getError()).orElse(new Response.Error());
-                            assertThat(err.getMessage()).as("raft.addPeer must succeed").isBlank();
-                        })
-                        .map(Response::getResult)
-                        .flatMap(raftId -> infraService.startNode(
-                            NodeAttributes.forNode(newNode.getName())
-                                    .withAdditionalGethArgs(additionalGethArgs.raftjoinexisting(raftId).gcmode(gcmode)),
-                            resourceId -> networkResources.add(newNode.getName(), resourceId)
-                        ))
-                        .blockingSubscribe();
+                raftService.addPeer(networkResources.aNodeName(), newNode.getEnodeUrl(), nodeType)
+                    .doOnNext(res -> {
+                        Response.Error err = Optional.ofNullable(res.getError()).orElse(new Response.Error());
+                        assertThat(err.getMessage()).as("raft.add" + nodeType.name() + " must succeed").isBlank();
+                        if (nodeType == NodeType.learner)
+                            DataStoreFactory.getScenarioDataStore().put(newNode.getName() + "_raftId", res.getResult());
+                    })
+                    .map(Response::getResult)
+                    .flatMap(raftId -> infraService.startNode(
+                        NodeAttributes.forNode(newNode.getName())
+                            .withAdditionalGethArgs(additionalGethArgs.raftjoinexisting(raftId).gcmode(gcmode)),
+                        resourceId -> networkResources.add(newNode.getName(), resourceId)
+                    ))
+                    .blockingSubscribe();
                 break;
             case "istanbul":
                 // this node is non-validator node, just start it up
                 infraService.startNode(
-                        NodeAttributes.forNode(newNode.getName())
-                                .withAdditionalGethArgs(additionalGethArgs.gcmode(gcmode)),
-                        resourceId -> networkResources.add(newNode.getName(), resourceId))
-                        .blockingSubscribe();
+                    NodeAttributes.forNode(newNode.getName())
+                        .withAdditionalGethArgs(additionalGethArgs.gcmode(gcmode)),
+                    resourceId -> networkResources.add(newNode.getName(), resourceId))
+                    .blockingSubscribe();
                 break;
             default:
                 throw new UnsupportedOperationException(networkProperty.getConsensus() + " not supported yet");
@@ -161,28 +178,44 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         // update static-nodes.json and permissioned-nodes.json from all the nodes
         // including the new node we just started
         Observable.fromIterable(networkResources.allResourceIds())
-                .filter(containerId -> infraService.isGeth(containerId).blockingFirst())
-                .doOnNext(gethContainerId -> logger.debug("Modifying files in container {}", StringUtils.substring(gethContainerId, 0, 12)))
-                .flatMap(gethContainerId -> infraService.modifyFile(gethContainerId,
-                        "/data/qdata/static-nodes.json",
-                        InfrastructureService.JSONListModifier.with(newNode.getEnodeUrl())))
-                .flatMap(gethContainerId -> infraService.modifyFile(gethContainerId,
-                        "/data/qdata/permissioned-nodes.json",
-                        InfrastructureService.JSONListModifier.with(newNode.getEnodeUrl())))
-                .doOnComplete(() -> {
-                    Duration duration = networkProperty.getConsensusGracePeriod();
-                    logger.debug("Waiting {}s while network reflects new modification ...", duration.getSeconds());
-                    Thread.sleep(duration.toMillis());
-                })
-                .blockingSubscribe();
+            .filter(containerId -> infraService.isGeth(containerId).blockingFirst())
+            .doOnNext(gethContainerId -> logger.debug("Modifying files in container {}", StringUtils.substring(gethContainerId, 0, 12)))
+            .flatMap(gethContainerId -> infraService.modifyFile(gethContainerId,
+                "/data/qdata/static-nodes.json",
+                InfrastructureService.JSONListModifier.with(newNode.getEnodeUrl())))
+            .flatMap(gethContainerId -> infraService.modifyFile(gethContainerId,
+                "/data/qdata/permissioned-nodes.json",
+                InfrastructureService.JSONListModifier.with(newNode.getEnodeUrl())))
+            .doOnComplete(() -> {
+                Duration duration = networkProperty.getConsensusGracePeriod();
+                logger.debug("Waiting {}s while network reflects new modification ...", duration.getSeconds());
+                Thread.sleep(duration.toMillis());
+            })
+            .blockingSubscribe();
     }
 
+
     @Step("Verify node <node> has the block height greater or equal to <latestBlockHeightName>")
-    public void verifyBlockHeight(Node node, String latestBlockHeightName) {
+    public void verifyBlockHeightGreaterThanOrEqualTo(Node node, String latestBlockHeightName) {
+        verifyBlockHeight(node, latestBlockHeightName, ">=");
+    }
+
+    @Step("Verify node <node> has the block height less than or equal to <latestBlockHeightName>")
+    public void verifyBlockHeightLessThanOrEqualTo(Node node, String latestBlockHeightName) {
+        verifyBlockHeight(node, latestBlockHeightName, "<=");
+    }
+
+    public void verifyBlockHeight(Node node, String latestBlockHeightName, String comparison) {
         BigInteger lastBlockHeight = mustHaveValue(DataStoreFactory.getScenarioDataStore(), latestBlockHeightName, BigInteger.class);
         BigInteger currentBlockHeight = utilService.getCurrentBlockNumberFrom(node).blockingFirst().getBlockNumber();
-
-        assertThat(currentBlockHeight).isGreaterThanOrEqualTo(lastBlockHeight);
+        switch (comparison) {
+            case ">=":
+                assertThat(currentBlockHeight).isGreaterThanOrEqualTo(lastBlockHeight);
+                break;
+            case "<=":
+                assertThat(currentBlockHeight).isLessThanOrEqualTo(lastBlockHeight);
+                break;
+        }
     }
 
     @Step("Record the current block number, named it as <name>")
@@ -192,6 +225,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(name, currentBlockNumber);
     }
 
+
     @Step("Stop all nodes in the network <id>")
     public void stopAllNodes(String id) {
         NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
@@ -199,6 +233,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
                 .flatMap(infraService::stopResource)
                 .blockingSubscribe();
     }
+
 
     @Step("Start all nodes in the network <id>")
     public void startAllNodes(String id) {
@@ -249,4 +284,72 @@ public class BlockSynchronization extends AbstractSpecImplementation {
 
         assertThat(found).as(expectedLogMsg).isTrue();
     }
+
+    @Step("Promote learner node <newNode> from node <fromNode>, in the network <networkName>")
+    public void promoteLearnerNode(Node newNode, Node fromNode, String id) {
+        Integer raftId = mustHaveValue(DataStoreFactory.getScenarioDataStore(), newNode.getName() + "_raftId", Integer.class);
+        switch (networkProperty.getConsensus()) {
+            case "raft":
+                raftService.promoteToPeer(fromNode.getName(), raftId)
+                    .doOnNext(res -> {
+                        Response.Error err = Optional.ofNullable(res.getError()).orElse(new Response.Error());
+                        assertThat(err.getMessage()).as("raft.promoteToPeer must succeed").isBlank();
+                        assertThat(res.getResult()).isTrue();
+                    }).blockingSubscribe();
+                break;
+            default:
+                throw new UnsupportedOperationException(networkProperty.getConsensus() + " not supported yet");
+        }
+    }
+
+    @Step("Stop node <nodeName> in the network <id>")
+    public void stopNode(Node nodeName, String id) {
+        // stops only the geth process of that node
+        NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
+        String resourceId = networkResources.getResourceId(nodeName.getName()).stream().filter(i -> infraService.isGeth(i).blockingFirst()).findFirst().get();
+        assertThat(resourceId).isNotNull();
+        infraService.stopResource(resourceId).doOnNext(ok -> {
+            assertThat(ok).as("Node must be stopped").isTrue();
+        }).doOnComplete(() -> {
+            Duration duration = Duration.ofSeconds(5);
+            logger.debug("Waiting {}s for node {} to be stopped completely...", duration.toSeconds(), nodeName.getName());
+            Thread.sleep(duration.toMillis());
+        }).blockingSubscribe();
+    }
+
+    @Step("Start node <nodeName> in the network <id>")
+    public void startNode(Node nodeName, String id) {
+        // starts only the geth process of the node
+        NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
+        String resourceId = networkResources.getResourceId(nodeName.getName()).stream().filter(i -> infraService.isGeth(i).blockingFirst()).findFirst().get();
+        assertThat(resourceId).isNotNull();
+        infraService.startResource(resourceId).doOnNext(ok -> {
+            assertThat(ok).as("Node must be up").isTrue();
+        }).doOnComplete(() -> {
+            Duration duration = Duration.ofSeconds(5);
+            logger.debug("Waiting {}s for node to be up completely...", duration.toSeconds());
+            Thread.sleep(duration.toMillis());
+        }).blockingSubscribe();
+    }
+
+    @Step("Save block height <latestBlockHeightName> as <newBlockHeightName>")
+    public void saveBlockHeightAs(String latestBlockHeightName, String newBlockHeightName) {
+        BigInteger lastBlockHeight = mustHaveValue(DataStoreFactory.getScenarioDataStore(), latestBlockHeightName, BigInteger.class);
+        DataStoreFactory.getScenarioDataStore().put(newBlockHeightName, lastBlockHeight);
+    }
+
+    @Step("Verify block height <bhName1> is greater than <bhName2>")
+    public void compareBlockHeightsGreaterThan(String bhName1, String bhName2) {
+        BigInteger lastBlockHeight1 = mustHaveValue(DataStoreFactory.getScenarioDataStore(), bhName1, BigInteger.class);
+        BigInteger lastBlockHeight2 = mustHaveValue(DataStoreFactory.getScenarioDataStore(), bhName2, BigInteger.class);
+        assertThat(lastBlockHeight1).isGreaterThan(lastBlockHeight2);
+    }
+
+    @Step("Verify block height <bhName1> is equal to <bhName2>")
+    public void compareBlockHeightsEqualTo(String bhName1, String bhName2) {
+        BigInteger lastBlockHeight1 = mustHaveValue(DataStoreFactory.getScenarioDataStore(), bhName1, BigInteger.class);
+        BigInteger lastBlockHeight2 = mustHaveValue(DataStoreFactory.getScenarioDataStore(), bhName2, BigInteger.class);
+        assertThat(lastBlockHeight1).isEqualTo(lastBlockHeight2);
+    }
+
 }

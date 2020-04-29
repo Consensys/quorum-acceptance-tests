@@ -13,10 +13,13 @@ provider "docker" {
 
 locals {
   node_indices = range(var.number_of_nodes)
+  more_args = join("", [
+    "--allow-insecure-unlock" # since 1.9.7 upgrade
+  ])
 }
 
 module "helper" {
-  source  = "../_modules/docker-helper"
+  source = "../_modules/docker-helper"
 
   consensus       = var.consensus
   number_of_nodes = var.number_of_nodes
@@ -41,7 +44,7 @@ module "helper" {
 }
 
 module "network" {
-  source  = "../_modules/ignite"
+  source = "../_modules/ignite"
 
   concensus             = module.helper.consensus
   network_name          = var.network_name
@@ -52,7 +55,7 @@ module "network" {
 }
 
 module "docker" {
-  source  = "../_modules/docker"
+  source = "../_modules/docker"
 
   consensus       = module.helper.consensus
   geth            = module.helper.geth_docker_config
@@ -72,6 +75,7 @@ module "docker" {
   exclude_initial_nodes = module.network.exclude_initial_nodes
   start_quorum          = false
   start_tessera         = false
+  additional_geth_args  = local.more_args
 }
 
 data "docker_registry_image" "pull" {

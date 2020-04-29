@@ -5,10 +5,13 @@ provider "docker" {
 locals {
   number_of_nodes = 4
   node_indices    = range(local.number_of_nodes)
+  more_args = join("", [
+    "--allow-insecure-unlock" # since 1.9.7 upgrade
+  ])
 }
 
 module "helper" {
-  source  = "../_modules/docker-helper"
+  source = "../_modules/docker-helper"
 
   consensus       = var.consensus
   number_of_nodes = local.number_of_nodes
@@ -33,7 +36,7 @@ module "helper" {
 }
 
 module "network" {
-  source  = "../_modules/ignite"
+  source = "../_modules/ignite"
 
   concensus       = module.helper.consensus
   network_name    = var.network_name
@@ -43,7 +46,7 @@ module "network" {
 }
 
 module "docker" {
-  source  = "../_modules/docker"
+  source = "../_modules/docker"
 
   consensus       = module.helper.consensus
   geth            = module.helper.geth_docker_config
@@ -54,10 +57,12 @@ module "docker" {
   ethstats_ip     = module.helper.ethstat_ip
   ethstats_secret = module.helper.ethstats_secret
 
-  network_name       = module.network.network_name
-  network_id         = module.network.network_id
-  node_keys_hex      = module.network.node_keys_hex
-  password_file_name = module.network.password_file_name
-  geth_datadirs      = var.remote_docker_config == null ? module.network.data_dirs : split(",", join("", null_resource.scp[*].triggers.data_dirs))
-  tessera_datadirs   = var.remote_docker_config == null ? module.network.tm_dirs : split(",", join("", null_resource.scp[*].triggers.tm_dirs))
+  network_name         = module.network.network_name
+  network_id           = module.network.network_id
+  node_keys_hex        = module.network.node_keys_hex
+  password_file_name   = module.network.password_file_name
+  geth_datadirs        = var.remote_docker_config == null ? module.network.data_dirs : split(",", join("", null_resource.scp[*].triggers.data_dirs))
+  tessera_datadirs     = var.remote_docker_config == null ? module.network.tm_dirs : split(",", join("", null_resource.scp[*].triggers.tm_dirs))
+  additional_geth_args = local.more_args
+
 }

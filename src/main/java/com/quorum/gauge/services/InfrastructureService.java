@@ -50,7 +50,6 @@ public interface InfrastructureService {
     Observable<Integer> checkNetwork(NetworkResources existingNetworkResources);
 
     /**
-     *
      * @param resourceId
      * @param filePath
      * @param modifier
@@ -139,8 +138,15 @@ public interface InfrastructureService {
         }
         public List<String> allResourceIds() {
             return super.values().stream()
-                    .flatMap(Collection::stream)
-                    .collect(Collectors.toList());
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
+        }
+
+        public Vector<String> getResourceId(String nodeName) {
+            if (containsKey(nodeName)) {
+                return get(nodeName);
+            }
+            return new Vector<>();
         }
     }
     class JSONListModifier<T> implements FileContentModifier {

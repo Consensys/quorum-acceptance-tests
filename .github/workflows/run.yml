@@ -45,6 +45,8 @@ jobs:
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
           - 'gcmode && block-sync && networks/template::raft-3plus1'
           - 'gcmode && block-sync && networks/template::istanbul-3plus1'
+          - 'learner-add-promote && networks/template::raft-3plus1'
+          - 'learner-quorum && networks/template::raft-3plus1'
           - 'basic || basic-raft || (advanced && raft) || networks/plugins::raft'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul'
     runs-on: ubuntu-latest
@@ -96,7 +98,7 @@ jobs:
 
           echo "Downloading terraform-provider-quorum ..."
           wget https://dl.bintray.com/quorumengineering/terraform/terraform-provider-quorum/v${{ env.TERRAFORM_PROVIDER_QUORUM_VERSION }}/terraform-provider-quorum_${{ env.TERRAFORM_PROVIDER_QUORUM_VERSION }}_linux_amd64.zip -O provider.zip -q
-          unzip provider.zip -d ${{ env.BIN_DIR }}
+          unzip -o provider.zip -d ${{ env.BIN_DIR }}
       - name: 'Setup environment'
         id: setup
         run: |
