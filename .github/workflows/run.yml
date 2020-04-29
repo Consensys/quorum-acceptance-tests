@@ -32,10 +32,14 @@ env:
   BIN_DIR: bin
 jobs:
   run:
+    # This workflow uses tag expression and its sha256 hash to aggregate test results
+    # from each execution. It is important that the job name has tag expression in the
+    # suffix and encapsulated within parathensis
     name: Tests tagged with (${{ matrix.tag }})
     strategy:
       fail-fast: false
       matrix:
+        # list of tag expression being executed in parallel
         tag:
           - 'basic || basic-raft || (advanced && raft) || networks/typical::raft'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
@@ -117,7 +121,8 @@ jobs:
           #MAVEN_OPTS: -Xmx512m -XX:MaxPermSize=128m
           #LOGGING_LEVEL_COM_QUORUM_GAUGE: DEBUG
         run: |
-          mvn clean test \
+          mvn --no-transfer-progress -B \
+              clean test \
               -Pauto \
               -Dtags="${{ matrix.tag }}" ${{ steps.setup.outputs.mvnArg }} \
               -Denv=${{ steps.setup.outputs.gauge-env }} \
@@ -151,11 +156,15 @@ jobs:
         with:
           name: testreport-${{ steps.keys.outputs.tag }}
           path: ${{ env.TEST_REPORT_DIR }}
-      - name: 'Destroy AWS infrastructure'
+      - name: 'Destroy infrastructure resources if ever created'
         if: always() && steps.setup.outputs.useAWS == 'true'
         # we don't care about containers running on the remote VM
         run: |
-          mvn exec:exec@infra.terraform-destroy -Pauto -Dinfra.folder="${{ env.INFRA_FOLDER }}" -Dinfra.profile="${{ env.INFRA_PROFILE }}"
+          mvn --no-transfer-progress -B \
+            exec:exec@infra.terraform-destroy \
+            -Pauto \
+            -Dinfra.folder="${{ env.INFRA_FOLDER }}" \
+            -Dinfra.profile="${{ env.INFRA_PROFILE }}"
   notify:
     if: always() && github.event_name != 'pull_request'
     name: Notify
@@ -163,6 +172,21 @@ jobs:
       - run
     runs-on: ubuntu-latest
     steps:
+      - name: 'Setup metadata'
+        id: setup
+        run: |
+          gitref_path="${{ github.ref }}"
+          gitref_path=${gitref_path/refs\/heads/tree} # for refs/heads/my-branch
+          gitref_path=${gitref_path/refs\/tags/tree}  # for refs/tags/v1.0.0
+          gitref_path=${gitref_path#refs\/}             # for refs/pull/123/merge
+          gitref_path=${gitref_path%/merge}           # for refs/pull/123/merge
+          run_on="AWS"
+          if [ "${{ env.AWS_ACCESS_KEY_ID }}" == "" ]; then
+            run_on="GithubActionsVM"
+            echo "::warning ::Tests run on Github Actions VM. Some tests may fail due to lack of hardware resources."
+          fi
+          echo "::set-output name=run-on::$run_on"
+          echo "::set-output name=gitref-path::$gitref_path"
       - name: 'Download test reports'
         # Use v2-preview so it downloads all the test reports artifacts
         uses: actions/download-artifact@6b4fc099
@@ -188,20 +212,10 @@ jobs:
           summary=$(cat $all | jq -c -s 'reduce (.[]  | to_entries[] | .value | to_entries[]) as {$key,$value} ({}; .[$key] += $value)' | jq -sR 'rtrimstr("\n")')
           summary=${summary#\"}
           summary=${summary%\"}
-          gitref_path="${{ github.ref }}"
-          gitref_path=${gitref_path/refs\/heads/tree} # for refs/heads/my-branch
-          gitref_path=${gitref_path/refs\/tags/tree}  # for refs/tags/v1.0.0
-          gitref_path=${gitref_path#refs\/}             # for refs/pull/123/merge
-          gitref_path=${gitref_path%/merge}           # for refs/pull/123/merge
-          run_on="AWS"
-          if [ "${{ env.AWS_ACCESS_KEY_ID }}" == "" ]; then
-            run_on="GithubActionsVM"
-          fi
+
           echo "::set-output name=reports::$reports"
           echo "::set-output name=summary::$summary"
-          echo "::set-output name=gitref-path::$gitref_path"
-          echo "::set-output name=run-on::$run_on"
-      - name: 'Prepare Slack message'
+      - name: 'Prepare Slack message with full info'
         id: status
         uses: actions/github-script@0.8.0
         with:
@@ -209,9 +223,8 @@ jobs:
             // need this utility function to hash the tag so we can read test report
             var sha256=function a(b){function c(a,b){return a>>>b|a<<32-b}for(var d,e,f=Math.pow,g=f(2,32),h="length",i="",j=[],k=8*b[h],l=a.h=a.h||[],m=a.k=a.k||[],n=m[h],o={},p=2;64>n;p++)if(!o[p]){for(d=0;313>d;d+=p)o[d]=p;l[n]=f(p,.5)*g|0,m[n++]=f(p,1/3)*g|0}for(b+="\x80";b[h]%64-56;)b+="\x00";for(d=0;d<b[h];d++){if(e=b.charCodeAt(d),e>>8)return;j[d>>2]|=e<<(3-d)%4*8}for(j[j[h]]=k/g|0,j[j[h]]=k,e=0;e<j[h];){var q=j.slice(e,e+=16),r=l;for(l=l.slice(0,8),d=0;64>d;d++){var s=q[d-15],t=q[d-2],u=l[0],v=l[4],w=l[7]+(c(v,6)^c(v,11)^c(v,25))+(v&l[5]^~v&l[6])+m[d]+(q[d]=16>d?q[d]:q[d-16]+(c(s,7)^c(s,18)^s>>>3)+q[d-7]+(c(t,17)^c(t,19)^t>>>10)|0),x=(c(u,2)^c(u,13)^c(u,22))+(u&l[1]^u&l[2]^l[1]&l[2]);l=[w+x|0].concat(l),l[4]=l[4]+w|0}for(d=0;8>d;d++)l[d]=l[d]+r[d]|0}for(d=0;8>d;d++)for(e=3;e+1;e--){var y=l[d]>>8*e&255;i+=(16>y?0:"")+y.toString(16)}return i};
             var summary = JSON.parse('${{ steps.report.outputs.summary }}')
-            var summary_text = ":sunny: " + summary.passed + "   :thunder_cloud_and_rain: " + summary.failed + "   :umbrella_with_rain_drops: " + summary.skipped
             var reports = JSON.parse('${{ steps.report.outputs.reports }}')
-            var gitref_path = "${{ steps.report.outputs.gitref-path }}"
+            var gitref_path = "${{ steps.setup.outputs.gitref-path }}"
             ////////////////////////////////////
             // retrieve workflow run data
             ////////////////////////////////////
@@ -268,10 +281,10 @@ jobs:
             var pr = ""
             for (p of wf_run.data.pull_requests) {
               const pull_response = await github.request(p.url)
-              pr += ",<"+ pull_response.data.html_url + "|PR #" + p.number + ">"
+              pr += `,<${pull_response.data.html_url}|PR #${p.number}>`
             }
             if (pr != "") {
-              pr = "for " + pr.substr(1)
+              pr = `for ${pr.substr(1)}`
             }
             // build the message
             var job_blocks = []
@@ -296,13 +309,13 @@ jobs:
                 var job_summary = reports[hash]
                 var job_summary_text = ""
                 if (job_summary != undefined) {
-                  job_summary_text = ":sunny: " + job_summary.passed + "   :thunder_cloud_and_rain: " + job_summary.failed + "   :umbrella_with_rain_drops: " + job_summary.skipped
+                  job_summary_text = `:sunny: ${job_summary.passed}   :thunder_cloud_and_rain: ${job_summary.failed}   :umbrella_with_rain_drops: ${job_summary.skipped}   `
                 }
                 job_blocks.push({
                     type: "section",
                     text: {
                       type: "mrkdwn",
-                      text: status_icon_func(j.conclusion) + " <" + j.html_url + "|" + j.name + ">\n" + job_summary_text + "   :hourglass: " + date_diff_func(new Date(j.started_at), new Date(j.completed_at))
+                      text: `${status_icon_func(j.conclusion)} <${j.html_url}|${j.name}>\n${job_summary_text}:hourglass: ${date_diff_func(new Date(j.started_at), new Date(j.completed_at))}`
                     }
                 })
             }
@@ -312,38 +325,44 @@ jobs:
             } else if (is_wf_failure) {
               workflow_status = "w_failure"
             }
+            var context_elements = [
+              {
+                  "type": "mrkdwn",
+                  "text": "*Repo:* <https://github.com/${{ github.repository }}|${{ github.repository }}>"
+              },
+              {
+                  "type": "mrkdwn",
+                  "text": `*Branch:* <https://github.com/${{ github.repository }}/${gitref_path}|${{ github.ref }}>`
+              },
+              {
+                  "type": "mrkdwn",
+                  "text": `*Event:* ${wf_run.data.event}`
+              }
+            ]
+            if (wf_run.data.event != 'schedule') {
+              context_elements.push(
+                {
+                    "type": "mrkdwn",
+                    "text": `*Commit:* <https://github.com/${{ github.repository }}/commit/${wf_run.data.head_commit.id}|${wf_run.data.head_commit.id.substr(0, 8)}>`
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": `*Author:* ${wf_run.data.head_commit.author.name}`
+                }
+              )
+            }
+            var summary_text =`:zap: ${job_blocks.length}   :sunny: ${summary.passed}   :thunder_cloud_and_rain: ${summary.failed}   :umbrella_with_rain_drops: ${summary.skipped}   :stopwatch: ${date_diff_func(new Date(wf_run.data.created_at), new Date(wf_run.data.updated_at))}`
             var header_blocks = [
                 {
                     type: "section",
                     text: {
                         type: "mrkdwn",
-                        text: status_icon_func(workflow_status) + " *${{ github.workflow }}* (ran on ${{ steps.report.outputs.run-on }}) <" + wf_run.data.html_url + "|#${{ github.run_number }}>\n:zap: " + job_blocks.length + "   " + summary_text + "   :stopwatch: " + date_diff_func(new Date(wf_run.data.created_at), new Date(wf_run.data.updated_at))
+                        text: `${status_icon_func(workflow_status)} *${{ github.workflow }}* (ran on ${{ steps.setup.outputs.run-on }}) <${wf_run.data.html_url}|#${{ github.run_number }}>\n${summary_text}`
                     }
                 },
                 {
-                    "type": "context",
-                    "elements": [
-                        {
-                            "type": "mrkdwn",
-                            "text": "*Repo:* <https://github.com/${{ github.repository }}|${{ github.repository }}>"
-                        },
-                        {
-                            "type": "mrkdwn",
-                            "text": "*Branch:* <https://github.com/${{ github.repository }}/" + gitref_path + "|${{ github.ref }}>"
-                        },
-                        {
-                            "type": "mrkdwn",
-                            "text": "*Event:* " + wf_run.data.event
-                        },
-                        {
-                            "type": "mrkdwn",
-                            "text": "*Commit:* <https://github.com/${{ github.repository }}/commit/" + wf_run.data.head_commit.id + "|" + wf_run.data.head_commit.id.substr(0, 8) + ">"
-                        },
-                        {
-                            "type": "mrkdwn",
-                            "text": "*Author:* " + wf_run.data.head_commit.author.name
-                        }
-                    ]
+                    type: "context",
+                    elements: context_elements,
                 },
                 {
                     type: "divider"
@@ -353,7 +372,8 @@ jobs:
                 blocks: [].concat(header_blocks, job_blocks)
             }
             return slack_msg
-      - name: 'Prepare a short Slack message'
+      - name: 'Prepare Slack message with partial info'
+        id: short_status
         if: failure()
         uses: actions/github-script@0.8.0
         with:
@@ -392,7 +412,7 @@ jobs:
                       type: "section",
                       text: {
                           type: "mrkdwn",
-                          text: ":skull_and_crossbones: *${{ github.workflow }}* <" + wf_run.data.html_url + "|#${{ github.run_number }}>\n:stopwatch: " + date_diff_func(new Date(wf_run.data.created_at), new Date(wf_run.data.updated_at))
+                          text: `:skull_and_crossbones: *${{ github.workflow }}* <${wf_run.data.html_url}|#${{ github.run_number }}>\n:stopwatch: ${date_diff_func(new Date(wf_run.data.created_at), new Date(wf_run.data.updated_at))}`
                       }
                   }
                 ]
@@ -401,4 +421,13 @@ jobs:
       - name: 'Send to Slack'
         if: always()
         run: |
-          curl -X POST ${{ secrets.SLACK_WEBHOOK_URL}} -H "Content-type: application/json" --data '${{ steps.status.outputs.result }}'
+          cat <<JSON > long_message.json
+          ${{ steps.status.outputs.result }}
+          JSON
+          cat <<JSON > short_message.json
+          ${{ steps.short_status.outputs.result }}
+          JSON
+          _post() {
+            curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} -H "Content-type: application/json" --data "@${1}"
+          }
+          _post "long_message.json" || _post "short_message.json"
