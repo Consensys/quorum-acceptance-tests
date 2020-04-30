@@ -25,3 +25,8 @@ variable "gauge_env_outdir" {
   default     = ""
   description = "Output directory containing user.properties for Gauge env"
 }
+
+//---------- advanced inputs -----------
+variable "number_of_nodes" {
+  default = 4
+}

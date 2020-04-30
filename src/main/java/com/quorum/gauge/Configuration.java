@@ -42,6 +42,12 @@ import java.util.concurrent.TimeUnit;
 public class Configuration {
     private static final Logger logger = LoggerFactory.getLogger(Configuration.class);
 
+    public Configuration() {
+        // this is to set the timeout when using Schedulers.io()
+        // default is only 60 seconds so we bump to higher value
+        System.setProperty("rx2.io-keep-alive-time", String.valueOf(TimeUnit.MINUTES.toSeconds(5)));
+    }
+
     @Autowired
     QuorumNetworkProperty networkProperty;
 

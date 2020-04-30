@@ -27,7 +27,6 @@ import com.thoughtworks.gauge.Gauge;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import io.reactivex.Observable;
-import io.reactivex.schedulers.Schedulers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,19 +66,17 @@ public class Istanbul extends AbstractSpecImplementation {
         List<QuorumNode> nodes = Observable.fromArray(QuorumNode.values()).take(totalNodesConfigured).toList().blockingGet();
         Collections.shuffle(nodes);
         List<QuorumNode> stoppedNodes = nodes.subList(0, numOfValidatorsToStop);
-        BigInteger lastBlockNumber = Observable.fromIterable(stoppedNodes)
-                .flatMap(node -> istanbulService.stopMining(node).subscribeOn(Schedulers.io()))
-                .flatMap(s -> utilService.getCurrentBlockNumber())
-                .blockingLast().getBlockNumber();
+        Observable.fromIterable(stoppedNodes)
+                .flatMap(istanbulService::stopMining)
+                .blockingSubscribe();
 
         DataStoreFactory.getScenarioDataStore().put("stoppedNodes", stoppedNodes);
-        DataStoreFactory.getScenarioDataStore().put("lastBlockNumber", lastBlockNumber);
     }
 
     @ContinueOnFailure
     @Step("The consensus should stop")
     public void verifyConsensusStopped() {
-        BigInteger lastBlockNumber = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "lastBlockNumber", BigInteger.class);
+        BigInteger lastBlockNumber = utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber();
         // wait for 10 seconds and get the block number
         BigInteger newBlockNumber = Observable.timer(10, TimeUnit.SECONDS).flatMap(x -> utilService.getCurrentBlockNumber()).blockingFirst().getBlockNumber();
 
@@ -90,7 +87,7 @@ public class Istanbul extends AbstractSpecImplementation {
     public void startValidators() {
         List<QuorumNode> nodes = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "stoppedNodes", List.class);
         Observable.fromIterable(nodes)
-                .flatMap(node -> istanbulService.startMining(node).subscribeOn(Schedulers.io()))
-                .blockingFirst();
+                .flatMap(istanbulService::startMining)
+                .blockingSubscribe();
     }
 }

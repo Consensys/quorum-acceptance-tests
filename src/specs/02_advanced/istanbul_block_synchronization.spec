@@ -1,4 +1,4 @@
-# Block synchronization when using Istanbul BFT consensus
+# Block synchronization with gcmode when using Istanbul BFT consensus
 
   Tags: networks/template::istanbul-3plus1, pre-condition/no-record-blocknumber, gcmode, block-sync
 
@@ -21,11 +21,9 @@
 
 * Start a <networkType> Quorum Network, named it <id>, consisting of "Node1,Node2,Node3" with <gcmode> `gcmode` using <consensus> consensus
 * Blocks are synced when adding new node "Node4" with <gcmode> `gcmode` to network <id> as "nonvalidator"
-* "Node4" is able to seal new blocks
 * Verify privacy between "Node1" and "Node4" excluding "Node3" when using a simple smart contract
 * Record the current block number, named it as "blockHeightBeforeStart"
 * Stop all nodes in the network <id>
 * Start all nodes in the network <id>
 * Verify block heights in all nodes are greater or equals to "blockHeightBeforeStart" in the network <id>
 * Verify privacy between "Node1" and "Node4" excluding "Node3" when using a simple smart contract
-

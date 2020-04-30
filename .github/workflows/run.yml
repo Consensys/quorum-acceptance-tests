@@ -19,7 +19,7 @@ on:
 env:
   JAVA_VERSION: 11
   TERRAFORM_VERSION: 0.12.24
-  SOLC_VERSION: 0.5.4
+  SOLC_VERSION: 0.5.5
   GAUGE_VERSION: 1.0.8
   TERRAFORM_PROVIDER_QUORUM_VERSION: 1.0.0-beta.1
   INFRA_FOLDER: 'networks/_infra/aws-ec2'
@@ -45,8 +45,8 @@ jobs:
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
           - 'gcmode && block-sync && networks/template::raft-3plus1'
           - 'gcmode && block-sync && networks/template::istanbul-3plus1'
-          - 'learner-add-promote && networks/template::raft-3plus1'
-          - 'learner-quorum && networks/template::raft-3plus1'
+          - 'learner-peer-management && networks/template::raft-3plus1'
+          - 'validator-management && networks/template::istanbul-3plus1'
           - 'basic || basic-raft || (advanced && raft) || networks/plugins::raft'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul'
     runs-on: ubuntu-latest
