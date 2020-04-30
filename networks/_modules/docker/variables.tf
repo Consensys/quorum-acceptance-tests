@@ -22,39 +22,15 @@ variable "node_keys_hex" {
   description = "List of node keys in hex"
 }
 
-variable "geth" {
-  type = object({
-    container = object({
-      image = object({ name = string, local = bool })
-      port  = object({ raft = number, p2p = number, http = number, ws = number })
-    })
-    host = object({
-      port = object({ http_start = number, ws_start = number })
-    })
-  })
-  description = "geth Docker container configuration "
-}
-
-variable "tessera" {
-  type = object({
-    container = object({
-      image = object({ name = string, local = bool })
-      port  = object({ thirdparty = number, p2p = number })
-    })
-    host = object({
-      port = object({ thirdparty_start = number })
-    })
-  })
-  description = "tessera Docker container configuration"
-}
-
 variable "geth_networking" {
   type = list(object({
+    image = object({ name = string, local = bool })
     port = object({
-      http = object({ internal = number, external = number })
-      ws   = object({ internal = number, external = number })
-      p2p  = number
-      raft = number
+      http    = object({ internal = number, external = number })
+      ws      = object({ internal = number, external = number })
+      graphql = object({ internal = number, external = number })
+      p2p     = number
+      raft    = number
     })
     ip = object({ private = string, public = string })
   }))
@@ -63,6 +39,7 @@ variable "geth_networking" {
 
 variable "tm_networking" {
   type = list(object({
+    image = object({ name = string, local = bool })
     port = object({
       thirdparty = object({ internal = number, external = number })
       p2p        = number
@@ -101,7 +78,7 @@ variable "start_tessera" {
 }
 
 variable "exclude_initial_nodes" {
-  default = []
+  default     = []
   description = "Exclude nodes (0-based index) from initial list of participants. E.g: [3, 4, 5] to exclude Node4, Node5, and Node6 from the initial participants of the network"
 }
 

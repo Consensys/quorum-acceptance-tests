@@ -43,3 +43,8 @@ variable "docker_images" {
   default     = []
   description = "List of docker images for pulling"
 }
+
+variable "addtional_geth_args" {
+  default = ""
+  description = "These are immutable args which will be written in the container entrypoint"
+}

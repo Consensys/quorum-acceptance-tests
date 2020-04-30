@@ -61,6 +61,7 @@ quorum:
 %{endfor~}
       url: ${data.null_data_source.meta[i].inputs.nodeUrl}
       third-party-url: ${data.null_data_source.meta[i].inputs.tmThirdpartyUrl}
+      graphql-url: ${data.null_data_source.meta[i].inputs.graphqlUrl}
 %{endfor~}
 EOF
 }

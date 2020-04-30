@@ -13,9 +13,6 @@ provider "docker" {
 
 locals {
   node_indices = range(var.number_of_nodes)
-  more_args = join(" ", [
-    "--allow-insecure-unlock" # since 1.9.7 upgrade
-  ])
 }
 
 module "helper" {
@@ -26,10 +23,10 @@ module "helper" {
   geth = {
     container = {
       image = { name = "quorumengineering/quorum:latest", local = false }
-      port  = { raft = 50400, p2p = 21000, http = 8545, ws = -1 }
+      port  = { raft = 50400, p2p = 21000, http = 8545, ws = -1, graphql = -1 }
     }
     host = {
-      port = { http_start = 22000, ws_start = -1 }
+      port = { http_start = 22000, ws_start = -1, graphql_start = -1 }
     }
   }
   tessera = {
@@ -58,8 +55,6 @@ module "docker" {
   source = "../_modules/docker"
 
   consensus       = module.helper.consensus
-  geth            = module.helper.geth_docker_config
-  tessera         = module.helper.tessera_docker_config
   geth_networking = module.helper.geth_networking
   tm_networking   = module.helper.tm_networking
   network_cidr    = module.helper.network_cidr
@@ -75,7 +70,7 @@ module "docker" {
   exclude_initial_nodes = module.network.exclude_initial_nodes
   start_quorum          = false
   start_tessera         = false
-  additional_geth_args  = local.more_args
+  additional_geth_args  = var.addtional_geth_args
 }
 
 data "docker_registry_image" "pull" {

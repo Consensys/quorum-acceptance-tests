@@ -1,32 +1,23 @@
-data "docker_registry_image" "geth" {
-  count = var.geth.container.image.local ? 0 : 1
-  name  = var.geth.container.image.name
+locals {
+  all_images      = concat(distinct(var.geth_networking[*].image), distinct(var.tm_networking[*].image), [var.ethstats.container.image])
+  registry_images = [for img in local.all_images : img.name if img.local == "false"]
+  local_images    = [for img in local.all_images : img.name if img.local == "true"]
 }
 
-resource "docker_image" "geth" {
-  name          = var.geth.container.image.name
-  keep_locally  = var.geth.container.image.local
-  pull_triggers = [coalesce(join("", data.docker_registry_image.geth[*].sha256_digest), "static")]
+data "docker_registry_image" "img" {
+  count = length(local.registry_images)
+  name  = local.registry_images[count.index]
 }
 
-data "docker_registry_image" "tessera" {
-  count = var.tessera.container.image.local ? 0 : 1
-  name  = var.tessera.container.image.name
+resource "docker_image" "registry" {
+  count         = length(local.registry_images)
+  name          = local.registry_images[count.index]
+  keep_locally  = false
+  pull_triggers = [data.docker_registry_image.img[count.index].sha256_digest]
 }
 
-resource "docker_image" "tessera" {
-  name          = var.tessera.container.image.name
-  keep_locally  = var.tessera.container.image.local
-  pull_triggers = [coalesce(join("", data.docker_registry_image.tessera[*].sha256_digest), "static")]
-}
-
-data "docker_registry_image" "ethstats" {
-  count = var.ethstats.container.image.local ? 0 : 1
-  name  = var.ethstats.container.image.name
-}
-
-resource "docker_image" "ethstats" {
-  name          = var.ethstats.container.image.name
-  keep_locally  = true
-  pull_triggers = [coalesce(join("", data.docker_registry_image.ethstats[*].sha256_digest), "static")]
+resource "docker_image" "local" {
+  count        = length(local.local_images)
+  name         = local.local_images[count.index]
+  keep_locally = true
 }

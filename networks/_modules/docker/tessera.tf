@@ -1,7 +1,8 @@
 resource "docker_container" "tessera" {
   count             = local.number_of_nodes
   name              = format("%s-tm%d", var.network_name, count.index)
-  image             = docker_image.tessera.name
+  depends_on        = [docker_image.local, docker_image.registry]
+  image             = var.tm_networking[count.index].image.name
   hostname          = format("tm%d", count.index)
   restart           = "no"
   publish_all_ports = false
@@ -12,11 +13,11 @@ resource "docker_container" "tessera" {
     value = count.index
   }
   ports {
-    internal = var.tessera.container.port.p2p
+    internal = var.tm_networking[count.index].port.p2p
   }
   ports {
-    internal = var.tessera.container.port.thirdparty
-    external = var.tessera.host.port.thirdparty_start + count.index
+    internal = var.tm_networking[count.index].port.thirdparty.internal
+    external = var.tm_networking[count.index].port.thirdparty.external
   }
   volumes {
     container_path = "/data"

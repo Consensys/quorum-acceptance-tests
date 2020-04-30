@@ -1,23 +1,30 @@
+locals {
+  publish_http_ports    = [for idx in local.node_indices : [var.geth_networking[idx].port.http]]
+  publish_ws_ports      = var.geth_networking[0].port.ws == null ? [for idx in local.node_indices : []] : [for idx in local.node_indices : [var.geth_networking[idx].port.ws]]
+  publish_graphql_ports = var.geth_networking[0].port.graphql == null ? [for idx in local.node_indices : []] : [for idx in local.node_indices : [var.geth_networking[idx].port.graphql]]
+}
+
 resource "docker_container" "geth" {
-  count    = local.number_of_nodes
-  name     = format("%s-node%d", var.network_name, count.index)
-  image    = docker_image.geth.name
-  hostname = format("node%d", count.index)
-  restart  = "no"
-  must_run = local.must_start[count.index]
-  start    = local.must_start[count.index]
+  count      = local.number_of_nodes
+  name       = format("%s-node%d", var.network_name, count.index)
+  depends_on = [docker_container.ethstats, docker_image.registry, docker_image.local]
+  image      = var.geth_networking[count.index].image.name
+  hostname   = format("node%d", count.index)
+  restart    = "no"
+  must_run   = local.must_start[count.index]
+  start      = local.must_start[count.index]
   labels {
     label = "QuorumContainer"
     value = count.index
   }
   ports {
-    internal = var.geth.container.port.p2p
+    internal = var.geth_networking[count.index].port.p2p
   }
   ports {
-    internal = var.geth.container.port.raft
+    internal = var.geth_networking[count.index].port.raft
   }
   dynamic "ports" {
-    for_each = var.geth.container.port.ws == -1 ? [{ internal = var.geth.container.port.http, external = var.geth.host.port.http_start + count.index }] : [{ internal = var.geth.container.port.http, external = var.geth.host.port.http_start + count.index }, { internal = var.geth.container.port.ws, external = var.geth.host.port.ws_start + count.index }]
+    for_each = concat(local.publish_http_ports[count.index], local.publish_ws_ports[count.index], local.publish_graphql_ports[count.index])
     content {
       internal = ports.value["internal"]
       external = ports.value["external"]
@@ -31,7 +38,6 @@ resource "docker_container" "geth" {
     container_path = local.container_geth_datadir_mounted
     host_path      = var.geth_datadirs[count.index]
   }
-  depends_on = [docker_container.ethstats]
   networks_advanced {
     name         = docker_network.quorum.name
     ipv4_address = var.geth_networking[count.index].ip.private
@@ -69,7 +75,7 @@ RUN
     content    = <<EOF
 #!/bin/sh
 
-URL="${var.tm_networking[count.index].ip.private}:${var.tessera.container.port.p2p}/upcheck"
+URL="${var.tm_networking[count.index].ip.private}:${var.tm_networking[count.index].port.p2p}/upcheck"
 
 UDS_WAIT=10
 for i in $(seq 1 100)
@@ -103,11 +109,16 @@ exec geth \
   --rpcaddr 0.0.0.0 \
   --rpcport ${var.geth_networking[count.index].port.http.internal} \
   --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,${var.consensus} \
-%{if var.geth.container.port.ws != -1~}
+%{if var.geth_networking[count.index].port.ws != null~}
   --ws \
   --wsaddr 0.0.0.0 \
-  --wsport ${var.geth.container.port.ws} \
+  --wsport ${var.geth_networking[count.index].port.ws.internal} \
   --wsapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,${var.consensus} \
+%{endif~}
+%{if var.geth_networking[count.index].port.graphql != null~}
+  --graphql \
+  --graphql.addr 0.0.0.0 \
+  --graphql.port ${var.geth_networking[count.index].port.graphql.internal} \
 %{endif~}
   --port ${var.geth_networking[count.index].port.p2p} \
   --ethstats "Node${count.index + 1}:${var.ethstats_secret}@${var.ethstats_ip}:${var.ethstats.container.port}" \

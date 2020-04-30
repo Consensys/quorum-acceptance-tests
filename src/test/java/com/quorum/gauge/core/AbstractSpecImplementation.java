@@ -72,6 +72,9 @@ public abstract class AbstractSpecImplementation {
     @Autowired
     protected RPCService rpcService;
 
+    @Autowired
+    protected GraphQLService graphQLService;
+
     protected BigInteger currentBlockNumber() {
         return mustHaveValue(DataStoreFactory.getScenarioDataStore(), "blocknumber", BigInteger.class);
     }
