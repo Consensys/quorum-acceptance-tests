@@ -32,6 +32,12 @@ variable "exclude_initial_nodes" {
   description = "Exclude nodes (0-based index) from initial network setup"
 }
 
+variable "quorum_docker_image" {
+  type        = object({ name = string, local = bool })
+  default     = { name = "quorumengineering/quorum:latest", local = false }
+  description = "Local=true indicates that the image is already available locally and don't need to pull from registry"
+}
+
 variable "docker_registry" {
   type        = list(object({ name = string, username = string, password = string }))
   default     = []

@@ -1,6 +1,6 @@
 # Transactions for different block heights
 
- Tags: advanced
+ Tags: advanced, block-heights
 
 This is to verify the basic functionalities when certain block height is reached.
 The purpose is to increase the possibility for the network to accept transactions during edge scenarios like:

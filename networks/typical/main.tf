@@ -1,5 +1,14 @@
 provider "docker" {
   host = var.remote_docker_config == null ? null : var.remote_docker_config.docker_host
+
+  dynamic "registry_auth" {
+    for_each = var.docker_registry
+    content {
+      address  = registry_auth.value["name"]
+      username = registry_auth.value["username"]
+      password = registry_auth.value["password"]
+    }
+  }
 }
 
 locals {
@@ -17,7 +26,7 @@ module "helper" {
   number_of_nodes = local.number_of_nodes
   geth = {
     container = {
-      image = { name = "quorumengineering/quorum:latest", local = false }
+      image = var.quorum_docker_image
       port  = { raft = 50400, p2p = 21000, http = 8545, ws = -1, graphql = 8547 }
     }
     host = {
