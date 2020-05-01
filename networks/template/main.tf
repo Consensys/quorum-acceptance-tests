@@ -22,7 +22,7 @@ module "helper" {
   number_of_nodes = var.number_of_nodes
   geth = {
     container = {
-      image = { name = "quorumengineering/quorum:latest", local = false }
+      image = var.quorum_docker_image
       port  = { raft = 50400, p2p = 21000, http = 8545, ws = -1, graphql = -1 }
     }
     host = {

@@ -1,6 +1,6 @@
 # Single private smart contract
 
- Tags: basic
+ Tags: basic, single
 
 This is to verify that a private smart contract between 2 parties are not accessible by others.
 A simple smart contract is to store a int value and to provide `get()` and `set()` functions.
@@ -59,7 +59,7 @@ contract SimpleStorage {
 
 ## When there's an update, privacy is still enforced
 
- Tags: private
+ Tags: private, privacy
 
 * Execute "contract17"'s `set()` function with new value "5" in "Node1" and it's private for "Node4"
 * "contract17"'s `get()` function execution in "Node1" returns "5"
