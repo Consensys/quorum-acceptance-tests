@@ -67,6 +67,19 @@ public class GethArgBuilder {
     }
 
     /**
+     * Add/remove {@code --raftdnsenable}
+     * @return
+     */
+    public GethArgBuilder raftdnsenable(boolean yes) {
+        if (yes) {
+            args.put("--raftdnsenable", "");
+        } else {
+            args.remove("--raftdnsenable");
+        }
+        return this;
+    }
+
+    /**
      * Add/remove {@code --gcmode}
      * @param mode black means remove
      * @return

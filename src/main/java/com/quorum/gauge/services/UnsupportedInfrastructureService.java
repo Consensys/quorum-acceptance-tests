@@ -89,6 +89,11 @@ public class UnsupportedInfrastructureService implements InfrastructureService, 
     }
 
     @Override
+    public Observable<Boolean> restartResource(String resourceId) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public Observable<Boolean> wait(String resourceId) {
         throw new UnsupportedOperationException();
     }
