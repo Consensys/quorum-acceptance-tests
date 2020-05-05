@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.vault.support.Versioned;
+import org.web3j.protocol.admin.methods.response.BooleanResponse;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -211,6 +212,14 @@ public class PluginHashicorpVaultAccountCreation extends AbstractSpecImplementat
                 fail("unable to delete file in account config directory: %s", e.getMessage());
             }
         });
+        // reload plugin so that the account is no longer available to node
+        BooleanResponse res = rpcService.call(
+            node,
+            "admin_reloadPlugin",
+            Collections.singletonList("account"),
+            BooleanResponse.class
+        ).blockingFirst();
+        assertThat(res.success()).isTrue();
     }
 }
 
