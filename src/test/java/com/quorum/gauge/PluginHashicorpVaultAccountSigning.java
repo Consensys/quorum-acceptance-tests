@@ -244,7 +244,7 @@ public class PluginHashicorpVaultAccountSigning extends AbstractSpecImplementati
     @Step("<node> gets the expected result when signing a known transaction with account 0x6038dc01869425004ca0b8370f6c81cf464213b3")
     public void compareSignTransaction(QuorumNetworkProperty.Node node) {
         try {
-            final String expected = "0xf84f80808347b76080808300000038a0eafd7c6c274313283754fbc32cb7f6ef2b0510812f185e3c387ab5ed04be5406a03e7934d715a40479df9820987b4bb2ed44404d0181371e57ba878045e39770f9";
+            final String expected = "0xf84f80808347b76080808300000025a050b4ca82805d053fea92514fabe2ecd8518c90f2064451d68cabac0b2bd2f04ea03aa1355d44807826e8152a6a6c59abc8d9459680086fe4df4e678f58952f1022";
 
             final Transaction toSign = hashicorpVaultSigningService.toSign(BigInteger.ZERO, "0x6038dc01869425004ca0b8370f6c81cf464213b3");
             final Map<String, Object> result = transactionService.personalSignTransaction(node, toSign, "");
