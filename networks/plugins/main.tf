@@ -3,7 +3,8 @@ locals {
   plugin_apis   = [for k, v in var.plugins : "plugin@${k}" if v.expose_api]
   apis          = "${local.standard_apis},${join(",", local.plugin_apis)}"
   more_args = join(" ", [
-    "--allow-insecure-unlock" # since 1.9.7 upgrade
+    "--allow-insecure-unlock", # since 1.9.7 upgrade
+    "--plugins.skipverify" //TODO(cjh) for testing - remove
   ])
 
   node_indices = range(var.number_of_nodes)
@@ -80,6 +81,11 @@ module "docker" {
 
   # provide additional geth args
   additional_geth_args = format("--rpcapi %s --plugins file://%s/plugin-settings.json %s", local.apis, "/data/qdata", local.more_args)
+  additional_geth_env = {
+    local.plugin_token_envvar_name = local.vault_server_token
+  }
+
+  host_plugin_account_dirs = local.host_plugin_acct_dirs
 }
 
 resource "local_file" "plugin-settings" {

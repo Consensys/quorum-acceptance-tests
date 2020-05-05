@@ -2,6 +2,8 @@ locals {
   publish_http_ports    = [for idx in local.node_indices : [var.geth_networking[idx].port.http]]
   publish_ws_ports      = var.geth_networking[0].port.ws == null ? [for idx in local.node_indices : []] : [for idx in local.node_indices : [var.geth_networking[idx].port.ws]]
   publish_graphql_ports = var.geth_networking[0].port.graphql == null ? [for idx in local.node_indices : []] : [for idx in local.node_indices : [var.geth_networking[idx].port.graphql]]
+
+  lengthened_plugin_acct_dirs = var.host_plugin_account_dirs == [] ? [for i in range(local.number_of_nodes) : "/tmp/quorum-plugin-accts-${i}"] : var.host_plugin_account_dirs
 }
 
 resource "docker_container" "geth" {
@@ -38,12 +40,21 @@ resource "docker_container" "geth" {
     container_path = local.container_geth_datadir_mounted
     host_path      = var.geth_datadirs[count.index]
   }
+  mounts {
+    target = local.container_plugin_acctdir
+    source = local.lengthened_plugin_acct_dirs[count.index]
+    type = "bind"
+  }
+  volumes {
+    host_path = "/Users/chrishounsom/alpine-plugin-builder/shared/build/target/quorum-account-plugin-hashicorp-vault-1.0.0.zip"
+    container_path = "${local.container_geth_datadir_mounted}/plugins/quorum-account-plugin-hashicorp-vault-1.0.0.zip"
+  }
   networks_advanced {
     name         = docker_network.quorum.name
     ipv4_address = var.geth_networking[count.index].ip.private
     aliases      = [format("node%d", count.index)]
   }
-  env = ["PRIVATE_CONFIG=${local.container_tm_ipc_file}"]
+  env = local.geth_env
   healthcheck {
     test         = ["CMD", "nc", "-vz", "localhost", var.geth_networking[count.index].port.http.internal]
     interval     = "3s"
