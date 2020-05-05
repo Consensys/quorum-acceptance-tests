@@ -19,6 +19,7 @@ import org.web3j.protocol.core.methods.request.Transaction;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -40,17 +41,22 @@ public class PluginHashicorpVaultAccountSigning extends AbstractSpecImplementati
 
     @Step("<node> does not have account 0x6038dc01869425004ca0b8370f6c81cf464213b3")
     public void verifyNodeDoesNotHaveAccount(QuorumNetworkProperty.Node node) {
+        LOGGER.error("CHRISSY listing wallets for node {}: {}", node.getName(), node.getUrl());
         List<AccountService.Wallet> wallets = null;
         try {
             wallets = accountService.personalListWallets(node);
         } catch (IOException e) {
-            fail("unable to list accounts for node %s: %s", node.toString(), e.getMessage());
+            fail("unable to list wallets for node %s: %s", node.toString(), e.getMessage());
         }
         assertThat(wallets).isNotNull();
+        LOGGER.error("CHRISSY personal_listWallets:");
+        wallets.forEach(w -> LOGGER.error("CHRISSY {}", w.getUrl()));
 
         List<AccountService.Wallet> filteredWallets = wallets.stream()
             .filter(w -> w.contains("0x6038dc01869425004ca0b8370f6c81cf464213b3"))
             .collect(Collectors.toList());
+
+        LOGGER.error("CHRISSY filtered wallets: len {}", filteredWallets.size());
 
         assertThat(filteredWallets).isEmpty();
     }
@@ -240,7 +246,7 @@ public class PluginHashicorpVaultAccountSigning extends AbstractSpecImplementati
         try {
             final String expected = "0xf84f80808347b76080808300000038a0eafd7c6c274313283754fbc32cb7f6ef2b0510812f185e3c387ab5ed04be5406a03e7934d715a40479df9820987b4bb2ed44404d0181371e57ba878045e39770f9";
 
-            final Transaction toSign = hashicorpVaultSigningService.toSign(node, "0x6038dc01869425004ca0b8370f6c81cf464213b3");
+            final Transaction toSign = hashicorpVaultSigningService.toSign(BigInteger.ZERO, "0x6038dc01869425004ca0b8370f6c81cf464213b3");
             final Map<String, Object> result = transactionService.personalSignTransaction(node, toSign, "");
 
             assertThat(result).isNotNull();

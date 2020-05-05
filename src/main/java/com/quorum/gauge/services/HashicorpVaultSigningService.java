@@ -16,11 +16,7 @@ import java.math.BigInteger;
 @Service
 public class HashicorpVaultSigningService extends HashicorpVaultAbstractService {
 
-    public Transaction toSign(QuorumNetworkProperty.Node node, String from) throws IOException {
-        Web3j web3j = connectionFactory().getWeb3jConnection(node);
-        EthGetTransactionCount ethGetTransactionCount = web3j.ethGetTransactionCount(from, DefaultBlockParameterName.LATEST).send();
-        BigInteger nonce = ethGetTransactionCount.getTransactionCount();
-
+    public Transaction toSign(BigInteger nonce, String from) {
         return new Transaction(from, nonce, BigInteger.ZERO, DEFAULT_GAS_LIMIT, null, null, "0x000000");
     }
 
