@@ -82,7 +82,7 @@ module "docker" {
   # provide additional geth args
   additional_geth_args = format("--rpcapi %s --plugins file://%s/plugin-settings.json %s", local.apis, "/data/qdata", local.more_args)
   additional_geth_env = {
-    local.plugin_token_envvar_name = local.vault_server_token
+    (local.plugin_token_envvar_name) = local.vault_server_token
   }
 
   host_plugin_account_dirs = local.host_plugin_acct_dirs

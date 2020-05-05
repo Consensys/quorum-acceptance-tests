@@ -6,12 +6,10 @@ locals {
     vault_server_token = "s.K0tuWLNVlyBCPLKCm39QOJvc"
     vault_server_unseal_key = "10gYKD89Wa5T3lomqComqrBYEwAiGFSKgpgehNY9LJk="
 
-    // TODO(cjh) path has been made relative - make sure still works
-    host_vault_storage_dir = "vault-server/vault-storage"
+    host_vault_storage_dir = abspath("vault-server/vault-storage")
     container_vault_storage_dir = "/vault-storage"
 
-    // TODO(cjh) path has been made relative - make sure still works
-    host_certs_dir = "vault-server/CertsWithQuorumRootCAandIntCA"
+    host_certs_dir = abspath("vault-server/CertsWithQuorumRootCAandIntCA")
     container_certs_dir = "/certs"
     container_server_cert = "${local.container_certs_dir}/localhost-with-san-chain.pem"
     container_server_key  = "${local.container_certs_dir}/localhost-with-san.key"
