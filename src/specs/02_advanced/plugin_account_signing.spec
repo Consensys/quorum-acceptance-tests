@@ -1,0 +1,15 @@
+# Pluggable Architecture with Hashicorp Vault implementation of account plugin
+
+ Tags: networks/plugins::raft, networks/plugins::istanbul, plugin-account, hashicorp-vault, signing
+
+* "Node1" does not have account 0x6038dc01869425004ca0b8370f6c81cf464213b3
+* Add Hashicorp Vault account 0x6038dc01869425004ca0b8370f6c81cf464213b3 to "Node1" with secret engine path "kv" and secret path "myacct"
+* "Node1" has account 0x6038dc01869425004ca0b8370f6c81cf464213b3
+
+## Keystore and Hashicorp Vault accounts give the same signing result
+* "Node1" gets the expected result when signing a known transaction with account 0x6038dc01869425004ca0b8370f6c81cf464213b3
+* "Node1" gets the expected result when signing known arbitrary data with account 0x6038dc01869425004ca0b8370f6c81cf464213b3
+
+___
+* Remove Hashicorp Vault account 0x6038dc01869425004ca0b8370f6c81cf464213b3 from "Node1"
+* "Node1" does not have account 0x6038dc01869425004ca0b8370f6c81cf464213b3

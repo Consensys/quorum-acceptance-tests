@@ -24,6 +24,7 @@ import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.ext.EthGetQuorumPayload;
 import com.quorum.gauge.ext.EthSignTransaction;
 import com.quorum.gauge.ext.ExtendedPrivateTransaction;
+import com.quorum.gauge.ext.StringResponse;
 import io.reactivex.schedulers.Schedulers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -392,6 +393,43 @@ public class TransactionService extends AbstractService {
                     );
                     return client.ethEstimateGas(tx).flowable().toObservable();
                 });
+    }
+
+    public Map<String, Object> personalSignTransaction(QuorumNetworkProperty.Node node, Transaction toSign, String acctPwd) throws IOException {
+        List<Object> params = new ArrayList<>();
+        params.add(toSign);
+        params.add(acctPwd);
+
+        Request<?, EthSignTransaction> request = new Request<>(
+            "personal_signTransaction",
+            params,
+            connectionFactory().getWeb3jService(node),
+            EthSignTransaction.class);
+
+        EthSignTransaction resp = request.send();
+        if (resp.hasError()) {
+            throw new RuntimeException(resp.getError().getMessage());
+        }
+        return resp.getResult();
+    }
+
+    public String personalSign(QuorumNetworkProperty.Node node, String toSign, String from, String acctPwd) throws IOException {
+        List<Object> params = new ArrayList<>();
+        params.add(toSign);
+        params.add(from);
+        params.add(acctPwd);
+
+        Request<?, StringResponse> request = new Request<>(
+            "personal_sign",
+            params,
+            connectionFactory().getWeb3jService(node),
+            StringResponse.class);
+
+        StringResponse resp = request.send();
+        if (resp.hasError()) {
+            throw new RuntimeException(resp.getError().getMessage());
+        }
+        return resp.getResult();
     }
 
 }
