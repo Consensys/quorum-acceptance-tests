@@ -36,7 +36,7 @@ public class QuorumNetworkProperty {
     private Map<String, WalletData> wallets = new HashMap<>();
     private String consensus;
     private SocksProxy socksProxy;
-
+    private HashicorpVaultServerProperty hashicorpVaultServer;
     private DockerInfrastructureProperty dockerInfrastructure = new DockerInfrastructureProperty();
 
     public SocksProxy getSocksProxy() {
@@ -75,6 +75,14 @@ public class QuorumNetworkProperty {
         Node node = Optional.ofNullable(nodes.get(QuorumNode.valueOf(nodeName))).orElseThrow(() -> new RuntimeException("no such node with name: " + nodeName));
         node.setName(nodeName);
         return node;
+    }
+
+    public HashicorpVaultServerProperty getHashicorpVaultServer() {
+        return hashicorpVaultServer;
+    }
+
+    public void setHashicorpVaultServer(HashicorpVaultServerProperty hashicorpVaultServer) {
+        this.hashicorpVaultServer = hashicorpVaultServer;
     }
 
     public DockerInfrastructureProperty getDockerInfrastructure() {
@@ -325,6 +333,123 @@ public class QuorumNetworkProperty {
             public void setTesseraContainerId(String tesseraContainerId) {
                 this.tesseraContainerId = tesseraContainerId;
             }
+        }
+    }
+
+    public static class HashicorpVaultServerProperty {
+        private String url;
+        private String caCertPath;
+        private String clientCertPath;
+        private String clientKeyPath;
+        private String tlsTrustStorePath;
+        private String tlsTrustStorePassword;
+        private String tlsKeyStorePath;
+        private String tlsKeyStorePassword;
+        private String authToken;
+        private Map<String, NodeAcctDirData> nodeAcctDirs;
+
+        public HashicorpVaultServerProperty() {
+        }
+
+        public String getUrl() {
+            return url;
+        }
+
+        public void setUrl(String url) {
+            this.url = url;
+        }
+
+        public String getCaCertPath() {
+            return caCertPath;
+        }
+
+        public void setCaCertPath(String caCertPath) {
+            this.caCertPath = caCertPath;
+        }
+
+        public String getClientCertPath() {
+            return clientCertPath;
+        }
+
+        public void setClientCertPath(String clientCertPath) {
+            this.clientCertPath = clientCertPath;
+        }
+
+        public String getClientKeyPath() {
+            return clientKeyPath;
+        }
+
+        public void setClientKeyPath(String clientKeyPath) {
+            this.clientKeyPath = clientKeyPath;
+        }
+
+        public String getTlsTrustStorePath() {
+            return tlsTrustStorePath;
+        }
+
+        public void setTlsTrustStorePath(String tlsTrustStorePath) {
+            this.tlsTrustStorePath = tlsTrustStorePath;
+        }
+
+        public String getTlsTrustStorePassword() {
+            return tlsTrustStorePassword;
+        }
+
+        public void setTlsTrustStorePassword(String tlsTrustStorePassword) {
+            this.tlsTrustStorePassword = tlsTrustStorePassword;
+        }
+
+        public String getTlsKeyStorePath() {
+            return tlsKeyStorePath;
+        }
+
+        public void setTlsKeyStorePath(String tlsKeyStorePath) {
+            this.tlsKeyStorePath = tlsKeyStorePath;
+        }
+
+        public String getTlsKeyStorePassword() {
+            return tlsKeyStorePassword;
+        }
+
+        public void setTlsKeyStorePassword(String tlsKeyStorePassword) {
+            this.tlsKeyStorePassword = tlsKeyStorePassword;
+        }
+
+        public String getAuthToken() {
+            return authToken;
+        }
+
+        public void setAuthToken(String authToken) {
+            this.authToken = authToken;
+        }
+
+        public Map<String, NodeAcctDirData> getNodeAcctDirs() {
+            return nodeAcctDirs;
+        }
+
+        public void setNodeAcctDirs(Map<String, NodeAcctDirData> nodeAcctDirs) {
+            this.nodeAcctDirs = nodeAcctDirs;
+        }
+    }
+
+    public static class NodeAcctDirData {
+        private String pluginAcctDir;
+        private String keystoreAcctDir;
+
+        public String getPluginAcctDir() {
+            return pluginAcctDir;
+        }
+
+        public void setPluginAcctDir(String pluginAcctDir) {
+            this.pluginAcctDir = pluginAcctDir;
+        }
+
+        public String getKeystoreAcctDir() {
+            return keystoreAcctDir;
+        }
+
+        public void setKeystoreAcctDir(String keystoreAcctDir) {
+            this.keystoreAcctDir = keystoreAcctDir;
         }
     }
 }

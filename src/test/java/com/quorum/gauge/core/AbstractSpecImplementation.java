@@ -75,6 +75,9 @@ public abstract class AbstractSpecImplementation {
     @Autowired
     protected GraphQLService graphQLService;
 
+    @Autowired
+    protected HashicorpVaultAccountCreationService hashicorpVaultAccountCreationService;
+
     protected BigInteger currentBlockNumber() {
         return mustHaveValue(DataStoreFactory.getScenarioDataStore(), "blocknumber", BigInteger.class);
     }
