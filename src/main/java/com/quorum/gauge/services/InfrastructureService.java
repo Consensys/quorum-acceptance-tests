@@ -65,6 +65,8 @@ public interface InfrastructureService {
 
     Observable<Boolean> startResource(String resourceId);
 
+    Observable<Boolean> restartResource(String resourceId);
+
     Observable<Boolean> wait(String resourceId);
 
     Observable<Boolean> grepLog(String resourceId, String grepStr, long timeoutAmount, TimeUnit timeoutUnit);

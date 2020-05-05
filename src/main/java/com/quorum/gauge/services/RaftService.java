@@ -71,6 +71,10 @@ public class RaftService extends AbstractService {
         });
     }
 
+    public Observable<RaftCluster> getCluster(String existingNode) {
+        return getCluster(QuorumNode.valueOf(existingNode));
+    }
+
     public Observable<RaftCluster> getCluster(QuorumNode node) {
         Request<String, RaftCluster> request = new Request<>(
                 "raft_cluster",

@@ -43,7 +43,7 @@ jobs:
         tag:
           - 'basic || basic-raft || (advanced && raft) || networks/typical::raft'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
-          - 'gcmode && block-sync && networks/template::raft-3plus1'
+          - '((gcmode && block-sync) || raftdnsenable) && networks/template::raft-3plus1'
           - 'gcmode && block-sync && networks/template::istanbul-3plus1'
           - 'learner-peer-management && networks/template::raft-3plus1'
           - 'validator-management && networks/template::istanbul-3plus1'

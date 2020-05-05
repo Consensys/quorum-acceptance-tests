@@ -7,11 +7,11 @@
 
   This specification is to describe the expection w.r.t block synchronization for Quorum Network to function based on the following permutations
 
-      |id    |networkType      |consensus|gcmode | nodeType |
-      |raft1 |permissioned     |raft     |full   | peer     |
-      |raft2 |permissioned     |raft     |archive| peer     |
-      |raft3 |non-permissioned |raft     |full   | peer     |
-      |raft4 |non-permissioned |raft     |archive| peer     |
+      |id    |networkType      |gcmode |
+      |raft1 |permissioned     |full   |
+      |raft2 |permissioned     |archive|
+      |raft3 |non-permissioned |full   |
+      |raft4 |non-permissioned |archive|
 
 ## Verify block synchronization
 
@@ -19,8 +19,8 @@
 
   This scenario is run against each row of data in the table above
 
-* Start a <networkType> Quorum Network, named it <id>, consisting of "Node1,Node2,Node3" with <gcmode> `gcmode` using <consensus> consensus
-* Blocks are synced when adding new node "Node4" with <gcmode> `gcmode` to network <id> as <nodeType>
+* Start a <networkType> Quorum Network, named it <id>, consisting of "Node1,Node2,Node3" with <gcmode> `gcmode` using raft consensus
+* Blocks are synced when adding new node "Node4" with <gcmode> `gcmode` to network <id> as "peer"
 * Verify privacy between "Node1" and "Node4" excluding "Node3" when using a simple smart contract
 * Record the current block number, named it as "blockHeightBeforeStart"
 * Stop all nodes in the network <id>

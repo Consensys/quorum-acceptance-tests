@@ -262,6 +262,16 @@ public class DockerInfrastructureService
                 });
     }
 
+    @Override
+    public Observable<Boolean> restartResource(String resourceId) {
+        return Observable.just(resourceId)
+            .doOnNext(id -> logger.debug("Restarting container {}", StringUtils.substring(id, 0, 12)))
+            .map(id -> {
+                dockerClient.restartContainerCmd(id).exec();
+                return true;
+            });
+    }
+
     /**
      * It's possible that container is still starting up even true is returned
      *
