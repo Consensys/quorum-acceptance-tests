@@ -212,7 +212,7 @@ public class PluginHashicorpVaultAccountCreation extends AbstractSpecImplementat
                 fail("unable to delete file in account config directory: %s", e.getMessage());
             }
         });
-        // reload plugin so that the account is no longer available to node
+        // reload plugin so any deleted accounts are no longer available to node
         BooleanResponse res = rpcService.call(
             node,
             "admin_reloadPlugin",

@@ -64,8 +64,6 @@ public class PluginHashicorpVaultAccountSigning extends AbstractSpecImplementati
 
         assertThat(wallets).isNotNull();
 
-        wallets.forEach(w -> LOGGER.error(w.getUrl()));
-
         List<AccountService.Wallet> filteredWallets = wallets.stream()
             .filter(w -> w.contains("0x6038dc01869425004ca0b8370f6c81cf464213b3"))
             .collect(Collectors.toList());
@@ -166,7 +164,6 @@ public class PluginHashicorpVaultAccountSigning extends AbstractSpecImplementati
         assertThat(result).isNotNull();
         final String signed = (String) result.get("raw");
         assertThat(signed).isNotNull();
-
         assertThat(signed).isEqualTo(expected);
     }
 
