@@ -2,8 +2,6 @@ locals {
   publish_http_ports    = [for idx in local.node_indices : [var.geth_networking[idx].port.http]]
   publish_ws_ports      = var.geth_networking[0].port.ws == null ? [for idx in local.node_indices : []] : [for idx in local.node_indices : [var.geth_networking[idx].port.ws]]
   publish_graphql_ports = var.geth_networking[0].port.graphql == null ? [for idx in local.node_indices : []] : [for idx in local.node_indices : [var.geth_networking[idx].port.graphql]]
-
-  lengthened_plugin_acct_dirs = var.host_plugin_account_dirs == [] ? [for i in range(local.number_of_nodes) : "/tmp/quorum-plugin-accts-${i}"] : var.host_plugin_account_dirs
 }
 
 resource "docker_container" "geth" {
@@ -42,7 +40,7 @@ resource "docker_container" "geth" {
   }
   mounts {
     target = local.container_plugin_acctdir
-    source = local.lengthened_plugin_acct_dirs[count.index]
+    source = length(local_file.plugin_acct_dir_files) != 0 ? dirname(local_file.plugin_acct_dir_files[count.index].filename) : dirname(local_file.plugin_acct_fallback_dir_files[count.index].filename)
     type = "bind"
   }
   volumes {

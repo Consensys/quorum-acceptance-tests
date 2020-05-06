@@ -12,13 +12,6 @@ locals {
     host_keystore_acct_dirs = [for d in module.network.data_dirs : "${d}/keystore"]
 }
 
-// make sure the plugin account config directories exist for each node
-resource "local_file" "plugin_acct_dir" {
-    count = length(local.host_plugin_acct_dirs)
-    filename = "${local.host_plugin_acct_dirs[count.index]}/tmp"
-    content = "{}"
-}
-
 # this resource creates additional Spring Application YML file
 # which is merged with default one when running test
 resource "local_file" "hashicorp-vault-test-properties" {
