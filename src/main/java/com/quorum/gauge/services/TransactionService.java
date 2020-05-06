@@ -395,7 +395,7 @@ public class TransactionService extends AbstractService {
                 });
     }
 
-    public Map<String, Object> personalSignTransaction(QuorumNetworkProperty.Node node, Transaction toSign, String acctPwd) throws IOException {
+    public Observable<EthSignTransaction> personalSignTransaction(QuorumNetworkProperty.Node node, Transaction toSign, String acctPwd) {
         List<Object> params = new ArrayList<>();
         params.add(toSign);
         params.add(acctPwd);
@@ -406,14 +406,10 @@ public class TransactionService extends AbstractService {
             connectionFactory().getWeb3jService(node),
             EthSignTransaction.class);
 
-        EthSignTransaction resp = request.send();
-        if (resp.hasError()) {
-            throw new RuntimeException(resp.getError().getMessage());
-        }
-        return resp.getResult();
+        return request.flowable().toObservable();
     }
 
-    public String personalSign(QuorumNetworkProperty.Node node, String toSign, String from, String acctPwd) throws IOException {
+    public Observable<StringResponse> personalSign(QuorumNetworkProperty.Node node, String toSign, String from, String acctPwd) {
         List<Object> params = new ArrayList<>();
         params.add(toSign);
         params.add(from);
@@ -425,11 +421,7 @@ public class TransactionService extends AbstractService {
             connectionFactory().getWeb3jService(node),
             StringResponse.class);
 
-        StringResponse resp = request.send();
-        if (resp.hasError()) {
-            throw new RuntimeException(resp.getError().getMessage());
-        }
-        return resp.getResult();
+        return request.flowable().toObservable();
     }
 
 }

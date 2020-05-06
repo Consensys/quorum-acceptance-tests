@@ -155,32 +155,30 @@ public class PluginHashicorpVaultAccountSigning extends AbstractSpecImplementati
 
     @Step("<node> gets the expected result when signing a known transaction with account 0x6038dc01869425004ca0b8370f6c81cf464213b3")
     public void compareSignTransaction(QuorumNetworkProperty.Node node) {
-        try {
-            final String expected = "0xf84f80808347b76080808300000025a050b4ca82805d053fea92514fabe2ecd8518c90f2064451d68cabac0b2bd2f04ea03aa1355d44807826e8152a6a6c59abc8d9459680086fe4df4e678f58952f1022";
+        final String expected = "0xf84f80808347b76080808300000025a050b4ca82805d053fea92514fabe2ecd8518c90f2064451d68cabac0b2bd2f04ea03aa1355d44807826e8152a6a6c59abc8d9459680086fe4df4e678f58952f1022";
 
-            final Transaction toSign = hashicorpVaultSigningService.toSign(BigInteger.ZERO, "0x6038dc01869425004ca0b8370f6c81cf464213b3");
-            final Map<String, Object> result = transactionService.personalSignTransaction(node, toSign, "");
+        final Transaction toSign = hashicorpVaultSigningService.toSign(BigInteger.ZERO, "0x6038dc01869425004ca0b8370f6c81cf464213b3");
+        final Map<String, Object> result = transactionService
+            .personalSignTransaction(node, toSign, "")
+            .blockingFirst()
+            .getResult();
 
-            assertThat(result).isNotNull();
-            final String signed = (String) result.get("raw");
-            assertThat(signed).isNotNull();
+        assertThat(result).isNotNull();
+        final String signed = (String) result.get("raw");
+        assertThat(signed).isNotNull();
 
-            assertThat(signed).isEqualTo(expected);
-        } catch (IOException e) {
-            fail("unable to sign transaction: %s", e.getMessage());
-        }
+        assertThat(signed).isEqualTo(expected);
     }
 
     @Step("<node> gets the expected result when signing known arbitrary data with account 0x6038dc01869425004ca0b8370f6c81cf464213b3")
     public void compareSign(QuorumNetworkProperty.Node node) {
-        try {
-            final String expected = "0xead3d9a19ac3fb4003c50f2d85e27072dac4e78b77903d6061d8619ba671db0551ab3e72790a7d0c722a3c6ee070a75fa08bb04b7d3ae2ca0be1963bbbdf94c41c";
+        final String expected = "0xead3d9a19ac3fb4003c50f2d85e27072dac4e78b77903d6061d8619ba671db0551ab3e72790a7d0c722a3c6ee070a75fa08bb04b7d3ae2ca0be1963bbbdf94c41c";
 
-            final String signed = transactionService.personalSign(node, "0xaaaaaa", "0x6038dc01869425004ca0b8370f6c81cf464213b3", "");
-            assertThat(signed).isNotNull();
-            assertThat(signed).isEqualTo(expected);
-        } catch (IOException e) {
-            fail("unable to sign transaction: %s", e.getMessage());
-        }
+        final String signed = transactionService
+            .personalSign(node, "0xaaaaaa", "0x6038dc01869425004ca0b8370f6c81cf464213b3", "")
+            .blockingFirst()
+            .toString();
+        assertThat(signed).isNotNull();
+        assertThat(signed).isEqualTo(expected);
     }
 }
