@@ -38,6 +38,15 @@ resource "docker_container" "vault_server" {
     image    = docker_image.vault.latest
     name     = local.vault_server_container_name
     hostname = local.vault_server_container_name
+    networks_advanced {
+      name = data.docker_network.quorum.name
+      ipv4_address = cidrhost(lookup(local.network_config, "subnet"), 200)
+      aliases = [local.cert_san_workaround_hostname]
+    }
+    ports {
+      internal = local.vault_server_port.internal
+      external = local.vault_server_port.external
+    }
     mounts {
         type = "bind"
         source = local.host_vault_storage_dir
@@ -49,7 +58,7 @@ resource "docker_container" "vault_server" {
         target = local.container_certs_dir
     }
     upload {
-        file    = "/vault/config/quourm-vault.hcl"
+        file    = "/vault/config/quorum-vault.hcl"
         content = <<EOF
 storage "file" {
 	path = "${local.container_vault_storage_dir}"
@@ -67,15 +76,6 @@ listener "tcp" {
 EOF
     }
     restart = "unless-stopped"
-    networks_advanced {
-        name = data.docker_network.quorum.name
-        ipv4_address = cidrhost(lookup(local.network_config, "subnet"), 200)
-        aliases = [local.cert_san_workaround_hostname]
-    }
-    ports {
-        internal = local.vault_server_port.internal
-        external = local.vault_server_port.external
-    }
     capabilities {
         add = ["IPC_LOCK"]
     }

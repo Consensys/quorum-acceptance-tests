@@ -434,7 +434,6 @@ public class QuorumNetworkProperty {
 
     public static class NodeAcctDirData {
         private String pluginAcctDir;
-        private String keystoreAcctDir;
 
         public String getPluginAcctDir() {
             return pluginAcctDir;
@@ -442,14 +441,6 @@ public class QuorumNetworkProperty {
 
         public void setPluginAcctDir(String pluginAcctDir) {
             this.pluginAcctDir = pluginAcctDir;
-        }
-
-        public String getKeystoreAcctDir() {
-            return keystoreAcctDir;
-        }
-
-        public void setKeystoreAcctDir(String keystoreAcctDir) {
-            this.keystoreAcctDir = keystoreAcctDir;
         }
     }
 }

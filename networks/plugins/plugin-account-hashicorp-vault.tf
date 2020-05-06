@@ -9,7 +9,6 @@ locals {
     hashicorp_vault_plugin_spring_profile = "hashicorp-vault-plugin"
 
     host_plugin_acct_dirs = [for d in module.network.data_dirs : "${d}/plugin-accts"]
-    host_keystore_acct_dirs = [for d in module.network.data_dirs : "${d}/keystore"]
 }
 
 # this resource creates additional Spring Application YML file
@@ -29,11 +28,11 @@ quorum:
 %{for idx in local.node_indices~}
             Node${idx + 1}:
                 plugin-acct-dir: ${local.host_plugin_acct_dirs[idx]}
-                keystore-acct-dir: ${local.host_keystore_acct_dirs[idx]}
 %{endfor~}
 YML
 }
 
+// each node will be configured with the same vault server as this is all that is currently required for the tests
 resource "local_file" "hashicorp-vault-account-plugin-config" {
     count    = var.number_of_nodes
     filename = format("%s/plugins/account-config.json", module.network.data_dirs[count.index])
@@ -53,30 +52,30 @@ resource "local_file" "hashicorp-vault-account-plugin-config" {
 JSON
 }
 
-//TODO configurable mounts/volumes on the quorum/tessera containers
-data "local_file" "local-ca-cert" {
+//TODO(cjh) configurable mounts/volumes on the quorum/tessera containers
+data "local_file" "host-ca-cert" {
     filename = "${local.host_certs_dir}/caRoot.pem"
 }
-resource "local_file" "node-ca-cert" {
+resource "local_file" "container-ca-cert" {
     count    = var.number_of_nodes
     filename = format("%s/%s", module.network.data_dirs[count.index], local.container_ca_cert)
-    content  = data.local_file.local-ca-cert.content
+    content  = data.local_file.host-ca-cert.content
 }
 
-data "local_file" "local-client-cert" {
+data "local_file" "host-client-cert" {
     filename = "${local.host_certs_dir}/quorum-client-chain.pem"
 }
-resource "local_file" "node-client-cert" {
+resource "local_file" "container-client-cert" {
     count    = var.number_of_nodes
     filename = format("%s/%s", module.network.data_dirs[count.index], local.container_client_cert)
-    content  = data.local_file.local-client-cert.content
+    content  = data.local_file.host-client-cert.content
 }
 
-data "local_file" "local-client-key" {
+data "local_file" "host-client-key" {
     filename = "${local.host_certs_dir}/quorum-client.key"
 }
-resource "local_file" "node-client-key" {
+resource "local_file" "container-client-key" {
     count    = var.number_of_nodes
     filename = format("%s/%s", module.network.data_dirs[count.index], local.container_client_key)
-    content  = data.local_file.local-client-key.content
+    content  = data.local_file.host-client-key.content
 }

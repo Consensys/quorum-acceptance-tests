@@ -17,7 +17,7 @@ public class HashicorpVaultSigningService extends HashicorpVaultAbstractService 
         return new PrivateTransactionGasPrice(from, nonce, DEFAULT_GAS_LIMIT, BigInteger.ZERO, null, null, "0x000000", null, Collections.singletonList("0xaaaaaa"));
     }
 
-    class PrivateTransactionGasPrice extends Transaction {
+    private static class PrivateTransactionGasPrice extends Transaction {
         private String privateFrom;
         private List<String> privateFor;
 

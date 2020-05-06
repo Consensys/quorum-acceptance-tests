@@ -129,58 +129,6 @@ public class PluginHashicorpVaultAccountSigning extends AbstractSpecImplementati
         assertThat(res.success()).isTrue();
     }
 
-    @Step("Add keystore account 0x6038dc01869425004ca0b8370f6c81cf464213b3 with no password to <node>")
-    public void createKeystoreAccount(QuorumNetworkProperty.Node node) {
-        String keystoreFileContentJson = "{" +
-            "\"address\":\"6038dc01869425004ca0b8370f6c81cf464213b3\"," +
-            "\"crypto\":{" +
-            "\"cipher\":\"aes-128-ctr\"," +
-            "\"ciphertext\":\"865a68f1f8795e0b848d25d3366d9dad73c9c5bae2005a19e95467db17e7a76e\"," +
-            "\"cipherparams\":{" +
-            "\"iv\":\"1a52502748a978d3e66507fa2d1c26a9\"" +
-            "}," +
-            "\"kdf\":\"scrypt\"," +
-            "\"kdfparams\":{" +
-            "\"dklen\":32," +
-            "\"n\":262144," +
-            "\"p\":1," +
-            "\"r\":8," +
-            "\"salt\":\"6b329ae63a7d5344012d5a72f5953acb45b98e152a80bd5a3026c4422ec595ee\"" +
-            "}," +
-            "\"mac\":\"e543e25d52f5d7e9925830ae8d7c58f234660d3a1f01d56a5b6860557292247f\"" +
-            "}," +
-            "\"id\":\"fe708ca7-978b-407d-a41d-146f2b710eef\"," +
-            "\"version\":3" +
-            "}";
-
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode keystoreFileContent = null;
-        try {
-            keystoreFileContent = mapper.readTree(keystoreFileContentJson);
-        } catch (JsonProcessingException e) {
-            fail("unable to read keystore file contents json: %s", e.getMessage());
-        }
-
-        String keystoreAcctDirPath = hashicorpVaultSigningService.vaultProperties().getNodeAcctDirs().get(node.getName()).getKeystoreAcctDir();
-        LOGGER.error("CHRISSY - writing to keystore account directory {}", keystoreAcctDirPath);
-        File keystoreFile = null;
-        try {
-            keystoreFile = File.createTempFile("6038dc01869425004ca0b8370f6c81cf464213b3--", ".json", new File(keystoreAcctDirPath));
-            LOGGER.error("CHRISSY - writing keystore account file {}", keystoreFile.getAbsolutePath());
-            mapper.writeValue(keystoreFile, keystoreFileContent);
-        } catch (IOException e) {
-            fail("unable to create keystore file: %s", e.getMessage());
-        }
-        assertThat(keystoreFile).exists();
-        LOGGER.error("CHRISSY - keystorefile exists = true");
-
-        try {
-            TimeUnit.SECONDS.sleep(5);
-        } catch (InterruptedException e) {
-            fail("error whilst waiting for node to update keystore accounts: %s", e.getMessage());
-        }
-    }
-
     @Step("Remove Hashicorp Vault account 0x6038dc01869425004ca0b8370f6c81cf464213b3 from <node>")
     public void removeHashicorpVaultAccount(QuorumNetworkProperty.Node node) {
         String pluginAcctDirPath = hashicorpVaultSigningService.vaultProperties().getNodeAcctDirs().get(node.getName()).getPluginAcctDir();
@@ -211,34 +159,6 @@ public class PluginHashicorpVaultAccountSigning extends AbstractSpecImplementati
             BooleanResponse.class
         ).blockingFirst();
         assertThat(res.success()).isTrue();
-    }
-
-    @Step("Remove keystore account 0x6038dc01869425004ca0b8370f6c81cf464213b3 from <node>")
-    public void removeKeystoreAccount(QuorumNetworkProperty.Node node) {
-        String keystoreAcctDirPath = hashicorpVaultSigningService.vaultProperties().getNodeAcctDirs().get(node.getName()).getKeystoreAcctDir();
-
-        Stream<Path> acctFiles = null;
-        try {
-            acctFiles = Files.list(Paths.get(keystoreAcctDirPath));
-        } catch (IOException e) {
-            fail("unable to list files in keystore directory: %s", e.getMessage());
-        }
-        assertThat(acctFiles).isNotNull();
-
-        acctFiles.filter(p -> p.getFileName().toString().contains("6038dc01869425004ca0b8370f6c81cf464213b3"))
-            .forEach(p -> {
-                try {
-                    Files.delete(p);
-                } catch (IOException e) {
-                    fail("unable to delete file %s: %s", p.toString(), e.getMessage());
-                }
-            });
-
-        try {
-            TimeUnit.SECONDS.sleep(1);
-        } catch (InterruptedException e) {
-            fail("error whilst waiting for node to update keystore accounts: %s", e.getMessage());
-        }
     }
 
     @Step("<node> gets the expected result when signing a known transaction with account 0x6038dc01869425004ca0b8370f6c81cf464213b3")
