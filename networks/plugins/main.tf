@@ -11,7 +11,7 @@ locals {
 
   providers = { for k, v in var.plugins : k => { name = v.name, version = v.version, config = format("file://%s/plugins/%s-config.json", module.docker.container_geth_datadir, k) } }
 
-  withHashicorpPlugin = contains(values(var.plugins)[*].name, "quorum-account-plugin-hashicorp-vault")
+  with_hashicorp_plugin = contains(values(var.plugins)[*].name, "quorum-account-plugin-hashicorp-vault")
 }
 
 provider "docker" {
