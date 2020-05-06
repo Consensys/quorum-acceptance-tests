@@ -174,7 +174,7 @@ public class PluginHashicorpVaultAccountSigning extends AbstractSpecImplementati
         final String signed = transactionService
             .personalSign(node, "0xaaaaaa", "0x6038dc01869425004ca0b8370f6c81cf464213b3", "")
             .blockingFirst()
-            .toString();
+            .getResult();
         assertThat(signed).isNotNull();
         assertThat(signed).isEqualTo(expected);
     }
