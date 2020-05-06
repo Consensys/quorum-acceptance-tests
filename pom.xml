@@ -24,11 +24,11 @@
 
         <!-- dependencies -->
         <web3j-quorum.version>4.0.6</web3j-quorum.version>
+        <web3j.version>4.2.0</web3j.version>
         <commons-lang.version>2.6</commons-lang.version>
         <docker-java.version>3.2.1</docker-java.version>
         <apache-sshd.version>2.4.0</apache-sshd.version>
         <i2p-eddsa.version>0.3.0</i2p-eddsa.version>
-        <web3j.version>4.2.0</web3j.version>
         <gauge-java.version>0.7.4</gauge-java.version>
 
         <!-- plugins -->
@@ -166,7 +166,7 @@
                     <dependency>
                         <groupId>org.web3j</groupId>
                         <artifactId>codegen</artifactId>
-                        <version>${web3j.version}</version>
+                        <version>${web3j-maven-plugin.version}</version>
                     </dependency>
                 </dependencies>
             </plugin>

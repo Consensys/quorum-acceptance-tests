@@ -19,7 +19,7 @@
 
   This scenario is run against each row of data in the table above
 
-* Start a <networkType> Quorum Network, named it <id>, consisting of "Node1,Node2,Node3" with <gcmode> `gcmode` using raft consensus
+* Start a <networkType> Quorum Network, named it <id>, consisting of "Node1,Node2,Node3" with <gcmode> `gcmode`
 * Blocks are synced when adding new node "Node4" with <gcmode> `gcmode` to network <id> as "peer"
 * Verify privacy between "Node1" and "Node4" excluding "Node3" when using a simple smart contract
 * Record the current block number, named it as "blockHeightBeforeStart"

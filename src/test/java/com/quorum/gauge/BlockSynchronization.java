@@ -67,7 +67,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
     @Autowired
     private IstanbulService istanbulService;
 
-    @Step("Start a <networkType> Quorum Network, named it <id>, consisting of <nodes> with <gcmode> `gcmode` using raft consensus")
+    @Step("Start a <networkType> Quorum Network, named it <id>, consisting of <nodes> with <gcmode> `gcmode`")
     public void startNetwork(String networkType, String id, List<Node> nodes, String gcmode) {
         GethArgBuilder additionalGethArgs = GethArgBuilder.newBuilder()
                 .permissioned("permissioned".equalsIgnoreCase(networkType))
@@ -171,6 +171,10 @@ public class BlockSynchronization extends AbstractSpecImplementation {
                         assertThat(err2.getMessage()).as("istanbul.propose must succeed").isBlank();
                     }).blockingSubscribe();
         });
+    }
+    @Step("Add new node, named it <newNode>, and join the network <id> as <nodeType>")
+    public void addNewNode(Node newNode, String id, NodeType nodeType) {
+        addNewNode(null, newNode, id, nodeType);
     }
 
     @Step("Add new node with <gcmode> `gcmode`, named it <newNode>, and join the network <id> as <nodeType>")

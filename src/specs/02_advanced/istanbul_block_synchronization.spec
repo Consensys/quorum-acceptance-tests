@@ -7,11 +7,11 @@
 
   This specification is to describe the expection w.r.t block synchronization for Quorum Network to function based on the following permutations
 
-      |id        |networkType      |consensus|gcmode |
-      |istanbul1 |permissioned     |istanbul |full   |
-      |istanbul2 |permissioned     |istanbul |archive|
-      |istanbul3 |non-permissioned |istanbul |full   |
-      |istanbul4 |non-permissioned |istanbul |archive|
+      |id        |networkType      |gcmode |
+      |istanbul1 |permissioned     |full   |
+      |istanbul2 |permissioned     |archive|
+      |istanbul3 |non-permissioned |full   |
+      |istanbul4 |non-permissioned |archive|
 
 ## Verify block synchronization
 
@@ -19,7 +19,7 @@
 
   This scenario is run against each row of data in the table above
 
-* Start a <networkType> Quorum Network, named it <id>, consisting of "Node1,Node2,Node3" with <gcmode> `gcmode` using <consensus> consensus
+* Start a <networkType> Quorum Network, named it <id>, consisting of "Node1,Node2,Node3" with <gcmode> `gcmode`
 * Blocks are synced when adding new node "Node4" with <gcmode> `gcmode` to network <id> as "nonvalidator"
 * Verify privacy between "Node1" and "Node4" excluding "Node3" when using a simple smart contract
 * Record the current block number, named it as "blockHeightBeforeStart"
