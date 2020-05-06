@@ -76,6 +76,12 @@ if [ ! -d "${local.container_geth_datadir}" ]; then
   echo "Copying mounted datadir to ${local.container_geth_datadir}"
   cp -r ${local.container_geth_datadir_mounted} ${local.container_geth_datadir}
 fi
+echo "ls ${local.container_plugin_acctdir}"
+ls ${local.container_plugin_acctdir}
+echo "Deleting any files in ${local.container_plugin_acctdir}"
+rm ${local.container_plugin_acctdir}/*
+echo "ls ${local.container_plugin_acctdir}"
+ls ${local.container_plugin_acctdir}
 ${local.container_geth_datadir_mounted}/wait-for-tessera.sh
 exec ${local.container_geth_datadir_mounted}/start-geth.sh
 RUN
