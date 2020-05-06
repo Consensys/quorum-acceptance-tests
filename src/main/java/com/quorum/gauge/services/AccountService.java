@@ -58,14 +58,14 @@ public class AccountService extends AbstractService {
             );
     }
 
-    public List<Wallet> personalListWallets(QuorumNetworkProperty.Node node) throws IOException {
+    public Observable<ListWalletsResponse> personalListWallets(QuorumNetworkProperty.Node node) {
         Request<?, ListWalletsResponse> request = new Request<>(
             "personal_listWallets",
             Collections.<String>emptyList(),
             connectionFactory().getWeb3jService(node),
             ListWalletsResponse.class);
 
-        return request.send().getWallets();
+        return request.flowable().toObservable();
     }
 
     public static class ListWalletsResponse extends Response<List<Wallet>> {

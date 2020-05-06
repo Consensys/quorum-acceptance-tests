@@ -41,37 +41,29 @@ public class PluginHashicorpVaultAccountSigning extends AbstractSpecImplementati
 
     @Step("<node> does not have account 0x6038dc01869425004ca0b8370f6c81cf464213b3")
     public void verifyNodeDoesNotHaveAccount(QuorumNetworkProperty.Node node) {
-        LOGGER.error("CHRISSY listing wallets for node {}: {}", node.getName(), node.getUrl());
-        List<AccountService.Wallet> wallets = null;
-        try {
-            wallets = accountService.personalListWallets(node);
-        } catch (IOException e) {
-            fail("unable to list wallets for node %s: %s", node.toString(), e.getMessage());
-        }
+        List<AccountService.Wallet> wallets = accountService
+            .personalListWallets(node)
+            .blockingFirst()
+            .getWallets();
+
         assertThat(wallets).isNotNull();
-        LOGGER.error("CHRISSY personal_listWallets:");
-        wallets.forEach(w -> LOGGER.error("CHRISSY {}", w.getUrl()));
 
         List<AccountService.Wallet> filteredWallets = wallets.stream()
             .filter(w -> w.contains("0x6038dc01869425004ca0b8370f6c81cf464213b3"))
             .collect(Collectors.toList());
-
-        LOGGER.error("CHRISSY filtered wallets: len {}", filteredWallets.size());
 
         assertThat(filteredWallets).isEmpty();
     }
 
     @Step("<node> has account 0x6038dc01869425004ca0b8370f6c81cf464213b3")
     public void verifyNodeHasAccount(QuorumNetworkProperty.Node node) {
-        List<AccountService.Wallet> wallets = null;
-        try {
-            wallets = accountService.personalListWallets(node);
-        } catch (IOException e) {
-            fail("unable to list accounts for node %s: %s", node.toString(), e.getMessage());
-        }
+        List<AccountService.Wallet> wallets = accountService
+            .personalListWallets(node)
+            .blockingFirst()
+            .getWallets();
+
         assertThat(wallets).isNotNull();
 
-        LOGGER.error("CHRISSY - personal_listWallets:");
         wallets.forEach(w -> LOGGER.error(w.getUrl()));
 
         List<AccountService.Wallet> filteredWallets = wallets.stream()
