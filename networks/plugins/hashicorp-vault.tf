@@ -7,7 +7,10 @@ locals {
     vault_server_unseal_key = "10gYKD89Wa5T3lomqComqrBYEwAiGFSKgpgehNY9LJk="
 
     host_vault_storage_dir = abspath("vault-server/vault-storage")
+    container_mounted_vault_storage_dir = "/mounted-vault-storage"
     container_vault_storage_dir = "/vault-storage"
+
+  container_entrypoint = "quorum-docker-entrypoint.sh"
 
     host_certs_dir = abspath("vault-server/CertsWithQuorumRootCAandIntCA")
     container_certs_dir = "/certs"
@@ -50,7 +53,7 @@ resource "docker_container" "vault_server" {
     mounts {
         type = "bind"
         source = local.host_vault_storage_dir
-        target = local.container_vault_storage_dir
+        target = local.container_mounted_vault_storage_dir
     }
     mounts {
         type = "bind"
@@ -75,6 +78,18 @@ listener "tcp" {
 }
 EOF
     }
+    upload {
+      executable = true
+      file = "/usr/local/bin/${local.container_entrypoint}"
+      content = <<EOF
+#!/usr/bin/dumb-init /bin/sh
+set -e
+echo "cp -a ${local.container_mounted_vault_storage_dir}/. ${local.container_vault_storage_dir}"
+cp -a ${local.container_mounted_vault_storage_dir}/. ${local.container_vault_storage_dir}
+chmod -R 777 ${local.container_vault_storage_dir}
+docker-entrypoint.sh "$@"
+EOF
+    }
     restart = "unless-stopped"
     capabilities {
         add = ["IPC_LOCK"]
@@ -85,6 +100,7 @@ EOF
         "VAULT_CLIENT_CERT=${local.container_client_cert}",
         "VAULT_CLIENT_KEY=${local.container_client_key}"
     ]
+    entrypoint = [local.container_entrypoint]
     command = ["server"]
     healthcheck {
         interval = "5s"
