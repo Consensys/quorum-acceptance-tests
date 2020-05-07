@@ -17,10 +17,9 @@
         <java.version>11</java.version>
         <generated.sol.dir>${project.build.directory}/generate-sources/sol</generated.sol.dir>
 
-        <!-- only run non-advanced test cases. This property is from gauge-maven-plugin configuration -->
-        <tags>basic</tags>
-        <!-- Gauge environment being used -->
-        <env>run-local</env>
+        <!-- properties from gauge-maven-plugin configuration -->
+        <tags>basic</tags> <!-- which tests to run by default -->
+        <env>run-local</env> <!-- Gauge environment being used -->
 
         <!-- dependencies -->
         <web3j-quorum.version>4.0.6</web3j-quorum.version>
@@ -135,7 +134,11 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <flags>--fail-safe</flags>
+                    <flags>
+                        <flag>--fail-safe</flag>
+                        <flag>--hide-suggestion</flag>
+                        <flag>--sort</flag>
+                    </flags>
                 </configuration>
             </plugin>
             <plugin>
@@ -224,6 +227,7 @@
                 it can be aggregated at the end.
                 -->
                 <auto.jobid>local</auto.jobid>
+                <auto.outputDir>/tmp</auto.outputDir>
 
                 <!-- global configuration for exec plugin -->
                 <exec.daemonThreadJoinTimeout>15000</exec.daemonThreadJoinTimeout>
@@ -478,12 +482,16 @@
                                     <skip>${skipTests}</skip>
                                     <mainClass>com.quorum.gauge.TestSummaryMain</mainClass>
                                     <!-- This will produce failures.txt and summary.txt in the output folder -->
-                                    <commandlineArgs>${auto.jobid} ${project.build.directory}/gauge/reports/xml-report/result.xml</commandlineArgs>
+                                    <commandlineArgs>${auto.jobid} ${project.build.directory}/gauge/reports/xml-report/result.xml ${auto.outputDir}</commandlineArgs>
                                 </configuration>
                             </execution>
                         </executions>
                         <configuration>
                             <executable>terraform</executable>
+                            <environmentVariables>
+                                <TF_VAR_network_name>${env}</TF_VAR_network_name>
+                                <TF_VAR_output_dir>${auto.outputDir}</TF_VAR_output_dir>
+                            </environmentVariables>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -499,6 +507,17 @@
             <properties>
                 <infra.enabled>true</infra.enabled>
                 <infra.forceDestroy>false</infra.forceDestroy>
+            </properties>
+        </profile>
+        <profile>
+            <id>outputDirForWindows</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                </os>
+            </activation>
+            <properties>
+                <auto.outputDir>${java.io.tmpdir}</auto.outputDir>
             </properties>
         </profile>
     </profiles>

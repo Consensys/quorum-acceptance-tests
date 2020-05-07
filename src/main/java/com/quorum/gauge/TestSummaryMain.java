@@ -50,13 +50,16 @@ import java.util.List;
  */
 public class TestSummaryMain {
     public static void main(String[] args) throws Exception {
-        if (args.length != 2) {
+        if (args.length < 2) {
             System.err.println("Missing args");
             System.exit(1);
         }
         String jobId = args[0];
         File xmlFile = new File(args[1]);
         File outputDir = xmlFile.getParentFile();
+        if (args.length > 2) {
+            outputDir = new File(args[2]);
+        }
         Summary aggregatedSpecSummary = new Summary();
         Summary aggregatedScenarioSummary = new Summary();
         if (xmlFile.exists()) {

@@ -12,6 +12,6 @@
         <propertyregex property="arg"  input="${cmdRaw}"
                        regexp="([^\s]+)\s+([^\s+]+)" select="\2"/>
         <echo level="info" message="$ ${cmdRaw}"/>
-        <exec executable="${cmd}"><arg line="${arg}"/></exec>
+        <exec executable="${cmd}" failonerror="false" failifexecutionfails="false"><arg line="${arg}"/></exec>
     </target>
 </project>

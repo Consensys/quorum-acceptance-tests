@@ -1,5 +1,4 @@
 consensus = "raft"
-network_name = "plugins-raft"
 plugins = {
   helloworld = {
     name = "quorum-plugin-hello-world-go"

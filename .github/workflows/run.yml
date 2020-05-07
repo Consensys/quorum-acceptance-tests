@@ -52,8 +52,6 @@ jobs:
           - 'migration && networks/template::raft-4nodes'
           - 'migration && networks/template::istanbul-4nodes'
     runs-on: ubuntu-latest
-    env:
-      TEST_REPORT_DIR: target/gauge/reports/xml-report
     steps:
       - name: 'Checkout'
         uses: actions/checkout@v2
@@ -117,9 +115,8 @@ jobs:
           echo "::set-output name=gauge-env::$gaugeEnv"
           echo "::set-output name=useAWS::$useAWS"
           echo "::set-output name=mvnArg::$mvnArg"
+          echo "::set-output name=outputDir::${{ runner.temp }}"
       - name: 'Run tests'
-        env:
-          TF_VAR_output_dir: ${{ runner.temp }}
           #MAVEN_OPTS: -Xmx512m -XX:MaxPermSize=128m
           #LOGGING_LEVEL_COM_QUORUM_GAUGE: DEBUG
         run: |
@@ -128,11 +125,12 @@ jobs:
               -Pauto \
               -Dtags="${{ matrix.tag }}" ${{ steps.setup.outputs.mvnArg }} \
               -Denv=${{ steps.setup.outputs.gauge-env }} \
+              -Dauto.outputDir=${{ steps.setup.outputs.outputDir }} \
               -Dauto.jobid=${{ steps.keys.outputs.tag }}
       - name: 'Read test report'
         if: always()
         run: |
-          failuresRaw="$(cat ${{ env.TEST_REPORT_DIR }}/failures.txt | jq -r '.[] | @base64')"
+          failuresRaw="$(cat ${{ steps.setup.outputs.outputDir }}/failures.txt | jq -r '.[] | @base64')"
           SAVEIFS=$IFS   # Save current IFS
           IFS=$'\n'      # Change IFS to new line
           failures=($failuresRaw) # split to array
@@ -141,12 +139,12 @@ jobs:
           do
             row=${failures[$i]}
             _jq() {
-                    echo ${row} | base64 --decode | jq -r ${1}
+                echo ${row} | base64 --decode | jq -r ${1}
             }
             echo "$(_jq '.file'): $(_jq '.message')"
             echo "::error file=$(_jq '.file'),line=$(_jq '.line'),col=$(_jq '.col')::$(_jq '.message')"
           done
-          cat ${{ env.TEST_REPORT_DIR}}/summary.txt
+          cat ${{ steps.setup.outputs.outputDir}}/summary.txt
       - name: 'Display debug when failure happens'
         if: failure() && steps.setup.outputs.useAWS == 'true'
         working-directory: ${{ env.INFRA_FOLDER }}
@@ -157,7 +155,7 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: testreport-${{ steps.keys.outputs.tag }}
-          path: ${{ env.TEST_REPORT_DIR }}
+          path: ${{ steps.setup.outputs.outputDir }}
       - name: 'Destroy infrastructure resources if ever created'
         if: always() && steps.setup.outputs.useAWS == 'true'
         # we don't care about containers running on the remote VM
