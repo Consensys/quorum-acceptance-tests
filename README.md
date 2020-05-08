@@ -1,8 +1,18 @@
 ![Run Acceptance Tests](https://github.com/jpmorganchase/quorum-acceptance-tests/workflows/Run%20Acceptance%20Tests/badge.svg?branch=master)
 
-## Prerequisites
+# Quick Start
 
-* Java 11+
+- Install [Docker Engine](https://docs.docker.com/engine/) or [Docker Desktop](https://www.docker.com/products/docker-desktop)
+- Run basic acceptance tests against a new Quorum network using Raft consensus:
+    ```
+    docker run --rm --network host -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/acctests:/tmp/acctests quorumengineering/acctests:latest test -Pauto -Dtags="basic || networks/typical::raft" -Dnetwork.forceDestroy=true
+    ```
+
+# Development
+
+Development environment requires the following:
+
+* JDK 11+
 * Maven 3.6.x
 * [Solidity Compiler](https://solidity.readthedocs.io/en/latest/installing-solidity.html) (make sure `solc` is installed and not `solcjs`)
   * For MacOS: use `brew`
