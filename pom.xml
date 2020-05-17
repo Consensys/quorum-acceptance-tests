@@ -110,6 +110,11 @@
                     <artifactId>maven-antrun-plugin</artifactId>
                     <version>3.0.0</version>
                 </plugin>
+                <plugin>
+                    <groupId>com.thoughtworks.gauge.maven</groupId>
+                    <artifactId>gauge-maven-plugin</artifactId>
+                    <version>${gauge-maven-plugin.version}</version>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -123,7 +128,6 @@
             <plugin>
                 <groupId>com.thoughtworks.gauge.maven</groupId>
                 <artifactId>gauge-maven-plugin</artifactId>
-                <version>${gauge-maven-plugin.version}</version>
                 <executions>
                     <execution>
                         <id>run-gauge</id>
@@ -135,7 +139,6 @@
                 </executions>
                 <configuration>
                     <flags>
-                        <flag>--fail-safe</flag>
                         <flag>--hide-suggestion</flag>
                         <flag>--sort</flag>
                     </flags>
@@ -519,6 +522,24 @@
             <properties>
                 <auto.outputDir>${java.io.tmpdir}</auto.outputDir>
             </properties>
+        </profile>
+        <profile>
+            <id>gaugeFailSafe</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.thoughtworks.gauge.maven</groupId>
+                        <artifactId>gauge-maven-plugin</artifactId>
+                        <configuration>
+                            <flags>
+                                <flag>--fail-safe</flag>
+                                <flag>--hide-suggestion</flag>
+                                <flag>--sort</flag>
+                            </flags>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 </project>

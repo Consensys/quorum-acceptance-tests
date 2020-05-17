@@ -122,6 +122,7 @@ jobs:
         run: |
           mvn --no-transfer-progress -B \
               clean test \
+              -P gaugeFailSafe \
               -Pauto \
               -Dtags="${{ matrix.tag }}" ${{ steps.setup.outputs.mvnArg }} \
               -Denv=${{ steps.setup.outputs.gauge-env }} \
