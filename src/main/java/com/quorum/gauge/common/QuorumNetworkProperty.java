@@ -202,7 +202,6 @@ public class QuorumNetworkProperty {
         private String istanbulValidatorId;
         private String enodeUrl;
         private String graphqlUrl;
-        private String dataDir;
 
         public String getPrivacyAddress() {
             return privacyAddress;
@@ -272,14 +271,6 @@ public class QuorumNetworkProperty {
 
         public void setName(String name) {
             this.name = name;
-        }
-
-        public String getDataDir() {
-            return dataDir;
-        }
-
-        public void setDataDir(String dataDir) {
-            this.dataDir = dataDir;
         }
 
         public Map<String, String> getAccountAliases() {

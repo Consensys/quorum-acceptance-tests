@@ -1,11 +1,11 @@
 package com.quorum.gauge;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.quorum.gauge.common.GethArgBuilder;
 import com.quorum.gauge.common.NodeType;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
-import com.quorum.gauge.common.config.WalletData;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.services.InfrastructureService;
 import com.quorum.gauge.services.RaftService;
@@ -14,23 +14,15 @@ import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import io.reactivex.Observable;
 import org.apache.commons.lang.StringUtils;
-import org.assertj.core.api.Assertions;
-import org.bouncycastle.util.encoders.Hex;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.Response;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.web3j.quorum.Quorum;
 import org.web3j.quorum.methods.response.permissioning.*;
 import org.web3j.tx.Contract;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.time.Duration;
 import java.util.*;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -85,6 +77,155 @@ public class Permissions extends AbstractSpecImplementation {
     public Permissions() {
     }
 
+    public class PermissionsConfig {
+        private String upgradableAddress;
+        private String interfaceAddress;
+        private String implAddress;
+        private String orgMgrAddress;
+        private String nodeMgrAddress;
+        private String accountMgrAddress;
+        private String roleMgrAddress;
+        private String voterMgrAddress;
+        private List<String> accounts;
+        private String nwAdminOrg;
+        private String nwAdminRole;
+        private String orgAdminRole;
+        private int subOrgBreadth;
+        private int subOrgDepth;
+
+        public String getUpgradableAddress() {
+            return upgradableAddress;
+        }
+
+        public void setUpgradableAddress(String upgradableAddress) {
+            this.upgradableAddress = upgradableAddress;
+        }
+
+        public String getInterfaceAddress() {
+            return interfaceAddress;
+        }
+
+        public void setInterfaceAddress(String interfaceAddress) {
+            this.interfaceAddress = interfaceAddress;
+        }
+
+        public String getImplAddress() {
+            return implAddress;
+        }
+
+        public void setImplAddress(String implAddress) {
+            this.implAddress = implAddress;
+        }
+
+        public String getNodeMgrAddress() {
+            return nodeMgrAddress;
+        }
+
+        public void setNodeMgrAddress(String nodeMgrAddress) {
+            this.nodeMgrAddress = nodeMgrAddress;
+        }
+
+        public String getAccountMgrAddress() {
+            return accountMgrAddress;
+        }
+
+        public void setAccountMgrAddress(String accountMgrAddress) {
+            this.accountMgrAddress = accountMgrAddress;
+        }
+
+        public String getRoleMgrAddress() {
+            return roleMgrAddress;
+        }
+
+        public void setRoleMgrAddress(String roleMgrAddress) {
+            this.roleMgrAddress = roleMgrAddress;
+        }
+
+        public String getVoterMgrAddress() {
+            return voterMgrAddress;
+        }
+
+        public void setVoterMgrAddress(String voterMgrAddress) {
+            this.voterMgrAddress = voterMgrAddress;
+        }
+
+        public String getNwAdminOrg() {
+            return nwAdminOrg;
+        }
+
+        public void setNwAdminOrg(String nwAdminOrg) {
+            this.nwAdminOrg = nwAdminOrg;
+        }
+
+        public String getNwAdminRole() {
+            return nwAdminRole;
+        }
+
+        public void setNwAdminRole(String nwAdminRole) {
+            this.nwAdminRole = nwAdminRole;
+        }
+
+        public String getOrgAdminRole() {
+            return orgAdminRole;
+        }
+
+        public void setOrgAdminRole(String orgAdminRole) {
+            this.orgAdminRole = orgAdminRole;
+        }
+
+        public int getSubOrgBreadth() {
+            return subOrgBreadth;
+        }
+
+        public void setSubOrgBreadth(int subOrgBreadth) {
+            this.subOrgBreadth = subOrgBreadth;
+        }
+
+        public int getSubOrgDepth() {
+            return subOrgDepth;
+        }
+
+        public void setSubOrgDepth(int subOrgDepth) {
+            this.subOrgDepth = subOrgDepth;
+        }
+
+        public String getOrgMgrAddress() {
+            return orgMgrAddress;
+        }
+
+        public void setOrgMgrAddress(String orgMgrAddress) {
+            this.orgMgrAddress = orgMgrAddress;
+        }
+
+        public void setAccounts(List<String> accounts) {
+            this.accounts = accounts;
+        }
+
+        @Override
+        public String toString() {
+            return "PermissionsConfig{" +
+                "upgradableAddress='" + upgradableAddress + '\'' +
+                ", interfaceAddress='" + interfaceAddress + '\'' +
+                ", implAddress='" + implAddress + '\'' +
+                ", orgMgrAddress='" + orgMgrAddress + '\'' +
+                ", nodeMgrAddress='" + nodeMgrAddress + '\'' +
+                ", accountMgrAddress='" + accountMgrAddress + '\'' +
+                ", roleMgrAddress='" + roleMgrAddress + '\'' +
+                ", voterMgrAddress='" + voterMgrAddress + '\'' +
+                ", accounts=" + accounts +
+                ", nwAdminOrg='" + nwAdminOrg + '\'' +
+                ", nwAdminRole='" + nwAdminRole + '\'' +
+                ", orgAdminRole='" + orgAdminRole + '\'' +
+                ", subOrgBreadth=" + subOrgBreadth +
+                ", subOrgDepth=" + subOrgDepth +
+                '}';
+        }
+
+        public List<String> getAccounts() {
+            return accounts;
+        }
+    }
+
     @Step("Deploy <contractName> smart contract from a default account in <node>, name this contract as <contractNameKey>")
     public void deployPermissionsContracts(String contractName, QuorumNode node, String contractNameKey) {
         Contract c = permissionContractService.createPermissionsGenericContracts(node, contractName, null).blockingFirst();
@@ -132,65 +273,77 @@ public class Permissions extends AbstractSpecImplementation {
         String voterMgrAddress = mustHaveValue(DataStoreFactory.getSpecDataStore(), voterContractKey, Contract.class).getContractAddress();
         String nodeMgrAddress = mustHaveValue(DataStoreFactory.getSpecDataStore(), nodeContractKey, Contract.class).getContractAddress();
 
-        JSONObject permConfigJson = new JSONObject();
-        permConfigJson.put("upgradableAddress", upgrContractAddress);
-        permConfigJson.put("interfaceAddress", interfaceContractAddress);
-        permConfigJson.put("implAddress", implContractAddress);
-        permConfigJson.put("nodeMgrAddress", nodeMgrAddress);
-        permConfigJson.put("accountMgrAddress", acctMgrAddress);
-        permConfigJson.put("roleMgrAddress", roleMgrAddress);
-        permConfigJson.put("voterMgrAddress", voterMgrAddress);
-        permConfigJson.put("orgMgrAddress", orgMgrAddress);
+//        JSONObject permConfigJson = new JSONObject();
+//        permConfigJson.put("upgradableAddress", upgrContractAddress);
+//        permConfigJson.put("interfaceAddress", interfaceContractAddress);
+//        permConfigJson.put("implAddress", implContractAddress);
+//        permConfigJson.put("nodeMgrAddress", nodeMgrAddress);
+//        permConfigJson.put("accountMgrAddress", acctMgrAddress);
+//        permConfigJson.put("roleMgrAddress", roleMgrAddress);
+//        permConfigJson.put("voterMgrAddress", voterMgrAddress);
+//        permConfigJson.put("orgMgrAddress", orgMgrAddress);
 
-        logger.debug("json object is {}", permConfigJson.toString());
-        DataStoreFactory.getSpecDataStore().put(objectName, permConfigJson);
+        PermissionsConfig permissionsConfig = new PermissionsConfig();
+        permissionsConfig.setUpgradableAddress(upgrContractAddress);
+        permissionsConfig.setInterfaceAddress(interfaceContractAddress);
+        permissionsConfig.setImplAddress(implContractAddress);
+        permissionsConfig.setNodeMgrAddress(nodeMgrAddress);
+        permissionsConfig.setAccountMgrAddress(acctMgrAddress);
+        permissionsConfig.setRoleMgrAddress(roleMgrAddress);
+        permissionsConfig.setVoterMgrAddress(voterMgrAddress);
+        permissionsConfig.setOrgMgrAddress(orgMgrAddress);
+
+        logger.debug("perm config object is {}", permissionsConfig.toString());
+        DataStoreFactory.getSpecDataStore().put(objectName, permissionsConfig);
     }
 
     @Step("Update <objectName>. Add <node>'s default account to accounts in config")
     public void addAccountToConfig(String objectName, QuorumNode node) {
-        JSONObject permConfigJson = mustHaveValue(DataStoreFactory.getSpecDataStore(), objectName, JSONObject.class);
-        logger.debug("json object is {}", permConfigJson.toString());
+        PermissionsConfig permConfig = mustHaveValue(DataStoreFactory.getSpecDataStore(), objectName, PermissionsConfig.class);
+        logger.debug("perm config object is {}", permConfig.toString());
 
-        JSONArray accounts = new JSONArray();
+        List<String> accounts = new ArrayList<>();
         accounts.add(accountService.getDefaultAccountAddress(node).blockingFirst());
-        permConfigJson.put("accounts", accounts);
+        permConfig.setAccounts(accounts);
 
-        logger.debug("json object is {}", permConfigJson.toString());
-        DataStoreFactory.getSpecDataStore().put(objectName, permConfigJson);
+        logger.debug("perm config object is {}", permConfig.toString());
+        DataStoreFactory.getSpecDataStore().put(objectName, permConfig);
     }
 
     @Step("Update <objectName>. Add <nwAdminOrg> as network admin org, <nwAdminRole> network admin role, <orgAdminRole> as the org admin role")
     public void setNetworkDetails(String objectName, String nwAdminOrg, String nwAdminRole, String orgAdminRole) {
-        JSONObject permConfigJson = mustHaveValue(DataStoreFactory.getSpecDataStore(), objectName, JSONObject.class);
-        permConfigJson.put("nwAdminOrg", nwAdminOrg);
-        permConfigJson.put("nwAdminRole", nwAdminRole);
-        permConfigJson.put("orgAdminRole", orgAdminRole);
+        PermissionsConfig permConfig = mustHaveValue(DataStoreFactory.getSpecDataStore(), objectName, PermissionsConfig.class);
+        permConfig.setNwAdminOrg(nwAdminOrg);
+        permConfig.setNwAdminRole(nwAdminRole);
+        permConfig.setOrgAdminRole(orgAdminRole);
 
-        logger.debug("json object is {}", permConfigJson.toString());
-        DataStoreFactory.getSpecDataStore().put(objectName, permConfigJson);
+        logger.debug("perm config object is {}", permConfig.toString());
+        DataStoreFactory.getSpecDataStore().put(objectName, permConfig);
     }
 
     @Step("Update <objectName>. Set suborg depth as <subOrgDepth>, suborg breadth as <subOrgBreadth>")
     public void setSubDepthBreadth(String objectName, int subOrgDepth, int subOrgBreadth) {
-        JSONObject permConfigJson = mustHaveValue(DataStoreFactory.getSpecDataStore(), objectName, JSONObject.class);
-        permConfigJson.put("subOrgBreadth", subOrgBreadth);
-        permConfigJson.put("subOrgDepth", subOrgDepth);
+        PermissionsConfig permConfig = mustHaveValue(DataStoreFactory.getSpecDataStore(), objectName, PermissionsConfig.class);
+        permConfig.setSubOrgBreadth(subOrgBreadth);
+        permConfig.setSubOrgDepth(subOrgDepth);
 
-        logger.debug("json object is {}", permConfigJson.toString());
-        DataStoreFactory.getSpecDataStore().put(objectName, permConfigJson);
+        logger.debug("perm cofnig object is {}", permConfig.toString());
+        DataStoreFactory.getSpecDataStore().put(objectName, permConfig);
     }
 
     @Step("Write <objectName> to the data directory of <nodes>")
     public void writePermissionConfig(String objectName, List<QuorumNetworkProperty.Node> nodes) {
         InfrastructureService.NetworkResources networkResources = mustHaveValue(DataStoreFactory.getSpecDataStore(), "networkResources", InfrastructureService.NetworkResources.class);
-        JSONObject permConfigJson = mustHaveValue(DataStoreFactory.getSpecDataStore(), objectName, JSONObject.class);
+        PermissionsConfig permConfig = mustHaveValue(DataStoreFactory.getSpecDataStore(), objectName, PermissionsConfig.class);
+
+        ObjectMapper mapper = new ObjectMapper();
 
         Observable.fromIterable(networkResources.allResourceIds())
             .filter(containerId -> infraService.isGeth(containerId).blockingFirst())
             .doOnNext(gethContainerId -> logger.debug("Writing permissions-config.json {}", StringUtils.substring(gethContainerId, 0, 12)))
-            .flatMap(gethContainerId -> infraService.copyFile(gethContainerId,
+            .flatMap(gethContainerId -> infraService.writeFile(gethContainerId,
                 "/data/qdata/permission-config.json",
-                permConfigJson.toJSONString()))
+                mapper.writerWithDefaultPrettyPrinter().writeValueAsString(permConfig)))
             .blockingSubscribe();
     }
 

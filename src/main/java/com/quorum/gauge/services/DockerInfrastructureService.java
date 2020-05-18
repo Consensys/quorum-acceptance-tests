@@ -161,7 +161,7 @@ public class DockerInfrastructureService
 
 
     @Override
-    public Observable<String> copyFile(String resourceId, String filePath, String modifier){
+    public Observable<String> writeFile(String resourceId, String filePath, String modifier){
         String str = modifier;
         InputStream is = null;
         ByteArrayOutputStream baos = new ByteArrayOutputStream();

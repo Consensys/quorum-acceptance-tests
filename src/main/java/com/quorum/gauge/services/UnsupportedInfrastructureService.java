@@ -69,7 +69,7 @@ public class UnsupportedInfrastructureService implements InfrastructureService, 
     }
 
     @Override
-    public Observable<String> copyFile(String resourceId, String filePath, String modifier) {
+    public Observable<String> writeFile(String resourceId, String filePath, String modifier) {
         throw new UnsupportedOperationException();
     }
 
