@@ -14,7 +14,6 @@ on:
       - '.gitignore'
     branches:
       - 'master'
-      - 'gh-*'
       - 'dev-*'
 env:
   JAVA_VERSION: 11
@@ -107,7 +106,7 @@ jobs:
           mkdir -p env/$gaugeEnv
           useAWS=true
           mvnArg="-Dinfra.target=${{ env.INFRA_FOLDER }}::${{ env.INFRA_PROFILE }}"
-          if [ "${{ env.AWS_ACCESS_KEY_ID }}" == "" ] || [ "${{ github.event_name }}" == "pull_request" ]; then
+          if [ "${{ env.AWS_ACCESS_KEY_ID }}" == "" ] || [ "${{ github.event_name }}" == "pull_request" ] || [ "${{ secrets.DISABLE_AWS }}" == "true" ]; then
             useAWS=false
             mvnArg=""
           fi
@@ -116,7 +115,7 @@ jobs:
           echo "::set-output name=useAWS::$useAWS"
           echo "::set-output name=mvnArg::$mvnArg"
           echo "::set-output name=outputDir::${{ runner.temp }}"
-      - name: 'Run tests'
+      - name: 'Run tests ${{ steps.setup.outputs.mvnArg }}'
           #MAVEN_OPTS: -Xmx512m -XX:MaxPermSize=128m
           #LOGGING_LEVEL_COM_QUORUM_GAUGE: DEBUG
         run: |
@@ -182,7 +181,7 @@ jobs:
           gitref_path=${gitref_path#refs\/}             # for refs/pull/123/merge
           gitref_path=${gitref_path%/merge}           # for refs/pull/123/merge
           run_on="AWS"
-          if [ "${{ env.AWS_ACCESS_KEY_ID }}" == "" ]; then
+          if [ "${{ env.AWS_ACCESS_KEY_ID }}" == "" ] || [ "${{ secrets.DISABLE_AWS }}" == "true" ]; then
             run_on="GithubActionsVM"
             echo "::warning ::Tests run on Github Actions VM. Some tests may fail due to lack of hardware resources."
           fi

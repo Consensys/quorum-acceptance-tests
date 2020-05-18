@@ -21,7 +21,7 @@ jobs:
             target="Github Packages"
           fi
           echo "::set-output name=target::$target"
-          echo "::set-output repo=$(echo "${{ github.repository }}/acctests" | tr '[:upper:]' '[:lower:]')"
+          echo "::set-output name=repo::$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')"
       - name: 'Build and push to Github Packages'
         if: steps.setup.outputs.target == 'Github Packages'
         uses: docker/build-push-action@v1
@@ -29,7 +29,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           registry: docker.pkg.github.com
-          repository: ${{ steps.setup.outputs.repo }}
+          repository: ${{ steps.setup.outputs.repo }}/acctests
           tag_with_ref: true
           add_git_labels: true
       - name: 'Build and push to Docker Hub'
