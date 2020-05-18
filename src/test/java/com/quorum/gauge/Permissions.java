@@ -232,56 +232,46 @@ public class Permissions extends AbstractSpecImplementation {
         logger.debug("{} contract address is:{}", contractName, c.getContractAddress());
 
         assertThat(c.getContractAddress()).isNotBlank();
-        DataStoreFactory.getSpecDataStore().put(contractNameKey, c);
+        DataStoreFactory.getScenarioDataStore().put(contractNameKey, c);
     }
 
     @Step("From <node> deploy <contractName> contract passing <upgrContractKey> address, name it <contractNameKey>")
     public void deployPermissionsGenericContracts(QuorumNode node, String contractName, String upgrContractKey, String contractNameKey) {
         // get the upgradable contract address from store, pass it to deploy call
-        String upgrContractAddress = mustHaveValue(DataStoreFactory.getSpecDataStore(), upgrContractKey, Contract.class).getContractAddress();
+        String upgrContractAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), upgrContractKey, Contract.class).getContractAddress();
         logger.debug("upgradable contract address is:{}", upgrContractAddress);
         Contract c = permissionContractService.createPermissionsGenericContracts(node, contractName, upgrContractAddress).blockingFirst();
         logger.debug("{} contract address is:{}", contractName, c.getContractAddress());
 
         assertThat(c.getContractAddress()).isNotBlank();
-        DataStoreFactory.getSpecDataStore().put(contractNameKey, c);
+        DataStoreFactory.getScenarioDataStore().put(contractNameKey, c);
     }
 
     @Step("From <node> deploy implementation contract passing addresses of <upgrContractKey>, <orgContractKey>, <roleContractKey>, <accountContractKey>, <voterContractKey>, <nodeContractKey>. Name this as <contractNameKey>")
     public void deployPermissionsImpementation(QuorumNode node, String upgrContractKey, String orgContractKey, String roleContractKey, String accountContractKey, String voterContractKey, String nodeContractKey, String contractNameKey) {
         // get the address of all deployed contracts
-        String upgrContractAddress = mustHaveValue(DataStoreFactory.getSpecDataStore(), upgrContractKey, Contract.class).getContractAddress();
-        String orgMgrAddress = mustHaveValue(DataStoreFactory.getSpecDataStore(), orgContractKey, Contract.class).getContractAddress();
-        String roleMgrAddress = mustHaveValue(DataStoreFactory.getSpecDataStore(), roleContractKey, Contract.class).getContractAddress();
-        String acctMgrAddress = mustHaveValue(DataStoreFactory.getSpecDataStore(), accountContractKey, Contract.class).getContractAddress();
-        String voterMgrAddress = mustHaveValue(DataStoreFactory.getSpecDataStore(), voterContractKey, Contract.class).getContractAddress();
-        String nodeMgrAddress = mustHaveValue(DataStoreFactory.getSpecDataStore(), nodeContractKey, Contract.class).getContractAddress();
+        String upgrContractAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), upgrContractKey, Contract.class).getContractAddress();
+        String orgMgrAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), orgContractKey, Contract.class).getContractAddress();
+        String roleMgrAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), roleContractKey, Contract.class).getContractAddress();
+        String acctMgrAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), accountContractKey, Contract.class).getContractAddress();
+        String voterMgrAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), voterContractKey, Contract.class).getContractAddress();
+        String nodeMgrAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), nodeContractKey, Contract.class).getContractAddress();
 
         Contract c = permissionContractService.createPermissionsImplementationContract(node, upgrContractAddress, orgMgrAddress, roleMgrAddress, acctMgrAddress, voterMgrAddress, nodeMgrAddress).blockingFirst();
         assertThat(c.getContractAddress()).isNotBlank();
-        DataStoreFactory.getSpecDataStore().put(contractNameKey, c);
+        DataStoreFactory.getScenarioDataStore().put(contractNameKey, c);
     }
 
     @Step("Create permissions-config.json object using the contract addersses of <upgrContractKey>, <interfaceContractKey>, <implContractKey>, <orgContractKey>, <roleContractKey>,  <acctContractKey>, <voterContractKey>, <nodeContractKey>. Name it <objectName>")
     public void createPermissionsConfig(String upgrContractKey, String interfaceContractKey, String implContractKey, String orgContractKey, String roleContractKey, String acctContractKey, String voterContractKey, String nodeContractKey, String objectName) {
-        String upgrContractAddress = mustHaveValue(DataStoreFactory.getSpecDataStore(), upgrContractKey, Contract.class).getContractAddress();
-        String interfaceContractAddress = mustHaveValue(DataStoreFactory.getSpecDataStore(), interfaceContractKey, Contract.class).getContractAddress();
-        String implContractAddress = mustHaveValue(DataStoreFactory.getSpecDataStore(), implContractKey, Contract.class).getContractAddress();
-        String orgMgrAddress = mustHaveValue(DataStoreFactory.getSpecDataStore(), orgContractKey, Contract.class).getContractAddress();
-        String roleMgrAddress = mustHaveValue(DataStoreFactory.getSpecDataStore(), roleContractKey, Contract.class).getContractAddress();
-        String acctMgrAddress = mustHaveValue(DataStoreFactory.getSpecDataStore(), acctContractKey, Contract.class).getContractAddress();
-        String voterMgrAddress = mustHaveValue(DataStoreFactory.getSpecDataStore(), voterContractKey, Contract.class).getContractAddress();
-        String nodeMgrAddress = mustHaveValue(DataStoreFactory.getSpecDataStore(), nodeContractKey, Contract.class).getContractAddress();
-
-//        JSONObject permConfigJson = new JSONObject();
-//        permConfigJson.put("upgradableAddress", upgrContractAddress);
-//        permConfigJson.put("interfaceAddress", interfaceContractAddress);
-//        permConfigJson.put("implAddress", implContractAddress);
-//        permConfigJson.put("nodeMgrAddress", nodeMgrAddress);
-//        permConfigJson.put("accountMgrAddress", acctMgrAddress);
-//        permConfigJson.put("roleMgrAddress", roleMgrAddress);
-//        permConfigJson.put("voterMgrAddress", voterMgrAddress);
-//        permConfigJson.put("orgMgrAddress", orgMgrAddress);
+        String upgrContractAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), upgrContractKey, Contract.class).getContractAddress();
+        String interfaceContractAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), interfaceContractKey, Contract.class).getContractAddress();
+        String implContractAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), implContractKey, Contract.class).getContractAddress();
+        String orgMgrAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), orgContractKey, Contract.class).getContractAddress();
+        String roleMgrAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), roleContractKey, Contract.class).getContractAddress();
+        String acctMgrAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), acctContractKey, Contract.class).getContractAddress();
+        String voterMgrAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), voterContractKey, Contract.class).getContractAddress();
+        String nodeMgrAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), nodeContractKey, Contract.class).getContractAddress();
 
         PermissionsConfig permissionsConfig = new PermissionsConfig();
         permissionsConfig.setUpgradableAddress(upgrContractAddress);
@@ -294,12 +284,12 @@ public class Permissions extends AbstractSpecImplementation {
         permissionsConfig.setOrgMgrAddress(orgMgrAddress);
 
         logger.debug("perm config object is {}", permissionsConfig.toString());
-        DataStoreFactory.getSpecDataStore().put(objectName, permissionsConfig);
+        DataStoreFactory.getScenarioDataStore().put(objectName, permissionsConfig);
     }
 
     @Step("Update <objectName>. Add <node>'s default account to accounts in config")
     public void addAccountToConfig(String objectName, QuorumNode node) {
-        PermissionsConfig permConfig = mustHaveValue(DataStoreFactory.getSpecDataStore(), objectName, PermissionsConfig.class);
+        PermissionsConfig permConfig = mustHaveValue(DataStoreFactory.getScenarioDataStore(), objectName, PermissionsConfig.class);
         logger.debug("perm config object is {}", permConfig.toString());
 
         List<String> accounts = new ArrayList<>();
@@ -307,34 +297,34 @@ public class Permissions extends AbstractSpecImplementation {
         permConfig.setAccounts(accounts);
 
         logger.debug("perm config object is {}", permConfig.toString());
-        DataStoreFactory.getSpecDataStore().put(objectName, permConfig);
+        DataStoreFactory.getScenarioDataStore().put(objectName, permConfig);
     }
 
     @Step("Update <objectName>. Add <nwAdminOrg> as network admin org, <nwAdminRole> network admin role, <orgAdminRole> as the org admin role")
     public void setNetworkDetails(String objectName, String nwAdminOrg, String nwAdminRole, String orgAdminRole) {
-        PermissionsConfig permConfig = mustHaveValue(DataStoreFactory.getSpecDataStore(), objectName, PermissionsConfig.class);
+        PermissionsConfig permConfig = mustHaveValue(DataStoreFactory.getScenarioDataStore(), objectName, PermissionsConfig.class);
         permConfig.setNwAdminOrg(nwAdminOrg);
         permConfig.setNwAdminRole(nwAdminRole);
         permConfig.setOrgAdminRole(orgAdminRole);
 
         logger.debug("perm config object is {}", permConfig.toString());
-        DataStoreFactory.getSpecDataStore().put(objectName, permConfig);
+        DataStoreFactory.getScenarioDataStore().put(objectName, permConfig);
     }
 
     @Step("Update <objectName>. Set suborg depth as <subOrgDepth>, suborg breadth as <subOrgBreadth>")
     public void setSubDepthBreadth(String objectName, int subOrgDepth, int subOrgBreadth) {
-        PermissionsConfig permConfig = mustHaveValue(DataStoreFactory.getSpecDataStore(), objectName, PermissionsConfig.class);
+        PermissionsConfig permConfig = mustHaveValue(DataStoreFactory.getScenarioDataStore(), objectName, PermissionsConfig.class);
         permConfig.setSubOrgBreadth(subOrgBreadth);
         permConfig.setSubOrgDepth(subOrgDepth);
 
         logger.debug("perm cofnig object is {}", permConfig.toString());
-        DataStoreFactory.getSpecDataStore().put(objectName, permConfig);
+        DataStoreFactory.getScenarioDataStore().put(objectName, permConfig);
     }
 
     @Step("Write <objectName> to the data directory of <nodes>")
     public void writePermissionConfig(String objectName, List<QuorumNetworkProperty.Node> nodes) {
-        InfrastructureService.NetworkResources networkResources = mustHaveValue(DataStoreFactory.getSpecDataStore(), "networkResources", InfrastructureService.NetworkResources.class);
-        PermissionsConfig permConfig = mustHaveValue(DataStoreFactory.getSpecDataStore(), objectName, PermissionsConfig.class);
+        InfrastructureService.NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", InfrastructureService.NetworkResources.class);
+        PermissionsConfig permConfig = mustHaveValue(DataStoreFactory.getScenarioDataStore(), objectName, PermissionsConfig.class);
 
         ObjectMapper mapper = new ObjectMapper();
 
@@ -349,22 +339,13 @@ public class Permissions extends AbstractSpecImplementation {
 
     @Step("From <node> execute permissions init on <upgrContractKey> passing <interfaceContractKey> and <implContractKey> contract addresses")
     public void executePermInit(QuorumNode node, String upgrContractKey, String interfaceContractKey, String implContractKey) {
-        String upgrContractAddress = mustHaveValue(DataStoreFactory.getSpecDataStore(), upgrContractKey, Contract.class).getContractAddress();
-        String interfaceContractAddress = mustHaveValue(DataStoreFactory.getSpecDataStore(), interfaceContractKey, Contract.class).getContractAddress();
-        String implContractAddress = mustHaveValue(DataStoreFactory.getSpecDataStore(), implContractKey, Contract.class).getContractAddress();
+        String upgrContractAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), upgrContractKey, Contract.class).getContractAddress();
+        String interfaceContractAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), interfaceContractKey, Contract.class).getContractAddress();
+        String implContractAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), implContractKey, Contract.class).getContractAddress();
 
         TransactionReceipt tx = permissionContractService.executeNetworkInit(node, upgrContractAddress, interfaceContractAddress, implContractAddress).blockingFirst();
 
         assertThat(tx.getTransactionHash()).isNotBlank();
-    }
-
-    @Step("Wait for <sleepTime> seconds for network to be restarted manually")
-    public void waitForNetworkStart(long sleepTime) {
-        try {
-            Thread.sleep(sleepTime * 1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     @Step("Get netowrk details from <node>")
@@ -376,7 +357,7 @@ public class Permissions extends AbstractSpecImplementation {
             logger.debug("{} org -> {}", c, o);
         }
 
-        DataStoreFactory.getSpecDataStore().put("permOrgList", orgList.getPermissionOrgList());
+        DataStoreFactory.getScenarioDataStore().put("permOrgList", orgList.getPermissionOrgList());
 
         PermissionAccountList acctList = permissionService.getPermissionAccountList(node).blockingFirst();
         List<PermissionAccountInfo> pa = acctList.getPermissionAccountList();
@@ -386,7 +367,7 @@ public class Permissions extends AbstractSpecImplementation {
             logger.debug("{} acct -> {}", c, o);
         }
 
-        DataStoreFactory.getSpecDataStore().put("permAcctList", pa);
+        DataStoreFactory.getScenarioDataStore().put("permAcctList", pa);
 
 
         PermissionNodeList nodeList = permissionService.getPermissionNodeList(node).blockingFirst();
@@ -396,7 +377,7 @@ public class Permissions extends AbstractSpecImplementation {
             ++c;
             logger.debug("{} node -> {}", c, o);
         }
-        DataStoreFactory.getSpecDataStore().put("permNodeList", pn);
+        DataStoreFactory.getScenarioDataStore().put("permNodeList", pn);
 
         PermissionRoleList roleList = permissionService.getPermissionRoleList(node).blockingFirst();
         List<PermissionRoleInfo> pr = roleList.getPermissionRoleList();
@@ -405,7 +386,7 @@ public class Permissions extends AbstractSpecImplementation {
             ++c;
             logger.debug("{} role -> {}", c, o);
         }
-        DataStoreFactory.getSpecDataStore().put("permRoleList", pr);
+        DataStoreFactory.getScenarioDataStore().put("permRoleList", pr);
     }
 
     @Step("Check org <org> is <status> with no parent, level <level> and empty sub orgs")
@@ -434,7 +415,7 @@ public class Permissions extends AbstractSpecImplementation {
     private boolean orgExists(String checkType, String org, String porg, String status, int level, String slist) {
         org = getNetworkAdminOrg(org);
         porg = getNetworkAdminOrg(porg);
-        List<PermissionOrgInfo> permOrgList = (ArrayList<PermissionOrgInfo>) DataStoreFactory.getSpecDataStore().get("permOrgList");
+        List<PermissionOrgInfo> permOrgList = (ArrayList<PermissionOrgInfo>) DataStoreFactory.getScenarioDataStore().get("permOrgList");
         assertThat(permOrgList.size()).isNotEqualTo(0);
         int c = 0;
         boolean isPresent = false;
@@ -482,7 +463,7 @@ public class Permissions extends AbstractSpecImplementation {
     public void checkNodeExists(String org, QuorumNode node, String status) throws Exception {
         org = getNetworkAdminOrg(org);
         String enodeId = getEnodeId(node);
-        List<PermissionNodeInfo> permNodeList = (ArrayList<PermissionNodeInfo>) DataStoreFactory.getSpecDataStore().get("permNodeList");
+        List<PermissionNodeInfo> permNodeList = (ArrayList<PermissionNodeInfo>) DataStoreFactory.getScenarioDataStore().get("permNodeList");
         assertThat(permNodeList.size()).isNotEqualTo(0);
         int c = 0;
         boolean isPresent = false;
@@ -500,7 +481,7 @@ public class Permissions extends AbstractSpecImplementation {
     private boolean roleExists(String checkType, String org, String role, String access) {
         org = getNetworkAdminOrg(org);
         role = getNetworkOrgAdminRole(role);
-        List<PermissionRoleInfo> permRoleList = (ArrayList<PermissionRoleInfo>) DataStoreFactory.getSpecDataStore().get("permRoleList");
+        List<PermissionRoleInfo> permRoleList = (ArrayList<PermissionRoleInfo>) DataStoreFactory.getScenarioDataStore().get("permRoleList");
         assertThat(permRoleList.size()).isNotEqualTo(0);
         int c = 0;
         boolean isPresent = false;
@@ -542,7 +523,7 @@ public class Permissions extends AbstractSpecImplementation {
         org = getNetworkAdminOrg(org);
         role = getNetworkOrgAdminRole(role);
         String defaultAcct = acct;
-        List<PermissionAccountInfo> pacctList = (ArrayList<PermissionAccountInfo>) DataStoreFactory.getSpecDataStore().get("permAcctList");
+        List<PermissionAccountInfo> pacctList = (ArrayList<PermissionAccountInfo>) DataStoreFactory.getScenarioDataStore().get("permAcctList");
         assertThat(pacctList.size()).isNotEqualTo(0);
         int c = 0;
         boolean isPresent = false;
@@ -590,7 +571,7 @@ public class Permissions extends AbstractSpecImplementation {
     @Step("Start stand alone <node> in <networkId>")
     public void startOneNodes(QuorumNetworkProperty.Node node, String networkId) {
         GethArgBuilder additionalGethArgs = GethArgBuilder.newBuilder();
-        InfrastructureService.NetworkResources networkResources = mustHaveValue(DataStoreFactory.getSpecDataStore(), "networkResources", InfrastructureService.NetworkResources.class);
+        InfrastructureService.NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", InfrastructureService.NetworkResources.class);
         raftService.addPeer(networkResources.aNodeName(), node.getEnodeUrl(), NodeType.peer)
             .doOnNext(res -> {
                 Response.Error err = Optional.ofNullable(res.getError()).orElse(new Response.Error());

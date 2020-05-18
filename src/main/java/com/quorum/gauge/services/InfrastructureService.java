@@ -57,7 +57,7 @@ public interface InfrastructureService {
      */
     Observable<String> modifyFile(String resourceId, String filePath, FileContentModifier modifier);
 
-    Observable<String> writeFile(String resourceId, String filePath, String modifier);
+    Observable<String> writeFile(String resourceId, String filePath, String fileContent);
 
     Observable<Boolean> isGeth(String resourceId);
 

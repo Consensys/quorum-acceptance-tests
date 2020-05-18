@@ -161,30 +161,29 @@ public class DockerInfrastructureService
 
 
     @Override
-    public Observable<String> writeFile(String resourceId, String filePath, String modifier){
-        String str = modifier;
-        InputStream is = null;
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        TarArchiveOutputStream taos = new TarArchiveOutputStream(baos);
-        TarArchiveEntry entry = new TarArchiveEntry(new File(filePath).getName());
-        entry.setSize(str.length());
-        entry.setMode(TarArchiveEntry.DEFAULT_FILE_MODE);
-        try {
+    public Observable<String> writeFile(String resourceId, String filePath, String fileContent){
+        return Observable.just(fileContent).map(data -> {
+            InputStream is = null;
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            TarArchiveOutputStream taos = new TarArchiveOutputStream(baos);
+            TarArchiveEntry entry = new TarArchiveEntry(new File(filePath).getName());
+            entry.setSize(data.length());
+            entry.setMode(TarArchiveEntry.DEFAULT_FILE_MODE);
             taos.putArchiveEntry(entry);
-            IOUtils.copy(new ByteArrayInputStream(str.getBytes()), taos);
+            IOUtils.copy(new ByteArrayInputStream(data.getBytes()), taos);
             taos.closeArchiveEntry();
             taos.finish();
             taos.close();
             baos.close();
             is = new ByteArrayInputStream(baos.toByteArray());
+            return is;
+        }).map(inputStr -> {
             dockerClient.copyArchiveToContainerCmd(resourceId)
-                .withTarInputStream(is)
+                .withTarInputStream(inputStr)
                 .withRemotePath(new File(filePath).getParent())
                 .exec();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return Observable.just(resourceId);
+            return resourceId;
+        });
     }
 
     /**
