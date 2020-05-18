@@ -18,23 +18,14 @@
 * Update "permissionsConfig". Set suborg depth as "4", suborg breadth as "4"
 * Write "permissionsConfig" to the data directory of "Node1,Node2,Node3"
 * From "Node1" execute permissions init on "upgradable" passing "interface" and "implementation" contract addresses
-* Stop all nodes in the network "default"
-* Start all nodes in the network "default"
-* Get netowrk details from "Node1"
-* Check org "NWADMIN" is "Approved" with no parent, level "1" and empty sub orgs
-* Check org "NWADMIN" has "Node1" with status "Approved"
-* Check org "NWADMIN" has "Node2" with status "Approved"
-* Check org "NWADMIN" has "Node3" with status "Approved"
-* Check org "NWADMIN" has role "NWADMIN" with access "FullAccess" and permission to vote and is active
+* Restart network "default"
+* Validate that "NWADMIN" is approved, has "Node1" linked and has role "NWADMIN"
+* Validate that "NWADMIN" is approved, has "Node2" linked and has role "NWADMIN"
+* Validate that "NWADMIN" is approved, has "Node3" linked and has role "NWADMIN"
 * Check "Node1"'s default account is from org "NWADMIN" and has role "NWADMIN" and is org admin and is active
 * From "Node1" propose new org "ORG1" into the network with "Node4"'s enode id and "Default" account
 * From "Node1" approve new org "ORG1" into the network with "Node4"'s enode id and "Default" account
 * Start stand alone "Node4" in "networkId"
 * Write "permissionsConfig" to the data directory of "Node4"
-* Stop all nodes in the network "default"
-* Start all nodes in the network "default"
-* Get netowrk details from "Node4"
-* Check org "ORG1" is "Approved" with no parent, level "1" and empty sub orgs
-* Check org "ORG1" has "Node4" with status "Approved"
-* Check org "ORG1" has role "ORGADMIN" with access "FullAccess" and permission to vote and is active
-
+* Restart network "default"
+* Validate that "ORG1" is approved, has "Node4" linked and has role "ORGADMIN"

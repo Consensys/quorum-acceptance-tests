@@ -1,0 +1,9 @@
+# Restart network <networkName>
+* Stop all nodes in the network <networkName>
+* Start all nodes in the network <networkName>
+
+# Validate that <org> is approved, has <node> linked and has role <role>
+* Get netowrk details from <node>
+* Check org <org> is "Approved" with no parent, level "1" and empty sub orgs
+* Check org <org> has <node> with status "Approved"
+* Check org <org> has role <role> with access "FullAccess" and permission to vote and is active
