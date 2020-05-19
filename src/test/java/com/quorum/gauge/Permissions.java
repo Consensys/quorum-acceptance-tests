@@ -4,6 +4,7 @@ package com.quorum.gauge;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.quorum.gauge.common.GethArgBuilder;
 import com.quorum.gauge.common.NodeType;
+import com.quorum.gauge.common.PermissionsConfig;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
@@ -19,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.Response;
+import org.web3j.protocol.core.methods.response.EthBlockNumber;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.quorum.methods.response.permissioning.*;
 import org.web3j.tx.Contract;
@@ -75,155 +77,6 @@ public class Permissions extends AbstractSpecImplementation {
     private static final Logger logger = LoggerFactory.getLogger(SmartContractDualState.class);
 
     public Permissions() {
-    }
-
-    public class PermissionsConfig {
-        private String upgradableAddress;
-        private String interfaceAddress;
-        private String implAddress;
-        private String orgMgrAddress;
-        private String nodeMgrAddress;
-        private String accountMgrAddress;
-        private String roleMgrAddress;
-        private String voterMgrAddress;
-        private List<String> accounts;
-        private String nwAdminOrg;
-        private String nwAdminRole;
-        private String orgAdminRole;
-        private int subOrgBreadth;
-        private int subOrgDepth;
-
-        public String getUpgradableAddress() {
-            return upgradableAddress;
-        }
-
-        public void setUpgradableAddress(String upgradableAddress) {
-            this.upgradableAddress = upgradableAddress;
-        }
-
-        public String getInterfaceAddress() {
-            return interfaceAddress;
-        }
-
-        public void setInterfaceAddress(String interfaceAddress) {
-            this.interfaceAddress = interfaceAddress;
-        }
-
-        public String getImplAddress() {
-            return implAddress;
-        }
-
-        public void setImplAddress(String implAddress) {
-            this.implAddress = implAddress;
-        }
-
-        public String getNodeMgrAddress() {
-            return nodeMgrAddress;
-        }
-
-        public void setNodeMgrAddress(String nodeMgrAddress) {
-            this.nodeMgrAddress = nodeMgrAddress;
-        }
-
-        public String getAccountMgrAddress() {
-            return accountMgrAddress;
-        }
-
-        public void setAccountMgrAddress(String accountMgrAddress) {
-            this.accountMgrAddress = accountMgrAddress;
-        }
-
-        public String getRoleMgrAddress() {
-            return roleMgrAddress;
-        }
-
-        public void setRoleMgrAddress(String roleMgrAddress) {
-            this.roleMgrAddress = roleMgrAddress;
-        }
-
-        public String getVoterMgrAddress() {
-            return voterMgrAddress;
-        }
-
-        public void setVoterMgrAddress(String voterMgrAddress) {
-            this.voterMgrAddress = voterMgrAddress;
-        }
-
-        public String getNwAdminOrg() {
-            return nwAdminOrg;
-        }
-
-        public void setNwAdminOrg(String nwAdminOrg) {
-            this.nwAdminOrg = nwAdminOrg;
-        }
-
-        public String getNwAdminRole() {
-            return nwAdminRole;
-        }
-
-        public void setNwAdminRole(String nwAdminRole) {
-            this.nwAdminRole = nwAdminRole;
-        }
-
-        public String getOrgAdminRole() {
-            return orgAdminRole;
-        }
-
-        public void setOrgAdminRole(String orgAdminRole) {
-            this.orgAdminRole = orgAdminRole;
-        }
-
-        public int getSubOrgBreadth() {
-            return subOrgBreadth;
-        }
-
-        public void setSubOrgBreadth(int subOrgBreadth) {
-            this.subOrgBreadth = subOrgBreadth;
-        }
-
-        public int getSubOrgDepth() {
-            return subOrgDepth;
-        }
-
-        public void setSubOrgDepth(int subOrgDepth) {
-            this.subOrgDepth = subOrgDepth;
-        }
-
-        public String getOrgMgrAddress() {
-            return orgMgrAddress;
-        }
-
-        public void setOrgMgrAddress(String orgMgrAddress) {
-            this.orgMgrAddress = orgMgrAddress;
-        }
-
-        public void setAccounts(List<String> accounts) {
-            this.accounts = accounts;
-        }
-
-        @Override
-        public String toString() {
-            return "PermissionsConfig{" +
-                "upgradableAddress='" + upgradableAddress + '\'' +
-                ", interfaceAddress='" + interfaceAddress + '\'' +
-                ", implAddress='" + implAddress + '\'' +
-                ", orgMgrAddress='" + orgMgrAddress + '\'' +
-                ", nodeMgrAddress='" + nodeMgrAddress + '\'' +
-                ", accountMgrAddress='" + accountMgrAddress + '\'' +
-                ", roleMgrAddress='" + roleMgrAddress + '\'' +
-                ", voterMgrAddress='" + voterMgrAddress + '\'' +
-                ", accounts=" + accounts +
-                ", nwAdminOrg='" + nwAdminOrg + '\'' +
-                ", nwAdminRole='" + nwAdminRole + '\'' +
-                ", orgAdminRole='" + orgAdminRole + '\'' +
-                ", subOrgBreadth=" + subOrgBreadth +
-                ", subOrgDepth=" + subOrgDepth +
-                '}';
-        }
-
-        public List<String> getAccounts() {
-            return accounts;
-        }
     }
 
     @Step("Deploy <contractName> smart contract from a default account in <node>, name this contract as <contractNameKey>")
@@ -666,4 +519,45 @@ public class Permissions extends AbstractSpecImplementation {
         assertThat(exMsg.contains(error)).isTrue();
     }
 
+    private String getFullEnode(String enode, QuorumNode node) {
+        List<PermissionNodeInfo> permNodeList = permissionService.getPermissionNodeList(node).blockingFirst().getPermissionNodeList();
+        assertThat(permNodeList.size()).isNotEqualTo(0);
+        int c = 0;
+        boolean isPresent = false;
+        for (PermissionNodeInfo i : permNodeList) {
+            ++c;
+            if (i.getUrl().contains(enode)) {
+                return i.getUrl();
+            }
+        }
+        return null;
+    }
+
+    @Step("From <fromNode> deactivate org <org>'s node <node>")
+    public void deactivateNode(QuorumNode fromNode, String org, QuorumNode node) {
+        org = getNetworkAdminOrg(org);
+        String enodeId = getEnodeId(node);
+        String fullEnodeId = getFullEnode(enodeId, node);
+        assertThat(fullEnodeId).isNotNull();
+        ExecStatusInfo execStatus = permissionService.updateNode(fromNode, org, fullEnodeId, 1).blockingFirst();
+        assertThat(!execStatus.hasError());
+        waitForSomeSeconds(1);
+        getNetworkDetails(fromNode);
+    }
+
+    @Step("Save current blocknumber from <node>")
+    public void saveCurrentBlockNumber(QuorumNode node) {
+        EthBlockNumber blkNumber = utilService.getCurrentBlockNumberFrom(node).blockingFirst();
+        DataStoreFactory.getScenarioDataStore().put(node.name() + "blockNumber", blkNumber);
+        logger.debug("current block number from {} is {}", node.name(), blkNumber.getBlockNumber().intValue());
+        assertThat(blkNumber.getBlockNumber().intValue()).isNotEqualTo(0);
+    }
+
+    @Step("Ensure current blocknumber from <node> has not changed")
+    public void checkBlockNumberHasNotChanged(QuorumNode node) {
+        EthBlockNumber oldBlkNumber = (EthBlockNumber) DataStoreFactory.getScenarioDataStore().get(node.name() + "blockNumber");
+        EthBlockNumber newBlkNumber = utilService.getCurrentBlockNumberFrom(node).blockingFirst();
+        logger.debug("block number old:{} new:{}", oldBlkNumber.getBlockNumber().intValue(), newBlkNumber.getBlockNumber().intValue());
+        assertThat(newBlkNumber.getBlockNumber().intValue()).isEqualTo(oldBlkNumber.getBlockNumber().intValue());
+    }
 }

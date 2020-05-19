@@ -37,4 +37,10 @@
 * Deploy "storec" smart contract with initial value "5" from a default account in "Node4", named this contract as "c1"
 * "c1"'s "getc" function execution in "Node4" returns "5"
 * "c1"'s "setc" function execution in "Node4" with value "8"
+* From "Node1" deactivate org "NWADMIN"'s node "Node3"
+* Check org "NWADMIN" has "Node3" with status "Deactivated"
+* Save current blocknumber from "Node3"
+* Deploy "storec" smart contract with initial value "1" from a default account in "Node1", named this contract as "c2"
+* Deploy "storec" smart contract with initial value "1" from a default account in "Node1", named this contract as "c3"
+* Ensure current blocknumber from "Node3" has not changed
 
