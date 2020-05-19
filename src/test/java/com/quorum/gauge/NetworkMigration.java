@@ -1,0 +1,169 @@
+package com.quorum.gauge;
+
+import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.core.AbstractSpecImplementation;
+import com.quorum.gauge.services.ContractService;
+import com.quorum.gauge.services.InfrastructureService;
+import com.quorum.gauge.services.InfrastructureService.NetworkResources;
+import com.thoughtworks.gauge.Step;
+import com.thoughtworks.gauge.Table;
+import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import io.reactivex.Observable;
+import io.reactivex.schedulers.Schedulers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.web3j.protocol.core.methods.response.EthBlockNumber;
+import org.web3j.tx.Contract;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+import java.util.stream.Collectors;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@Service
+public class NetworkMigration extends AbstractSpecImplementation {
+    private static final Logger logger = LoggerFactory.getLogger(NetworkMigration.class);
+
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
+    @Autowired
+    private InfrastructureService infraService;
+
+    @Autowired
+    private ContractService contractService;
+
+    @Step("Start the network with: <table>")
+    public void startNetwork(Table table) {
+        NetworkResources networkResources = new NetworkResources();
+        try {
+            Observable.fromIterable(table.getTableRows())
+                    .flatMap(r -> infraService.startNode(
+                            InfrastructureService.NodeAttributes.forNode(r.getCell("node"))
+                                    .withQuorumVersionKey(r.getCell("quorum"))
+                                    .withTesseraVersionKey(r.getCell("tessera")),
+                            resourceId -> networkResources.add(r.getCell("node"), resourceId)))
+                    .doOnNext(ok -> {
+                        assertThat(ok).as("Node must start successfully").isTrue();
+                    })
+                    .doOnComplete(() -> {
+                        logger.debug("Waiting for network to be up completely...");
+                        Thread.sleep(networkProperty.getConsensusGracePeriod().toMillis());
+                    })
+                    .blockingSubscribe();
+        } finally {
+            DataStoreFactory.getScenarioDataStore().put("networkResources", networkResources);
+        }
+    }
+
+    /**
+     * When restarting the network, we destroy the currrent containers and recreate new ones with new images
+     * Datadir will not be deleted as it lives in the volume
+     * @param table
+     */
+    @Step("Restart the network with: <table>")
+    public void restartNetwork(Table table) {
+        NetworkResources existingNetworkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
+        infraService.deleteNetwork(existingNetworkResources).blockingSubscribe();
+        NetworkResources networkResources = new NetworkResources();
+        try {
+            Observable.fromIterable(table.getTableRows())
+                    .flatMap(r -> infraService.startNode(
+                            InfrastructureService.NodeAttributes.forNode(r.getCell("node"))
+                                    .withQuorumVersionKey(r.getCell("quorum"))
+                                    .withTesseraVersionKey(r.getCell("tessera")),
+                            resourceId -> networkResources.add(r.getCell("node"), resourceId)))
+                    .doOnNext(ok -> {
+                        assertThat(ok).as("Node must be restarted successfully").isTrue();
+                    })
+                    .doOnComplete(() -> {
+                        logger.debug("Waiting for network to be up completely...");
+                        Thread.sleep(networkProperty.getConsensusGracePeriod().toMillis());
+                    })
+                    .blockingSubscribe();
+        } finally {
+            DataStoreFactory.getScenarioDataStore().put("networkResources", networkResources);
+        }
+    }
+
+    @Step("Stop and start <component> in <node> using <versionKey>")
+    public void stopAndStartNodes(String component, String node, String versionKey) {
+        NetworkResources existingNetworkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
+        infraService.deleteResources(existingNetworkResources.get(node)).blockingSubscribe();
+        existingNetworkResources.remove(node);
+        try {
+            infraService.startNode(
+                    InfrastructureService.NodeAttributes.forNode(node)
+                            .withQuorumVersionKey(versionKey),
+                    resourceId -> existingNetworkResources.add(node, resourceId))
+                    .doOnNext(ok -> {
+                        assertThat(ok).as(node + " must be restarted successfully").isTrue();
+                    })
+                    .doOnComplete(() -> {
+                        logger.debug("Waiting for {} to be up completely...", node);
+                        Thread.sleep(networkProperty.getConsensusGracePeriod().toMillis());
+                    })
+                    .blockingSubscribe();
+        } finally {
+            DataStoreFactory.getScenarioDataStore().put("networkResources", existingNetworkResources);
+        }
+    }
+
+    @Step("Use SimpleStorage smart contract, populate network with <publicTxCount> public transactions and <privateTxCount> private transactions randomly between <nodesStr>")
+    public void deploySimpleStorageContract(int publicTxCount, int privateTxCount, String nodesStr) {
+        List<String> nodes = Arrays.stream(nodesStr.split(",")).map(String::trim).collect(Collectors.toList());
+        int threadsPerNode = 10;
+        // build calls for public transactions
+        // fire to each node in parallel, max 10 threads for each node
+        int txCountPerNode = (int) Math.round(Math.ceil((double)publicTxCount / nodes.size()));
+        if (txCountPerNode < threadsPerNode) {
+            threadsPerNode = txCountPerNode;
+        }
+        List<Observable<?>> parallelNodes = new ArrayList<>();
+        for (String n : nodes) {
+            parallelNodes.add(sendTxs(QuorumNode.valueOf(n), txCountPerNode, threadsPerNode).subscribeOn(Schedulers.io()));
+        }
+        Observable.zip(parallelNodes, oks -> true).blockingSubscribe();
+    }
+
+    private Observable<? extends Contract> sendTxs(QuorumNode n, int txCountPerNode, int threadsPerNode) {
+        return Observable.range(0, txCountPerNode)
+                .doOnNext(c -> logger.debug("Sending tx {} to {}", c, n))
+                .flatMap(v -> Observable.just(v)
+                        .flatMap(num -> contractService.createSimpleContract(40, n, null))
+                        .subscribeOn(Schedulers.io())
+                        , threadsPerNode);
+    }
+
+    private QuorumNode randomNode(List<String> nodes, QuorumNode n) {
+        List<String> nodesLessN = nodes.stream().filter(s -> !n.name().equalsIgnoreCase(s)).collect(Collectors.toList());
+        Random rand = new Random();
+        return QuorumNode.valueOf(nodesLessN.get(rand.nextInt(nodesLessN.size())));
+    }
+
+    @Step("Verify block number in <nodes> in sync with <name>")
+    public void verifyBlockNumberInSync(String nodes, String name) {
+        BigInteger expectedBlockNumber = mustHaveValue(DataStoreFactory.getScenarioDataStore(), name, BigInteger.class);
+        Observable.fromIterable(Arrays.stream(nodes.split(",")).map(String::trim).collect(Collectors.toList()))
+                .map(networkProperty::getNode)
+                .doOnNext(n -> {
+                    EthBlockNumber b = utilService.getCurrentBlockNumberFrom(n).blockingFirst();
+                    assertThat(b.getBlockNumber()).as("Block number from node " + n).isGreaterThanOrEqualTo(expectedBlockNumber);
+                })
+                .blockingSubscribe();
+    }
+
+    @Step("Network is running")
+    public void checkNetwork() {
+        NetworkResources existingNetworkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
+
+        int status = infraService.checkNetwork(existingNetworkResources).blockingFirst();
+
+        assertThat(status & InfrastructureService.STATUS_RUNNING).as("Network must be running").isEqualTo(InfrastructureService.STATUS_RUNNING);
+        assertThat(status & InfrastructureService.STATUS_HEALTHY).as("Network must be healthy").isEqualTo(InfrastructureService.STATUS_HEALTHY);
+    }
+}

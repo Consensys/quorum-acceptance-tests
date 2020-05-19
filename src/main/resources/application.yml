@@ -3,9 +3,7 @@ server:
 logging:
   level:
     com.quorum.gauge: INFO
-spring:
-  profiles:
-    include: local
+    org.apache.sshd.common.forward.DefaultForwardingFilter: DEBUG # to display port forwarding info
 
 quorum:
   wallets:

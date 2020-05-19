@@ -9,24 +9,25 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.0.5.RELEASE</version>
+        <version>2.2.6.RELEASE</version>
     </parent>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.version>1.8</java.version>
+        <java.version>11</java.version>
         <generated.sol.dir>${project.build.directory}/generate-sources/sol</generated.sol.dir>
 
-        <!-- only run non-advanced test cases. This property is from gauge-maven-plugin configuration -->
-        <CONSENSUS>TBD</CONSENSUS>
-        <tags>(basic || basic-${CONSENSUS}) &amp;&amp; !advanced</tags>
+        <!-- properties from gauge-maven-plugin configuration -->
+        <tags>basic</tags> <!-- which tests to run by default -->
+        <env>run-local</env> <!-- Gauge environment being used -->
 
         <!-- dependencies -->
         <web3j-quorum.version>4.0.6</web3j-quorum.version>
-        <commons-lang.version>2.6</commons-lang.version>
-
-        <!-- there's an issue with code gen in web3j 3.5.0-->
         <web3j.version>4.2.0</web3j.version>
+        <commons-lang.version>2.6</commons-lang.version>
+        <docker-java.version>3.2.1</docker-java.version>
+        <apache-sshd.version>2.4.0</apache-sshd.version>
+        <i2p-eddsa.version>0.3.0</i2p-eddsa.version>
         <gauge-java.version>0.7.4</gauge-java.version>
 
         <!-- plugins -->
@@ -83,14 +84,54 @@
             <artifactId>commons-lang</artifactId>
             <version>${commons-lang.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.docker-java</groupId>
+            <artifactId>docker-java-transport-okhttp</artifactId>
+            <version>${docker-java.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-xml</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sshd</groupId>
+            <artifactId>sshd-core</artifactId>
+            <version>${apache-sshd.version}</version>
+        </dependency>
+        <dependency>
+            <!-- this is to support SSHClient using Apache SSHD when connecting to openssh asking for eddsa  -->
+            <groupId>net.i2p.crypto</groupId>
+            <artifactId>eddsa</artifactId>
+            <version>${i2p-eddsa.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>3.0.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>com.thoughtworks.gauge.maven</groupId>
+                    <artifactId>gauge-maven-plugin</artifactId>
+                    <version>${gauge-maven-plugin.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <fork>true</fork>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>com.thoughtworks.gauge.maven</groupId>
                 <artifactId>gauge-maven-plugin</artifactId>
-                <version>${gauge-maven-plugin.version}</version>
                 <executions>
                     <execution>
                         <id>run-gauge</id>
@@ -100,6 +141,12 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <flags>
+                        <flag>--hide-suggestion</flag>
+                        <flag>--sort</flag>
+                    </flags>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.web3j</groupId>
@@ -129,7 +176,7 @@
                     <dependency>
                         <groupId>org.web3j</groupId>
                         <artifactId>codegen</artifactId>
-                        <version>${web3j.version}</version>
+                        <version>${web3j-maven-plugin.version}</version>
                     </dependency>
                 </dependencies>
             </plugin>
@@ -172,111 +219,331 @@
             </plugin>
         </plugins>
     </build>
-
     <profiles>
-
         <profile>
-            <id>travis</id>
-            <activation>
-                <property>
-                    <name>TRAVIS</name>
-                    <value>true</value>
-                </property>
-            </activation>
+            <id>auto</id>
             <properties>
-                <!-- expected to pass the below variables via -D option -->
-                <TRAVIS_JOB_NUMBER>TBD</TRAVIS_JOB_NUMBER>
-                <TRAVIS_TEST_RESULT>TBD</TRAVIS_TEST_RESULT>
-                <GITHUB_TOKEN>TBD</GITHUB_TOKEN>
-                <REPO_NAME>TBD</REPO_NAME>
-                <REPO_OWNER>TBD</REPO_OWNER>
-                <GITHUB_USERNAME>TBD</GITHUB_USERNAME>
-                <CONSENSUS>TBD</CONSENSUS>
-                <!-- in Travis, we run advanced test cases tagged with the corresponding consensus -->
-                <tags>basic || basic-${CONSENSUS} || (advanced &amp;&amp; ${CONSENSUS})</tags>
+                <!-- run Terraform destory after test -->
+                <network.forceDestroy>false</network.forceDestroy>
+
+                <!-- enable remote infrastructure. Will be set to true if profile `infra` is activated -->
+                <infra.enabled>false</infra.enabled>
+                <!--
+                This value is to differentiate between multiple `mvn` runs.
+                Github Actions need to inject different values for different runs so
+                it can be aggregated at the end.
+                -->
+                <auto.jobid>local</auto.jobid>
+                <auto.outputDir>/tmp</auto.outputDir>
+
+                <!-- global configuration for exec plugin -->
+                <exec.daemonThreadJoinTimeout>15000</exec.daemonThreadJoinTimeout>
             </properties>
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-site-plugin</artifactId>
-                        <configuration>
-                            <generateReports>false</generateReports>
-                            <generateProjectInfo>false</generateProjectInfo>
-                            <skipDeploy>true</skipDeploy>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-project-info-reports-plugin</artifactId>
-                        <version>${maven-project-info-reports-plugin.version}</version>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <dependencies>
+                            <dependency>
+                                <groupId>ant-contrib</groupId>
+                                <artifactId>ant-contrib</artifactId>
+                                <version>1.0b3</version>
+                                <exclusions>
+                                    <exclusion>
+                                        <groupId>ant</groupId>
+                                        <artifactId>ant</artifactId>
+                                    </exclusion>
+                                </exclusions>
+                            </dependency>
+                        </dependencies>
+                        <executions>
+                            <execution>
+                                <id>check-required-tools</id>
+                                <goals><goal>run</goal></goals>
+                                <phase>process-test-resources</phase>
+                                <configuration>
+                                    <!-- make sure we fail fast if tools are not installed -->
+                                    <failOnError>true</failOnError>
+                                    <exportAntProperties>false</exportAntProperties>
+                                    <target name="Check required tools and display their info">
+                                        <ant antfile="${basedir}/src/main/ant/helper.xml"
+                                            target="tools"/>
+                                    </target>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>extract</id>
+                                <goals><goal>run</goal></goals>
+                                <phase>process-test-resources</phase>
+                                <configuration>
+                                    <exportAntProperties>true</exportAntProperties>
+                                    <target name="Extract network location and profile">
+                                        <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+                                        <macrodef name="parser">
+                                            <attribute name="raw" default="undefined" />
+                                            <attribute name="prefix" default="networks" />
+                                            <attribute name="folderPropertyName" />
+                                            <attribute name="defaultFolder" default="target/tf-scratchpad" />
+                                            <attribute name="profilePropertyName" />
+                                            <attribute name="defaultProfile" default="undefined" />
+                                            <sequential>
+                                                <mkdir dir="@{defaultFolder}" />
+                                                <local name="folder_extract" />
+                                                <local name="profile_extract" />
+                                                <local name="silent" />
+                                                <echo message="Extract from: @{raw}" level="info" />
+                                                <propertyregex property="folder_extract"
+                                                               input="@{raw}"
+                                                               regexp="(@{prefix}/[0-9a-zA-Z-_\.]+)::([0-9a-zA-Z-_\.]+)"
+                                                               select="\1"
+                                                               casesensitive="false"
+                                                               defaultValue="@{defaultFolder}"/>
+                                                <propertyregex property="profile_extract"
+                                                               input="@{raw}"
+                                                               regexp="(@{prefix}/[0-9a-zA-Z-_\.]+)::([0-9a-zA-Z-_\.]+)"
+                                                               select="\2"
+                                                               casesensitive="false"
+                                                               defaultValue="@{defaultProfile}"/>
+                                                <property name="@{folderPropertyName}" value="${folder_extract}" />
+                                                <property name="@{profilePropertyName}" value="${profile_extract}" />
+                                                <if>
+                                                    <not><equals arg1="${profile_extract}" arg2="undefined" /></not>
+                                                    <then>
+                                                        <touch file="${folder_extract}/terraform.${profile_extract}.tfvars" mkdirs="true" />
+                                                    </then>
+                                                </if>
+                                                <echo level="info" message="@{folderPropertyName}=${folder_extract}" />
+                                                <echo level="info" message="@{profilePropertyName}=${profile_extract}" />
+                                                <exec executable="terraform" dir="${folder_extract}"
+                                                      failonerror="false" failifexecutionfails="false">
+                                                    <arg line="workspace new ${profile_extract}"/>
+                                                </exec>
+                                            </sequential>
+                                        </macrodef>
+                                        <local name="networkRaw" />
+                                        <condition property="networkRaw" value="${network.target}" else="${tags}">
+                                            <isset property="network.target" />
+                                        </condition>
+                                        <parser raw="${networkRaw}" prefix="networks"
+                                                folderPropertyName="network.folder"
+                                                profilePropertyName="network.profile"/>
+                                        <condition property="network.skipDestroy" value="true" else="false">
+                                            <or>
+                                                <isfalse value="${network.forceDestroy}"/>
+                                                <equals arg1="${network.profile}" arg2="undefined" />
+                                            </or>
+                                        </condition>
+                                        <condition property="network.skipApply" value="true" else="false">
+                                            <equals arg1="${network.profile}" arg2="undefined" />
+                                        </condition>
+                                        <condition property="network.skipWait" value="true" else="false">
+                                            <equals arg1="${network.profile}" arg2="undefined" />
+                                        </condition>
+                                        <echo level="info" message="Auto-destroying network: ${network.forceDestroy}"/>
+                                        <condition property="infra.disabled" value="false" else="true">
+                                            <istrue value="${infra.enabled}"/>
+                                        </condition>
+                                        <if>
+                                            <equals arg1="${infra.enabled}" arg2="true"/>
+                                            <then>
+                                                <parser raw="${infra.target}" prefix="networks/_infra"
+                                                        folderPropertyName="infra.folder"
+                                                        profilePropertyName="infra.profile"/>
+                                                <condition property="infra.skipDestroy" value="false" else="true">
+                                                    <istrue value="${infra.forceDestroy}"/>
+                                                </condition>
+                                                <echo level="info" message="Auto-destroying infra: ${infra.forceDestroy}"/>
+                                            </then>
+                                            <else>
+                                                <property name="infra.skipDestroy" value="true" />
+                                                <property name="infra.skipApply" value="true" />
+                                                <property name="infra.skipWait" value="true" />
+                                            </else>
+                                        </if>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
                     </plugin>
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>exec-maven-plugin</artifactId>
-                        <configuration>
-                            <executable>gauge</executable>
-                            <workingDirectory>${basedir}</workingDirectory>
-                            <arguments>
-                                <argument>docs</argument>
-                                <argument>spectacle</argument>
-                                <argument>src/specs</argument>
-                            </arguments>
-                        </configuration>
                         <executions>
                             <execution>
-                                <id>generate-html-specs</id>
-                                <goals>
-                                    <goal>exec</goal>
-                                </goals>
-                                <phase>pre-site</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>com.github.github</groupId>
-                        <artifactId>site-maven-plugin</artifactId>
-                        <version>${github.site-maven-plugin.version}</version>
-                        <configuration>
-                            <branch>refs/heads/master</branch>
-                            <merge>true</merge>
-                            <oauth2Token>${GITHUB_TOKEN}</oauth2Token>
-                            <repositoryName>${REPO_NAME}</repositoryName>
-                            <repositoryOwner>${REPO_OWNER}</repositoryOwner>
-                            <userName>${GITHUB_USERNAME}</userName>
-                            <message></message>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>upload-specs-html</id>
-                                <goals>
-                                    <goal>site</goal>
-                                </goals>
-                                <phase>site</phase>
+                                <id>infra.terraform-init</id>
+                                <goals><goal>exec</goal></goals>
+                                <phase>process-test-resources</phase>
                                 <configuration>
-                                    <message>Specs in HTML</message>
-                                    <path>${project.artifactId}/docs</path>
-                                    <outputDirectory>${basedir}/docs</outputDirectory>
+                                    <skip>${infra.skipApply}</skip>
+                                    <commandlineArgs>init</commandlineArgs>
+                                    <workingDirectory>${infra.folder}</workingDirectory>
                                 </configuration>
                             </execution>
                             <execution>
-                                <id>upload-test-report</id>
-                                <goals>
-                                    <goal>site</goal>
-                                </goals>
-                                <phase>site</phase>
+                                <id>infra.terraform-workspace</id>
+                                <goals><goal>exec</goal></goals>
+                                <phase>process-test-resources</phase>
                                 <configuration>
-                                    <message>Test Reports for Travis Job ${TRAVIS_JOB_NUMBER} - Result:
-                                        ${TRAVIS_TEST_RESULT}
-                                    </message>
-                                    <path>${project.artifactId}/${CONSENSUS}</path>
+                                    <skip>${infra.skipApply}</skip>
+                                    <commandlineArgs>workspace select ${infra.profile}</commandlineArgs>
+                                    <workingDirectory>${infra.folder}</workingDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>infra.terraform-apply</id>
+                                <goals><goal>exec</goal></goals>
+                                <phase>process-test-resources</phase>
+                                <configuration>
+                                    <skip>${infra.skipApply}</skip>
+                                    <commandlineArgs>apply --auto-approve -var-file terraform.${infra.profile}.tfvars -var tfvars_outdir='${basedir}/${network.folder}' -var properties_outdir='${project.build.outputDirectory}' -var run_on='${env}'</commandlineArgs>
+                                    <workingDirectory>${infra.folder}</workingDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>infra.wait</id>
+                                <goals><goal>exec</goal></goals>
+                                <phase>process-test-resources</phase>
+                                <configuration>
+                                    <skip>${infra.skipWait}</skip>
+                                    <executable>java</executable>
+                                    <arguments>
+                                        <argument>-classpath</argument>
+                                        <classpath/>
+                                        <argument>com.quorum.gauge.DockerWaitMain</argument>
+                                        <argument>infra</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>network.terraform-init</id>
+                                <goals><goal>exec</goal></goals>
+                                <phase>process-test-resources</phase>
+                                <configuration>
+                                    <skip>${network.skipApply}</skip>
+                                    <commandlineArgs>init</commandlineArgs>
+                                    <workingDirectory>${network.folder}</workingDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>network.terraform-workspace</id>
+                                <goals><goal>exec</goal></goals>
+                                <phase>process-test-resources</phase>
+                                <configuration>
+                                    <skip>${network.skipApply}</skip>
+                                    <commandlineArgs>workspace select ${network.profile}</commandlineArgs>
+                                    <workingDirectory>${network.folder}</workingDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>network.terraform-apply</id>
+                                <goals><goal>exec</goal></goals>
+                                <phase>process-test-resources</phase>
+                                <configuration>
+                                    <skip>${network.skipApply}</skip>
+                                    <commandlineArgs>apply --auto-approve -var-file terraform.${network.profile}.tfvars -var properties_outdir='${project.build.outputDirectory}' -var gauge_env_outdir='${basedir}/env/${env}'</commandlineArgs>
+                                    <workingDirectory>${network.folder}</workingDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>network.wait</id>
+                                <goals><goal>exec</goal></goals>
+                                <phase>process-test-resources</phase>
+                                <configuration>
+                                    <skip>${network.skipWait}</skip>
+                                    <executable>java</executable>
+                                    <arguments>
+                                        <argument>-classpath</argument>
+                                        <classpath/>
+                                        <argument>com.quorum.gauge.DockerWaitMain</argument>
+                                        <argument>network</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <!-- this execution is run after Gauge test -->
+                                <id>network.terraform-destroy</id>
+                                <goals><goal>exec</goal></goals>
+                                <phase>test</phase>
+                                <configuration>
+                                    <skip>${network.skipDestroy}</skip>
+                                    <commandlineArgs>destroy --auto-approve -var-file terraform.${network.profile}.tfvars</commandlineArgs>
+                                    <workingDirectory>${network.folder}</workingDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <!-- this execution is run after Gauge test -->
+                                <id>infra.terraform-destroy</id>
+                                <goals><goal>exec</goal></goals>
+                                <phase>test</phase>
+                                <configuration>
+                                    <skip>${infra.skipDestroy}</skip>
+                                    <commandlineArgs>destroy --auto-approve -var-file terraform.${infra.profile}.tfvars</commandlineArgs>
+                                    <workingDirectory>${infra.folder}</workingDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>extract-test-summary</id>
+                                <goals><goal>java</goal></goals>
+                                <phase>test</phase>
+                                <configuration>
+                                    <skip>${skipTests}</skip>
+                                    <mainClass>com.quorum.gauge.TestSummaryMain</mainClass>
+                                    <!-- This will produce failures.txt and summary.txt in the output folder -->
+                                    <commandlineArgs>${auto.jobid} ${project.build.directory}/gauge/reports/xml-report/result.xml ${auto.outputDir}</commandlineArgs>
                                 </configuration>
                             </execution>
                         </executions>
+                        <configuration>
+                            <executable>terraform</executable>
+                            <environmentVariables>
+                                <TF_VAR_network_name>${env}</TF_VAR_network_name>
+                                <TF_VAR_output_dir>${auto.outputDir}</TF_VAR_output_dir>
+                            </environmentVariables>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
         </profile>
-
+        <profile>
+            <id>infra</id>
+            <activation>
+                <property>
+                    <name>infra.target</name>
+                </property>
+            </activation>
+            <properties>
+                <infra.enabled>true</infra.enabled>
+                <infra.forceDestroy>false</infra.forceDestroy>
+            </properties>
+        </profile>
+        <profile>
+            <id>outputDirForWindows</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                </os>
+            </activation>
+            <properties>
+                <auto.outputDir>${java.io.tmpdir}</auto.outputDir>
+            </properties>
+        </profile>
+        <profile>
+            <id>gaugeFailSafe</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.thoughtworks.gauge.maven</groupId>
+                        <artifactId>gauge-maven-plugin</artifactId>
+                        <configuration>
+                            <flags>
+                                <flag>--fail-safe</flag>
+                                <flag>--hide-suggestion</flag>
+                                <flag>--sort</flag>
+                            </flags>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 </project>

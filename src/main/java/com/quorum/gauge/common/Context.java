@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 public class Context {
     private static final Logger logger = LoggerFactory.getLogger(Context.class);
     static ThreadLocal<QuorumNodeConnectionFactory> connectionFactoryThreadLocal = new ThreadLocal<>();
+    static ThreadLocal<String> accessTokenHolder = new ThreadLocal<>();
 
     public static void setConnectionFactory(QuorumNodeConnectionFactory c) {
         if (c == null) {
@@ -45,5 +46,18 @@ public class Context {
 
     public static void clear() {
         connectionFactoryThreadLocal.remove();
+    }
+
+    public static String storeAccessToken(String token) {
+        accessTokenHolder.set(token);
+        return token;
+    }
+
+    public static String retrieveAccessToken() {
+        return accessTokenHolder.get();
+    }
+
+    public static void removeAccessToken() {
+        accessTokenHolder.remove();
     }
 }

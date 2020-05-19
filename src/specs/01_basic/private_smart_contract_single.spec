@@ -59,7 +59,7 @@ contract SimpleStorage {
 
 ## When there's an update, privacy is still enforced
 
- Tags: private
+ Tags: private, privacy
 
 * Execute "contract17"'s `set()` function with new value "5" in "Node1" and it's private for "Node4"
 * "contract17"'s `get()` function execution in "Node1" returns "5"
