@@ -201,7 +201,7 @@ public class Permissions extends AbstractSpecImplementation {
         assertThat(tx.getTransactionHash()).isNotBlank();
     }
 
-    @Step("Get netowrk details from <node>")
+    @Step("Get network details from <node>")
     public void getNetworkDetails(QuorumNode node) {
         PermissionOrgList orgList = permissionService.getPermissionOrgList(node).blockingFirst();
         int c = 0;
