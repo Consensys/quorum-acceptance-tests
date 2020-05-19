@@ -587,4 +587,83 @@ public class Permissions extends AbstractSpecImplementation {
             .blockingSubscribe();
     }
 
+    private boolean checkOrgStatusExists(QuorumNode fromNode, String org, String status)  {
+        org = getNetworkAdminOrg(org);
+        getNetworkDetails(fromNode);
+        List<PermissionOrgInfo> orgList = (ArrayList<PermissionOrgInfo>) DataStoreFactory.getScenarioDataStore().get("permOrgList");
+        assertThat(orgList.size()).isNotEqualTo(0);
+        int c = 0;
+        boolean isPresent = false;
+        for (PermissionOrgInfo i : orgList) {
+            ++c;
+            logger.debug("{} org: {} status: {}", c, i.getFullOrgId(), i.getStatus());
+            if (i.getFullOrgId().equalsIgnoreCase(org) && i.getStatus() == orgStatusMap.get(status)) {
+                isPresent = true;
+                break;
+            }
+        }
+        return isPresent;
+    }
+
+    private void waitForSomeSeconds(int seconds) {
+        try {
+            logger.debug("wating for {} seconds", seconds);
+            Thread.sleep(seconds * 1000);
+            logger.debug("wait is over");
+        } catch (InterruptedException e) {
+
+        }
+    }
+
+    @Step("From <node> suspend org <org>, confirm that org status is <status>")
+    public void suspendOrg(QuorumNode node, String org, String status) {
+        org = getNetworkAdminOrg(org);
+        ExecStatusInfo execStatus = permissionService.updateOrgStatus(node, org, 1).blockingFirst();
+        assertThat(!execStatus.hasError());
+        waitForSomeSeconds(1);
+        assertThat(checkOrgStatusExists(node, org, status)).isTrue();
+    }
+
+    @Step("From <node> approve org <org>'s suspension, confirm that org status is <status>")
+    public void approveSuspension(QuorumNode node, String org, String status) {
+        org = getNetworkAdminOrg(org);
+        ExecStatusInfo execStatus = permissionService.approveOrgStatus(node, org, 1).blockingFirst();
+        assertThat(!execStatus.hasError());
+        waitForSomeSeconds(1);
+        assertThat(checkOrgStatusExists(node, org, status)).isTrue();
+    }
+
+    @Step("From <node> revoke suspension of org <org>, confirm that org status is <status>")
+    public void revokeSuspension(QuorumNode node, String org, String status) {
+        org = getNetworkAdminOrg(org);
+        ExecStatusInfo execStatus = permissionService.updateOrgStatus(node, org, 2).blockingFirst();
+        assertThat(!execStatus.hasError());
+        waitForSomeSeconds(1);
+        assertThat(checkOrgStatusExists(node, org, status)).isTrue();
+    }
+
+    @Step("From <node> approve org <org>'s suspension revoke, confirm that org status is <status>")
+    public void approveSuspensionRevoke(QuorumNode node, String org, String status) {
+        org = getNetworkAdminOrg(org);
+        ExecStatusInfo execStatus = permissionService.approveOrgStatus(node, org, 2).blockingFirst();
+        assertThat(!execStatus.hasError());
+        waitForSomeSeconds(1);
+        assertThat(checkOrgStatusExists(node, org, status)).isTrue();
+    }
+
+    @Step("Deploy <contractName> smart contract with initial value <initialValue> from a default account in <node> fails with error <error>")
+    public void setupStorecAsPublicDependentContract(String contractName, int initialValue, QuorumNode node, String error) {
+        Contract c = null;
+        String exMsg = "";
+        try {
+            c = contractService.createGenericStoreContract(node, contractName, initialValue, null, false, null).blockingFirst();
+
+        } catch (Exception ex) {
+            exMsg = ex.getMessage();
+            logger.debug("deploy contract failed " + ex.getMessage());
+        }
+        assertThat(c).isNull();
+        assertThat(exMsg.contains(error)).isTrue();
+    }
+
 }

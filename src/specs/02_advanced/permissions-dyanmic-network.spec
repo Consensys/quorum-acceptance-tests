@@ -29,3 +29,12 @@
 * Write "permissionsConfig" to the data directory of "Node4"
 * Restart network "default"
 * Validate that "ORG1" is approved, has "Node4" linked and has role "ORGADMIN"
+* From "Node1" suspend org "ORG1", confirm that org status is "PendingSuspension"
+* From "Node1" approve org "ORG1"'s suspension, confirm that org status is "Suspended"
+* Deploy "storec" smart contract with initial value "5" from a default account in "Node4" fails with error "read only account. cannot transact"
+* From "Node1" revoke suspension of org "ORG1", confirm that org status is "RevokeSuspension"
+* From "Node1" approve org "ORG1"'s suspension revoke, confirm that org status is "Approved"
+* Deploy "storec" smart contract with initial value "5" from a default account in "Node4", named this contract as "c1"
+* "c1"'s "getc" function execution in "Node4" returns "5"
+* "c1"'s "setc" function execution in "Node4" with value "8"
+
