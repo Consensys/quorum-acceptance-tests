@@ -78,7 +78,7 @@ public class Permissions extends AbstractSpecImplementation {
     public Permissions() {
     }
 
-    @Step("Deploy <contractName> smart contract from a default account in <node>, name this contract as <contractNameKey>")
+    @Step("Deploy <contractName> smart contract setting default account of <node> as the guardian account, name this as <contractNameKey>")
     public void deployPermissionsContracts(String contractName, QuorumNetworkProperty.Node node, String contractNameKey) {
         Contract c = permissionContractService.createPermissionsGenericContracts(node, contractName, null).blockingFirst();
         logger.debug("{} contract address is:{}", contractName, c.getContractAddress());

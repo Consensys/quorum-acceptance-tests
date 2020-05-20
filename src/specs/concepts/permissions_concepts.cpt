@@ -1,9 +1,31 @@
+# Deploy permissions model contracts from <node>
+* Deploy "PermissionsUpgradable" smart contract setting default account of "Node1" as the guardian account, name this as "upgradable"
+* From <node> deploy "AccountManager" contract passing "upgradable" address, name it "accountmgr"
+* From <node> deploy "OrgManager" contract passing "upgradable" address, name it "orgmgr"
+* From <node> deploy "RoleManager" contract passing "upgradable" address, name it "rolemgr"
+* From <node> deploy "NodeManager" contract passing "upgradable" address, name it "nodemgr"
+* From <node> deploy "VoterManager" contract passing "upgradable" address, name it "votermgr"
+* From <node> deploy "PermissionsInterface" contract passing "upgradable" address, name it "interface"
+* From <node> deploy implementation contract passing addresses of "upgradable", "orgmgr", "rolemgr", "accountmgr", "votermgr", "nodemgr". Name this as "implementation"
+* From <node> execute permissions init on "upgradable" passing "interface" and "implementation" contract addresses
+
+# Create permissions config file and write the file to <nodes>
+* Create permissions-config.json object using the contract addersses of "upgradable", "interface", "implementation", "orgmgr", "rolemgr",  "accountmgr", "votermgr", "nodemgr". Name it "permissionsConfig"
+* Update "permissionsConfig". Add "Node1"'s default account to accounts in config
+* Update "permissionsConfig". Add "NWADMIN" as network admin org, "NWADMIN" network admin role, "ORGADMIN" as the org admin role
+* Update "permissionsConfig". Set suborg depth as "4", suborg breadth as "4"
+* Write "permissionsConfig" to the data directory of <nodes>
+
 # Restart network <networkName>
 * Stop all nodes in the network <networkName>
 * Start all nodes in the network <networkName>
 
-# Validate that <org> is approved, has <node> linked and has role <role>
+# Validate that org <org> is approved, has <node> linked and has role <role>
 * Get network details from <node>
 * Check org <org> is "Approved" with no parent, level "1" and empty sub orgs
 * Check org <org> has <node> with status "Approved"
 * Check org <org> has role <role> with access "FullAccess" and permission to vote and is active
+
+# From <node> propose and approve new org <org> with <proposedNode>'s enode id and <accountName> account
+* From <node> propose new org <org> into the network with <proposedNode>'s enode id and <accountName> account
+* From <node> approve new org <org> into the network with <proposedNode>'s enode id and <accountName> account

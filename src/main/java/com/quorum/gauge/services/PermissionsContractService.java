@@ -100,8 +100,7 @@ public class PermissionsContractService extends AbstractService {
         return PermissionsImplementation.deploy(
             client,
             transactionManager,
-            BigInteger.valueOf(0),
-            DEFAULT_PERMISSIONS_GAS_LIMIT,
+            getPermContractGasProvider(),
             upgrAddr,
             orgMgrAddr,
             roleMgrAddr,
@@ -119,8 +118,7 @@ public class PermissionsContractService extends AbstractService {
         return PermissionsUpgradable.load(
             upgrAddr,
             client, transactionManager,
-            BigInteger.valueOf(0),
-            DEFAULT_GAS_LIMIT
+            getPermContractGasProvider()
             ).init(interfaceAddr, implAddress).flowable().toObservable();
     }
 
