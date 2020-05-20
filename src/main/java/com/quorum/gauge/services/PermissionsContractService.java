@@ -1,6 +1,6 @@
 package com.quorum.gauge.services;
 
-import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.sol.*;
 import io.reactivex.Observable;
 import org.slf4j.Logger;
@@ -21,7 +21,7 @@ public class PermissionsContractService extends AbstractService {
     @Autowired
     AccountService accountService;
 
-    private org.web3j.tx.ClientTransactionManager getTxManager(QuorumNode node, Web3j client){
+    private org.web3j.tx.ClientTransactionManager getTxManager(QuorumNetworkProperty.Node node, Web3j client){
         String fromAddress = accountService.getDefaultAccountAddress(node).blockingFirst();
         return new org.web3j.tx.ClientTransactionManager(
             client,
@@ -30,7 +30,7 @@ public class PermissionsContractService extends AbstractService {
             DEFAULT_SLEEP_DURATION_IN_MILLIS);
     }
 
-    public Observable<? extends Contract> createPermissionsGenericContracts(QuorumNode node, String contractName, String upgrContractAddress) {
+    public Observable<? extends Contract> createPermissionsGenericContracts(QuorumNetworkProperty.Node node, String contractName, String upgrContractAddress) {
         Web3j client = connectionFactory().getWeb3jConnection(node);
 
         TransactionManager transactionManager = getTxManager(node, client);
@@ -42,56 +42,49 @@ public class PermissionsContractService extends AbstractService {
                 return AccountManager.deploy(
                     client,
                     transactionManager,
-                    BigInteger.valueOf(0),
-                    DEFAULT_PERMISSIONS_GAS_LIMIT,
+                    getPermContractGasProvider(),
                     upgrContractAddress).flowable().toObservable();
 
             case "orgmanager":
                 return OrgManager.deploy(
                     client,
                     transactionManager,
-                    BigInteger.valueOf(0),
-                    DEFAULT_PERMISSIONS_GAS_LIMIT,
+                    getPermContractGasProvider(),
                     upgrContractAddress).flowable().toObservable();
 
             case "nodemanager":
                 return NodeManager.deploy(
                     client,
                     transactionManager,
-                    BigInteger.valueOf(0),
-                    DEFAULT_PERMISSIONS_GAS_LIMIT,
+                    getPermContractGasProvider(),
                     upgrContractAddress).flowable().toObservable();
 
             case "rolemanager":
                 return RoleManager.deploy(
                     client,
                     transactionManager,
-                    BigInteger.valueOf(0),
-                    DEFAULT_PERMISSIONS_GAS_LIMIT,
+                    getPermContractGasProvider(),
                     upgrContractAddress).flowable().toObservable();
 
             case "votermanager":
                 return VoterManager.deploy(
                     client,
                     transactionManager,
-                    BigInteger.valueOf(0),
-                    DEFAULT_PERMISSIONS_GAS_LIMIT,
+                    getPermContractGasProvider(),
                     upgrContractAddress).flowable().toObservable();
 
             case "permissionsupgradable":
                 return PermissionsUpgradable.deploy(
                     client,
                     transactionManager,
-                    BigInteger.valueOf(0),
-                    DEFAULT_PERMISSIONS_GAS_LIMIT,
+                    getPermContractGasProvider(),
                     accountService.getDefaultAccountAddress(node).blockingFirst()).flowable().toObservable();
 
             case "permissionsinterface":
                 return PermissionsInterface.deploy(
                     client,
                     transactionManager,
-                    BigInteger.valueOf(0),
-                    DEFAULT_PERMISSIONS_GAS_LIMIT,
+                    getPermContractGasProvider(),
                     upgrContractAddress).flowable().toObservable();
 
             default:
@@ -100,7 +93,7 @@ public class PermissionsContractService extends AbstractService {
 
     }
 
-    public Observable<? extends Contract> createPermissionsImplementationContract(QuorumNode node, String upgrAddr, String orgMgrAddr, String roleMgrAddr, String acctMgrAddr, String voterMgrAddr, String nodeMgrAddr) {
+    public Observable<? extends Contract> createPermissionsImplementationContract(QuorumNetworkProperty.Node node, String upgrAddr, String orgMgrAddr, String roleMgrAddr, String acctMgrAddr, String voterMgrAddr, String nodeMgrAddr) {
         Web3j client = connectionFactory().getWeb3jConnection(node);
         TransactionManager transactionManager = getTxManager(node, client);
 
@@ -119,7 +112,7 @@ public class PermissionsContractService extends AbstractService {
 
     }
 
-    public Observable<TransactionReceipt> executeNetworkInit(QuorumNode node, String upgrAddr, String interfaceAddr, String implAddress) {
+    public Observable<TransactionReceipt> executeNetworkInit(QuorumNetworkProperty.Node node, String upgrAddr, String interfaceAddr, String implAddress) {
         Web3j client = connectionFactory().getWeb3jConnection(node);
         TransactionManager transactionManager = getTxManager(node, client);
 

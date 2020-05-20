@@ -22,6 +22,7 @@ package com.quorum.gauge.services;
 import com.quorum.gauge.common.Context;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.web3j.tx.gas.ContractGasProvider;
 
 import java.math.BigInteger;
 
@@ -31,6 +32,8 @@ public abstract class AbstractService {
     BigInteger DEFAULT_PERMISSIONS_GAS_LIMIT = new BigInteger("8C6180", 16);
     int DEFAULT_SLEEP_DURATION_IN_MILLIS = 2000;
     int DEFAULT_MAX_RETRY = 30;
+
+    private ContractGasProvider permContractGasProvider = new PermissionContractGasProvider();
 
     @Autowired
     private QuorumNodeConnectionFactory connectionFactory;
@@ -50,5 +53,13 @@ public abstract class AbstractService {
             return networkProperty;
         }
         return Context.getNetworkProperty();
+    }
+
+    public ContractGasProvider getPermContractGasProvider() {
+        return permContractGasProvider;
+    }
+
+    public void setPermContractGasProvider(PermissionContractGasProvider permContractGasProvider) {
+        this.permContractGasProvider = permContractGasProvider;
     }
 }

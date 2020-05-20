@@ -6,7 +6,6 @@ import com.quorum.gauge.common.GethArgBuilder;
 import com.quorum.gauge.common.NodeType;
 import com.quorum.gauge.common.PermissionsConfig;
 import com.quorum.gauge.common.QuorumNetworkProperty;
-import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.services.InfrastructureService;
 import com.quorum.gauge.services.RaftService;
@@ -80,7 +79,7 @@ public class Permissions extends AbstractSpecImplementation {
     }
 
     @Step("Deploy <contractName> smart contract from a default account in <node>, name this contract as <contractNameKey>")
-    public void deployPermissionsContracts(String contractName, QuorumNode node, String contractNameKey) {
+    public void deployPermissionsContracts(String contractName, QuorumNetworkProperty.Node node, String contractNameKey) {
         Contract c = permissionContractService.createPermissionsGenericContracts(node, contractName, null).blockingFirst();
         logger.debug("{} contract address is:{}", contractName, c.getContractAddress());
 
@@ -89,7 +88,7 @@ public class Permissions extends AbstractSpecImplementation {
     }
 
     @Step("From <node> deploy <contractName> contract passing <upgrContractKey> address, name it <contractNameKey>")
-    public void deployPermissionsGenericContracts(QuorumNode node, String contractName, String upgrContractKey, String contractNameKey) {
+    public void deployPermissionsGenericContracts(QuorumNetworkProperty.Node node, String contractName, String upgrContractKey, String contractNameKey) {
         // get the upgradable contract address from store, pass it to deploy call
         String upgrContractAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), upgrContractKey, Contract.class).getContractAddress();
         logger.debug("upgradable contract address is:{}", upgrContractAddress);
@@ -101,7 +100,7 @@ public class Permissions extends AbstractSpecImplementation {
     }
 
     @Step("From <node> deploy implementation contract passing addresses of <upgrContractKey>, <orgContractKey>, <roleContractKey>, <accountContractKey>, <voterContractKey>, <nodeContractKey>. Name this as <contractNameKey>")
-    public void deployPermissionsImpementation(QuorumNode node, String upgrContractKey, String orgContractKey, String roleContractKey, String accountContractKey, String voterContractKey, String nodeContractKey, String contractNameKey) {
+    public void deployPermissionsImpementation(QuorumNetworkProperty.Node node, String upgrContractKey, String orgContractKey, String roleContractKey, String accountContractKey, String voterContractKey, String nodeContractKey, String contractNameKey) {
         // get the address of all deployed contracts
         String upgrContractAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), upgrContractKey, Contract.class).getContractAddress();
         String orgMgrAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), orgContractKey, Contract.class).getContractAddress();
@@ -141,7 +140,7 @@ public class Permissions extends AbstractSpecImplementation {
     }
 
     @Step("Update <objectName>. Add <node>'s default account to accounts in config")
-    public void addAccountToConfig(String objectName, QuorumNode node) {
+    public void addAccountToConfig(String objectName, QuorumNetworkProperty.Node node) {
         PermissionsConfig permConfig = mustHaveValue(DataStoreFactory.getScenarioDataStore(), objectName, PermissionsConfig.class);
         logger.debug("perm config object is {}", permConfig.toString());
 
@@ -191,7 +190,7 @@ public class Permissions extends AbstractSpecImplementation {
     }
 
     @Step("From <node> execute permissions init on <upgrContractKey> passing <interfaceContractKey> and <implContractKey> contract addresses")
-    public void executePermInit(QuorumNode node, String upgrContractKey, String interfaceContractKey, String implContractKey) {
+    public void executePermInit(QuorumNetworkProperty.Node node, String upgrContractKey, String interfaceContractKey, String implContractKey) {
         String upgrContractAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), upgrContractKey, Contract.class).getContractAddress();
         String interfaceContractAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), interfaceContractKey, Contract.class).getContractAddress();
         String implContractAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), implContractKey, Contract.class).getContractAddress();
@@ -202,7 +201,7 @@ public class Permissions extends AbstractSpecImplementation {
     }
 
     @Step("Get network details from <node>")
-    public void getNetworkDetails(QuorumNode node) {
+    public void getNetworkDetails(QuorumNetworkProperty.Node node) {
         PermissionOrgList orgList = permissionService.getPermissionOrgList(node).blockingFirst();
         int c = 0;
         for (PermissionOrgInfo o : orgList.getPermissionOrgList()) {
@@ -306,14 +305,14 @@ public class Permissions extends AbstractSpecImplementation {
         return isPresent;
     }
 
-    public String getEnodeId(QuorumNode node) {
+    public String getEnodeId(QuorumNetworkProperty.Node node) {
         String enode = permissionService.NodeInfo(node);
         String enodeId = enode.substring(0, enode.indexOf("@")).substring("enode://".length());
         return enodeId;
     }
 
     @Step("Check org <org> has <node> with status <status>")
-    public void checkNodeExists(String org, QuorumNode node, String status) throws Exception {
+    public void checkNodeExists(String org, QuorumNetworkProperty.Node node, String status) throws Exception {
         org = getNetworkAdminOrg(org);
         String enodeId = getEnodeId(node);
         List<PermissionNodeInfo> permNodeList = (ArrayList<PermissionNodeInfo>) DataStoreFactory.getScenarioDataStore().get("permNodeList");
@@ -401,21 +400,21 @@ public class Permissions extends AbstractSpecImplementation {
     }
 
     @Step("Check <node>'s default account is from org <org> and has role <role> and is org admin and is active")
-    public void checkAccountExists3(QuorumNode node, String org, String role) throws Exception {
+    public void checkAccountExists3(QuorumNetworkProperty.Node node, String org, String role) throws Exception {
         String acct = accountService.getDefaultAccountAddress(node).blockingFirst();
         boolean isPresent = accountExists(acct, org, role, true);
         assertThat(isPresent).isTrue();
     }
 
     @Step("From <proposingNode> propose new org <orgId> into the network with <node>'s enode id and <accountKey> account")
-    public void proposeOrg(QuorumNode proposingNode, String orgId, QuorumNetworkProperty.Node node, String accountKey) {
+    public void proposeOrg(QuorumNetworkProperty.Node proposingNode, String orgId, QuorumNetworkProperty.Node node, String accountKey) {
         String acctId = node.getAccountAliases().get(accountKey);
         ExecStatusInfo execStatus = permissionService.addOrg(proposingNode, orgId, node.getEnodeUrl(), acctId).blockingFirst();
         assertThat(!execStatus.hasError());
     }
 
     @Step("From <proposingNode> approve new org <orgId> into the network with <node>'s enode id and <accountKey> account")
-    public void approveOrg(QuorumNode proposingNode, String orgId, QuorumNetworkProperty.Node node, String accountKey) {
+    public void approveOrg(QuorumNetworkProperty.Node proposingNode, String orgId, QuorumNetworkProperty.Node node, String accountKey) {
         String acctId = node.getAccountAliases().get(accountKey);
         ExecStatusInfo execStatus = permissionService.approveOrg(proposingNode, orgId, node.getEnodeUrl(), acctId).blockingFirst();
         assertThat(!execStatus.hasError());
@@ -440,7 +439,7 @@ public class Permissions extends AbstractSpecImplementation {
             .blockingSubscribe();
     }
 
-    private boolean checkOrgStatusExists(QuorumNode fromNode, String org, String status)  {
+    private boolean checkOrgStatusExists(QuorumNetworkProperty.Node fromNode, String org, String status)  {
         org = getNetworkAdminOrg(org);
         getNetworkDetails(fromNode);
         List<PermissionOrgInfo> orgList = (ArrayList<PermissionOrgInfo>) DataStoreFactory.getScenarioDataStore().get("permOrgList");
@@ -469,7 +468,7 @@ public class Permissions extends AbstractSpecImplementation {
     }
 
     @Step("From <node> suspend org <org>, confirm that org status is <status>")
-    public void suspendOrg(QuorumNode node, String org, String status) {
+    public void suspendOrg(QuorumNetworkProperty.Node node, String org, String status) {
         org = getNetworkAdminOrg(org);
         ExecStatusInfo execStatus = permissionService.updateOrgStatus(node, org, 1).blockingFirst();
         assertThat(!execStatus.hasError());
@@ -478,7 +477,7 @@ public class Permissions extends AbstractSpecImplementation {
     }
 
     @Step("From <node> approve org <org>'s suspension, confirm that org status is <status>")
-    public void approveSuspension(QuorumNode node, String org, String status) {
+    public void approveSuspension(QuorumNetworkProperty.Node node, String org, String status) {
         org = getNetworkAdminOrg(org);
         ExecStatusInfo execStatus = permissionService.approveOrgStatus(node, org, 1).blockingFirst();
         assertThat(!execStatus.hasError());
@@ -487,7 +486,7 @@ public class Permissions extends AbstractSpecImplementation {
     }
 
     @Step("From <node> revoke suspension of org <org>, confirm that org status is <status>")
-    public void revokeSuspension(QuorumNode node, String org, String status) {
+    public void revokeSuspension(QuorumNetworkProperty.Node node, String org, String status) {
         org = getNetworkAdminOrg(org);
         ExecStatusInfo execStatus = permissionService.updateOrgStatus(node, org, 2).blockingFirst();
         assertThat(!execStatus.hasError());
@@ -496,7 +495,7 @@ public class Permissions extends AbstractSpecImplementation {
     }
 
     @Step("From <node> approve org <org>'s suspension revoke, confirm that org status is <status>")
-    public void approveSuspensionRevoke(QuorumNode node, String org, String status) {
+    public void approveSuspensionRevoke(QuorumNetworkProperty.Node node, String org, String status) {
         org = getNetworkAdminOrg(org);
         ExecStatusInfo execStatus = permissionService.approveOrgStatus(node, org, 2).blockingFirst();
         assertThat(!execStatus.hasError());
@@ -505,7 +504,7 @@ public class Permissions extends AbstractSpecImplementation {
     }
 
     @Step("Deploy <contractName> smart contract with initial value <initialValue> from a default account in <node> fails with error <error>")
-    public void setupStorecAsPublicDependentContract(String contractName, int initialValue, QuorumNode node, String error) {
+    public void setupStorecAsPublicDependentContract(String contractName, int initialValue, QuorumNetworkProperty.Node node, String error) {
         Contract c = null;
         String exMsg = "";
         try {
@@ -519,7 +518,7 @@ public class Permissions extends AbstractSpecImplementation {
         assertThat(exMsg.contains(error)).isTrue();
     }
 
-    private String getFullEnode(String enode, QuorumNode node) {
+    private String getFullEnode(String enode, QuorumNetworkProperty.Node node) {
         List<PermissionNodeInfo> permNodeList = permissionService.getPermissionNodeList(node).blockingFirst().getPermissionNodeList();
         assertThat(permNodeList.size()).isNotEqualTo(0);
         int c = 0;
@@ -534,7 +533,7 @@ public class Permissions extends AbstractSpecImplementation {
     }
 
     @Step("From <fromNode> deactivate org <org>'s node <node>")
-    public void deactivateNode(QuorumNode fromNode, String org, QuorumNode node) {
+    public void deactivateNode(QuorumNetworkProperty.Node fromNode, String org, QuorumNetworkProperty.Node node) {
         org = getNetworkAdminOrg(org);
         String enodeId = getEnodeId(node);
         String fullEnodeId = getFullEnode(enodeId, node);
@@ -546,16 +545,16 @@ public class Permissions extends AbstractSpecImplementation {
     }
 
     @Step("Save current blocknumber from <node>")
-    public void saveCurrentBlockNumber(QuorumNode node) {
+    public void saveCurrentBlockNumber(QuorumNetworkProperty.Node node) {
         EthBlockNumber blkNumber = utilService.getCurrentBlockNumberFrom(node).blockingFirst();
-        DataStoreFactory.getScenarioDataStore().put(node.name() + "blockNumber", blkNumber);
-        logger.debug("current block number from {} is {}", node.name(), blkNumber.getBlockNumber().intValue());
+        DataStoreFactory.getScenarioDataStore().put(node.getName() + "blockNumber", blkNumber);
+        logger.debug("current block number from {} is {}", node.getName(), blkNumber.getBlockNumber().intValue());
         assertThat(blkNumber.getBlockNumber().intValue()).isNotEqualTo(0);
     }
 
     @Step("Ensure current blocknumber from <node> has not changed")
-    public void checkBlockNumberHasNotChanged(QuorumNode node) {
-        EthBlockNumber oldBlkNumber = (EthBlockNumber) DataStoreFactory.getScenarioDataStore().get(node.name() + "blockNumber");
+    public void checkBlockNumberHasNotChanged(QuorumNetworkProperty.Node node) {
+        EthBlockNumber oldBlkNumber = (EthBlockNumber) DataStoreFactory.getScenarioDataStore().get(node.getName() + "blockNumber");
         EthBlockNumber newBlkNumber = utilService.getCurrentBlockNumberFrom(node).blockingFirst();
         logger.debug("block number old:{} new:{}", oldBlkNumber.getBlockNumber().intValue(), newBlkNumber.getBlockNumber().intValue());
         assertThat(newBlkNumber.getBlockNumber().intValue()).isEqualTo(oldBlkNumber.getBlockNumber().intValue());

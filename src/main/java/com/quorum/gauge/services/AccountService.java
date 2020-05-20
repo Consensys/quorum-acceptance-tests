@@ -19,6 +19,7 @@
 
 package com.quorum.gauge.services;
 
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import io.reactivex.Observable;
 import org.springframework.stereotype.Service;
@@ -39,6 +40,10 @@ public class AccountService extends AbstractService {
 
     public Observable<String> getDefaultAccountAddress(QuorumNode node) {
         return Observable.just(getAccountAddresses(node).blockingFirst());
+    }
+
+    public Observable<String> getDefaultAccountAddress(QuorumNetworkProperty.Node node) {
+        return Observable.just(getAccountAddresses(QuorumNode.valueOf(node.getName())).blockingFirst());
     }
 
     public Observable<EthGetBalance> getDefaultAccountBalance(QuorumNode node) {

@@ -1,6 +1,6 @@
 package com.quorum.gauge.services;
 
-import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.ext.NodeInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,7 @@ public class PermissionService extends AbstractService {
     @Autowired
     AccountService accountService;
 
-    public String NodeInfo(QuorumNode node) {
+    public String NodeInfo(QuorumNetworkProperty.Node node) {
 
         Request<?, NodeInfo> nodeInfoRequest = new Request<>(
                 "admin_nodeInfo",
@@ -30,89 +30,89 @@ public class PermissionService extends AbstractService {
         return nodeInfo.getEnode();
     }
 
-    public Observable<PermissionAccountList> getPermissionAccountList(QuorumNode node) {
+    public Observable<PermissionAccountList> getPermissionAccountList(QuorumNetworkProperty.Node node) {
         Quorum client = connectionFactory().getConnection(node);
         return client.quorumPermissionGetAccountList().flowable().toObservable();
     }
 
-    public Observable<PermissionNodeList> getPermissionNodeList(QuorumNode node) {
+    public Observable<PermissionNodeList> getPermissionNodeList(QuorumNetworkProperty.Node node) {
         Quorum client = connectionFactory().getConnection(node);
         return client.quorumPermissionGetNodeList().flowable().toObservable();
     }
 
-    public Observable<PermissionRoleList> getPermissionRoleList(QuorumNode node) {
+    public Observable<PermissionRoleList> getPermissionRoleList(QuorumNetworkProperty.Node node) {
         Quorum client = connectionFactory().getConnection(node);
         return client.quorumPermissionGetRoleList().flowable().toObservable();
     }
 
-    public Observable<PermissionOrgList> getPermissionOrgList(QuorumNode node) {
+    public Observable<PermissionOrgList> getPermissionOrgList(QuorumNetworkProperty.Node node) {
         Quorum client = connectionFactory().getConnection(node);
         return client.quorumPermissionGetOrgList().flowable().toObservable();
     }
 
 
-    public Observable<ExecStatusInfo> addOrg(QuorumNode node, String org, String enode, String address) {
+    public Observable<ExecStatusInfo> addOrg(QuorumNetworkProperty.Node node, String org, String enode, String address) {
         Quorum client = connectionFactory().getConnection(node);
         String fromAccount = accountService.getDefaultAccountAddress(node).blockingFirst();
         return client.quorumPermissionAddOrg(org, enode, address, new PrivateTransaction(fromAccount, null, DEFAULT_GAS_LIMIT, null, BigInteger.ZERO, null, null, null)).flowable().toObservable();
 
     }
 
-    public Observable<ExecStatusInfo> assignAccountRole(QuorumNode node, String address, String org, String role) {
+    public Observable<ExecStatusInfo> assignAccountRole(QuorumNetworkProperty.Node node, String address, String org, String role) {
         Quorum client = connectionFactory().getConnection(node);
         String fromAccount = accountService.getDefaultAccountAddress(node).blockingFirst();
         return client.quorumPermissionAddAccountToOrg(address, org, role, new PrivateTransaction(fromAccount, null, DEFAULT_GAS_LIMIT, null, BigInteger.ZERO, null, null, null)).flowable().toObservable();
 
     }
 
-    public Observable<ExecStatusInfo> updateOrgStatus(QuorumNode node, String org, int status) {
+    public Observable<ExecStatusInfo> updateOrgStatus(QuorumNetworkProperty.Node node, String org, int status) {
         Quorum client = connectionFactory().getConnection(node);
         String fromAccount = accountService.getDefaultAccountAddress(node).blockingFirst();
         return client.quorumPermissionUpdateOrgStatus(org, status, new PrivateTransaction(fromAccount, null, DEFAULT_GAS_LIMIT, null, BigInteger.ZERO, null, null, null)).flowable().toObservable();
     }
 
-    public Observable<ExecStatusInfo> approveOrgStatus(QuorumNode node, String org, int status) {
+    public Observable<ExecStatusInfo> approveOrgStatus(QuorumNetworkProperty.Node node, String org, int status) {
         Quorum client = connectionFactory().getConnection(node);
         String fromAccount = accountService.getDefaultAccountAddress(node).blockingFirst();
         return client.quorumPermissionApproveOrgStatus(org, status, new PrivateTransaction(fromAccount, null, DEFAULT_GAS_LIMIT, null, BigInteger.ZERO, null, null, null)).flowable().toObservable();
     }
 
-    public Observable<ExecStatusInfo> addNodeToOrg(QuorumNode node, String org, String enode) {
+    public Observable<ExecStatusInfo> addNodeToOrg(QuorumNetworkProperty.Node node, String org, String enode) {
         Quorum client = connectionFactory().getConnection(node);
         String fromAccount = accountService.getDefaultAccountAddress(node).blockingFirst();
         return client.quorumPermissionAddNode(org, enode, new PrivateTransaction(fromAccount, null, DEFAULT_GAS_LIMIT, null, BigInteger.ZERO, null, null, null)).flowable().toObservable();
 
     }
 
-    public Observable<ExecStatusInfo> updateNode(QuorumNode node, String org, String enode, int status) {
+    public Observable<ExecStatusInfo> updateNode(QuorumNetworkProperty.Node node, String org, String enode, int status) {
         Quorum client = connectionFactory().getConnection(node);
         String fromAccount = accountService.getDefaultAccountAddress(node).blockingFirst();
         return client.quorumPermissionUpdateNodeStatus(org, enode, status, new PrivateTransaction(fromAccount, null, DEFAULT_GAS_LIMIT, null, BigInteger.ZERO, null, null, null)).flowable().toObservable();
 
     }
 
-    public Observable<ExecStatusInfo> addNewRole(QuorumNode node, String org, String role, int access, boolean isVoter, boolean isAdmin) {
+    public Observable<ExecStatusInfo> addNewRole(QuorumNetworkProperty.Node node, String org, String role, int access, boolean isVoter, boolean isAdmin) {
         Quorum client = connectionFactory().getConnection(node);
         String fromAccount = accountService.getDefaultAccountAddress(node).blockingFirst();
         return client.quorumPermissionAddNewRole(org, role, access, isVoter, isAdmin, new PrivateTransaction(fromAccount, null, DEFAULT_GAS_LIMIT, null, BigInteger.ZERO, null, null, null)).flowable().toObservable();
 
     }
 
-    public Observable<ExecStatusInfo> removeRole(QuorumNode node, String org, String role) {
+    public Observable<ExecStatusInfo> removeRole(QuorumNetworkProperty.Node node, String org, String role) {
         Quorum client = connectionFactory().getConnection(node);
         String fromAccount = accountService.getDefaultAccountAddress(node).blockingFirst();
         return client.quorumPermissionRemoveRole(org, role, new PrivateTransaction(fromAccount, null, DEFAULT_GAS_LIMIT, null, BigInteger.ZERO, null, null, null)).flowable().toObservable();
 
     }
 
-    public Observable<ExecStatusInfo> addSubOrg(QuorumNode node, String porg, String sorg, String enode) {
+    public Observable<ExecStatusInfo> addSubOrg(QuorumNetworkProperty.Node node, String porg, String sorg, String enode) {
         Quorum client = connectionFactory().getConnection(node);
         String fromAccount = accountService.getDefaultAccountAddress(node).blockingFirst();
         return client.quorumPermissionAddSubOrg(porg, sorg, enode, new PrivateTransaction(fromAccount, null, DEFAULT_GAS_LIMIT, null, BigInteger.ZERO, null, null, null)).flowable().toObservable();
 
     }
 
-    public Observable<ExecStatusInfo> approveOrg(QuorumNode node, String org, String enode, String address) {
+    public Observable<ExecStatusInfo> approveOrg(QuorumNetworkProperty.Node node, String org, String enode, String address) {
         Quorum client = connectionFactory().getConnection(node);
         String fromAccount = accountService.getDefaultAccountAddress(node).blockingFirst();
         return client.quorumPermissionApproveOrg(org, enode, address, new PrivateTransaction(fromAccount, null, DEFAULT_GAS_LIMIT, null, BigInteger.ZERO, null, null, null)).flowable().toObservable();
