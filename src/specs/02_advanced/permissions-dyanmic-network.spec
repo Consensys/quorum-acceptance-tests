@@ -5,6 +5,7 @@
 ## Permissions basic testing
     Tags: post-condition/datadir-cleanup, post-condition/network-cleanup
 
+
 * Start a "permissioned" Quorum Network, named it "default", consisting of "Node1,Node2,Node3" with "full" `gcmode`
 * Deploy permissions model contracts from "Node1"
 * Create permissions config file and write the file to "Node1,Node2,Node3"
@@ -14,8 +15,9 @@
 * Validate that org "NWADMIN" is approved, has "Node3" linked and has role "NWADMIN"
 * Check "Node1"'s default account is from org "NWADMIN" and has role "NWADMIN" and is org admin and is active
 
-## Permission dyanmic node addition scenario
+## Permission with new org propose and approval
     Tags: post-condition/datadir-cleanup, post-condition/network-cleanup
+
 
 * Start a "permissioned" Quorum Network, named it "default", consisting of "Node1,Node2,Node3" with "full" `gcmode`
 * Deploy permissions model contracts from "Node1"
@@ -55,6 +57,8 @@
 
 ## Permissioned network deactivate a node and ensure that blocks are not syncing
     Tags: post-condition/datadir-cleanup, post-condition/network-cleanup
+
+
 * Start a "permissioned" Quorum Network, named it "default", consisting of "Node1,Node2,Node3" with "full" `gcmode`
 * Deploy permissions model contracts from "Node1"
 * Create permissions config file and write the file to "Node1,Node2,Node3"
