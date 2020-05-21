@@ -19,6 +19,7 @@
 
 package com.quorum.gauge.services;
 
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNetworkProperty.Node;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.ext.EthSendTransactionAsync;
@@ -226,7 +227,7 @@ public class ContractService extends AbstractService {
         }
     }
 
-    public Observable<TransactionReceipt> setGenericStoreContractSetValue(QuorumNode node, String contractAddress, String contractName, String methodName, int value, boolean isPrivate, QuorumNode target) {
+    public Observable<TransactionReceipt> setGenericStoreContractSetValue(QuorumNetworkProperty.Node node, String contractAddress, String contractName, String methodName, int value, boolean isPrivate, QuorumNode target) {
         Quorum client = connectionFactory().getConnection(node);
 
         String fromAddress = accountService.getDefaultAccountAddress(node).blockingFirst();
@@ -297,7 +298,7 @@ public class ContractService extends AbstractService {
         }
     }
 
-    public Observable<? extends Contract> createGenericStoreContract(QuorumNode node, String contractName, int initalValue, String dpContractAddress, boolean isPrivate, QuorumNode target) {
+    public Observable<? extends Contract> createGenericStoreContract(QuorumNetworkProperty.Node node, String contractName, int initalValue, String dpContractAddress, boolean isPrivate, QuorumNode target) {
         Quorum client = connectionFactory().getConnection(node);
 
         String fromAddress = accountService.getDefaultAccountAddress(node).blockingFirst();

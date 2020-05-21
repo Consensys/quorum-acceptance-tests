@@ -67,6 +67,11 @@ public class BlockSynchronization extends AbstractSpecImplementation {
     @Autowired
     private IstanbulService istanbulService;
 
+    @Step("Start a <networkType> Quorum Network, named it <id>, consisting of <nodes>")
+    public void startNetwork(String networkType, String id, List<Node> nodes) {
+        startNetwork(networkType, id, nodes, null);
+    }
+
     @Step("Start a <networkType> Quorum Network, named it <id>, consisting of <nodes> with <gcmode> `gcmode`")
     public void startNetwork(String networkType, String id, List<Node> nodes, String gcmode) {
         GethArgBuilder additionalGethArgs = GethArgBuilder.newBuilder()
