@@ -46,14 +46,14 @@ public class AccountService extends AbstractService {
         if (qnode != null) {
             return getDefaultAccountAddress(qnode);
         } else {
-            return getAccountAddresses(node).take(1);
+            return getAccountAddresses(node).firstOrError().toObservable();
         }
     }
 
     public Observable<String> getDefaultAccountAddress(QuorumNetworkProperty.Node node) {
         Map<String, String> accountAliases = node.getAccountAliases();
         if (CollectionUtils.isEmpty(accountAliases) || !accountAliases.containsKey("Default")) {
-            return getDefaultAccountAddress(QuorumNode.valueOf(node.getName()));
+            return getAccountAddresses(QuorumNode.valueOf(node.getName())).firstOrError().toObservable();
         } else {
             return Observable.just(accountAliases.get("Default"));
         }
