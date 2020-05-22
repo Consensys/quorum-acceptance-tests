@@ -196,6 +196,7 @@ public class QuorumNetworkProperty {
         private String name;
         private String privacyAddress;
         private Map<String, String> privacyAddressAliases = new LinkedHashMap<>();
+        private Map<String, String> accountAliases = new LinkedHashMap<>();
         private String url;
         private String thirdPartyUrl;
         private String istanbulValidatorId;
@@ -270,6 +271,14 @@ public class QuorumNetworkProperty {
 
         public void setName(String name) {
             this.name = name;
+        }
+
+        public Map<String, String> getAccountAliases() {
+            return accountAliases;
+        }
+
+        public void setAccountAliases(Map<String, String> accountAliases) {
+            this.accountAliases = accountAliases;
         }
     }
 

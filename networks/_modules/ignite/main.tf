@@ -53,7 +53,7 @@ quorum:
       enode-url: ${local.enode_urls[i]}
       account-aliases:
 %{for idx, k in local.named_accounts_alloc[i]~}
-        ${k}: ${element(quorum_bootstrap_keystore.accountkeys-generator[i].account.*.address, idx)}
+        ${k}: "${element(quorum_bootstrap_keystore.accountkeys-generator[i].account.*.address, idx)}"
 %{endfor~}
       privacy-address-aliases:
 %{for k in local.tm_named_keys_alloc[i]~}
