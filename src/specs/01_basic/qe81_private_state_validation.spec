@@ -1,6 +1,6 @@
 # Support Private State Validation in a private smart contract
 
- Tags: basic, privacy, privacy-enhancement, private-state-validation, qe81
+ Tags: privacy, private-state-validation, privacy-enhancements, qe81
 
 For simplicity, Private State Validation is abbreviated to PSV through out the specification.
 

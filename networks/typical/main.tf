@@ -35,7 +35,7 @@ module "helper" {
   }
   tessera = {
     container = {
-      image = { name = "quorumengineering/tessera:latest", local = false }
+      image = var.tessera_docker_image
       port  = { thirdparty = 9080, p2p = 9000 }
     }
     host = {

@@ -86,6 +86,23 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
     }
 
+    @Step("Deploying a <privacyFlags> simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target> fails with message <failureMessage>")
+    public void setupContractFailsWithMessage(String privacyFlags, int initialValue, QuorumNode source, QuorumNode target, String failureMessage) {
+        saveCurrentBlockNumber();
+        logger.debug("Setting up contract from {} to {}", source, target);
+        try {
+            contractService.createSimpleContract(
+                initialValue,
+                source,
+                Arrays.asList(target),
+                AbstractService.DEFAULT_GAS_LIMIT,
+                Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())
+            ).blockingFirst();
+        } catch (Exception txe){
+            assertThat(txe).hasMessageContaining(failureMessage);
+        }
+    }
+
     @Step("Transaction Hash is returned for <contractName>")
     public void verifyTransactionHash(String contractName) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);

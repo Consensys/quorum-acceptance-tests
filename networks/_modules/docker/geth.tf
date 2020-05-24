@@ -98,6 +98,8 @@ EOF
     content    = <<EOF
 #!/bin/sh
 
+geth --datadir ${local.container_geth_datadir} init ${local.container_geth_datadir}/genesis.json
+
 exec geth \
   --identity Node${count.index + 1} \
   --datadir ${local.container_geth_datadir} \

@@ -126,9 +126,13 @@ public class SmartContractDualState extends AbstractSpecImplementation {
         try {
             TransactionReceipt tr = contractService.setGenericStoreContractSetValue(node, c.getContractAddress(), contractName, methodName, value, true, target).blockingFirst();
             logger.debug("{} {} {}, txHash = {}", contractNameKey, contractName, methodName, tr.getTransactionHash());
+            assertThat(tr).isNull();
         } catch (Exception txe) {
             logger.debug("expected exception", txe);
-            assertThat(txe).hasMessageContaining("Error processing transaction request");
+            // TODO add an API to check if privacy enhancements are enabled and invoke it in order decide what
+            // error message to test for
+            assertThat(txe.getMessage().contains("Error processing transaction request")
+                || txe.getMessage().contains("Transaction has failed")).isTrue();
         }
     }
 

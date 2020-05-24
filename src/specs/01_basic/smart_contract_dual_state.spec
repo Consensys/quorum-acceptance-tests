@@ -154,6 +154,12 @@ contract storea {
 
  Tags: private-to-public
 
+  Depending on whether privacy enhancements are enabled the failures (a3.setc & a3.setb) occur:
+  = enabled - during the tx simulation thus the error is "Error processing transaction request".
+  = disabled - after the transaction is signed, submitted and minted (while the node is trying to append the latest
+    block) - thus the error is "Transaction has failed with status: 0x0. Gas used: 0. (not-enough gas?)"
+
+
 * Deploy "storec" smart contract with initial value "1" from a default account in "Node1", named this contract as "c3"
 * "c3"'s "getc" function execution in "Node1" returns "1"
 * Deploy "storeb" smart contract with contract "c3" initial value "1" from a default account in "Node1", named this contract as "b3"
