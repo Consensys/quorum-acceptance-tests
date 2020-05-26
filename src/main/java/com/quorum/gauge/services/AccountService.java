@@ -23,14 +23,15 @@ import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import io.reactivex.Observable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.Response;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class AccountService extends AbstractService {
@@ -45,7 +46,21 @@ public class AccountService extends AbstractService {
     }
 
     public Observable<String> getDefaultAccountAddress(QuorumNode node) {
-        return Observable.just(getAccountAddresses(node).blockingFirst());
+        QuorumNetworkProperty.Node qnode = networkProperty().getNode(node.name());
+        if (qnode != null) {
+            return getDefaultAccountAddress(qnode);
+        } else {
+            return getAccountAddresses(node).firstOrError().toObservable();
+        }
+    }
+
+    public Observable<String> getDefaultAccountAddress(QuorumNetworkProperty.Node node) {
+        Map<String, String> accountAliases = node.getAccountAliases();
+        if (CollectionUtils.isEmpty(accountAliases) || !accountAliases.containsKey("Default")) {
+            return getAccountAddresses(QuorumNode.valueOf(node.getName())).firstOrError().toObservable();
+        } else {
+            return Observable.just(accountAliases.get("Default"));
+        }
     }
 
     public Observable<EthGetBalance> getDefaultAccountBalance(QuorumNode node) {

@@ -1,0 +1,10 @@
+.github
+.git
+.gauge
+.editorconfig
+.gitignore
+**/.terraform
+**/terraform.d
+**/terraform.tfstate*
+*.iml
+target

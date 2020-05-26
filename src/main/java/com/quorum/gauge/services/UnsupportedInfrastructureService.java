@@ -69,6 +69,11 @@ public class UnsupportedInfrastructureService implements InfrastructureService, 
     }
 
     @Override
+    public Observable<String> writeFile(String resourceId, String filePath, String fileContent) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public Observable<Boolean> isGeth(String resourceId) {
         throw new UnsupportedOperationException();
     }
@@ -85,6 +90,11 @@ public class UnsupportedInfrastructureService implements InfrastructureService, 
 
     @Override
     public Observable<Boolean> startResource(String resourceId) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Observable<Boolean> restartResource(String resourceId) {
         throw new UnsupportedOperationException();
     }
 

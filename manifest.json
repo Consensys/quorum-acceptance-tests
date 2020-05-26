@@ -3,6 +3,7 @@
   "Plugins": [
     "html-report",
     "xml-report",
-    "spectacle"
+    "spectacle",
+    "screenshot"
   ]
 }

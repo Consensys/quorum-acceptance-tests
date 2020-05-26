@@ -1,3 +1,22 @@
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one
+  ~ or more contributor license agreements.  See the NOTICE file
+  ~ distributed with this work for additional information
+  ~ regarding copyright ownership.  The ASF licenses this file
+  ~ to you under the Apache License, Version 2.0 (the
+  ~ "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
@@ -17,18 +36,17 @@
         <java.version>11</java.version>
         <generated.sol.dir>${project.build.directory}/generate-sources/sol</generated.sol.dir>
 
-        <!-- only run non-advanced test cases. This property is from gauge-maven-plugin configuration -->
-        <tags>basic</tags>
-        <!-- Gauge environment being used -->
-        <env>run-local</env>
+        <!-- properties from gauge-maven-plugin configuration -->
+        <tags>basic</tags> <!-- which tests to run by default -->
+        <env>run-local</env> <!-- Gauge environment being used -->
 
         <!-- dependencies -->
-        <web3j-quorum.version>4.0.6</web3j-quorum.version>
+        <web3j-quorum.version>4.5.8</web3j-quorum.version>
+        <web3j.version>4.2.0</web3j.version>
         <commons-lang.version>2.6</commons-lang.version>
         <docker-java.version>3.2.1</docker-java.version>
         <apache-sshd.version>2.4.0</apache-sshd.version>
         <i2p-eddsa.version>0.3.0</i2p-eddsa.version>
-        <web3j.version>4.2.0</web3j.version>
         <gauge-java.version>0.7.4</gauge-java.version>
 
         <!-- plugins -->
@@ -116,6 +134,11 @@
                     <artifactId>maven-antrun-plugin</artifactId>
                     <version>3.0.0</version>
                 </plugin>
+                <plugin>
+                    <groupId>com.thoughtworks.gauge.maven</groupId>
+                    <artifactId>gauge-maven-plugin</artifactId>
+                    <version>${gauge-maven-plugin.version}</version>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -129,7 +152,6 @@
             <plugin>
                 <groupId>com.thoughtworks.gauge.maven</groupId>
                 <artifactId>gauge-maven-plugin</artifactId>
-                <version>${gauge-maven-plugin.version}</version>
                 <executions>
                     <execution>
                         <id>run-gauge</id>
@@ -140,7 +162,10 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <flags>--fail-safe</flags>
+                    <flags>
+                        <flag>--hide-suggestion</flag>
+                        <flag>--sort</flag>
+                    </flags>
                 </configuration>
             </plugin>
             <plugin>
@@ -171,7 +196,7 @@
                     <dependency>
                         <groupId>org.web3j</groupId>
                         <artifactId>codegen</artifactId>
-                        <version>${web3j.version}</version>
+                        <version>${web3j-maven-plugin.version}</version>
                     </dependency>
                 </dependencies>
             </plugin>
@@ -229,6 +254,7 @@
                 it can be aggregated at the end.
                 -->
                 <auto.jobid>local</auto.jobid>
+                <auto.outputDir>/tmp</auto.outputDir>
 
                 <!-- global configuration for exec plugin -->
                 <exec.daemonThreadJoinTimeout>15000</exec.daemonThreadJoinTimeout>
@@ -483,12 +509,16 @@
                                     <skip>${skipTests}</skip>
                                     <mainClass>com.quorum.gauge.TestSummaryMain</mainClass>
                                     <!-- This will produce failures.txt and summary.txt in the output folder -->
-                                    <commandlineArgs>${auto.jobid} ${project.build.directory}/gauge/reports/xml-report/result.xml</commandlineArgs>
+                                    <commandlineArgs>${auto.jobid} ${project.build.directory}/gauge/reports/xml-report/result.xml ${auto.outputDir}</commandlineArgs>
                                 </configuration>
                             </execution>
                         </executions>
                         <configuration>
                             <executable>terraform</executable>
+                            <environmentVariables>
+                                <TF_VAR_network_name>${env}</TF_VAR_network_name>
+                                <TF_VAR_output_dir>${auto.outputDir}</TF_VAR_output_dir>
+                            </environmentVariables>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -505,6 +535,35 @@
                 <infra.enabled>true</infra.enabled>
                 <infra.forceDestroy>false</infra.forceDestroy>
             </properties>
+        </profile>
+        <profile>
+            <id>outputDirForWindows</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                </os>
+            </activation>
+            <properties>
+                <auto.outputDir>${java.io.tmpdir}</auto.outputDir>
+            </properties>
+        </profile>
+        <profile>
+            <id>gaugeFailSafe</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.thoughtworks.gauge.maven</groupId>
+                        <artifactId>gauge-maven-plugin</artifactId>
+                        <configuration>
+                            <flags>
+                                <flag>--fail-safe</flag>
+                                <flag>--hide-suggestion</flag>
+                                <flag>--sort</flag>
+                            </flags>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 </project>

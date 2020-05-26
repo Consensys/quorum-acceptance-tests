@@ -57,6 +57,8 @@ public interface InfrastructureService {
      */
     Observable<String> modifyFile(String resourceId, String filePath, FileContentModifier modifier);
 
+    Observable<String> writeFile(String resourceId, String filePath, String fileContent);
+
     Observable<Boolean> isGeth(String resourceId);
 
     Observable<Boolean> deleteDatadirs(NetworkResources networkResources);
@@ -64,6 +66,8 @@ public interface InfrastructureService {
     Observable<Boolean> stopResource(String resourceId);
 
     Observable<Boolean> startResource(String resourceId);
+
+    Observable<Boolean> restartResource(String resourceId);
 
     Observable<Boolean> wait(String resourceId);
 

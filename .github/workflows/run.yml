@@ -14,7 +14,6 @@ on:
       - '.gitignore'
     branches:
       - 'master'
-      - 'gh-*'
       - 'dev-*'
 env:
   JAVA_VERSION: 11
@@ -45,15 +44,14 @@ jobs:
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
           - 'gcmode && block-sync && networks/template::raft-3plus1'
           - 'gcmode && block-sync && networks/template::istanbul-3plus1'
-          - 'learner-peer-management && networks/template::raft-3plus1'
+          - 'learner-peer-management || raftdnsenable && networks/template::raft-3plus1'
           - 'validator-management && networks/template::istanbul-3plus1'
           - 'basic || basic-raft || (advanced && raft) || networks/plugins::raft'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul'
           - 'migration && networks/template::raft-4nodes'
           - 'migration && networks/template::istanbul-4nodes'
+          - 'permissions && networks/template::raft-3plus1'
     runs-on: ubuntu-latest
-    env:
-      TEST_REPORT_DIR: target/gauge/reports/xml-report
     steps:
       - name: 'Checkout'
         uses: actions/checkout@v2
@@ -109,7 +107,7 @@ jobs:
           mkdir -p env/$gaugeEnv
           useAWS=true
           mvnArg="-Dinfra.target=${{ env.INFRA_FOLDER }}::${{ env.INFRA_PROFILE }}"
-          if [ "${{ env.AWS_ACCESS_KEY_ID }}" == "" ] || [ "${{ github.event_name }}" == "pull_request" ]; then
+          if [ "${{ env.AWS_ACCESS_KEY_ID }}" == "" ] || [ "${{ github.event_name }}" == "pull_request" ] || [ "${{ secrets.DISABLE_AWS }}" == "true" ]; then
             useAWS=false
             mvnArg=""
           fi
@@ -117,22 +115,23 @@ jobs:
           echo "::set-output name=gauge-env::$gaugeEnv"
           echo "::set-output name=useAWS::$useAWS"
           echo "::set-output name=mvnArg::$mvnArg"
-      - name: 'Run tests'
-        env:
-          TF_VAR_output_dir: ${{ runner.temp }}
+          echo "::set-output name=outputDir::${{ runner.temp }}"
+      - name: 'Run tests ${{ steps.setup.outputs.mvnArg }}'
           #MAVEN_OPTS: -Xmx512m -XX:MaxPermSize=128m
           #LOGGING_LEVEL_COM_QUORUM_GAUGE: DEBUG
         run: |
           mvn --no-transfer-progress -B \
               clean test \
+              -P gaugeFailSafe \
               -Pauto \
               -Dtags="${{ matrix.tag }}" ${{ steps.setup.outputs.mvnArg }} \
               -Denv=${{ steps.setup.outputs.gauge-env }} \
+              -Dauto.outputDir=${{ steps.setup.outputs.outputDir }} \
               -Dauto.jobid=${{ steps.keys.outputs.tag }}
       - name: 'Read test report'
         if: always()
         run: |
-          failuresRaw="$(cat ${{ env.TEST_REPORT_DIR }}/failures.txt | jq -r '.[] | @base64')"
+          failuresRaw="$(cat ${{ steps.setup.outputs.outputDir }}/failures.txt | jq -r '.[] | @base64')"
           SAVEIFS=$IFS   # Save current IFS
           IFS=$'\n'      # Change IFS to new line
           failures=($failuresRaw) # split to array
@@ -141,12 +140,12 @@ jobs:
           do
             row=${failures[$i]}
             _jq() {
-                    echo ${row} | base64 --decode | jq -r ${1}
+                echo ${row} | base64 --decode | jq -r ${1}
             }
             echo "$(_jq '.file'): $(_jq '.message')"
             echo "::error file=$(_jq '.file'),line=$(_jq '.line'),col=$(_jq '.col')::$(_jq '.message')"
           done
-          cat ${{ env.TEST_REPORT_DIR}}/summary.txt
+          cat ${{ steps.setup.outputs.outputDir}}/summary.txt
       - name: 'Display debug when failure happens'
         if: failure() && steps.setup.outputs.useAWS == 'true'
         working-directory: ${{ env.INFRA_FOLDER }}
@@ -154,10 +153,10 @@ jobs:
           terraform show
       - name: 'Upload test report'
         if: always()
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: testreport-${{ steps.keys.outputs.tag }}
-          path: ${{ env.TEST_REPORT_DIR }}
+          path: ${{ steps.setup.outputs.outputDir }}/*.* # only files not directory
       - name: 'Destroy infrastructure resources if ever created'
         if: always() && steps.setup.outputs.useAWS == 'true'
         # we don't care about containers running on the remote VM
@@ -183,15 +182,14 @@ jobs:
           gitref_path=${gitref_path#refs\/}             # for refs/pull/123/merge
           gitref_path=${gitref_path%/merge}           # for refs/pull/123/merge
           run_on="AWS"
-          if [ "${{ env.AWS_ACCESS_KEY_ID }}" == "" ]; then
+          if [ "${{ env.AWS_ACCESS_KEY_ID }}" == "" ] || [ "${{ secrets.DISABLE_AWS }}" == "true" ]; then
             run_on="GithubActionsVM"
             echo "::warning ::Tests run on Github Actions VM. Some tests may fail due to lack of hardware resources."
           fi
           echo "::set-output name=run-on::$run_on"
           echo "::set-output name=gitref-path::$gitref_path"
       - name: 'Download test reports'
-        # Use v2-preview so it downloads all the test reports artifacts
-        uses: actions/download-artifact@6b4fc099
+        uses: actions/download-artifact@v2
       - name: 'Aggregate test reports'
         id: report
         # all test reports are now downloaded and folders are prefixed with 'testreport'

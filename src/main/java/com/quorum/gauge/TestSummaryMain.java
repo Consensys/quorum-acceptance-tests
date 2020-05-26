@@ -50,13 +50,16 @@ import java.util.List;
  */
 public class TestSummaryMain {
     public static void main(String[] args) throws Exception {
-        if (args.length != 2) {
+        if (args.length < 2) {
             System.err.println("Missing args");
             System.exit(1);
         }
         String jobId = args[0];
         File xmlFile = new File(args[1]);
         File outputDir = xmlFile.getParentFile();
+        if (args.length > 2) {
+            outputDir = new File(args[2]);
+        }
         Summary aggregatedSpecSummary = new Summary();
         Summary aggregatedScenarioSummary = new Summary();
         if (xmlFile.exists()) {
@@ -68,20 +71,26 @@ public class TestSummaryMain {
                 Summary scenario = new Summary();
                 spec.addExecuted(1);
                 boolean hasFailedOrSkipped = false;
+                String s = "";
                 if (ts.failures + ts.errors > 0) {
                     spec.addFailed(1);
                     hasFailedOrSkipped = true;
+                    s = "FAILED";
                 }
                 if (ts.skipped > 0) {
                     hasFailedOrSkipped = true;
                     spec.addSkipped(1);
+                    s = "SKIPPED";
                 }
                 if (!hasFailedOrSkipped) {
                     spec.addPassed(1);
+                    s = "PASSED";
                 }
+                System.out.printf("\n%s - %s - took %.2fs\n", ts.getName(), s, ts.getTime());
                 if (ts.getTestcase() != null) { // some exception before test executed
                     scenario.addExecuted(ts.getTestcase().size());
                     for (TestCase tc : ts.getTestcase()) {
+                        s = "PASSED";
                         if (tc.getFailure() != null) {
                             FailureSummary fs = new FailureSummary();
                             fs.setFile(StringUtils.removeStart(ts.getSpec(), StringUtils.substringBefore(ts.getSpec(), "src/specs")));
@@ -90,10 +99,13 @@ public class TestSummaryMain {
                             fs.setMessage(String.format("Scenario: %s\nStep: %s", tc.getName(), tc.getFailure().getMessage()).replaceAll("\\n", "%0A"));
                             failures.add(fs);
                             scenario.addFailed(1);
+                            s = "FAILED";
                         }
                         if (tc.getSkipped() != null) {
                             scenario.addSkipped(1);
+                            s = "SKIPPED";
                         }
+                        System.out.printf("  %s - %s - took %.2fs\n", tc.getName(), s, tc.getTime());
                     }
                     scenario.addPassed(Math.max(0, scenario.getExecuted() - scenario.getFailed() - scenario.getSkipped()));
                 }
@@ -326,8 +338,11 @@ public class TestSummaryMain {
     private static class TestCase {
         @JacksonXmlProperty(isAttribute = true)
         private String name;
+        @JacksonXmlProperty(isAttribute = true)
+        private double time;
         private Failure failure;
         private Skipped skipped;
+
 
         public String getName() {
             return name;
@@ -351,6 +366,14 @@ public class TestSummaryMain {
 
         public void setSkipped(Skipped skipped) {
             this.skipped = skipped;
+        }
+
+        public double getTime() {
+            return time;
+        }
+
+        public void setTime(double time) {
+            this.time = time;
         }
     }
     @JsonIgnoreProperties(ignoreUnknown = true)
