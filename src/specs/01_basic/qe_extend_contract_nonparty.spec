@@ -85,7 +85,7 @@ contract C2 {
 }
 
 ```
-## Extend a contract to a new party - happy path
+## Extend a contract to a new party, new party accepts the extension
 
 * Deploy a "PartyProtection" C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract1Extension"
 * "contract1Extension" is deployed "successfully" in "Node2,Node4"
@@ -100,7 +100,7 @@ contract C2 {
 * Wait for "contract1Extension" to disappear from active extension in "Node1"
 * "contract1Extension"'s `get()` function execution in "Node1" returns "42"
 
-## Extend contract but new party doesn't accept
+## Extend contract to a new party, new party rejects the extension
 
 * Deploy a "PartyProtection" C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract2Extension"
 * "contract2Extension" is deployed "successfully" in "Node2,Node4"
@@ -116,7 +116,7 @@ contract C2 {
 * "contract2Extension"'s `get()` function execution in "Node1" returns "0"
 * "Node2" does not see "contract2Extension" listed in all active extensions
 
-## Voter votes to not extend
+## Extend contract to a new party, voter votes to not extend
 
 * Deploy a "PartyProtection" C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract3Extension"
 * "contract3Extension" is deployed "successfully" in "Node2,Node4"
@@ -132,7 +132,7 @@ contract C2 {
 * "contract3Extension"'s `get()` function execution in "Node1" returns "0"
 * "Node2" does not see "contract3Extension" listed in all active extensions
 
-## Creator cancels contract after creating extension request
+## Extend contract to a new party, creator cancels extension
 * Deploy a "PartyProtection" C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract4Extension"
 * "contract4Extension" is deployed "successfully" in "Node2,Node4"
 
@@ -194,7 +194,7 @@ contract C2 {
 * "contract6Extension"'s `get()` function execution in "Node4" returns "999"
 * "contract6Extension"'s `get()` function execution in "Node1" returns "0"
 
-## Re-extend an alraedy extende contract - state change should not happen
+## Re-extend an alraedy extended contract - state change should not happen
 * Deploy a "PartyProtection" C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract7Extension"
 * "contract7Extension" is deployed "successfully" in "Node2,Node4"
 * "contract7Extension"'s `get()` function execution in "Node2" returns "42"

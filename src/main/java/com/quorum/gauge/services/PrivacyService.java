@@ -33,12 +33,12 @@ public class PrivacyService extends AbstractService {
     public String id(QuorumNode node) {
         String privacyAddress = getQuorumNodeConfig(node).getPrivacyAddress();
         if (StringUtils.isEmpty(privacyAddress)) {
-            if (getQuorumNodeConfig(node).getNamedPrivacyAddress().isEmpty()) {
+            if (getQuorumNodeConfig(node).getPrivacyAddress().isEmpty()) {
                 throw new RuntimeException("no privacy address is configured");
             }
-            privacyAddress = getQuorumNodeConfig(node).getNamedPrivacyAddress().values().iterator().next();
+            privacyAddress = getQuorumNodeConfig(node).getPrivacyAddress();
+            return privacyAddress;
         }
-        return privacyAddress;
         QuorumNetworkProperty.Node quorumNodeConfig = getQuorumNodeConfig(node);
         String v = quorumNodeConfig.getPrivacyAddress();
         if (StringUtils.isEmpty(v)) {
