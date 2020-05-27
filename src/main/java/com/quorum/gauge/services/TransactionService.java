@@ -19,6 +19,7 @@
 
 package com.quorum.gauge.services;
 
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.ext.EthGetQuorumPayload;
 import com.quorum.gauge.ext.EthSignTransaction;
@@ -275,7 +276,7 @@ public class TransactionService extends AbstractService {
                 });
     }
 
-    public Observable<EthEstimateGas> estimateGasForPublicContract(QuorumNode from, Contract c) {
+    public Observable<EthEstimateGas> estimateGasForPublicContract(QuorumNetworkProperty.Node from, Contract c) {
         Web3j client = connectionFactory().getWeb3jConnection(from);
         String fromAddress;
         try {

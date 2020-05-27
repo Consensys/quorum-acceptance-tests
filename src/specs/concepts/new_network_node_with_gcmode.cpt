@@ -1,0 +1,5 @@
+# Blocks are synced when adding new node <nodeName> with <gcmode> `gcmode` to network <networkName> as <nodeType>
+
+* Send some transactions to create blocks in network <networkName> and capture the latest block height as "latestBlockHeight"
+* Add new node with <gcmode> `gcmode`, named it <nodeName>, and join the network <networkName> as <nodeType>
+* Verify node <nodeName> has the block height greater or equal to "latestBlockHeight"

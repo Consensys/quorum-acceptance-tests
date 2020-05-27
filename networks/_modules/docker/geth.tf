@@ -1,0 +1,130 @@
+locals {
+  publish_http_ports    = [for idx in local.node_indices : [var.geth_networking[idx].port.http]]
+  publish_ws_ports      = var.geth_networking[0].port.ws == null ? [for idx in local.node_indices : []] : [for idx in local.node_indices : [var.geth_networking[idx].port.ws]]
+  publish_graphql_ports = var.geth_networking[0].port.graphql == null ? [for idx in local.node_indices : []] : [for idx in local.node_indices : [var.geth_networking[idx].port.graphql]]
+}
+
+resource "docker_container" "geth" {
+  count      = local.number_of_nodes
+  name       = format("%s-node%d", var.network_name, count.index)
+  depends_on = [docker_container.ethstats, docker_image.registry, docker_image.local]
+  image      = var.geth_networking[count.index].image.name
+  hostname   = format("node%d", count.index)
+  restart    = "no"
+  must_run   = local.must_start[count.index]
+  start      = local.must_start[count.index]
+  labels {
+    label = "QuorumContainer"
+    value = count.index
+  }
+  ports {
+    internal = var.geth_networking[count.index].port.p2p
+  }
+  ports {
+    internal = var.geth_networking[count.index].port.raft
+  }
+  dynamic "ports" {
+    for_each = concat(local.publish_http_ports[count.index], local.publish_ws_ports[count.index], local.publish_graphql_ports[count.index])
+    content {
+      internal = ports.value["internal"]
+      external = ports.value["external"]
+    }
+  }
+  volumes {
+    container_path = "/data"
+    volume_name    = docker_volume.shared_volume[count.index].name
+  }
+  volumes {
+    container_path = local.container_geth_datadir_mounted
+    host_path      = var.geth_datadirs[count.index]
+  }
+  networks_advanced {
+    name         = docker_network.quorum.name
+    ipv4_address = var.geth_networking[count.index].ip.private
+    aliases      = [format("node%d", count.index)]
+  }
+  env = ["PRIVATE_CONFIG=${local.container_tm_ipc_file}"]
+  healthcheck {
+    test         = ["CMD", "nc", "-vz", "localhost", var.geth_networking[count.index].port.http.internal]
+    interval     = "3s"
+    retries      = 10
+    timeout      = "3s"
+    start_period = "5s"
+  }
+  entrypoint = [
+    "/bin/sh",
+    "-c",
+    <<RUN
+#Quorum${count.index + 1}
+
+if [ "$ALWAYS_REFRESH" == "true" ]; then
+  echo "Deleting ${local.container_geth_datadir} to refresh with original datadir"
+  rm -rf ${local.container_geth_datadir}
+fi
+if [ ! -d "${local.container_geth_datadir}" ]; then
+  echo "Copying mounted datadir to ${local.container_geth_datadir}"
+  cp -r ${local.container_geth_datadir_mounted} ${local.container_geth_datadir}
+fi
+${local.container_geth_datadir_mounted}/wait-for-tessera.sh
+exec ${local.container_geth_datadir_mounted}/start-geth.sh
+RUN
+  ]
+  upload {
+    file       = "${local.container_geth_datadir_mounted}/wait-for-tessera.sh"
+    executable = true
+    content    = <<EOF
+#!/bin/sh
+
+URL="${var.tm_networking[count.index].ip.private}:${var.tm_networking[count.index].port.p2p}/upcheck"
+
+UDS_WAIT=10
+for i in $(seq 1 100)
+do
+  result=$(wget --timeout $UDS_WAIT -qO- --proxy off $URL)
+  echo "$result"
+  if [ -S $PRIVATE_CONFIG ] && [ "I'm up!" = "$result" ]; then
+    break
+  else
+    echo "Sleep $UDS_WAIT seconds. Waiting for TxManager."
+    sleep $UDS_WAIT
+  fi
+done
+EOF
+  }
+
+  upload {
+    file       = "${local.container_geth_datadir_mounted}/start-geth.sh"
+    executable = true
+    content    = <<EOF
+#!/bin/sh
+
+exec geth \
+  --identity Node${count.index + 1} \
+  --datadir ${local.container_geth_datadir} \
+  --nodiscover \
+  --verbosity 5 \
+  --networkid ${var.network_id} \
+  --nodekeyhex ${var.node_keys_hex[count.index]} \
+  --rpc \
+  --rpcaddr 0.0.0.0 \
+  --rpcport ${var.geth_networking[count.index].port.http.internal} \
+  --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,${var.consensus} \
+%{if var.geth_networking[count.index].port.ws != null~}
+  --ws \
+  --wsaddr 0.0.0.0 \
+  --wsport ${var.geth_networking[count.index].port.ws.internal} \
+  --wsapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,${var.consensus} \
+%{endif~}
+%{if var.geth_networking[count.index].port.graphql != null~}
+  --graphql \
+  --graphql.addr 0.0.0.0 \
+  --graphql.port ${var.geth_networking[count.index].port.graphql.internal} \
+%{endif~}
+  --port ${var.geth_networking[count.index].port.p2p} \
+  --ethstats "Node${count.index + 1}:${var.ethstats_secret}@${var.ethstats_ip}:${var.ethstats.container.port}" \
+  --unlock 0 \
+  --password ${local.container_geth_datadir}/${var.password_file_name} \
+  ${var.consensus == "istanbul" ? "--istanbul.blockperiod 1 --syncmode full --mine --minerthreads 1" : format("--raft --raftport %d", var.geth_networking[count.index].port.raft)} ${var.additional_geth_args} $ADDITIONAL_GETH_ARGS
+EOF
+  }
+}

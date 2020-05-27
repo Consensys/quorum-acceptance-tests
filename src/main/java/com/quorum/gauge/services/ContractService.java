@@ -20,6 +20,7 @@
 package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.PrivacyFlag;
+import com.quorum.gauge.common.QuorumNetworkProperty.Node;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.ext.EnhancedClientTransactionManager;
 import com.quorum.gauge.ext.EthSendTransactionAsync;
@@ -59,6 +60,14 @@ public class ContractService extends AbstractService {
 
     @Autowired
     AccountService accountService;
+
+    public Observable<? extends Contract> createSimpleContract(int initialValue, Node source, Node target) {
+        QuorumNode targetNode = null;
+        if (target != null) {
+            targetNode = QuorumNode.valueOf(target.getName());
+        }
+        return createSimpleContract(initialValue, QuorumNode.valueOf(source.getName()), targetNode, DEFAULT_GAS_LIMIT);
+    }
 
     public Observable<? extends Contract> createSimpleContract(int initialValue, QuorumNode source, QuorumNode target) {
         return createSimpleContract(initialValue, source, target, DEFAULT_GAS_LIMIT);

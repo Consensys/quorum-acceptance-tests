@@ -20,23 +20,20 @@
 package com.quorum.gauge;
 
 import com.quorum.gauge.common.QuorumNode;
-import com.quorum.gauge.common.Wallet;
+import com.quorum.gauge.common.config.WalletData;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import org.assertj.core.api.AssertionsForClassTypes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 
 @Service
 public class PublicRawSmartContract extends AbstractSpecImplementation {
-    private static final Logger logger = LoggerFactory.getLogger(PublicRawSmartContract.class);
 
     @Step("Deploy `SimpleStorage` public smart contract with initial value <initialValue> signed by external wallet <wallet> on node <node>, name this contract as <contractName>")
-    public void deployClientReceiptSmartContract(Integer initialValue, Wallet wallet, QuorumNode node, String contractName) {
+    public void deployClientReceiptSmartContract(Integer initialValue, WalletData wallet, QuorumNode node, String contractName) {
         Contract c = rawContractService.createRawSimplePublicContract(initialValue, wallet, node).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, c);
@@ -44,7 +41,7 @@ public class PublicRawSmartContract extends AbstractSpecImplementation {
     }
 
     @Step("Execute <contractName>'s `set()` function with new value <newValue> signed by external wallet <wallet> in <source>")
-    public void updateNewValue(String contractName, int newValue, Wallet wallet, QuorumNode source) {
+    public void updateNewValue(String contractName, int newValue, WalletData wallet, QuorumNode source) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         TransactionReceipt receipt = rawContractService.updateRawSimplePublicContract(source, wallet, c.getContractAddress(), newValue).blockingFirst();
 

@@ -19,6 +19,7 @@
 package com.quorum.gauge;
 
 import com.quorum.gauge.common.PrivacyFlag;
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.thoughtworks.gauge.Step;
@@ -48,6 +49,13 @@ public class EstimateGas extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put("estimatedValue", estimatedValue);
     }
 
+    @Step("Estimate gas for public transaction transferring zero Wei from a default account in <from> to a default account in <to>")
+    public void estimatePublicTransactionZeroValue(QuorumNode from, QuorumNode to) {
+        EthEstimateGas estimatedValue = transactionService.estimateGasForTransaction(0, from, to).blockingFirst();
+
+        DataStoreFactory.getScenarioDataStore().put("estimatedValue", estimatedValue);
+    }
+
     @Step("Deploy `SimpleContract` public smart contract from a default account in <from>")
     public void createContract(QuorumNode from) {
         Contract c = contractService.createSimpleContract(0, from, null).blockingFirst();
@@ -56,7 +64,7 @@ public class EstimateGas extends AbstractSpecImplementation {
     }
 
     @Step("Estimate gas for deploying `SimpleContract` public smart contract from a default account in <from>")
-    public void estimatePublicContract(QuorumNode from) {
+    public void estimatePublicContract(QuorumNetworkProperty.Node from) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), "publicContract1", Contract.class);
 
         EthEstimateGas estimatedValue = transactionService.estimateGasForPublicContract(from, c).blockingFirst();
@@ -128,7 +136,7 @@ public class EstimateGas extends AbstractSpecImplementation {
             .updateSimpleContractWithGasLimit(from, Arrays.asList(privateFor), contractAddress, estimatedGasLimit, value, Arrays.asList(PrivacyFlag.Legacy))
             .blockingFirst();
 
-        assertThat(receipt.getStatus()).isEqualTo("0x1");
+        assertThat(receipt.isStatusOK()).isTrue();
     }
 
 }

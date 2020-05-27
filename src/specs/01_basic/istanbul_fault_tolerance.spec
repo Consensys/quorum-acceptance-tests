@@ -1,6 +1,6 @@
 # Istanbul fault tolerance and recoverability
 
- Tags: basic-istanbul
+ Tags: basic-istanbul, recoverability
 
 [Istanbul consensus](https://github.com/ethereum/EIPs/issues/650) can tolerate at most of F faulty nodes in a N validator nodes network, where N = 3F + 1.
 

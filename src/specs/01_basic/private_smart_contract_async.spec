@@ -1,6 +1,6 @@
 # Sending private smart contract asynchronously
 
- Tags: basic
+ Tags: basic, async
 
 Ability to submit a simple private smart contract asynchrously with callback
 ```

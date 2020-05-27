@@ -21,12 +21,15 @@ package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
-import com.quorum.gauge.common.Wallet;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 public class PrivacyService extends AbstractService {
+
     public String id(QuorumNode node) {
         String privacyAddress = getQuorumNodeConfig(node).getPrivacyAddress();
         if (StringUtils.isEmpty(privacyAddress)) {
@@ -36,13 +39,45 @@ public class PrivacyService extends AbstractService {
             privacyAddress = getQuorumNodeConfig(node).getNamedPrivacyAddress().values().iterator().next();
         }
         return privacyAddress;
+        QuorumNetworkProperty.Node quorumNodeConfig = getQuorumNodeConfig(node);
+        String v = quorumNodeConfig.getPrivacyAddress();
+        if (StringUtils.isEmpty(v)) {
+            if (quorumNodeConfig.getPrivacyAddressAliases().isEmpty()) {
+                throw new RuntimeException("no privacy address is defined for node: " + node);
+            }
+            v = quorumNodeConfig.getPrivacyAddressAliases().values().iterator().next();
+        }
+        return v;
+    }
+
+    public String id(QuorumNetworkProperty.Node node, String alias) {
+        if (node.getPrivacyAddressAliases().containsKey(alias)) {
+            return node.getPrivacyAddressAliases().get(alias);
+        }
+        throw new RuntimeException("private address alias not found: " + alias);
+    }
+
+    public String id(String alias) {
+        List<String> matches = new ArrayList<>();
+        for (QuorumNetworkProperty.Node node : networkProperty().getNodes().values()) {
+            if (node.getPrivacyAddressAliases().containsKey(alias)) {
+                matches.add(node.getPrivacyAddressAliases().get(alias));
+            }
+        }
+        if (matches.size() == 0) {
+            throw new RuntimeException("private address alias not found: " + alias);
+        }
+        if (matches.size() > 1) {
+            throw new RuntimeException("there are " + matches.size() + " nodes having this privacy address alias: " + alias);
+        }
+        return matches.get(0);
     }
 
     public String thirdPartyUrl(QuorumNode node) {
         return getQuorumNodeConfig(node).getThirdPartyUrl();
     }
 
-    private QuorumNetworkProperty.Node getQuorumNodeConfig(QuorumNode node){
+    private QuorumNetworkProperty.Node getQuorumNodeConfig(QuorumNode node) {
         QuorumNetworkProperty.Node nodeConfig = networkProperty().getNodes().get(node);
         if (nodeConfig == null) {
             throw new IllegalArgumentException("Node " + node + " not found in config");
@@ -50,11 +85,4 @@ public class PrivacyService extends AbstractService {
         return nodeConfig;
     }
 
-    public QuorumNetworkProperty.WalletData walletData(Wallet wallet){
-        QuorumNetworkProperty.WalletData walletData = networkProperty().getWallets().get(wallet);
-        if (walletData == null) {
-            throw new IllegalArgumentException("Wallet " + wallet + " not found in config");
-        }
-        return walletData;
-    }
 }

@@ -1,0 +1,13 @@
+# Blocks are synced when stopping node <learnerNode> and <peerNode> in network <networkName> as learner node does not affect raft quorum
+
+* Stop node <learnerNode> in the network <networkName>
+* Send some transactions to create blocks in network <networkName> from "Node1,Node2" and capture the latest block height as "latestBlockHeight"
+* Verify node <peerNode> has the block height greater or equal to "latestBlockHeight"
+* Verify node "Node2" has the block height greater or equal to "latestBlockHeight"
+* Save block height "latestBlockHeight" as "BlockHeight1"
+* Stop node <peerNode> in the network <networkName>
+* Send some transactions to create blocks in network <networkName> from "Node1,Node2" and capture the latest block height as "latestBlockHeight"
+* Verify block height "latestBlockHeight" is greater than "BlockHeight1"
+* Verify node "Node2" has the block height greater or equal to "latestBlockHeight"
+* Start node <learnerNode> in the network <networkName>
+* Start node <peerNode> in the network <networkName>

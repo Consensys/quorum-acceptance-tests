@@ -19,21 +19,25 @@
 
 package com.quorum.gauge.common;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.quorum.gauge.common.config.WalletData;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Component
 @ConfigurationProperties(prefix = "quorum")
 public class QuorumNetworkProperty {
     private Map<QuorumNode, Node> nodes = new HashMap<>();
-    private Map<Wallet, WalletData> wallets = new HashMap<>();
+    private Map<String, WalletData> wallets = new HashMap<>();
+    private String consensus;
     private SocksProxy socksProxy;
-    private String bootEndpoint;
+
+    private DockerInfrastructureProperty dockerInfrastructure = new DockerInfrastructureProperty();
 
     public SocksProxy getSocksProxy() {
         return socksProxy;
@@ -51,23 +55,66 @@ public class QuorumNetworkProperty {
         this.nodes = nodes;
     }
 
-    public String getBootEndpoint() {
-        return bootEndpoint;
-    }
-
-    public void setBootEndpoint(String bootEndpoint) {
-        this.bootEndpoint = bootEndpoint;
-    }
-
-    public Map<Wallet, WalletData> getWallets() {
+    public Map<String, WalletData> getWallets() {
         return wallets;
     }
 
-    public void setWallets(Map<Wallet, WalletData> wallets) {
+    public void setWallets(final Map<String, WalletData> wallets) {
         this.wallets = wallets;
     }
 
+    public Map<String, Node> getNodesAsString() {
+        Map<String, Node> converted = new HashMap<>();
+        for (Map.Entry<QuorumNode, Node> quorumNodeNodeEntry : nodes.entrySet()) {
+            converted.put(quorumNodeNodeEntry.getKey().name(), quorumNodeNodeEntry.getValue());
+        }
+        return converted;
+    }
+
+    public Node getNode(String nodeName) {
+        Node node = Optional.ofNullable(nodes.get(QuorumNode.valueOf(nodeName))).orElseThrow(() -> new RuntimeException("no such node with name: " + nodeName));
+        node.setName(nodeName);
+        return node;
+    }
+
+    public DockerInfrastructureProperty getDockerInfrastructure() {
+        return dockerInfrastructure;
+    }
+
+    public void setDockerInfrastructure(DockerInfrastructureProperty dockerInfrastructure) {
+        this.dockerInfrastructure = dockerInfrastructure;
+    }
+
+    public String getConsensus() {
+        return consensus;
+    }
+
+    public void setConsensus(String consensus) {
+        this.consensus = consensus;
+    }
+
+    /**
+     * @return holistic delay post a node or a network startup w.r.t {@link #getConsensus()} value
+     */
+    public Duration getConsensusGracePeriod() {
+        Duration duration = Duration.ofSeconds(15);
+        switch (Optional.ofNullable(getConsensus()).orElse("")) {
+            case "raft":
+                duration = Duration.ofSeconds(30);
+                break;
+            case "istanbul":
+                duration = Duration.ofSeconds(45);
+                break;
+        }
+        return duration;
+    }
+
     public static class SocksProxy {
+        /**
+         * This configuration allows to create a proxy server that supports dynamic port forwarding
+         */
+        private SSHTunneling tunnel;
+
         private String host;
         private int port;
 
@@ -86,19 +133,74 @@ public class QuorumNetworkProperty {
         public void setPort(int port) {
             this.port = port;
         }
+
+        public SSHTunneling getTunnel() {
+            return tunnel;
+        }
+
+        public void setTunnel(SSHTunneling tunnel) {
+            this.tunnel = tunnel;
+        }
+
+        public static class SSHTunneling {
+            private boolean enabled;
+            private boolean autoStart;
+            private String user;
+            private String host;
+            private String privateKeyFile;
+
+            public String getUser() {
+                return user;
+            }
+
+            public void setUser(String user) {
+                this.user = user;
+            }
+
+            public String getHost() {
+                return host;
+            }
+
+            public void setHost(String host) {
+                this.host = host;
+            }
+
+            public boolean isEnabled() {
+                return enabled;
+            }
+
+            public void setEnabled(boolean enabled) {
+                this.enabled = enabled;
+            }
+
+            public String getPrivateKeyFile() {
+                return privateKeyFile;
+            }
+
+            public void setPrivateKeyFile(String privateKeyFile) {
+                this.privateKeyFile = privateKeyFile;
+            }
+
+            public boolean isAutoStart() {
+                return autoStart;
+            }
+
+            public void setAutoStart(boolean autoStart) {
+                this.autoStart = autoStart;
+            }
+        }
     }
 
     public static class Node {
-        @JsonProperty("privacy-address")
+        // this value is not expected from YML
+        private String name;
         private String privacyAddress;
-        private Map<String, String> namedPrivacyAddress = new LinkedHashMap<>();
+        private Map<String, String> privacyAddressAliases = new LinkedHashMap<>();
         private String url;
-        @JsonProperty("third-party-url")
         private String thirdPartyUrl;
-        @JsonProperty("validator-address")
-        private String validatorAddress;
-        @JsonProperty("enode-address")
-        private String enode;
+        private String istanbulValidatorId;
+        private String enodeUrl;
+        private String graphqlUrl;
 
         public String getPrivacyAddress() {
             return privacyAddress;
@@ -116,26 +218,26 @@ public class QuorumNetworkProperty {
             this.url = url;
         }
 
-        public String getValidatorAddress() {
-            return validatorAddress;
+        public String getIstanbulValidatorId() {
+            return istanbulValidatorId;
         }
 
-        public void setValidatorAddress(String validatorAddress) {
-            this.validatorAddress = validatorAddress;
+        public void setIstanbulValidatorId(String istanbulValidatorId) {
+            this.istanbulValidatorId = istanbulValidatorId;
         }
 
         @Override
         public String toString() {
             final String template = "Node[url: %s, privacy-address: %s, validator-address: %s, enode: %s]";
-            return String.format(template, url, privacyAddress, validatorAddress, enode);
+            return String.format(template, url, privacyAddress, istanbulValidatorId, enodeUrl);
         }
 
-        public String getEnode() {
-            return enode;
+        public String getEnodeUrl() {
+            return enodeUrl;
         }
 
-        public void setEnode(String enode) {
-            this.enode = enode;
+        public void setEnodeUrl(String enodeUrl) {
+            this.enodeUrl = enodeUrl;
         }
 
         public String getThirdPartyUrl() {
@@ -146,35 +248,83 @@ public class QuorumNetworkProperty {
             this.thirdPartyUrl = thirdPartyUrl;
         }
 
-        public Map<String, String> getNamedPrivacyAddress() {
-            return namedPrivacyAddress;
+        public Map<String, String> getPrivacyAddressAliases() {
+            return privacyAddressAliases;
         }
 
-        public void setNamedPrivacyAddress(Map<String, String> namedPrivacyAddress) {
-            this.namedPrivacyAddress = namedPrivacyAddress;
+        public void setPrivacyAddressAliases(Map<String, String> privacyAddressAliases) {
+            this.privacyAddressAliases = privacyAddressAliases;
+        }
+
+        public String getGraphqlUrl() {
+            return graphqlUrl;
+        }
+
+        public void setGraphqlUrl(String graphqlUrl) {
+            this.graphqlUrl = graphqlUrl;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
         }
     }
 
-    public static class WalletData {
-        @JsonProperty("path")
-        private String walletPath;
-        @JsonProperty("pass")
-        private String walletPass;
+    public static class DockerInfrastructureProperty {
+        private boolean enabled;
+        private String host;
+        private Map<String, DockerContainerProperty> nodes = new HashMap<>();
 
-        public String getWalletPath() {
-            return walletPath;
+        public DockerInfrastructureProperty() {
+            this.enabled = false;
         }
 
-        public void setWalletPath(String walletPath) {
-            this.walletPath = walletPath;
+        public String getHost() {
+            return host;
         }
 
-        public String getWalletPass() {
-            return walletPass;
+        public void setHost(String host) {
+            this.host = host;
         }
 
-        public void setWalletPass(String walletPass) {
-            this.walletPass = walletPass;
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public Map<String, DockerContainerProperty> getNodes() {
+            return nodes;
+        }
+
+        public void setNodes(Map<String, DockerContainerProperty> nodes) {
+            this.nodes = nodes;
+        }
+
+        public static class DockerContainerProperty {
+            private String quorumContainerId;
+            private String tesseraContainerId;
+
+            public String getQuorumContainerId() {
+                return quorumContainerId;
+            }
+
+            public void setQuorumContainerId(String quorumContainerId) {
+                this.quorumContainerId = quorumContainerId;
+            }
+
+            public String getTesseraContainerId() {
+                return tesseraContainerId;
+            }
+
+            public void setTesseraContainerId(String tesseraContainerId) {
+                this.tesseraContainerId = tesseraContainerId;
+            }
         }
     }
 }

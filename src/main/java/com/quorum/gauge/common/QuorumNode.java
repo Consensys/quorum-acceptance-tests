@@ -19,6 +19,13 @@
 
 package com.quorum.gauge.common;
 
+/**
+ * Named values used to talk about specific nodes in spec files.
+ *
+ * @deprecated
+ * <p> Use {@link QuorumNetworkProperty.Node} instead.
+ */
+@Deprecated
 public enum QuorumNode {
     Node1, Node2, Node3, Node4, Node5, Node6, Node7, Node8, Node9, Node10
 }

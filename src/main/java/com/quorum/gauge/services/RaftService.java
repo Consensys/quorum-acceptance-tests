@@ -19,18 +19,19 @@
 
 package com.quorum.gauge.services;
 
-import com.quorum.gauge.common.QuorumNetworkProperty;
+import com.quorum.gauge.common.NodeType;
+import com.quorum.gauge.common.QuorumNetworkProperty.Node;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.ext.NodeInfo;
 import com.quorum.gauge.ext.RaftCluster;
 import com.quorum.gauge.ext.RaftLeader;
+import io.reactivex.Observable;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.Response;
-import io.reactivex.Observable;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -39,9 +40,14 @@ import java.util.Map;
 public class RaftService extends AbstractService {
     private static final Logger logger = LoggerFactory.getLogger(RaftService.class);
 
-    public Observable<RaftAddPeer> addPeer(QuorumNode node, String enode) {
+    public Observable<RaftAddPeer> addPeer(String existingNode, String enodeUrl, NodeType nodeType) {
+        return addPeer(QuorumNode.valueOf(existingNode), enodeUrl, nodeType);
+    }
+
+    public Observable<RaftAddPeer> addPeer(QuorumNode node, String enode, NodeType nodeType) {
+        String rpcMethod = nodeType == NodeType.peer ? "raft_addPeer" : "raft_addLearner";
         Request<?, RaftService.RaftAddPeer> request = new Request<>(
-                "raft_addPeer",
+                rpcMethod,
                 Arrays.asList(StringEscapeUtils.unescapeJavaScript(enode)),
                 connectionFactory().getWeb3jService(node),
                 RaftService.RaftAddPeer.class
@@ -50,6 +56,23 @@ public class RaftService extends AbstractService {
             raftAddPeer.setNode(node);
             return raftAddPeer;
         });
+    }
+
+    public Observable<RaftPromoteLearner> promoteToPeer(String frmNode, Integer learnerRaftId) {
+        Request<?, RaftService.RaftPromoteLearner> request = new Request<>(
+            "raft_promoteToPeer",
+            Arrays.asList(learnerRaftId.intValue()),
+            connectionFactory().getWeb3jService(QuorumNode.valueOf(frmNode)),
+            RaftService.RaftPromoteLearner.class
+        );
+        return request.flowable().toObservable().map(rf -> {
+            rf.setNode(QuorumNode.valueOf(frmNode));
+            return rf;
+        });
+    }
+
+    public Observable<RaftCluster> getCluster(String existingNode) {
+        return getCluster(QuorumNode.valueOf(existingNode));
     }
 
     public Observable<RaftCluster> getCluster(QuorumNode node) {
@@ -75,7 +98,7 @@ public class RaftService extends AbstractService {
         String leaderEnode = response.getResult();
         logger.debug("Retrieved leader enode: {}", leaderEnode);
 
-        Map<QuorumNode, QuorumNetworkProperty.Node> nodes = connectionFactory().getNetworkProperty().getNodes();
+        Map<QuorumNode, Node> nodes = connectionFactory().getNetworkProperty().getNodes();
         for (QuorumNode nodeId : nodes.keySet()) {
             Request<?, NodeInfo> nodeInfoRequest = new Request<>(
                     "admin_nodeInfo",
@@ -99,6 +122,19 @@ public class RaftService extends AbstractService {
         private QuorumNode node;
 
         // node that perform addPeer
+        public QuorumNode getNode() {
+            return node;
+        }
+
+        public void setNode(QuorumNode node) {
+            this.node = node;
+        }
+    }
+
+    public static class RaftPromoteLearner extends Response<Boolean> {
+        private QuorumNode node;
+
+        // node that perform promoteToPeer
         public QuorumNode getNode() {
             return node;
         }
