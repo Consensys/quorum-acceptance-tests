@@ -1,6 +1,6 @@
 # Extend contract to new party
 
- Tags: extension
+ Tags: basic, extension
 
 This is to verify that a node must not be able to send transactions to private smart contract which it is not party to.
 
@@ -85,7 +85,7 @@ contract C2 {
 }
 
 ```
-## Extend a contract to a new party - happy path
+## Extend a contract to a new party, new party accepts the extension
 
 * Deploy a "PartyProtection" C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract1Extension"
 * "contract1Extension" is deployed "successfully" in "Node2,Node4"
@@ -94,13 +94,12 @@ contract C2 {
 * "contract1Extension"'s `get()` function execution in "Node4" returns "42"
 * "contract1Extension"'s `get()` function execution in "Node1" returns "0"
 
-* Create a "PartyProtection" extension to "Node1" from "Node2" with "Node2,Node4" as voters for contract "contract1Extension"
+* Create a "PartyProtection" extension to "Node1" with its default account as recipient from "Node2" for contract "contract1Extension"
 * "Node1" accepts the offer to extend the contract "contract1Extension"
-* "Node4" votes "true" to extending contract "contract1Extension"
 * Wait for "contract1Extension" to disappear from active extension in "Node1"
 * "contract1Extension"'s `get()` function execution in "Node1" returns "42"
 
-## Extend contract but new party doesn't accept
+## Extend contract to a new party, new party rejects the extension
 
 * Deploy a "PartyProtection" C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract2Extension"
 * "contract2Extension" is deployed "successfully" in "Node2,Node4"
@@ -108,43 +107,24 @@ contract C2 {
 * "contract2Extension"'s `get()` function execution in "Node4" returns "42"
 * "contract2Extension"'s `get()` function execution in "Node1" returns "0"
 
-* Create a "PartyProtection" extension to "Node1" from "Node2" with "Node2,Node4" as voters for contract "contract2Extension"
-* "Node4" votes "true" to extending contract "contract2Extension"
+* Create a "PartyProtection" extension to "Node1" with its default account as recipient from "Node2" for contract "contract2Extension"
 * "Node1" has "contract2Extension" listed in all active extensions
-* "Node1" votes "false" to extending contract "contract2Extension"
+* "Node1" rejects contract extension of "contract2Extension"
 * Wait for "contract2Extension" to disappear from active extension in "Node1"
 * "contract2Extension"'s `get()` function execution in "Node1" returns "0"
 * "Node2" does not see "contract2Extension" listed in all active extensions
 
-## Voter votes to not extend
-
-* Deploy a "PartyProtection" C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract3Extension"
-* "contract3Extension" is deployed "successfully" in "Node2,Node4"
-* "contract3Extension"'s `get()` function execution in "Node2" returns "42"
-* "contract3Extension"'s `get()` function execution in "Node4" returns "42"
-* "contract3Extension"'s `get()` function execution in "Node1" returns "0"
-
-* Create a "PartyProtection" extension to "Node1" from "Node2" with "Node2,Node4" as voters for contract "contract3Extension"
-* "Node1" has "contract3Extension" listed in all active extensions
-* "Node4" votes "false" to extending contract "contract3Extension"
-* "Node1" does not see "contract3Extension" listed in all active extensions
-* Wait for "contract3Extension" to disappear from active extension in "Node1"
-* "contract3Extension"'s `get()` function execution in "Node1" returns "0"
-* "Node2" does not see "contract3Extension" listed in all active extensions
-
-## Creator cancels contract after creating extension request
+## Extend contract to a new party, creator cancels extension
 * Deploy a "PartyProtection" C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract4Extension"
 * "contract4Extension" is deployed "successfully" in "Node2,Node4"
 
-* Create a "PartyProtection" extension to "Node1" from "Node2" with "Node2,Node4" as voters for contract "contract4Extension"
-
+* Create a "PartyProtection" extension to "Node1" with its default account as recipient from "Node2" for contract "contract4Extension"
 * "Node1" has "contract4Extension" listed in all active extensions
 * "Node2" cancels "contract4Extension"
 * Wait for "contract4Extension" to disappear from active extension in "Node1"
 * "Node1" does not see "contract4Extension" listed in all active extensions
 
 ## Extend a contract to a new party - extending contract after initial state change
-
 * Deploy a "PartyProtection" C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract5Extension"
 * "contract5Extension" is deployed "successfully" in "Node2,Node4"
 * "contract5Extension"'s `get()` function execution in "Node2" returns "42"
@@ -161,49 +141,24 @@ contract C2 {
 * "contract5Extension"'s `get()` function execution in "Node4" returns "999"
 * "contract5Extension"'s `get()` function execution in "Node1" returns "0"
 
-* Create a "PartyProtection" extension to "Node1" from "Node2" with "Node2,Node4" as voters for contract "contract5Extension"
+* Create a "PartyProtection" extension to "Node1" with its default account as recipient from "Node2" for contract "contract5Extension"
 * "Node1" accepts the offer to extend the contract "contract5Extension"
-* "Node4" votes "true" to extending contract "contract5Extension"
 * Wait for "contract5Extension" to disappear from active extension in "Node1"
 
 * "contract5Extension"'s `get()` function execution in "Node2" returns "999"
 * "contract5Extension"'s `get()` function execution in "Node4" returns "999"
 * "contract5Extension"'s `get()` function execution in "Node1" returns "999"
 
-## Extend a contract to a new party - state corruption for initiator when recepient voter account is not given
-* Deploy a "PartyProtection" C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract6Extension"
-* "contract6Extension" is deployed "successfully" in "Node2,Node4"
-* "contract6Extension"'s `get()` function execution in "Node2" returns "42"
-* "contract6Extension"'s `get()` function execution in "Node4" returns "42"
-* "contract6Extension"'s `get()` function execution in "Node1" returns "0"
 
-* Execute "contract6Extension"'s `set()` function with new value "99" in "Node2" and it's private for "Node4"
-* "contract6Extension"'s `get()` function execution in "Node2" returns "99"
-* "contract6Extension"'s `get()` function execution in "Node4" returns "99"
-* "contract6Extension"'s `get()` function execution in "Node1" returns "0"
-
-* Execute "contract6Extension"'s `set()` function with new value "999" in "Node2" and it's private for "Node4"
-* "contract6Extension"'s `get()` function execution in "Node2" returns "999"
-* "contract6Extension"'s `get()` function execution in "Node4" returns "999"
-* "contract6Extension"'s `get()` function execution in "Node1" returns "0"
-
-* Create a "PartyProtection" extension to "Node1" from "Node2" with only "Node2,Node4" as voters for contract "contract6Extension"
-* "Node4" votes "true" to extending contract "contract6Extension"
-* Wait for "contract6Extension" to disappear from active extension in "Node1"
-* "contract6Extension"'s `get()` function execution in "Node2" returns "999"
-* "contract6Extension"'s `get()` function execution in "Node4" returns "999"
-* "contract6Extension"'s `get()` function execution in "Node1" returns "0"
-
-## Re-extend an alraedy extende contract - state change should not happen
+## Re-extend an alraedy extended contract - state change should not happen
 * Deploy a "PartyProtection" C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract7Extension"
 * "contract7Extension" is deployed "successfully" in "Node2,Node4"
 * "contract7Extension"'s `get()` function execution in "Node2" returns "42"
 * "contract7Extension"'s `get()` function execution in "Node4" returns "42"
 * "contract7Extension"'s `get()` function execution in "Node1" returns "0"
 
-* Create a "PartyProtection" extension to "Node1" from "Node2" with "Node2,Node4" as voters for contract "contract7Extension"
+* Create a "PartyProtection" extension to "Node1" with its default account as recipient from "Node2" for contract "contract7Extension"
 * "Node1" accepts the offer to extend the contract "contract7Extension"
-* "Node4" votes "true" to extending contract "contract7Extension"
 * Wait for "contract7Extension" to disappear from active extension in "Node1"
 * "contract7Extension"'s `get()` function execution in "Node2" returns "42"
 * "contract7Extension"'s `get()` function execution in "Node4" returns "42"
@@ -214,9 +169,8 @@ contract C2 {
 * "contract7Extension"'s `get()` function execution in "Node4" returns "999"
 * "contract7Extension"'s `get()` function execution in "Node1" returns "42"
 
-* Create a "PartyProtection" extension to "Node1" from "Node2" with "Node2,Node4" as voters for contract "contract7Extension"
+* Create a "PartyProtection" extension to "Node1" with its default account as recipient from "Node2" for contract "contract7Extension"
 * "Node1" accepts the offer to extend the contract "contract7Extension"
-* "Node4" votes "true" to extending contract "contract7Extension"
 * Wait for "contract7Extension" to disappear from active extension in "Node1"
 * "contract7Extension"'s `get()` function execution in "Node2" returns "999"
 * "contract7Extension"'s `get()` function execution in "Node4" returns "999"
@@ -237,18 +191,19 @@ contract C2 {
 * "a2"'s "geta" function execution in "Node1" returns "1000"
 * "b2"'s "getb" function execution in "Node1" returns "100"
 * "c2"'s "getc" function execution in "Node1" returns "10"
-* Create a "PartyProtection" extension to "Node4" from "Node1" with "Node1,Node2" as voters for contract "c2"
+
+* Create a "PartyProtection" extension to "Node4" with its default account as recipient from "Node1" for contract "c2"
 * "Node4" accepts the offer to extend the contract "c2"
-* "Node2" votes "true" to extending contract "c2"
 * Wait for "c2" to disappear from active extension in "Node1"
-* Create a "PartyProtection" extension to "Node4" from "Node1" with "Node1,Node2" as voters for contract "b2"
+
+* Create a "PartyProtection" extension to "Node4" with its default account as recipient from "Node1" for contract "b2"
 * "Node4" accepts the offer to extend the contract "b2"
-* "Node2" votes "true" to extending contract "b2"
 * Wait for "b2" to disappear from active extension in "Node1"
-* Create a "PartyProtection" extension to "Node4" from "Node1" with "Node1,Node2" as voters for contract "a2"
+
+* Create a "PartyProtection" extension to "Node4" with its default account as recipient from "Node1" for contract "a2"
 * "Node4" accepts the offer to extend the contract "a2"
-* "Node2" votes "true" to extending contract "a2"
 * Wait for "a2" to disappear from active extension in "Node1"
+
 * "c2"'s "getc" function execution in "Node4" returns "10"
 * "b2"'s "getb" function execution in "Node4" returns "100"
 * "a2"'s "geta" function execution in "Node4" returns "1000"

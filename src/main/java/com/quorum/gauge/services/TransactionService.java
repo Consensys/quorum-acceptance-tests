@@ -69,6 +69,11 @@ public class TransactionService extends AbstractService {
         return client.ethGetTransactionReceipt(transactionHash).flowable().toObservable();
     }
 
+    public Observable<EthGetTransactionReceipt> getTransactionReceipt(QuorumNetworkProperty.Node node, String transactionHash) {
+        Quorum client = connectionFactory().getConnection(node);
+        return client.ethGetTransactionReceipt(transactionHash).flowable().toObservable();
+    }
+
     public Observable<EthSendTransaction> sendPublicTransaction(int value, QuorumNode from, QuorumNode to) {
         Web3j client = connectionFactory().getWeb3jConnection(from);
         return Observable.zip(
