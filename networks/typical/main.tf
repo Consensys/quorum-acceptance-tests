@@ -47,11 +47,12 @@ module "helper" {
 module "network" {
   source = "../_modules/ignite"
 
-  concensus       = module.helper.consensus
-  network_name    = var.network_name
-  geth_networking = module.helper.geth_networking
-  tm_networking   = module.helper.tm_networking
-  output_dir      = var.output_dir
+  concensus            = module.helper.consensus
+  privacy_enhancements = var.privacy_enhancements
+  network_name         = var.network_name
+  geth_networking      = module.helper.geth_networking
+  tm_networking        = module.helper.tm_networking
+  output_dir           = var.output_dir
 }
 
 module "docker" {
