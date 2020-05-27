@@ -52,6 +52,12 @@ public abstract class AbstractSpecImplementation {
     protected NestedContractService nestedContractService;
 
     @Autowired
+    protected PermissionsContractService permissionContractService;
+
+    @Autowired
+    protected PermissionService permissionService;
+
+    @Autowired
     protected RawContractService rawContractService;
 
     @Autowired

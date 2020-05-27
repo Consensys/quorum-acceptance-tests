@@ -19,6 +19,7 @@
 
 package com.quorum.gauge;
 
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.thoughtworks.gauge.Step;
@@ -37,7 +38,7 @@ public class SmartContractDualState extends AbstractSpecImplementation {
     private static final Logger logger = LoggerFactory.getLogger(SmartContractDualState.class);
 
     @Step("Deploy <contractName> smart contract with initial value <initialValue> from a default account in <node>, named this contract as <contractNameKey>")
-    public void setupStorecAsPublicDependentContract(String contractName, int initialValue, QuorumNode node, String contractNameKey) {
+    public void setupStorecAsPublicDependentContract(String contractName, int initialValue, QuorumNetworkProperty.Node node, String contractNameKey) {
         Contract c = contractService.createGenericStoreContract(node, contractName, initialValue, null, false, null).blockingFirst();
         logger.debug("{} contract address is:{}", contractName, c.getContractAddress());
 
@@ -51,7 +52,7 @@ public class SmartContractDualState extends AbstractSpecImplementation {
     }
 
     @Step("Deploy <contractName> smart contract with initial value <initialValue> from a default account in <node> and it's private for <target>, named this contract as <contractNameKey>")
-    public void setupStorecAsPrivateDependentContract(String contractName, int initialValue, QuorumNode node, QuorumNode target, String contractNameKey) {
+    public void setupStorecAsPrivateDependentContract(String contractName, int initialValue, QuorumNetworkProperty.Node node, QuorumNode target, String contractNameKey) {
         Contract c = contractService.createGenericStoreContract(node, contractName, initialValue, null, true, target).blockingFirst();
         logger.debug("{} contract address is:{}", contractName, c.getContractAddress());
 
@@ -66,7 +67,7 @@ public class SmartContractDualState extends AbstractSpecImplementation {
     }
 
     @Step("Deploy <contractName> smart contract with contract <depContractName> initial value <initialValue> from a default account in <node>, named this contract as <contractNameKey>")
-    public void setupStoreaOrStorebAsPublicContract(String contractName, String depContractName, int initialValue, QuorumNode node, String contractNameKey) {
+    public void setupStoreaOrStorebAsPublicContract(String contractName, String depContractName, int initialValue, QuorumNetworkProperty.Node node, String contractNameKey) {
         Contract dc = mustHaveValue(DataStoreFactory.getSpecDataStore(), depContractName, Contract.class);
         Contract c = contractService.createGenericStoreContract(node, contractName, initialValue, dc.getContractAddress(), false, null).blockingFirst();
         logger.debug("{} contract address is:{} with dc contract address: {}", contractName, c.getContractAddress(), dc.getContractAddress());
@@ -81,7 +82,7 @@ public class SmartContractDualState extends AbstractSpecImplementation {
     }
 
     @Step("Deploy <contractName> smart contract with contract <dependentContractName> initial value <initialValue> from a default account in <source> and it's private for <target>, named this contract as <contractNameKey>")
-    public void setupStoreaOrStorebAsPrivateContract(String contractName, String dependentContractName, int initialValue, QuorumNode source, QuorumNode target, String contractNameKey) {
+    public void setupStoreaOrStorebAsPrivateContract(String contractName, String dependentContractName, int initialValue, QuorumNetworkProperty.Node source, QuorumNode target, String contractNameKey) {
         Contract dc = mustHaveValue(DataStoreFactory.getSpecDataStore(), dependentContractName, Contract.class);
         logger.debug("Setting up contract from {} to {}", source, target);
         Contract contract = contractService.createGenericStoreContract(source, contractName, initialValue, dc.getContractAddress(), true, target).blockingFirst();
@@ -107,7 +108,7 @@ public class SmartContractDualState extends AbstractSpecImplementation {
     }
 
     @Step("<contractNameKey>'s <methodName> function execution in <node> with value <value> and its private for <target>")
-    public void setStoreContractValueInPrivate(String contractNameKey, String methodName, QuorumNode node, int value, QuorumNode target) {
+    public void setStoreContractValueInPrivate(String contractNameKey, String methodName, QuorumNetworkProperty.Node node, int value, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey, Contract.class);
         String contractName = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey + "Type", String.class);
         logger.debug("{} contract address is:{}", contractNameKey, c.getContractAddress());
@@ -118,7 +119,7 @@ public class SmartContractDualState extends AbstractSpecImplementation {
     }
 
     @Step("<contractNameKey>'s <methodName> function execution in <node> with value <value> and its private for <target>, should fail")
-    public void setStoreContractValueInPrivateShouldFail(String contractNameKey, String methodName, QuorumNode node, int value, QuorumNode target) {
+    public void setStoreContractValueInPrivateShouldFail(String contractNameKey, String methodName, QuorumNetworkProperty.Node node, int value, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey, Contract.class);
         String contractName = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey + "Type", String.class);
         logger.debug("{} contract address is:{}", contractNameKey, c.getContractAddress());
@@ -132,7 +133,7 @@ public class SmartContractDualState extends AbstractSpecImplementation {
     }
 
     @Step("<contractNameKey>'s <methodName> function execution in <node> with value <value>")
-    public void setStoreContractValueInPublic(String contractNameKey, String methodName, QuorumNode node, int value) {
+    public void setStoreContractValueInPublic(String contractNameKey, String methodName, QuorumNetworkProperty.Node node, int value) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey, Contract.class);
         String contractName = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey + "Type", String.class);
         logger.debug("{} contract address is:{}, {} {}", contractNameKey, c.getContractAddress(), methodName, value);
@@ -154,7 +155,7 @@ public class SmartContractDualState extends AbstractSpecImplementation {
     }
 
     @Step("<contractNameKey>'s <methodName> function execution in <node> with value <value>, should fail")
-    public void setStoreContractValueInPublicShouldFail(String contractNameKey, String methodName, QuorumNode node, int value) {
+    public void setStoreContractValueInPublicShouldFail(String contractNameKey, String methodName, QuorumNetworkProperty.Node node, int value) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey, Contract.class);
         String contractName = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey + "Type", String.class);
         logger.debug("{} contract address is:{}", contractNameKey, c.getContractAddress());

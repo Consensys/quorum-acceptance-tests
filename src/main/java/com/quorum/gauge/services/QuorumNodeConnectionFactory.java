@@ -41,6 +41,10 @@ public class QuorumNodeConnectionFactory {
         return Quorum.build(getWeb3jService(node));
     }
 
+    public Quorum getConnection(QuorumNetworkProperty.Node node) {
+        return Quorum.build(getWeb3jService(node));
+    }
+
     public Web3j getWeb3jConnection(QuorumNode node) {
         return Web3j.build(getWeb3jService(node));
     }
