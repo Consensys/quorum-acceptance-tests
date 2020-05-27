@@ -170,7 +170,7 @@ contract C2 {
 * "contract5Extension"'s `get()` function execution in "Node4" returns "999"
 * "contract5Extension"'s `get()` function execution in "Node1" returns "999"
 
-## Extend a contract to a new party - state corruption for initiator when recepient voter account is not given
+## Extend a contract to a new party - check state corruption for initiator when recepient account is not given
 * Deploy a "PartyProtection" C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract6Extension"
 * "contract6Extension" is deployed "successfully" in "Node2,Node4"
 * "contract6Extension"'s `get()` function execution in "Node2" returns "42"
