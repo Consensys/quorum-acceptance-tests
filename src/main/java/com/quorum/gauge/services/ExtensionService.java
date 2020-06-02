@@ -2,10 +2,7 @@ package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.PrivacyFlag;
 import com.quorum.gauge.common.QuorumNetworkProperty;
-import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.ext.EnhancedClientTransactionManager;
-import com.quorum.gauge.ext.NodeInfo;
-import com.quorum.gauge.ext.RaftLeader;
 import com.quorum.gauge.ext.contractextension.*;
 import io.reactivex.Observable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +12,6 @@ import org.web3j.quorum.methods.request.PrivateTransaction;
 
 import java.math.BigInteger;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -27,33 +23,24 @@ import static java.util.Collections.singletonList;
 @Service
 public class ExtensionService extends AbstractService {
 
-    private final PrivacyService privacyService;
-
     private final AccountService accountService;
 
     @Autowired
     public ExtensionService(final PrivacyService privacyService, final AccountService accountService) {
-        this.privacyService = Objects.requireNonNull(privacyService);
         this.accountService = Objects.requireNonNull(accountService);
     }
 
-    public Observable<QuorumExtendContract> initiateContractExtension(final QuorumNode node,
+    public Observable<QuorumExtendContract> initiateContractExtension(final QuorumNetworkProperty.Node node,
                                                                       final String addressToExtend,
-                                                                      final QuorumNode newParty,
-                                                                      final List<QuorumNode> voters,
+                                                                      final QuorumNetworkProperty.Node newParty,
                                                                       final PrivacyFlag privacyFlag) {
 
-        final List<String> voterDefaultAddresses = voters
-            .stream()
-            .map(accountService::getDefaultAccountAddress)
-            .map(Observable::blockingFirst)
-            .collect(Collectors.toList());
 
-        final List<String> privateFor = Stream
-            .concat(Stream.of(newParty), voters.stream())
+        String recipientKey = accountService.getDefaultAccountAddress(newParty).blockingFirst();
+
+        final List<String> privateFor = Stream.of(newParty)
             .filter(n -> !n.equals(node))
-            .distinct()
-            .map(privacyService::id)
+            .map(QuorumNetworkProperty.Node::getPrivacyAddress)
             .collect(Collectors.toList());
 
         final EnhancedClientTransactionManager.EnhancedPrivateTransaction transactionArgs = new EnhancedClientTransactionManager.EnhancedPrivateTransaction(
@@ -63,8 +50,8 @@ public class ExtensionService extends AbstractService {
 
         final List<Object> arguments = Stream.of(
             addressToExtend,
-            privacyService.id(newParty),
-            voterDefaultAddresses,
+            newParty.getPrivacyAddress(),
+            recipientKey,
             transactionArgs
         ).collect(Collectors.toList());
 
@@ -78,15 +65,16 @@ public class ExtensionService extends AbstractService {
         return request.flowable().toObservable();
     }
 
-    public Observable<QuorumVoteOnContract> voteOnExtension(final QuorumNode node,
+    public Observable<QuorumVoteOnContract> acceptExtension(final QuorumNetworkProperty.Node node,
                                                             final boolean vote,
                                                             final String address,
-                                                            final Set<QuorumNode> allNodes,
+                                                            final Set<QuorumNetworkProperty.Node> allNodes,
                                                             final PrivacyFlag privacyFlag) {
+
         final List<String> privateFor = allNodes
             .stream()
             .filter(n -> !n.equals(node))
-            .map(privacyService::id)
+            .map(QuorumNetworkProperty.Node::getPrivacyAddress)
             .collect(Collectors.toList());
 
         final PrivateTransaction transactionArgs = new EnhancedClientTransactionManager.EnhancedPrivateTransaction(
@@ -95,22 +83,22 @@ public class ExtensionService extends AbstractService {
         );
 
         return new Request<>(
-            "quorumExtension_approveExtension",
+            "quorumExtension_acceptExtension",
             Stream.of(address, vote, transactionArgs).collect(Collectors.toList()),
             connectionFactory().getWeb3jService(node),
             QuorumVoteOnContract.class
         ).flowable().toObservable();
     }
 
-    public Observable<QuorumUpdateParties> updateParties(final QuorumNode initiator,
+    public Observable<QuorumUpdateParties> updateParties(final QuorumNetworkProperty.Node initiator,
                                                          final String address,
-                                                         final Set<QuorumNode> allNodes,
+                                                         final Set<QuorumNetworkProperty.Node> allNodes,
                                                          final PrivacyFlag privacyFlag) {
 
         final List<String> privateFor = allNodes
             .stream()
             .filter(n -> !n.equals(initiator))
-            .map(privacyService::id)
+            .map(QuorumNetworkProperty.Node::getPrivacyAddress)
             .collect(Collectors.toList());
 
         final PrivateTransaction transactionArgs = new EnhancedClientTransactionManager.EnhancedPrivateTransaction(
@@ -127,7 +115,7 @@ public class ExtensionService extends AbstractService {
 
     }
 
-    public Observable<QuorumActiveExtensionContracts> getExtensionContracts(final QuorumNode node) {
+    public Observable<QuorumActiveExtensionContracts> getExtensionContracts(final QuorumNetworkProperty.Node node) {
 
         return new Request<>(
             "quorumExtension_activeExtensionContracts",
@@ -138,14 +126,14 @@ public class ExtensionService extends AbstractService {
 
     }
 
-    public Observable<QuorumCancel> cancelExtension(final QuorumNode node,
+    public Observable<QuorumCancel> cancelExtension(final QuorumNetworkProperty.Node node,
                                                     final String address,
-                                                    final Set<QuorumNode> allNodes,
+                                                    final Set<QuorumNetworkProperty.Node> allNodes,
                                                     final PrivacyFlag privacyFlag) {
         final List<String> privateFor = allNodes
             .stream()
             .filter(n -> !n.equals(node))
-            .map(privacyService::id)
+            .map(QuorumNetworkProperty.Node::getPrivacyAddress)
             .collect(Collectors.toList());
 
         final PrivateTransaction transactionArgs = new EnhancedClientTransactionManager.EnhancedPrivateTransaction(
@@ -162,21 +150,7 @@ public class ExtensionService extends AbstractService {
 
     }
 
-    public String getConsensusUsed(QuorumNode node) {
-        Map<QuorumNode, QuorumNetworkProperty.Node> nodes = connectionFactory().getNetworkProperty().getNodes();
-        Request<?, NodeInfo> nodeInfoRequest = new Request<>(
-            "admin_nodeInfo",
-            null,
-            connectionFactory().getWeb3jService(node),
-            NodeInfo.class
-        );
-
-        NodeInfo nodeInfo = nodeInfoRequest.flowable().toObservable().blockingFirst();
-        String consensus = nodeInfo.getConsensus();
-        return consensus;
-    }
-
-    public String getExtensionStatus(final QuorumNode node,
+    public String getExtensionStatus(final QuorumNetworkProperty.Node node,
                                                     final String address) {
 
         final List<Object> arguments = Stream.of(
