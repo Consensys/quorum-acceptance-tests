@@ -87,6 +87,14 @@ public class RaftGasUsage extends AbstractSpecImplementation {
         assertThat(result.getErrorMessage()).matches(".*" + expectedMessage + ".*");
     }
 
+    @Step("Contract <contractName> had exception related to insufficient gas")
+    public void checkContractForGasException(String contractName) {
+        CreationResult result = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, CreationResult.class);
+        assertThat(result.getResult()).isEqualTo(CreationResult.CreationResultTypes.exception);
+        assertThat(result.getErrorMessage()).matches(".*intrinsic gas too low.*|.*contract creation code storage out of gas.*");
+    }
+
+
 
     @Step("Contract <contractName> creation succeeded")
     public void checkContractResult(String contractName) {
