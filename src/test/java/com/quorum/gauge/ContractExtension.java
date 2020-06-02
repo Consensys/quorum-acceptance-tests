@@ -107,7 +107,11 @@ public class ContractExtension extends AbstractSpecImplementation {
         assertThat(transactionReceipt.isPresent()).isTrue();
         assertThat(transactionReceipt.get().getStatus()).isEqualTo("0x1");
 
-        Thread.sleep(1000);
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     @Step("<node> requests parties are updated for contract <contractName>")
@@ -129,7 +133,11 @@ public class ContractExtension extends AbstractSpecImplementation {
         assertThat(transactionReceipt.isPresent()).isTrue();
         assertThat(transactionReceipt.get().getStatus()).isEqualTo("0x1");
 
-        Thread.sleep(1000);
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     @Step("<node> has <contractName> listed in all active extensions")
