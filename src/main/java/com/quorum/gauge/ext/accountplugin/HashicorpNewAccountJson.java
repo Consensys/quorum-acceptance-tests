@@ -5,33 +5,20 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class HashicorpNewAccountJson {
-    @JsonAlias("SecretEnginePath")
-    private String secretEnginePath;
-
-    @JsonAlias("SecretPath")
-    private String secretPath;
+    @JsonAlias("SecretName")
+    private String secretName;
 
     @JsonAlias("SecretVersion")
     private Integer secretVersion;
 
-    private Boolean insecureSkipCAS;
+    private OverwriteProtection overwriteProtection;
 
-    private Integer casValue;
-
-    public String getSecretEnginePath() {
-        return secretEnginePath;
+    public String getSecretName() {
+        return secretName;
     }
 
-    public void setSecretEnginePath(String secretEnginePath) {
-        this.secretEnginePath = secretEnginePath;
-    }
-
-    public String getSecretPath() {
-        return secretPath;
-    }
-
-    public void setSecretPath(String secretPath) {
-        this.secretPath = secretPath;
+    public void setSecretName(String secretName) {
+        this.secretName = secretName;
     }
 
     public Integer getSecretVersion() {
@@ -42,20 +29,39 @@ public class HashicorpNewAccountJson {
         this.secretVersion = secretVersion;
     }
 
-    public Boolean isInsecureSkipCAS() {
-        return insecureSkipCAS;
+    public OverwriteProtection getOverwriteProtection() {
+        return overwriteProtection;
     }
 
-    public void setInsecureSkipCAS(Boolean insecureSkipCAS) {
-        this.insecureSkipCAS = insecureSkipCAS;
+    public void setOverwriteProtection(OverwriteProtection overwriteProtection) {
+        this.overwriteProtection = overwriteProtection;
     }
 
-    public Integer getCasValue() {
-        return casValue;
-    }
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class OverwriteProtection {
+        private Boolean insecureDisable;
 
-    public void setCasValue(Integer casValue) {
-        this.casValue = casValue;
+        private Integer currentVersion;
+
+        public Boolean getInsecureDisable() {
+            return insecureDisable;
+        }
+
+        public void setInsecureDisable(Boolean insecureDisable) {
+            this.insecureDisable = insecureDisable;
+        }
+
+        public Integer getCurrentVersion() {
+            return currentVersion;
+        }
+
+        public void setCurrentVersion(Integer currentVersion) {
+            this.currentVersion = currentVersion;
+        }
     }
 }
+
+
+
+
 

@@ -39,6 +39,7 @@ resource "local_file" "hashicorp-vault-account-plugin-config" {
     content  = <<JSON
 {
     "vault": "https://${local.cert_san_workaround_hostname}:${local.vault_server_port.external}",
+    "kvEngineName": "kv",
     "accountDirectory": "file:///data/plugin-accts",
     "authentication": {
         "token": "env://${local.plugin_token_envvar_name}"

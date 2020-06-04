@@ -63,16 +63,14 @@ public class PluginHashicorpVaultAccountCreation extends AbstractSpecImplementat
         hashicorpVaultAccountCreationService.setNewAccountUrl(result.get("url"));
     }
 
-    @Step("The account address and a private key exist at the Vault secret URL")
-    public void verifyAccountCreated() {
+    // kvEngineName is a plugin config-level property.  This is set in the plugin config json when using the terraform plugins network.
+    @Step("The account address and a private key exist at kv secret engine with name <kvEngineName> and secret name <secretName>")
+    public void verifyAccountCreated(String kvEngineName, String secretName) {
         if (!hashicorpVaultAccountCreationService.isNewAccountContextInitialised()) {
             fail("test context not initialised");
         }
 
-        Versioned<Map<String, Object>> response = hashicorpVaultAccountCreationService.readSecret(
-            hashicorpVaultAccountCreationService.getNewAccountJson().getSecretEnginePath(),
-            hashicorpVaultAccountCreationService.getNewAccountJson().getSecretPath()
-        );
+        Versioned<Map<String, Object>> response = hashicorpVaultAccountCreationService.readSecret(kvEngineName, secretName);
 
         int newAccountVersion = Integer.parseInt(
             hashicorpVaultAccountCreationService.getNewAccountUrl().split("version=")[1]
@@ -130,8 +128,7 @@ public class PluginHashicorpVaultAccountCreation extends AbstractSpecImplementat
         assertThat(accountConfigFileJson).isNotNull();
 
         assertThat(accountConfigFileJson.getAddress()).isEqualTo(hashicorpVaultAccountCreationService.getNewAccountAddress().replaceFirst("0x", ""));
-        assertThat(accountConfigFileJson.getVaultAccount().getSecretEnginePath()).isEqualTo(hashicorpVaultAccountCreationService.getNewAccountJson().getSecretEnginePath());
-        assertThat(accountConfigFileJson.getVaultAccount().getSecretPath()).isEqualTo(hashicorpVaultAccountCreationService.getNewAccountJson().getSecretPath());
+        assertThat(accountConfigFileJson.getVaultAccount().getSecretName()).isEqualTo(hashicorpVaultAccountCreationService.getNewAccountJson().getSecretName());
     }
 
     @Step("Calling `plugin@account_importRawKey` API in <node> with parameters <rawKey> and <param> returns the imported account address and Vault secret URL")
@@ -171,16 +168,14 @@ public class PluginHashicorpVaultAccountCreation extends AbstractSpecImplementat
         hashicorpVaultAccountCreationService.setNewAccountUrl(result.get("url"));
     }
 
-    @Step("The account address and private key <rawKey> exist at the Vault secret URL")
-    public void verifyAccountImported(String privateKey) {
+    // kvEngineName is a plugin config-level property.  This is set in the plugin config json when using the terraform plugins network.
+    @Step("The account address and private key <rawKey> exist at kv secret engine with name <kvEngineName> and secret name <secretName>")
+    public void verifyAccountImported(String privateKey, String kvEngineName, String secretName) {
         if (!hashicorpVaultAccountCreationService.isNewAccountContextInitialised()) {
             fail("test context not initialised");
         }
 
-        Versioned<Map<String, Object>> response = hashicorpVaultAccountCreationService.readSecret(
-            hashicorpVaultAccountCreationService.getNewAccountJson().getSecretEnginePath(),
-            hashicorpVaultAccountCreationService.getNewAccountJson().getSecretPath()
-        );
+        Versioned<Map<String, Object>> response = hashicorpVaultAccountCreationService.readSecret(kvEngineName , secretName);
 
         int newAccountVersion = Integer.parseInt(
             hashicorpVaultAccountCreationService.getNewAccountUrl().split("version=")[1]

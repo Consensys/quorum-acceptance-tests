@@ -92,8 +92,7 @@ public class PluginHashicorpVaultAccountSigning extends AbstractSpecImplementati
         assertThat(acctConfigFile).exists();
 
         HashicorpNewAccountJson acctJson = new HashicorpNewAccountJson();
-        acctJson.setSecretEnginePath(secretEnginePath);
-        acctJson.setSecretPath(secretPath);
+        acctJson.setSecretName(secretPath);
         acctJson.setSecretVersion(metadata.getVersion().getVersion());
 
         HashicorpAccountConfigFileJson fileContents = new HashicorpAccountConfigFileJson();
