@@ -83,7 +83,7 @@ public class ExtensionService extends AbstractService {
         );
 
         return new Request<>(
-            "quorumExtension_acceptExtension",
+            "quorumExtension_approveExtension",
             Stream.of(address, vote, transactionArgs).collect(Collectors.toList()),
             connectionFactory().getWeb3jService(node),
             QuorumVoteOnContract.class
