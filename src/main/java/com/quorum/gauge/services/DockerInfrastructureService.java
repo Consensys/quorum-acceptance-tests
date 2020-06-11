@@ -27,7 +27,8 @@ import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.model.*;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
-import com.github.dockerjava.okhttp.OkHttpDockerCmdExecFactory;
+import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
+import com.github.dockerjava.transport.DockerHttpClient;
 import com.google.common.collect.ImmutableMap;
 import com.quorum.gauge.common.GethArgBuilder;
 import com.quorum.gauge.common.QuorumNetworkProperty;
@@ -74,9 +75,13 @@ public class DockerInfrastructureService
         if (StringUtils.isNotBlank(networkProperty().getDockerInfrastructure().getHost())) {
             configBuilder.withDockerHost(networkProperty().getDockerInfrastructure().getHost());
         }
+        DefaultDockerClientConfig config = configBuilder.build();
         infraProperty = networkProperty().getDockerInfrastructure();
-        dockerClient = DockerClientImpl.getInstance(configBuilder.build())
-                .withDockerCmdExecFactory(new OkHttpDockerCmdExecFactory());
+        DockerHttpClient httpClient = new ApacheDockerHttpClient.Builder()
+                .dockerHost(config.getDockerHost())
+                .sslConfig(config.getSSLConfig())
+                .build();
+        dockerClient = DockerClientImpl.getInstance(config, httpClient);
         quorumDockerImageCatalog = ImmutableMap.of(
         "v2.5.0", new QuorumImageConfig("quorumengineering/quorum:2.5.0", GethArgBuilder.newBuilder()),
         "latest", new QuorumImageConfig("quorumengineering/quorum:latest", GethArgBuilder.newBuilder().allowInsecureUnlock(true))

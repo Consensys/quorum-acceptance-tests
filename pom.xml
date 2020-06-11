@@ -44,7 +44,7 @@
         <web3j-quorum.version>4.5.8</web3j-quorum.version>
         <web3j.version>4.2.0</web3j.version>
         <commons-lang.version>2.6</commons-lang.version>
-        <docker-java.version>3.2.1</docker-java.version>
+        <docker-java.version>3.2.2</docker-java.version>
         <apache-sshd.version>2.4.0</apache-sshd.version>
         <i2p-eddsa.version>0.3.0</i2p-eddsa.version>
         <!-- this must be the same value in Dockerfile
@@ -103,7 +103,12 @@
         </dependency>
         <dependency>
             <groupId>com.github.docker-java</groupId>
-            <artifactId>docker-java-transport-okhttp</artifactId>
+            <artifactId>docker-java-core</artifactId>
+            <version>${docker-java.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.docker-java</groupId>
+            <artifactId>docker-java-transport-httpclient5</artifactId>
             <version>${docker-java.version}</version>
         </dependency>
         <dependency>
