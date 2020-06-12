@@ -212,24 +212,31 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
 
     @Step("Fire and forget execution of simple contract(<contractName>)'s `set()` function with new arbitrary value in <node> and it's private for <privateFor>")
     public void fireAndForgetSimpleContractNoFlag(String contractName, QuorumNode node, String privateFor) {
-        fireAndForgetSimpleContract(PrivacyFlag.StandardPrivate, contractName, node, privateFor);
+        fireAndForgetSimpleContractArbitraryValue(PrivacyFlag.StandardPrivate, contractName, node, privateFor);
     }
 
     @Step("Fire and forget execution of <flag> simple contract(<contractName>)'s `set()` function with new arbitrary value in <node> and it's private for <privateFor>")
-    public void fireAndForgetSimpleContract(PrivacyFlag flag, String contractName, QuorumNode node, String privateFor) {
-        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
+    public void fireAndForgetSimpleContractArbitraryValue(PrivacyFlag flag, String contractName, QuorumNode node, String privateFor) {
         int arbitraryValue = new Random().nextInt(100) + 1000;
+        fireAndForgetSimpleContractWithValue(flag, contractName, String.valueOf(arbitraryValue), node, privateFor);
+    }
+
+    @Step("Fire and forget execution of <flag> simple contract(<contractName>)'s `set()` function with new value <value> in <node> and it's private for <privateFor>")
+    public void fireAndForgetSimpleContractWithValue(PrivacyFlag flag, String contractName, String value, QuorumNode node, String privateFor) {
+        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
+        int intValue = Integer.parseInt(value);
 
         TransactionReceipt receipt = contractService.updateSimpleContract(
-                node,
-                Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
-                c.getContractAddress(),
-                arbitraryValue,
+            node,
+            Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
+            c.getContractAddress(),
+            intValue,
             Arrays.asList(flag)).onExceptionResumeNext(Observable.empty()).blockingFirst();
         String txHashKey = contractName + "_transactionHash";
         DataStoreFactory.getSpecDataStore().put(txHashKey, receipt.getTransactionHash());
         DataStoreFactory.getScenarioDataStore().put(txHashKey, receipt.getTransactionHash());
     }
+
 
     // TODO PricacyEnhancements - check and merge the fail/Fails methods
 
