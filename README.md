@@ -5,7 +5,9 @@
 - Install [Docker Engine](https://docs.docker.com/engine/) or [Docker Desktop](https://www.docker.com/products/docker-desktop)
 - Run basic acceptance tests against a new Quorum network using Raft consensus:
     ```
-    docker run --rm --network host -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/acctests:/tmp/acctests quorumengineering/acctests:latest test -Pauto -Dtags="basic || networks/typical::raft" -Dnetwork.forceDestroy=true
+    docker run --rm --network host -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/acctests:/tmp/acctests \
+            quorumengineering/acctests:latest test -Pauto -Dtags="basic || networks/typical::raft" \
+            -Dauto.outputDir=/tmp/acctests -Dnetwork.forceDestroy=true
     ```
 
 # Development
