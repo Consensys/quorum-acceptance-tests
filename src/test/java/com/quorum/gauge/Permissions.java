@@ -578,4 +578,33 @@ public class Permissions extends AbstractSpecImplementation {
         logger.debug("block number old:{} new:{}", oldBlkNumber.getBlockNumber().intValue(), newBlkNumber.getBlockNumber().intValue());
         assertThat(newBlkNumber.getBlockNumber().intValue()).isEqualTo(oldBlkNumber.getBlockNumber().intValue());
     }
+
+    @Step("From <fromNode> add a new org admin role named <roleId> to <org>")
+    public void addOrgAdminRole(QuorumNetworkProperty.Node fromNode, String roleId, String org){
+        org = getNetworkAdminOrg(org);
+        ExecStatusInfo execStatus = permissionService.addNewRole(fromNode, org, roleId, 3, true, true).blockingFirst();
+        assertThat(!execStatus.hasError());
+        waitForSomeSeconds(1);
+        getNetworkDetails(fromNode);
+    }
+
+    @Step("From <fromNode> assign <targetNode>'s default account to <org> org and <roleId> role")
+    public void assignAccountRole(QuorumNetworkProperty.Node fromNode, QuorumNetworkProperty.Node targetNode, String org, String roleId){
+        org = getNetworkAdminOrg(org);
+        String account = accountService.getDefaultAccountAddress(targetNode).blockingFirst();
+        ExecStatusInfo execStatus = permissionService.assignAdminRole(fromNode, account, org, roleId).blockingFirst();
+        assertThat(!execStatus.hasError());
+        waitForSomeSeconds(1);
+        getNetworkDetails(fromNode);
+    }
+
+    @Step("From <fromNode> approve <targetNode>'s default account to <org> org and <roleId> role")
+    public void approveAccountRole(QuorumNetworkProperty.Node fromNode, QuorumNetworkProperty.Node targetNode, String org, String roleId){
+        org = getNetworkAdminOrg(org);
+        String account = accountService.getDefaultAccountAddress(targetNode).blockingFirst();
+        ExecStatusInfo execStatus = permissionService.approveAdminRoleAssignment(fromNode, account, org).blockingFirst();
+        assertThat(!execStatus.hasError());
+        waitForSomeSeconds(1);
+        getNetworkDetails(fromNode);
+    }
 }

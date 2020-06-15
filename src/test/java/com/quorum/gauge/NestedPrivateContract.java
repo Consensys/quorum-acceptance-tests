@@ -52,6 +52,7 @@ public class NestedPrivateContract extends AbstractSpecImplementation {
     @Step("Deploy a <privacyFlags> C1 contract with initial value <initialValue> in <source>'s default account and it's private for <target>, named this contract as <contractName>")
     public void setupC1Contract(String privacyFlags, int initialValue, QuorumNode source, QuorumNode target, String contractName) {
         logger.debug("Setting up contract from {} to {}", source, target);
+        saveCurrentBlockNumber();
         Contract contract = nestedContractService.createC1Contract(
             initialValue,
             source,

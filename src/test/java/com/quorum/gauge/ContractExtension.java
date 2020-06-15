@@ -67,6 +67,26 @@ public class ContractExtension extends AbstractSpecImplementation {
 
     }
 
+    @Step("Creating a <privacyFlag> extension of <contractName> to <newNode> with its default account as recipient from <creator> should fail with error <expErrMsg>")
+    public void createInavlidContractExtension(final PrivacyFlag privacyFlag,
+                                               final String contractName,
+                                               final QuorumNetworkProperty.Node newNode,
+                                               final QuorumNetworkProperty.Node creator,
+                                               final String expErrMsg) {
+        DataStoreFactory.getScenarioDataStore().put("privacyFlag", privacyFlag);
+        final Set<QuorumNetworkProperty.Node> allNodes = Stream.of(newNode, creator)
+            .collect(Collectors.toSet());
+        DataStoreFactory.getScenarioDataStore().put("extensionAllNodes", allNodes);
+
+        final Contract existingContract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
+
+        final QuorumExtendContract result = extensionService
+            .initiateContractExtension(creator, existingContract.getContractAddress(), newNode, privacyFlag)
+            .blockingFirst();
+
+        assertThat(result.getError().getMessage()).isEqualTo(expErrMsg);
+    }
+
     @Step("<newNode> accepts the offer to extend the contract <contractName>")
     public void acceptExtension(final QuorumNetworkProperty.Node newNode, final String contractName) {
 
@@ -88,7 +108,7 @@ public class ContractExtension extends AbstractSpecImplementation {
     }
 
     @Step("<node> rejects contract extension of <contractName>")
-    public void rejectExtension(final QuorumNetworkProperty.Node node, final String contractName)  {
+    public void rejectExtension(final QuorumNetworkProperty.Node node, final String contractName) {
 
         final DataStore store = DataStoreFactory.getScenarioDataStore();
         final PrivacyFlag privacyFlag = mustHaveValue(store, "privacyFlag", PrivacyFlag.class);
@@ -115,7 +135,7 @@ public class ContractExtension extends AbstractSpecImplementation {
     }
 
     @Step("<node> requests parties are updated for contract <contractName>")
-    public void updatePartiesForContract(final QuorumNetworkProperty.Node node, final String contractName)  {
+    public void updatePartiesForContract(final QuorumNetworkProperty.Node node, final String contractName) {
 
         final DataStore store = DataStoreFactory.getScenarioDataStore();
         final PrivacyFlag privacyFlag = mustHaveValue(store, "privacyFlag", PrivacyFlag.class);
@@ -243,8 +263,7 @@ public class ContractExtension extends AbstractSpecImplementation {
                 .findFirst();
             if ((!first.isPresent()) || (count > 25)) {
                 break;
-            }
-            else {
+            } else {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
@@ -259,7 +278,7 @@ public class ContractExtension extends AbstractSpecImplementation {
         String status = extensionService.getExtensionStatus(node, contractAddress);
         int i = 0;
         if (!status.equals("DONE")) {
-            while (true){
+            while (true) {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
@@ -267,7 +286,7 @@ public class ContractExtension extends AbstractSpecImplementation {
                 }
                 i++;
                 status = extensionService.getExtensionStatus(node, contractAddress);
-                if ((i > 25) || status.equals("DONE"))  {
+                if ((i > 25) || status.equals("DONE")) {
                     break;
                 }
 

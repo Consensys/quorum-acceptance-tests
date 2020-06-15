@@ -26,6 +26,9 @@ public class ExtensionService extends AbstractService {
     private final AccountService accountService;
 
     @Autowired
+    PrivacyService privacyService;
+
+    @Autowired
     public ExtensionService(final PrivacyService privacyService, final AccountService accountService) {
         this.accountService = Objects.requireNonNull(accountService);
     }
@@ -38,10 +41,7 @@ public class ExtensionService extends AbstractService {
 
         String recipientKey = accountService.getDefaultAccountAddress(newParty).blockingFirst();
 
-        final List<String> privateFor = Stream.of(newParty)
-            .filter(n -> !n.equals(node))
-            .map(QuorumNetworkProperty.Node::getPrivacyAddress)
-            .collect(Collectors.toList());
+        final List<String> privateFor = Stream.of(newParty).map(n -> privacyService.id(n)).collect(Collectors.toList());
 
         final EnhancedClientTransactionManager.EnhancedPrivateTransaction transactionArgs = new EnhancedClientTransactionManager.EnhancedPrivateTransaction(
             accountService.getDefaultAccountAddress(node).blockingFirst(),
@@ -74,7 +74,7 @@ public class ExtensionService extends AbstractService {
         final List<String> privateFor = allNodes
             .stream()
             .filter(n -> !n.equals(node))
-            .map(QuorumNetworkProperty.Node::getPrivacyAddress)
+            .map(n -> privacyService.id(n))
             .collect(Collectors.toList());
 
         final PrivateTransaction transactionArgs = new EnhancedClientTransactionManager.EnhancedPrivateTransaction(
@@ -98,8 +98,9 @@ public class ExtensionService extends AbstractService {
         final List<String> privateFor = allNodes
             .stream()
             .filter(n -> !n.equals(initiator))
-            .map(QuorumNetworkProperty.Node::getPrivacyAddress)
+            .map(n -> privacyService.id(n))
             .collect(Collectors.toList());
+
 
         final PrivateTransaction transactionArgs = new EnhancedClientTransactionManager.EnhancedPrivateTransaction(
             accountService.getDefaultAccountAddress(initiator).blockingFirst(),
@@ -133,7 +134,7 @@ public class ExtensionService extends AbstractService {
         final List<String> privateFor = allNodes
             .stream()
             .filter(n -> !n.equals(node))
-            .map(QuorumNetworkProperty.Node::getPrivacyAddress)
+            .map(n -> privacyService.id(n))
             .collect(Collectors.toList());
 
         final PrivateTransaction transactionArgs = new EnhancedClientTransactionManager.EnhancedPrivateTransaction(
