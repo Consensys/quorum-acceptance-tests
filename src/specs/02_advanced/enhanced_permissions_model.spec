@@ -9,10 +9,14 @@ For more information, visit https://docs.goquorum.com/en/latest/Permissioning/En
 
 The test scenarios are based on the following setup:
 
-* Start a "permissioned" Quorum Network, named it "default", consisting of "Node1,Node2,Node3"
-* Deploy permissions model contracts from "Node1"
+      |id        |networkType      |version |
+      |r1        |permissioned     |basic   |
+      |r2        |permissioned     |eea     |
+      
+* Start a <networkType> <version> Quorum Network, named it <id>, consisting of "Node1,Node2,Node3"
+* Deploy permissions model contracts from "Node1" with <version>
 * Create permissions config file and write the file to "Node1,Node2,Node3"
-* Restart network "default"
+* Restart network <id>
 
 ## Network Admin Organization and Role are initialized successfully
 
@@ -40,9 +44,9 @@ Majority approval from the network admin accounts is required before an organiza
 * Validate that org "NWADMIN" is approved, has "Node1" linked and has role "NWADMIN"
 * Check "Node1"'s default account is from org "NWADMIN" and has role "NWADMIN" and is org admin and is active
 * From "Node1" propose and approve new org "ORG1" with "Node4"'s enode id and "Default" account
-* Start stand alone "Node4" in "networkId"
+* Start stand alone "Node4" with <version>
 * Write "permissionsConfig" to the data directory of "Node4"
-* Restart network "default"
+* Restart network <id>
 * Validate that org "ORG1" is approved, has "Node4" linked and has role "ORGADMIN"
 
 ## Suspending an organization temporarily
@@ -55,9 +59,9 @@ of an organization and will require majority voting.
 * Validate that org "NWADMIN" is approved, has "Node1" linked and has role "NWADMIN"
 * Check "Node1"'s default account is from org "NWADMIN" and has role "NWADMIN" and is org admin and is active
 * From "Node1" propose and approve new org "ORG1" with "Node4"'s enode id and "Default" account
-* Start stand alone "Node4" in "networkId"
+* Start stand alone "Node4" with <version>
 * Write "permissionsConfig" to the data directory of "Node4"
-* Restart network "default"
+* Restart network <id>
 * Validate that org "ORG1" is approved, has "Node4" linked and has role "ORGADMIN"
 * From "Node1" suspend org "ORG1", confirm that org status is "PendingSuspension"
 * From "Node1" approve org "ORG1"'s suspension, confirm that org status is "Suspended"
@@ -74,9 +78,9 @@ of an organization and will require majority voting.
 * Validate that org "NWADMIN" is approved, has "Node1" linked and has role "NWADMIN"
 * Check "Node1"'s default account is from org "NWADMIN" and has role "NWADMIN" and is org admin and is active
 * From "Node1" propose and approve new org "ORG1" with "Node4"'s enode id and "Default" account
-* Start stand alone "Node4" in "networkId"
+* Start stand alone "Node4" with <version>
 * Write "permissionsConfig" to the data directory of "Node4"
-* Restart network "default"
+* Restart network <id>
 * Validate that org "ORG1" is approved, has "Node4" linked and has role "ORGADMIN"
 * From "Node1" deactivate org "NWADMIN"'s node "Node3"
 * Check org "NWADMIN" has "Node3" with status "Deactivated"

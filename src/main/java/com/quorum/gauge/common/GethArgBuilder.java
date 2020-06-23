@@ -66,6 +66,15 @@ public class GethArgBuilder {
         return this;
     }
 
+    public GethArgBuilder permEeaFlag(boolean yes) {
+        if (yes) {
+            args.put("--permeea", "");
+        } else {
+            args.remove("--permeea");
+        }
+        return this;
+    }
+
     /**
      * Add/remove {@code --raftdnsenable}
      * @return

@@ -21,6 +21,7 @@ package com.quorum.gauge;
 
 import com.quorum.gauge.common.GethArgBuilder;
 import com.quorum.gauge.common.NodeType;
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNetworkProperty.Node;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
@@ -67,16 +68,22 @@ public class BlockSynchronization extends AbstractSpecImplementation {
     @Autowired
     private IstanbulService istanbulService;
 
-    @Step("Start a <networkType> Quorum Network, named it <id>, consisting of <nodes>")
-    public void startNetwork(String networkType, String id, List<Node> nodes) {
-        startNetwork(networkType, id, nodes, null);
+    @Step("Start a <networkType> <version> Quorum Network, named it <id>, consisting of <nodes>")
+    public void startNetwork(String networkType, String version, String id, List<Node> nodes) {
+        startQuorumNetwork(networkType, id, nodes, null, version);
     }
 
     @Step("Start a <networkType> Quorum Network, named it <id>, consisting of <nodes> with <gcmode> `gcmode`")
     public void startNetwork(String networkType, String id, List<Node> nodes, String gcmode) {
+        startQuorumNetwork(networkType, id, nodes, gcmode, "basic");
+    }
+
+    public void startQuorumNetwork(String networkType, String id, List<Node> nodes, String gcmode, String permissionVersion) {
         GethArgBuilder additionalGethArgs = GethArgBuilder.newBuilder()
                 .permissioned("permissioned".equalsIgnoreCase(networkType))
+                .permEeaFlag(permissionVersion.equals("eea"))
                 .gcmode(gcmode);
+
         NetworkResources networkResources = new NetworkResources();
         try {
             Observable.fromIterable(nodes)
