@@ -111,7 +111,7 @@ public class Permissions extends AbstractSpecImplementation {
         // get the upgradable contract address from store, pass it to deploy call
         String upgrContractAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), upgrContractKey, Contract.class).getContractAddress();
         logger.debug("upgradable contract address is:{}", upgrContractAddress);
-        Contract c = permissionContractService.createPermissionsGenericContracts(node, version, contractName, upgrContractAddress).blockingFirst();
+        Contract c = permissionContractService.createPermissionsGenericContracts(node, contractName, upgrContractAddress, version).blockingFirst();
         logger.debug("{} contract address is:{}", contractName, c.getContractAddress());
 
         assertThat(c.getContractAddress()).isNotBlank();
