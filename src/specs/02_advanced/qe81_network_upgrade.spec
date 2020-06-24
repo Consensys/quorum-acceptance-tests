@@ -26,11 +26,10 @@
  - quorum starts successfully
  - when Node4 receives a PP transaction from Node1 it logs a warning that PE metadata is ignored (as PE are disabled)
  We enable PE on Node4 and check that:
- - we deploy a PP contract from Node1 to Node2 and Node4
+ - we deploy a PP contract from Node1 to Node4
  - we prove that a non party node (Node3) can't affect the state of the deployed PP contract on Node1 and Node4
  - we prove that PE party nodes can update the state of the PP contract
- - we prove that non PE prarty nodes can't update the state of the PP contract
- - run the above scenario with a SP contract to highlight the different behavior
+ - run the above scenario with a SP contract (and heighlight that non party can alter the state of party nodes)
 
  Tags: privacy-enhancements-upgrade, pre-condition/no-record-blocknumber
 
@@ -80,27 +79,15 @@
 * Stop and start "Node1" using quorum version <q_to_version> and tessera version <t_to_version>
 * Deploy a "StandardPrivate" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract16"
 * "contract16" is deployed "successfully" in "Node1,Node4"
- A PartyProtection contract will be deployed on Node1 while on Node4 it will be considered StandardPrivate (Node4 is not upgraded yet)
-* Deploy a "PartyProtection" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract17"
-* "contract17" is deployed "successfully" in "Node1,Node4"
- A PartyProtection transaction from Node3 will affect Node4's state but not Node1s's - as it will be received on Node1 as a StandardPrivate transaction
-* Fire and forget execution of "PartyProtection" simple contract("contract17")'s `set()` function with new value "5" in "Node3" and it's private for "Node1,Node4"
-* Transaction Receipt is "unsuccessfully" available in "Node1" for "contract17"
-* Transaction Receipt is "successfully" available in "Node3,Node4" for "contract17"
-* "contract17"'s `get()` function execution in "Node1" returns "42"
-* "contract17"'s `get()` function execution in "Node4" returns "5"
-* "contract17"'s `get()` function execution in "Node3" returns "0"
- A PartyProtection transaction from Node4 will node affect Node1's state as it will be received on Node1 as a StandardPrivate transaction
-* Fire and forget execution of "PartyProtection" simple contract("contract17")'s `set()` function with new value "7" in "Node4" and it's private for "Node1"
-* Transaction Receipt is "unsuccessfully" available in "Node1" for "contract17"
-* Transaction Receipt is "successfully" available in "Node4" for "contract17"
-* "contract17"'s `get()` function execution in "Node1" returns "42"
-* "contract17"'s `get()` function execution in "Node4" returns "7"
+ A PartyProtection contract will not be deployed on Node1 as the tessera process on Node1 will detect that the tessera process on Node4 does not support privacy enhancements
+* Deploying a "PartyProtection" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4" fails with message "Transactions with enhanced privacy is not currently supported on recipient"
 * Stop and start "Node4" using quorum version <q_to_version> and tessera version <t_to_version>
  Node4 is now privacy enhancements capable but privacy enhancements are not enabled (geth init hasnt been run with a genesis file containing privacyEnhancementsBlock)
 * Deploying a "PartyProtection" simple smart contract with initial value "42" in "Node4"'s default account and it's private for "Node1" fails with message "PrivacyEnhancements are disabled"
+* Deploy a "StandardPrivate" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract17"
+* "contract17" is deployed "successfully" in "Node1,Node4"
 * Deploy a "PartyProtection" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract18"
- A warning should be displayed in Node4 logs stating that privacy metadata has been ignored
+ A warning should be written in Node4 logs stating that privacy metadata has been ignored
 * Grep "quorum" in "Node4" for "Non StandardPrivate transaction received but PrivacyEnhancements are disabled. Enhanced privacy metadata will be ignored."
  Run geth init to start geth with privacy enhancements enabled
 * Record the current block number, named it as "recordedBlockNumber"
@@ -111,63 +98,59 @@
  Geth init is automatically followed by geth start so geth should already be started
 * Check that "quorum" in "Node4" is "up"
  At this stage Node1 and Node4 are fully upgraded and have enabled privacy enhancements while Node2 and Node3 have the original versions
-* Deploy a "PartyProtection" contract `SimpleStorage` with initial value "42" in "Node1"'s default account and it's private for "Node2,Node4", named this contract as "contract19"
-* "contract19" is deployed "successfully" in "Node1,Node2,Node4"
-* "contract19"'s `get()` function execution in "Node1" returns "42"
-* "contract19"'s `get()` function execution in "Node2" returns "42"
-* "contract19"'s `get()` function execution in "Node3" returns "0"
-* "contract19"'s `get()` function execution in "Node4" returns "42"
- Node3 which is not party to the contract can't update the state of the PE nodes which are party to the contract (Node1 and Node4)
-* Fire and forget execution of "PartyProtection" simple contract("contract19")'s `set()` function with new value "5" in "Node3" and it's private for "Node1,Node2,Node4"
-* Transaction Receipt is "unsuccessfully" available in "Node1,Node4" for "contract19"
-* Transaction Receipt is "successfully" available in "Node2" for "contract19"
-* "contract19"'s `get()` function execution in "Node1" returns "42"
- For Node2 all the PP transactions are SP (normal private transactions) - thus the state is updated (even from non party node)
-* "contract19"'s `get()` function execution in "Node2" returns "5"
-* "contract19"'s `get()` function execution in "Node3" returns "0"
-* "contract19"'s `get()` function execution in "Node4" returns "42"
- PP transaction from Node4 updates all party nodes state
-* Fire and forget execution of "PartyProtection" simple contract("contract19")'s `set()` function with new value "55" in "Node4" and it's private for "Node1,Node2"
-* Transaction Receipt is "successfully" available in "Node1,Node2,Node4" for "contract19"
-* "contract19"'s `get()` function execution in "Node1" returns "55"
-* "contract19"'s `get()` function execution in "Node2" returns "55"
-* "contract19"'s `get()` function execution in "Node3" returns "0"
-* "contract19"'s `get()` function execution in "Node4" returns "55"
- Even though Node2 is party to the PP contract - it can't update the state on Node1 and Node4 as transactions coming from Node2 are SP for Node1 and Node4. It does however update it's own state.
-* Fire and forget execution of "PartyProtection" simple contract("contract19")'s `set()` function with new value "10" in "Node2" and it's private for "Node1,Node4"
-* Transaction Receipt is "unsuccessfully" available in "Node1,Node4" for "contract19"
-* Transaction Receipt is "successfully" available in "Node2" for "contract19"
-* "contract19"'s `get()` function execution in "Node1" returns "55"
-* "contract19"'s `get()` function execution in "Node2" returns "10"
-* "contract19"'s `get()` function execution in "Node3" returns "0"
-* "contract19"'s `get()` function execution in "Node4" returns "55"
+
  Standard private transactions work as expected (in a mix of old/new nodes)
  Deploy a StandardPrivate simple contract from Node1 to Node2 and Node4
-* Deploy a "StandardPrivate" contract `SimpleStorage` with initial value "42" in "Node1"'s default account and it's private for "Node2,Node4", named this contract as "contract20"
-* "contract20" is deployed "successfully" in "Node1,Node2,Node4"
-* "contract20"'s `get()` function execution in "Node1" returns "42"
-* "contract20"'s `get()` function execution in "Node3" returns "0"
-* "contract20"'s `get()` function execution in "Node2" returns "42"
-* "contract20"'s `get()` function execution in "Node4" returns "42"
+* Deploy a "StandardPrivate" contract `SimpleStorage` with initial value "42" in "Node1"'s default account and it's private for "Node2,Node4", named this contract as "contract19"
+* "contract19" is deployed "successfully" in "Node1,Node2,Node4"
+* "contract19"'s `get()` function execution in "Node1" returns "42"
+* "contract19"'s `get()` function execution in "Node3" returns "0"
+* "contract19"'s `get()` function execution in "Node2" returns "42"
+* "contract19"'s `get()` function execution in "Node4" returns "42"
  Update the value in Node4 for Node1 and Node2
-* Fire and forget execution of "StandardPrivate" simple contract("contract20")'s `set()` function with new value "7" in "Node4" and it's private for "Node1,Node2"
-* Transaction Receipt is "successfully" available in "Node1,Node2,Node4" for "contract20"
-* "contract20"'s `get()` function execution in "Node1" returns "7"
-* "contract20"'s `get()` function execution in "Node2" returns "7"
-* "contract20"'s `get()` function execution in "Node3" returns "0"
-* "contract20"'s `get()` function execution in "Node4" returns "7"
+* Fire and forget execution of "StandardPrivate" simple contract("contract19")'s `set()` function with new value "7" in "Node4" and it's private for "Node1,Node2"
+* Transaction Receipt is "successfully" available in "Node1,Node2,Node4" for "contract19"
+* "contract19"'s `get()` function execution in "Node1" returns "7"
+* "contract19"'s `get()` function execution in "Node2" returns "7"
+* "contract19"'s `get()` function execution in "Node3" returns "0"
+* "contract19"'s `get()` function execution in "Node4" returns "7"
  Update the value in Node2 for Node1 and Node4
-* Fire and forget execution of "StandardPrivate" simple contract("contract20")'s `set()` function with new value "8" in "Node2" and it's private for "Node1,Node4"
-* Transaction Receipt is "successfully" available in "Node1,Node2,Node4" for "contract20"
-* "contract20"'s `get()` function execution in "Node1" returns "8"
-* "contract20"'s `get()` function execution in "Node2" returns "8"
-* "contract20"'s `get()` function execution in "Node3" returns "0"
-* "contract20"'s `get()` function execution in "Node4" returns "8"
+* Fire and forget execution of "StandardPrivate" simple contract("contract19")'s `set()` function with new value "8" in "Node2" and it's private for "Node1,Node4"
+* Transaction Receipt is "successfully" available in "Node1,Node2,Node4" for "contract19"
+* "contract19"'s `get()` function execution in "Node1" returns "8"
+* "contract19"'s `get()` function execution in "Node2" returns "8"
+* "contract19"'s `get()` function execution in "Node3" returns "0"
+* "contract19"'s `get()` function execution in "Node4" returns "8"
  A non party (Node3) can change the state of party nodes
-* Fire and forget execution of "StandardPrivate" simple contract("contract20")'s `set()` function with new value "9" in "Node3" and it's private for "Node1,Node2,Node4"
-* Transaction Receipt is "successfully" available in "Node1,Node2,Node4" for "contract20"
-* "contract20"'s `get()` function execution in "Node1" returns "9"
-* "contract20"'s `get()` function execution in "Node2" returns "9"
+* Fire and forget execution of "StandardPrivate" simple contract("contract19")'s `set()` function with new value "9" in "Node3" and it's private for "Node1,Node2,Node4"
+* Transaction Receipt is "successfully" available in "Node1,Node2,Node4" for "contract19"
+* "contract19"'s `get()` function execution in "Node1" returns "9"
+* "contract19"'s `get()` function execution in "Node2" returns "9"
+* "contract19"'s `get()` function execution in "Node3" returns "0"
+* "contract19"'s `get()` function execution in "Node4" returns "9"
+
+ Party protection transactions only work as expected between the upgraded nodes
+* Deploy a "PartyProtection" contract `SimpleStorage` with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract20"
+* "contract20" is deployed "successfully" in "Node1,Node4"
+* "contract20"'s `get()` function execution in "Node1" returns "42"
+* "contract20"'s `get()` function execution in "Node2" returns "0"
 * "contract20"'s `get()` function execution in "Node3" returns "0"
-* "contract20"'s `get()` function execution in "Node4" returns "9"
+* "contract20"'s `get()` function execution in "Node4" returns "42"
+ Node3 which is not party to the contract can't update the state of the PE nodes which are party to the contract (Node1 and Node4).
+ Even though we specify the privacy flag as PartyProtection because Node3 is not upgraded the transaction is sent as StandardPrivate.
+* Fire and forget execution of "PartyProtection" simple contract("contract20")'s `set()` function with new value "5" in "Node3" and it's private for "Node1,Node4"
+* Transaction Receipt is "unsuccessfully" available in "Node1,Node4" for "contract20"
+* Transaction Receipt is "successfully" available in "Node2,Node3" for "contract20"
+* "contract20"'s `get()` function execution in "Node1" returns "42"
+* "contract20"'s `get()` function execution in "Node2" returns "0"
+* "contract20"'s `get()` function execution in "Node3" returns "0"
+* "contract20"'s `get()` function execution in "Node4" returns "42"
+ PP transaction from Node4 updates all party nodes state
+* Fire and forget execution of "PartyProtection" simple contract("contract20")'s `set()` function with new value "55" in "Node4" and it's private for "Node1"
+* Transaction Receipt is "successfully" available in "Node1,Node4" for "contract19"
+* "contract20"'s `get()` function execution in "Node1" returns "55"
+* "contract20"'s `get()` function execution in "Node2" returns "0"
+* "contract20"'s `get()` function execution in "Node3" returns "0"
+* "contract20"'s `get()` function execution in "Node4" returns "55"
+
 // TODO - Check with Nam if we could add some resend steps here (or leave it for a separate upgrade & resend scenario)

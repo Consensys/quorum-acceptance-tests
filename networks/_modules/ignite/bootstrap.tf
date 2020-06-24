@@ -200,7 +200,10 @@ resource "local_file" "tmconfigs-generator" {
       "passwords": [],
       "keyData": [${data.null_data_source.meta[count.index].inputs.tmKeys}]
     },
-    "alwaysSendTo": []
+    "alwaysSendTo": [],
+    "features" : {
+      "enableRemoteKeyValidation" : "true"
+    }
 }
 JSON
 }
