@@ -86,7 +86,6 @@ contract C2 {
 
 ```
 ## Extend a contract to a new party, new party accepts the extension
-
 * Deploy a "PartyProtection" C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract1Extension"
 * "contract1Extension" is deployed "successfully" in "Node2,Node4"
 
@@ -100,7 +99,6 @@ contract C2 {
 * "contract1Extension"'s `get()` function execution in "Node1" returns "42"
 
 ## Extend contract to a new party, new party rejects the extension
-
 * Deploy a "PartyProtection" C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract2Extension"
 * "contract2Extension" is deployed "successfully" in "Node2,Node4"
 * "contract2Extension"'s `get()` function execution in "Node2" returns "42"
@@ -207,3 +205,13 @@ contract C2 {
 * "c2"'s "getc" function execution in "Node4" returns "10"
 * "b2"'s "getb" function execution in "Node4" returns "100"
 * "a2"'s "geta" function execution in "Node4" returns "1000"
+
+## Extend a non-existent private contract - shuold fail
+* Deploy a "PartyProtection" C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract8Extension"
+* "contract8Extension" is deployed "successfully" in "Node2,Node4"
+
+* "contract8Extension"'s `get()` function execution in "Node2" returns "42"
+* "contract8Extension"'s `get()` function execution in "Node4" returns "42"
+* "contract8Extension"'s `get()` function execution in "Node1" returns "0"
+
+* Creating a "PartyProtection" extension to "Node1" with its default account as recipient from "Node3" for contract "contract8Extension" should fail with error "extending a non-existent private contract!!! not allowed"
