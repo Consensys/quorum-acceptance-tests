@@ -31,11 +31,31 @@ env:
   TF_VAR_public_subnet_id: '${{ secrets.AWS_PUBLIC_SUBNET_ID }}'
   BIN_DIR: bin
 jobs:
+  condition:
+    name: Evaluate workflow run conditions
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: '${{ steps.check.outputs.val }}'
+    steps:
+      - name: Check
+        id: check
+        run: |
+          val="false"
+          if [ \( "${{ github.event_name }}" == "schedule" -a "${{ secrets.SCHEDULE_RUN }}" != "disable" \) -o "${{ github.event_name }}" != "schedule" ]; then
+            val="true"
+          fi
+          if [ "$val" == "false" ]; then
+            echo "::warning ::Runs are conditionally skipped"
+          fi
+          echo "::set-output name=val::$val"
   run:
     # This workflow uses tag expression and its sha256 hash to aggregate test results
     # from each execution. It is important that the job name has tag expression in the
     # suffix and encapsulated within parathensis
     name: Tests tagged with (${{ matrix.tag }})
+    if: needs.condition.outputs.should_run == 'true'
+    needs:
+      - condition
     strategy:
       fail-fast: false
       matrix:
@@ -169,9 +189,10 @@ jobs:
             -Dinfra.folder="${{ env.INFRA_FOLDER }}" \
             -Dinfra.profile="${{ env.INFRA_PROFILE }}"
   notify:
-    if: always() && github.event_name != 'pull_request'
+    if: always() && github.event_name != 'pull_request' && needs.condition.outputs.should_run == 'true'
     name: Notify
     needs:
+      - condition
       - run
     runs-on: ubuntu-latest
     steps:
