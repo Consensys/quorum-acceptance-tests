@@ -7,7 +7,7 @@ plugins = {
         },
     account = {
         name = "quorum-account-plugin-hashicorp-vault"
-        version = "1.0.0"
+        version = "0.0.1"
         expose_api = true
     }
 }

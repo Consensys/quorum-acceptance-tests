@@ -43,11 +43,6 @@ resource "docker_container" "geth" {
     source = length(local_file.plugin_acct_dir_files) != 0 ? dirname(local_file.plugin_acct_dir_files[count.index].filename) : dirname(local_file.plugin_acct_fallback_dir_files[count.index].filename)
     type = "bind"
   }
-  //TODO(cjh) once the plugin is public and available on the plugin central bintray this will not be required
-  volumes {
-    host_path = abspath("to-delete/quorum-account-plugin-hashicorp-vault-1.0.0.zip")
-    container_path = "${local.container_geth_datadir_mounted}/plugins/quorum-account-plugin-hashicorp-vault-1.0.0.zip"
-  }
   networks_advanced {
     name         = docker_network.quorum.name
     ipv4_address = var.geth_networking[count.index].ip.private

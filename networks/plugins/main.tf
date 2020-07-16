@@ -4,7 +4,6 @@ locals {
   apis          = "${local.standard_apis},${join(",", local.plugin_apis)}"
   more_args = join(" ", [
     "--allow-insecure-unlock", # since 1.9.7 upgrade
-    "--plugins.skipverify" //TODO(cjh) for testing - remove
   ])
 
   node_indices = range(var.number_of_nodes)
