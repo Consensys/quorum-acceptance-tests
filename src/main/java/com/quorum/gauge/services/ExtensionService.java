@@ -50,7 +50,7 @@ public class ExtensionService extends AbstractService {
 
         final List<Object> arguments = Stream.of(
             addressToExtend,
-            newParty.getPrivacyAddress(),
+            privacyService.id(newParty),
             recipientKey,
             transactionArgs
         ).collect(Collectors.toList());
