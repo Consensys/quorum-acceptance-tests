@@ -3,8 +3,8 @@ locals {
     //TODO(cjh) this is used as a workaround for the SAN's defined in the certificates used by the vault server. New certificates should be generated for the {network-name}-vault-server SAN
     cert_san_workaround_hostname = "node1"
     vault_server_port  = { internal = 8222, external = 8222 }
-    vault_server_token = "s.K0tuWLNVlyBCPLKCm39QOJvc"
-    vault_server_unseal_key = "10gYKD89Wa5T3lomqComqrBYEwAiGFSKgpgehNY9LJk="
+    vault_server_token = "s.TZG2LuIkjcT9AYRNZfHrmuQn"
+    vault_server_unseal_key = "Xg/nHOs0/uuckKjcszobas4aVNjFxyRP4GtsmlmnV4U="
 
     host_vault_storage_dir = abspath("vault-server/vault-storage")
     container_mounted_vault_storage_dir = "/mounted-vault-storage"

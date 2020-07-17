@@ -6,8 +6,8 @@ The Vault has the following setup:
 
 | Property | Value |
 | --- | --- |
-| Unseal key | `10gYKD89Wa5T3lomqComqrBYEwAiGFSKgpgehNY9LJk=` |
-| Root token | `s.K0tuWLNVlyBCPLKCm39QOJvc` |
+| Unseal key | `Xg/nHOs0/uuckKjcszobas4aVNjFxyRP4GtsmlmnV4U=` |
+| Root token | `s.TZG2LuIkjcT9AYRNZfHrmuQn` |
 | kv-v2 secret engine path | `kv` | 
 
 ## Usage
