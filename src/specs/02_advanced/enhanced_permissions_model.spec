@@ -94,17 +94,19 @@ Majority approval from the network admin accounts is required before an organiza
 
 * Validate that org "NWADMIN" is approved, has "Node1" linked and has role "NWADMIN"
 * Check "Node1"'s default account is from org "NWADMIN" and has role "NWADMIN" and is org admin and is active
-* Deploy a "PartyProtection" C1 contract with initial value "111" in "Node1"'s default account and it's private for "Node2", named this contract as "contract1Extension"
+* Deploy a C1 contract with initial value "111" in "Node1"'s default account and it's private for "Node2", named this contract as "contract1Extension"
 * "contract1Extension" is deployed "successfully" in "Node1,Node2"
 * "contract1Extension"'s `get()` function execution in "Node1" returns "111"
 * "contract1Extension"'s `get()` function execution in "Node2" returns "111"
 * "contract1Extension"'s `get()` function execution in "Node3" returns "0"
-* Creating a "PartyProtection" extension of "contract1Extension" to "Node3" with its default account as recipient from "Node2" should fail with error "account not an org admin account, cannot initiate extension"
-* Creating a "PartyProtection" extension of "contract1Extension" to "Node3" with its default account as recipient from "Node1" should fail with error "recipient account address is not an org admin account. cannot accept extension"
+
+* Initiating extension of "contract1Extension" to "Node3" with its default account as recipient from "Node2" should fail with error "account not an org admin account, cannot initiate extension"
+* Initiating extension of "contract1Extension" to "Node3" with its default account as recipient from "Node1" should fail with error "recipient account address is not an org admin account. cannot accept extension"
+
 * From "Node1" add a new org admin role named "ORGADMIN" to "NWADMIN"
 * From "Node1" assign "Node3"'s default account to "NWADMIN" org and "ORGADMIN" role
 * From "Node1" approve "Node3"'s default account to "NWADMIN" org and "ORGADMIN" role
-* Create a "PartyProtection" extension to "Node3" with its default account as recipient from "Node1" for contract "contract1Extension"
+* Initiate contract extension to "Node3" with its default account as recipient from "Node1" for contract "contract1Extension"
 * "Node3" accepts the offer to extend the contract "contract1Extension"
 * Wait for "contract1Extension" to disappear from active extension in "Node3"
 * "contract1Extension"'s `get()` function execution in "Node1" returns "111"
