@@ -84,6 +84,20 @@ public class PermissionService extends AbstractService {
 
     }
 
+    public Observable<ExecStatusInfo> assignAdminRole(QuorumNetworkProperty.Node node, String address, String org, String role) {
+        Quorum client = connectionFactory().getConnection(node);
+        String fromAccount = accountService.getDefaultAccountAddress(node).blockingFirst();
+        return client.quorumPermissionAssignAdminRole(org, address, role, new PrivateTransaction(fromAccount, null, DEFAULT_GAS_LIMIT, null, BigInteger.ZERO, null, null, null)).flowable().toObservable();
+
+    }
+
+    public Observable<ExecStatusInfo> approveAdminRoleAssignment(QuorumNetworkProperty.Node node, String address, String org) {
+        Quorum client = connectionFactory().getConnection(node);
+        String fromAccount = accountService.getDefaultAccountAddress(node).blockingFirst();
+        return client.quorumPermissionApproveAdminRole(org, address, new PrivateTransaction(fromAccount, null, DEFAULT_GAS_LIMIT, null, BigInteger.ZERO, null, null, null)).flowable().toObservable();
+
+    }
+
     public Observable<ExecStatusInfo> updateOrgStatus(QuorumNetworkProperty.Node node, String org, int status) {
         Quorum client = connectionFactory().getConnection(node);
         String fromAccount = accountService.getDefaultAccountAddress(node).blockingFirst();
