@@ -44,6 +44,7 @@ import org.web3j.quorum.methods.response.permissioning.*;
 import org.web3j.tx.Contract;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -425,11 +426,35 @@ public class Permissions extends AbstractSpecImplementation {
         assertThat(isPresent).isTrue();
     }
 
+    private void waitForOrgStatus(QuorumNetworkProperty.Node proposingNode, String orgId, String status) {
+        assertThat(permissionService.getPermissionOrgList(proposingNode)
+            .map(orgList -> {
+                boolean found = false;
+                for (PermissionOrgInfo orgInfo : orgList.getPermissionOrgList()) {
+                    if (orgId.equalsIgnoreCase(orgInfo.getOrgId()) && orgInfo.getStatus() == orgStatusMap.get(status)) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    throw new Exception("not found yet"); // to trigger retry
+                }
+                return true;
+            })
+            .doOnNext(found -> logger.debug("Org = {}, expected status = {}, ready = {}", orgId, status, found))
+            .retryWhen(errors -> errors
+                    .zipWith(Observable.range(1, 5), (n, i) -> i) // how many retries
+                    .flatMap(retryCount -> Observable.timer(1, TimeUnit.SECONDS))) // sleep x seconds between retry
+            .blockingFirst()
+        ).as("wait for the org " + orgId + " status to be " + status).isTrue();
+    }
+
     @Step("From <proposingNode> propose new org <orgId> into the network with <node>'s enode id and <accountKey> account")
     public void proposeOrg(QuorumNetworkProperty.Node proposingNode, String orgId, QuorumNetworkProperty.Node node, String accountKey) {
         String acctId = node.getAccountAliases().get(accountKey);
         ExecStatusInfo execStatus = permissionService.addOrg(proposingNode, orgId, node.getEnodeUrl(), acctId).blockingFirst();
         assertThat(!execStatus.hasError());
+        waitForOrgStatus(proposingNode, orgId, "Proposed");
     }
 
     @Step("From <proposingNode> approve new org <orgId> into the network with <node>'s enode id and <accountKey> account")
@@ -437,6 +462,7 @@ public class Permissions extends AbstractSpecImplementation {
         String acctId = node.getAccountAliases().get(accountKey);
         ExecStatusInfo execStatus = permissionService.approveOrg(proposingNode, orgId, node.getEnodeUrl(), acctId).blockingFirst();
         assertThat(!execStatus.hasError());
+        waitForOrgStatus(proposingNode, orgId, "Approved");
     }
 
     @Step("Start stand alone <node> in <networkId>")
