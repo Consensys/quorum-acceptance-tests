@@ -139,6 +139,17 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     @Step("<contractName>'s `get()` function execution in <node> returns <expectedValue>")
     public void verifyPrivacyWithParticipatedNodes(String contractName, QuorumNode node, int expectedValue) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
+        // check transaction receipt to make sure the state is ready
+        assertThat(c.getTransactionReceipt().isPresent()).isTrue();
+        transactionService.getTransactionReceipt(node, c.getTransactionReceipt().get().getTransactionHash())
+                .map(ethGetTransactionReceipt -> {
+                    if (ethGetTransactionReceipt.getTransactionReceipt().isPresent()) {
+                        return ethGetTransactionReceipt;
+                    } else {
+                        throw new RuntimeException("retry");
+                    }
+                }).retryWhen(new RetryWithDelay(5, 1000))
+                .blockingSubscribe();
         int actualValue = contractService.readSimpleContractValue(node, c.getContractAddress());
 
         assertThat(actualValue).isEqualTo(expectedValue);
