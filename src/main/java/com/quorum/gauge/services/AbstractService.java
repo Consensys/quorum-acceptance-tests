@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.web3j.tx.gas.ContractGasProvider;
 
 import java.math.BigInteger;
+import java.util.Optional;
 
 public abstract class AbstractService {
 
@@ -53,6 +54,11 @@ public abstract class AbstractService {
             return networkProperty;
         }
         return Context.getNetworkProperty();
+    }
+
+    protected QuorumNetworkProperty.OAuth2ServerProperty oAuth2ServerProperty() {
+        return  Optional.ofNullable(networkProperty().getOauth2Server())
+                .orElseThrow(() -> new RuntimeException("missing oauth2 server configuration"));
     }
 
     public ContractGasProvider getPermContractGasProvider() {
