@@ -28,6 +28,8 @@ With built-in provisioning feature:
 * [Terraform Provider Quorum](https://bintray.com/quorumengineering/terraform/terraform-provider-quorum)
    - Refer to [this guide](https://www.terraform.io/docs/configuration/providers.html#third-party-plugins) on how to install the provider manually
 
+**For more details on tools and versions being used, please refer to [Dockerfile](Dockerfile)**
+
 ## Writing Tests
 
 * Using [Gauge](https://github.com/getgauge/gauge) test automation framework
