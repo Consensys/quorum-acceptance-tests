@@ -1,0 +1,4 @@
+# <contractName> is deployed <status> in <nodeList>
+
+* Transaction Hash is <status> returned for <contractName>
+* Transaction Receipt is <status> available in <nodeList> for <contractName>

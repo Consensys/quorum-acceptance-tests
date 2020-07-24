@@ -33,6 +33,8 @@ public class BootSpring implements ClassInitializer {
     private ApplicationContext context;
 
     public BootSpring() {
+        // workaround for JDK11: https://bugs.openjdk.java.net/browse/JDK-8213202
+        System.setProperty("jdk.tls.client.protocols", "TLSv1,TLSv1.1,TLSv1.2");
         context = SpringApplication.run(Main.class);
     }
 

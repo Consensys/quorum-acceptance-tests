@@ -76,6 +76,10 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.web3j</groupId>
             <artifactId>quorum</artifactId>
             <version>${web3j-quorum.version}</version>

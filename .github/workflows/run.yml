@@ -15,27 +15,14 @@ on:
     branches:
       - 'master'
       - 'dev-*'
-env:
-  JAVA_VERSION: 11
-  TERRAFORM_VERSION: 0.12.24
-  SOLC_VERSION: 0.5.5
-  GAUGE_VERSION: 1.0.8
-  GAUGE_JAVA_VERSION: 0.7.7 # To have a consistent run, this must be the same as gauge-java.version in pom.xml
-  TERRAFORM_PROVIDER_QUORUM_VERSION: 1.0.0-beta.1
-  INFRA_FOLDER: 'networks/_infra/aws-ec2'
-  INFRA_PROFILE: '${{ secrets.AWS_REGION }}'
-  AWS_ACCESS_KEY_ID: '${{ secrets.AWS_ACCESS_KEY_ID }}'
-  AWS_SECRET_ACCESS_KEY: '${{ secrets.AWS_SECRET_ACCESS_KEY }}'
-  # Terraform variables for infra provisioning
-  TF_VAR_vpc_id: '${{ secrets.AWS_VPC_ID }}'
-  TF_VAR_public_subnet_id: '${{ secrets.AWS_PUBLIC_SUBNET_ID }}'
-  BIN_DIR: bin
 jobs:
   condition:
     name: Evaluate workflow run conditions
     runs-on: ubuntu-latest
     outputs:
       should_run: '${{ steps.check.outputs.val }}'
+      use_aws: '${{ steps.check.outputs.useAws }}'
+      infra: '${{ steps.check.outputs.infra }}'
     steps:
       - name: Check
         id: check
@@ -47,7 +34,53 @@ jobs:
           if [ "$val" == "false" ]; then
             echo "::warning ::Runs are conditionally skipped"
           fi
+          useAws="true"
+          infraName="AWS"
+          if [ "${{ secrets.AWS_ACCESS_KEY_ID }}" == "" ] || [ "${{ github.event_name }}" == "pull_request" ] || [ "${{ secrets.DISABLE_AWS }}" == "true" ]; then
+            useAws="false"
+            infraName="GithubActionsVM"
+          fi
+          echo "::warning ::Networks are provisioned using $infraName infrastructure"
           echo "::set-output name=val::$val"
+          echo "::set-output name=useAws::$useAws"
+          echo "::set-output name=infra::$infraName"
+  docker-build:
+    name: 'Build Docker image'
+    if: needs.condition.outputs.should_run == 'true'
+    needs:
+      - condition
+    runs-on: ubuntu-latest
+    outputs:
+      output_dir: '${{ steps.prepare.outputs.output_dir }}'
+      output_file: '${{ steps.prepare.outputs.output_file }}'
+      image_file: '${{ steps.prepare.outputs.image_file }}'
+      image_name: '${{ steps.prepare.outputs.image_name }}'
+    steps:
+      - name: 'Prepare'
+        id: prepare
+        run: |
+          output_dir=${{ runner.temp }}/docker
+          mkdir -p $output_dir
+          echo "::set-output name=output_dir::$output_dir"
+          echo "::set-output name=output_file::$output_dir/acctests.tar.gz"
+          echo "::set-output name=image_file::acctests.tar"
+          echo "::set-output name=image_name::quorumengineering/acctests:gh"
+      - name: 'Cache docker image'
+        id: cache-image
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.prepare.outputs.output_dir }}
+          key: ${{ github.sha }}
+      - name: 'Check out project files'
+        if: steps.cache-image.outputs.cache-hit != 'true'
+        uses: actions/checkout@v2
+      - name: 'Build docker image'
+        if: steps.cache-image.outputs.cache-hit != 'true'
+        id: build
+        run: |
+          docker build -t ${{ steps.prepare.outputs.image_name }} .
+          docker save ${{ steps.prepare.outputs.image_name }} > ${{ steps.prepare.outputs.image_file }}
+          tar cfvz ${{ steps.prepare.outputs.output_file }} ${{ steps.prepare.outputs.image_file }}
   run:
     # This workflow uses tag expression and its sha256 hash to aggregate test results
     # from each execution. It is important that the job name has tag expression in the
@@ -56,6 +89,7 @@ jobs:
     if: needs.condition.outputs.should_run == 'true'
     needs:
       - condition
+      - docker-build
     strategy:
       fail-fast: false
       matrix:
@@ -69,87 +103,50 @@ jobs:
           - 'validator-management && networks/template::istanbul-3plus1'
           - 'basic || basic-raft || (advanced && raft) || networks/plugins::raft'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul'
+          - 'basic-rpc-security || networks/plugins::raft-rpc-security'
+          - 'basic-rpc-security || networks/plugins::istanbul-rpc-security'
           - 'migration && networks/template::raft-4nodes'
           - 'migration && networks/template::istanbul-4nodes'
           - 'permissions && networks/template::raft-3plus1'
     runs-on: ubuntu-latest
     steps:
-      - name: 'Checkout'
-        uses: actions/checkout@v2
-      - name: 'Setup Java ${{ env.JAVA_VERSION }}'
-        uses: actions/setup-java@v1
+      - name: 'Download docker image'
+        uses: actions/cache@v2
         with:
-          java-version: ${{ env.JAVA_VERSION }}
-      - name: 'Create cache keys'
-        id: keys
-        run: |
-          tagKey=$(echo -n "${{ matrix.tag }}" | shasum --algorithm=256 | awk '{print $1}')
-          versionKey=$(echo "${{ env.TERRAFORM_VERSION }}-${{ env.SOLC_VERSION }}-${{ env.GAUGE_VERSION }}-${{ env.TERRAFORM_PROVIDER_QUORUM_VERSION }}" | shasum --algorithm=256 | awk '{print $1}')
-          echo "::set-output name=tag::$tagKey"
-          echo "::set-output name=version::$versionKey"
-      - name: 'Cache binaries'
-        id: bin
-        uses: actions/cache@v1
-        with:
-          path: ${{ env.BIN_DIR }}
-          key: ${{ runner.os }}-bin-${{ steps.keys.outputs.tag }}-${{ steps.keys.outputs.version }}
-          restore-keys: ${{ runner.os }}-bin-${{ steps.keys.outputs.tag }}-
-      - name: 'Cache Maven dependencies'
-        uses: actions/cache@v1
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-m2-${{ steps.keys.outputs.tag }}-${{ hashFiles('pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2-${{ steps.keys.outputs.tag }}-
-      - name: 'Download binaries'
-        if: steps.bin.outputs.cache-hit != 'true'
-        run: |
-          mkdir -p ${{ env.BIN_DIR }}
-
-          echo "Downloading terraform ..."
-          wget https://releases.hashicorp.com/terraform/${{ env.TERRAFORM_VERSION }}/terraform_${{ env.TERRAFORM_VERSION }}_linux_amd64.zip -O terraform.zip -q
-          unzip -o terraform.zip -d ${{ env.BIN_DIR }}
-
-          echo "Downloading solc ..."
-          wget https://github.com/ethereum/solidity/releases/download/v${{ env.SOLC_VERSION }}/solc-static-linux -O ${{ env.BIN_DIR }}/solc -q
-          chmod +x ${{ env.BIN_DIR }}/solc
-
-          echo "Downloading gauge ..."
-          wget https://github.com/getgauge/gauge/releases/download/v${{ env.GAUGE_VERSION }}/gauge-${{ env.GAUGE_VERSION }}-linux.x86_64.zip -O gauge.zip -q
-          unzip -o gauge.zip -d ${{ env.BIN_DIR }}
-
-          echo "Downloading terraform-provider-quorum ..."
-          wget https://dl.bintray.com/quorumengineering/terraform/terraform-provider-quorum/v${{ env.TERRAFORM_PROVIDER_QUORUM_VERSION }}/terraform-provider-quorum_${{ env.TERRAFORM_PROVIDER_QUORUM_VERSION }}_linux_amd64.zip -O provider.zip -q
-          unzip -o provider.zip -d ${{ env.BIN_DIR }}
-      - name: 'Setup environment'
+          path: ${{ needs.docker-build.outputs.output_dir }}
+          key: ${{ github.sha }}
+      - name: 'Prepare environment'
         id: setup
         run: |
-          ${{ env.BIN_DIR }}/gauge install java --version ${{ env.GAUGE_JAVA_VERSION }}
-          ${{ env.BIN_DIR }}/gauge install
-          gaugeEnv=GithubActions-workflow-${{ github.run_number }}
-          mkdir -p env/$gaugeEnv
-          useAWS=true
-          mvnArg="-Dinfra.target=${{ env.INFRA_FOLDER }}::${{ env.INFRA_PROFILE }}"
-          if [ "${{ env.AWS_ACCESS_KEY_ID }}" == "" ] || [ "${{ github.event_name }}" == "pull_request" ] || [ "${{ secrets.DISABLE_AWS }}" == "true" ]; then
-            useAWS=false
-            mvnArg=""
+          tar xfvz ${{ needs.docker-build.outputs.output_file }}
+          docker load --input ${{ needs.docker-build.outputs.image_file }}
+          tagKey=$(echo -n "${{ matrix.tag }}" | shasum --algorithm=256 | awk '{print $1}')
+          mvnArg=""
+          dockerEnv="--network host -v /var/run/docker.sock:/var/run/docker.sock"
+          if [ "${{ needs.condition.outputs.use_aws }}" == "true" ]; then
+            infraFolder="networks/_infra/aws-ec2"
+            infraProfile="${{ secrets.AWS_REGION }}"
+            mvnArg="-Dinfra.target=$infraFolder::$infraProfile"
+            dockerEnv="-e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} -e TF_VAR_vpc_id=${{ secrets.AWS_VPC_ID }} -e TF_VAR_public_subnet_id=${{ secrets.AWS_PUBLIC_SUBNET_ID }}"
+            echo "::set-env name=INFRA_FOLDER::$infraFolder"
+            echo "::set-env name=INFRA_PROFILE::$infraProfile"
           fi
-          echo "::add-path::$(pwd)/${{ env.BIN_DIR }}"
-          echo "::set-output name=gauge-env::$gaugeEnv"
-          echo "::set-output name=useAWS::$useAWS"
+          echo "::set-output name=tag::$tagKey"
           echo "::set-output name=mvnArg::$mvnArg"
+          echo "::set-output name=dockerEnv::$dockerEnv"
           echo "::set-output name=outputDir::${{ runner.temp }}"
-      - name: 'Run tests ${{ steps.setup.outputs.mvnArg }}'
-          #MAVEN_OPTS: -Xmx512m -XX:MaxPermSize=128m
-          #LOGGING_LEVEL_COM_QUORUM_GAUGE: DEBUG
+      - name: 'Run tests using ${{ needs.condition.outputs.infra }}'
         run: |
-          mvn --no-transfer-progress -B \
-              clean test \
-              -P gaugeFailSafe \
-              -Pauto \
-              -Dtags="${{ matrix.tag }}" ${{ steps.setup.outputs.mvnArg }} \
-              -Denv=${{ steps.setup.outputs.gauge-env }} \
-              -Dauto.outputDir=${{ steps.setup.outputs.outputDir }} \
-              -Dauto.jobid=${{ steps.keys.outputs.tag }}
+          # we don't remove the container after run as we need to clean up the infra if used
+          docker run \
+              --name acctests-run ${{ steps.setup.outputs.dockerEnv }} \
+              -v ${{ steps.setup.outputs.outputDir }}:${{ steps.setup.outputs.outputDir }} \
+              ${{ needs.docker-build.outputs.image_name }} test \
+                -PgaugeFailSafe \
+                -Pauto \
+                -Dtags="${{ matrix.tag }}" ${{ steps.setup.outputs.mvnArg }} \
+                -Dauto.outputDir=${{ steps.setup.outputs.outputDir }} \
+                -Dauto.jobid=${{ steps.setup.outputs.tag }}
       - name: 'Read test report'
         if: always()
         run: |
@@ -168,31 +165,30 @@ jobs:
             echo "::error file=$(_jq '.file'),line=$(_jq '.line'),col=$(_jq '.col')::$(_jq '.message')"
           done
           cat ${{ steps.setup.outputs.outputDir}}/summary.txt
-      - name: 'Display debug when failure happens'
-        if: failure() && steps.setup.outputs.useAWS == 'true'
-        working-directory: ${{ env.INFRA_FOLDER }}
-        run: |
-          terraform show
       - name: 'Upload test report'
         if: always()
         uses: actions/upload-artifact@v2
         with:
-          name: testreport-${{ steps.keys.outputs.tag }}
+          name: testreport-${{ steps.setup.outputs.tag }}
           path: ${{ steps.setup.outputs.outputDir }}/*.* # only files not directory
       - name: 'Destroy infrastructure resources if ever created'
-        if: always() && steps.setup.outputs.useAWS == 'true'
+        if: always() && needs.condition.outputs.use_aws == 'true'
         # we don't care about containers running on the remote VM
         run: |
-          mvn --no-transfer-progress -B \
-            exec:exec@infra.terraform-destroy \
-            -Pauto \
-            -Dinfra.folder="${{ env.INFRA_FOLDER }}" \
-            -Dinfra.profile="${{ env.INFRA_PROFILE }}"
+          docker commit acctests-run quorumengineering/acctests:after
+          docker run --rm ${{ steps.setup.outputs.dockerEnv }} \
+              -v ${{ steps.setup.outputs.outputDir }}:${{ steps.setup.outputs.outputDir  }} \
+              quorumengineering/acctests:after \
+                exec:exec@infra.terraform-destroy \
+                -Pauto \
+                -Dinfra.folder="${{ env.INFRA_FOLDER }}" \
+                -Dinfra.profile="${{ env.INFRA_PROFILE }}"
   notify:
     if: always() && github.event_name != 'pull_request' && needs.condition.outputs.should_run == 'true'
     name: Notify
     needs:
       - condition
+      - docker-build
       - run
     runs-on: ubuntu-latest
     steps:
@@ -204,12 +200,6 @@ jobs:
           gitref_path=${gitref_path/refs\/tags/tree}  # for refs/tags/v1.0.0
           gitref_path=${gitref_path#refs\/}             # for refs/pull/123/merge
           gitref_path=${gitref_path%/merge}           # for refs/pull/123/merge
-          run_on="AWS"
-          if [ "${{ env.AWS_ACCESS_KEY_ID }}" == "" ] || [ "${{ secrets.DISABLE_AWS }}" == "true" ]; then
-            run_on="GithubActionsVM"
-            echo "::warning ::Tests run on Github Actions VM. Some tests may fail due to lack of hardware resources."
-          fi
-          echo "::set-output name=run-on::$run_on"
           echo "::set-output name=gitref-path::$gitref_path"
       - name: 'Download test reports'
         uses: actions/download-artifact@v2
@@ -380,7 +370,7 @@ jobs:
                     type: "section",
                     text: {
                         type: "mrkdwn",
-                        text: `${status_icon_func(workflow_status)} *${{ github.workflow }}* (ran on ${{ steps.setup.outputs.run-on }}) <${wf_run.data.html_url}|#${{ github.run_number }}>\n${summary_text}`
+                        text: `${status_icon_func(workflow_status)} *${{ github.workflow }}* (ran on ${{ needs.condition.outputs.infra }}) <${wf_run.data.html_url}|#${{ github.run_number }}>\n${summary_text}`
                     }
                 },
                 {

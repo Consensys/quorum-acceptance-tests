@@ -38,6 +38,7 @@ public class QuorumNetworkProperty {
     private SocksProxy socksProxy;
     private HashicorpVaultServerProperty hashicorpVaultServer;
     private DockerInfrastructureProperty dockerInfrastructure = new DockerInfrastructureProperty();
+    private OAuth2ServerProperty oauth2Server;
 
     public SocksProxy getSocksProxy() {
         return socksProxy;
@@ -115,6 +116,14 @@ public class QuorumNetworkProperty {
                 break;
         }
         return duration;
+    }
+
+    public OAuth2ServerProperty getOauth2Server() {
+        return oauth2Server;
+    }
+
+    public void setOauth2Server(OAuth2ServerProperty oauth2Server) {
+        this.oauth2Server = oauth2Server;
     }
 
     public static class SocksProxy {
@@ -342,6 +351,30 @@ public class QuorumNetworkProperty {
             public void setTesseraContainerId(String tesseraContainerId) {
                 this.tesseraContainerId = tesseraContainerId;
             }
+        }
+    }
+
+    public static class OAuth2ServerProperty {
+        private String clientEndpoint;
+        private String adminEndpoint;
+
+        public OAuth2ServerProperty() {
+        }
+
+        public String getClientEndpoint() {
+            return clientEndpoint;
+        }
+
+        public void setClientEndpoint(String clientEndpoint) {
+            this.clientEndpoint = clientEndpoint;
+        }
+
+        public String getAdminEndpoint() {
+            return adminEndpoint;
+        }
+
+        public void setAdminEndpoint(String adminEndpoint) {
+            this.adminEndpoint = adminEndpoint;
         }
     }
 

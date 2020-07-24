@@ -19,9 +19,11 @@
 
 package com.quorum.gauge.services;
 
+import com.quorum.gauge.common.PrivacyFlag;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNetworkProperty.Node;
 import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.ext.EnhancedClientTransactionManager;
 import com.quorum.gauge.ext.EthSendTransactionAsync;
 import com.quorum.gauge.ext.EthStorageRoot;
 import com.quorum.gauge.ext.PrivateTransactionAsync;
@@ -48,8 +50,7 @@ import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
-
-import static java.util.Collections.singletonList;
+import java.util.stream.Collectors;
 
 @Service
 public class ContractService extends AbstractService {
@@ -74,22 +75,27 @@ public class ContractService extends AbstractService {
     }
 
     public Observable<? extends Contract> createSimpleContract(int initialValue, QuorumNode source, QuorumNode target, BigInteger gas) {
+        return createSimpleContract(initialValue, source, Arrays.asList(target), gas, Arrays.asList(PrivacyFlag.Legacy));
+    }
+
+    public Observable<? extends Contract> createSimpleContract(int initialValue, QuorumNode source, List<QuorumNode> targets, BigInteger gas, List<PrivacyFlag> flags) {
         Quorum client = connectionFactory().getConnection(source);
         final List<String> privateFor;
-        if (null != target) {
-            privateFor = Arrays.asList(privacyService.id(target));
+        if (null != targets) {
+            privateFor = targets.stream().filter(q -> q != null).map(q -> privacyService.id(q)).collect(Collectors.toList());
         } else {
             privateFor = null;
         }
 
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
-            ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
-                    client,
-                    address,
-                    null,
-                    privateFor,
-                    DEFAULT_MAX_RETRY,
-                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+            EnhancedClientTransactionManager clientTransactionManager = new EnhancedClientTransactionManager(
+                client,
+                address,
+                null,
+                privateFor,
+                flags,
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS);
             return SimpleStorage.deploy(client,
                     clientTransactionManager,
                     BigInteger.valueOf(0),
@@ -107,8 +113,8 @@ public class ContractService extends AbstractService {
             address = client.ethCoinbase().send().getAddress();
             ReadonlyTransactionManager txManager = new ReadonlyTransactionManager(client, address);
             return SimpleStorage.load(contractAddress, client, txManager,
-                    BigInteger.valueOf(0),
-                    DEFAULT_GAS_LIMIT).get().send().intValue();
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT).get().send().intValue();
         } catch (ContractCallException cce) {
             if (cce.getMessage().contains("Empty value (0x)")) {
                 return 0;
@@ -121,23 +127,29 @@ public class ContractService extends AbstractService {
         }
     }
 
+    public Observable<TransactionReceipt> updateSimpleContract(final QuorumNode source, List<QuorumNode> target,
+                                                               final String contractAddress, final int newValue, List<PrivacyFlag> flags) {
+        return this.updateSimpleContractWithGasLimit(source, target, contractAddress, DEFAULT_GAS_LIMIT, newValue, flags);
+    }
+
     public Observable<TransactionReceipt> updateSimpleContract(final QuorumNode source, final QuorumNode target,
-                                                   final String contractAddress, final int newValue) {
-        return this.updateSimpleContractWithGasLimit(source, target, contractAddress, DEFAULT_GAS_LIMIT, newValue);
+                                                               final String contractAddress, final int newValue, List<PrivacyFlag> flags) {
+        return this.updateSimpleContractWithGasLimit(source, Arrays.asList(target), contractAddress, DEFAULT_GAS_LIMIT, newValue, flags);
     }
 
     public Observable<TransactionReceipt> updateSimpleContractWithGasLimit(final QuorumNode source,
-                                                               final QuorumNode target,
-                                                               final String contractAddress,
-                                                               final BigInteger gasLimit,
-                                                               final int newValue) {
+                                                                           final List<QuorumNode> target,
+                                                                           final String contractAddress,
+                                                                           final BigInteger gasLimit,
+                                                                           final int newValue,
+                                                                           final List<PrivacyFlag> flags) {
         final Quorum client = connectionFactory().getConnection(source);
         final BigInteger value = BigInteger.valueOf(newValue);
-        final List<String> privateFor = singletonList(privacyService.id(target));
+        final List<String> privateFor = target.stream().map(q -> privacyService.id(q)).collect(Collectors.toList());
 
         return accountService.getDefaultAccountAddress(source)
-            .map(address -> new ClientTransactionManager(
-                client, address, null, privateFor, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
+            .map(address -> new EnhancedClientTransactionManager(
+                client, address, null, privateFor, flags, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
             ))
             .flatMap(txManager -> SimpleStorage.load(
                 contractAddress, client, txManager, BigInteger.ZERO, gasLimit).set(value).flowable().toObservable()
@@ -182,16 +194,16 @@ public class ContractService extends AbstractService {
                     switch (methodName.toLowerCase().trim()) {
                         case "geta":
                             return Storea.load(contractAddress, client, txManager,
-                                    BigInteger.valueOf(0),
-                                    DEFAULT_GAS_LIMIT).geta().send().intValue();
+                                BigInteger.valueOf(0),
+                                DEFAULT_GAS_LIMIT).geta().send().intValue();
                         case "getb":
                             return Storea.load(contractAddress, client, txManager,
-                                    BigInteger.valueOf(0),
-                                    DEFAULT_GAS_LIMIT).getb().send().intValue();
+                                BigInteger.valueOf(0),
+                                DEFAULT_GAS_LIMIT).getb().send().intValue();
                         case "getc":
                             return Storea.load(contractAddress, client, txManager,
-                                    BigInteger.valueOf(0),
-                                    DEFAULT_GAS_LIMIT).getc().send().intValue();
+                                BigInteger.valueOf(0),
+                                DEFAULT_GAS_LIMIT).getc().send().intValue();
                         default:
                             throw new Exception("invalid method name " + methodName + " for contract " + contractName);
 
@@ -200,12 +212,12 @@ public class ContractService extends AbstractService {
                     switch (methodName.toLowerCase().trim()) {
                         case "getb":
                             return Storeb.load(contractAddress, client, txManager,
-                                    BigInteger.valueOf(0),
-                                    DEFAULT_GAS_LIMIT).getb().send().intValue();
+                                BigInteger.valueOf(0),
+                                DEFAULT_GAS_LIMIT).getb().send().intValue();
                         case "getc":
                             return Storeb.load(contractAddress, client, txManager,
-                                    BigInteger.valueOf(0),
-                                    DEFAULT_GAS_LIMIT).getc().send().intValue();
+                                BigInteger.valueOf(0),
+                                DEFAULT_GAS_LIMIT).getc().send().intValue();
                         default:
                             throw new Exception("invalid method name " + methodName + " for contract " + contractName);
                     }
@@ -213,8 +225,8 @@ public class ContractService extends AbstractService {
                     switch (methodName.toLowerCase().trim()) {
                         case "getc":
                             return Storec.load(contractAddress, client, txManager,
-                                    BigInteger.valueOf(0),
-                                    DEFAULT_GAS_LIMIT).getc().send().intValue();
+                                BigInteger.valueOf(0),
+                                DEFAULT_GAS_LIMIT).getc().send().intValue();
                         default:
                             throw new Exception("invalid method name " + methodName + " for contract " + contractName);
                     }
@@ -234,18 +246,18 @@ public class ContractService extends AbstractService {
         TransactionManager txManager;
         if (isPrivate) {
             txManager = new ClientTransactionManager(
-                    client,
-                    fromAddress,
-                    null,
-                    Arrays.asList(privacyService.id(target)),
-                    DEFAULT_MAX_RETRY,
-                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                client,
+                fromAddress,
+                null,
+                Arrays.asList(privacyService.id(target)),
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS);
         } else {
             txManager = new org.web3j.tx.ClientTransactionManager(
-                    client,
-                    fromAddress,
-                    DEFAULT_MAX_RETRY,
-                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                client,
+                fromAddress,
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS);
         }
         try {
             switch (contractName.toLowerCase().trim()) {
@@ -253,6 +265,7 @@ public class ContractService extends AbstractService {
                     switch (methodName.toLowerCase().trim()) {
                         case "seta":
                             return Storea.load(contractAddress, client, txManager,
+
                                     BigInteger.valueOf(0),
                                     DEFAULT_GAS_LIMIT).seta(BigInteger.valueOf(value)).flowable().toObservable();
                         case "setb":
@@ -305,18 +318,18 @@ public class ContractService extends AbstractService {
         TransactionManager transactionManager;
         if (isPrivate) {
             transactionManager = new ClientTransactionManager(
-                    client,
-                    fromAddress,
-                    null,
-                    Arrays.asList(privacyService.id(target)),
-                    DEFAULT_MAX_RETRY,
-                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                client,
+                fromAddress,
+                null,
+                Arrays.asList(privacyService.id(target)),
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS);
         } else {
             transactionManager = new org.web3j.tx.ClientTransactionManager(
-                    client,
-                    fromAddress,
-                    DEFAULT_MAX_RETRY,
-                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                client,
+                fromAddress,
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS);
         }
         switch (contractName.toLowerCase().trim()) {
             case "storea":
@@ -348,12 +361,12 @@ public class ContractService extends AbstractService {
         Quorum client = connectionFactory().getConnection(source);
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
             ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
-                    client,
-                    address,
-                    null,
-                    Arrays.asList(privacyService.id(target)),
-                    DEFAULT_MAX_RETRY,
-                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                client,
+                address,
+                null,
+                Arrays.asList(privacyService.id(target)),
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS);
             return ClientReceipt.deploy(client,
                     clientTransactionManager,
                     BigInteger.valueOf(0),
@@ -379,12 +392,12 @@ public class ContractService extends AbstractService {
         Quorum client = connectionFactory().getConnection(source);
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
             ClientTransactionManager txManager = new ClientTransactionManager(
-                    client,
-                    address,
-                    null,
-                    Arrays.asList(privacyService.id(target)),
-                    DEFAULT_MAX_RETRY,
-                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                client,
+                address,
+                null,
+                Arrays.asList(privacyService.id(target)),
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS);
             return ClientReceipt.load(contractAddress, client, txManager,
                     BigInteger.valueOf(0),
                     DEFAULT_GAS_LIMIT).deposit(new byte[32], value).flowable().toObservable();

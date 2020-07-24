@@ -49,6 +49,9 @@ public abstract class AbstractSpecImplementation {
     protected ContractService contractService;
 
     @Autowired
+    protected NestedContractService nestedContractService;
+
+    @Autowired
     protected PermissionsContractService permissionContractService;
 
     @Autowired
@@ -82,6 +85,9 @@ public abstract class AbstractSpecImplementation {
     protected GraphQLService graphQLService;
 
     @Autowired
+    protected OAuth2Service oAuth2Service;
+
+    @Autowired
     protected HashicorpVaultAccountCreationService hashicorpVaultAccountCreationService;
 
     @Autowired
@@ -100,6 +106,29 @@ public abstract class AbstractSpecImplementation {
         Object v = ds.get(key);
         assertThat(v).as("Value class for key [" + key + "] in Gauge DataStore").isInstanceOf(clazz);
         assertThat(v).as("Value for key [" + key + "] in Gauge DataStore").isNotNull();
+        return (T) v;
+    }
+
+    /**
+     * Check in all Gauge Data Stores
+     *
+     * @param key
+     * @param clazz
+     * @param <T>
+     * @return
+     */
+    protected <T> T mustHaveValue(String key, Class<T> clazz) {
+        Object v = null;
+        boolean isInstance = false;
+        for (DataStore ds : new DataStore[]{DataStoreFactory.getScenarioDataStore(), DataStoreFactory.getSpecDataStore(), DataStoreFactory.getSuiteDataStore()}) {
+            v = ds.get(key);
+            if (v != null && clazz.isInstance(v)) {
+                isInstance = true;
+                break;
+            }
+        }
+        assertThat(v).as("Value for key [" + key + "] in all Gauge DataStores").isNotNull();
+        assertThat(isInstance).as("Value for key [" + key + "] of type [" + clazz.getName() + "] in all Gauge DataStores").isTrue();
         return (T) v;
     }
 
@@ -129,9 +158,10 @@ public abstract class AbstractSpecImplementation {
         ).blockingFirst();
     }
 
-    // created a fixed thread pool executor and inject quorum connection factory into the scheduled thread
-    protected Scheduler networkAwaredScheduler(int threadCount) {
+    // created a fixed thread pool executor and inject ThreadLocal values into the scheduled thread
+    protected Scheduler threadLocalDelegateScheduler(int threadCount) {
         QuorumNodeConnectionFactory connectionFactory = Context.getConnectionFactory();
+        String accessToken = Context.retrieveAccessToken();
         Executor executor = Executors.newFixedThreadPool(Math.min(threadCount, 100), new ThreadFactory() {
             private int count = 0;
 
@@ -141,6 +171,7 @@ public abstract class AbstractSpecImplementation {
                     @Override
                     public void run() {
                         Context.setConnectionFactory(connectionFactory);
+                        Context.storeAccessToken(accessToken);
                         super.run();
                     }
                 };
@@ -154,5 +185,9 @@ public abstract class AbstractSpecImplementation {
      */
     protected int numberOfQuorumNodes() {
         return networkProperty.getNodes().size();
+    }
+
+    public enum Status {
+        successfully, unsuccessfully
     }
 }
