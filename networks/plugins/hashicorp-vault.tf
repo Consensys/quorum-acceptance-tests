@@ -10,7 +10,7 @@ locals {
     container_mounted_vault_storage_dir = "/mounted-vault-storage"
     container_vault_storage_dir = "/vault-storage"
 
-  container_entrypoint = "quorum-docker-entrypoint.sh"
+    container_entrypoint = "quorum-docker-entrypoint.sh"
 
     host_certs_dir = abspath("vault-server/CertsWithQuorumRootCAandIntCA")
     container_certs_dir = "/certs"
@@ -19,12 +19,6 @@ locals {
     container_client_cert = "${local.container_certs_dir}/quorum-client-chain.pem"
     container_client_key = "${local.container_certs_dir}/quorum-client.key"
     container_ca_cert = "${local.container_certs_dir}/caRoot.pem"
-
-    network_config = tolist(data.docker_network.quorum.ipam_config)[0]
-}
-
-data "docker_network" "quorum" {
-    name = module.docker.docker_network_name
 }
 
 data "docker_registry_image" "vault" {
