@@ -44,15 +44,13 @@ resource "docker_container" "vault_server" {
       internal = local.vault_server_port.internal
       external = local.vault_server_port.external
     }
-    mounts {
-        type = "bind"
-        source = local.host_vault_storage_dir
-        target = local.container_mounted_vault_storage_dir
+    volumes {
+        host_path = local.host_vault_storage_dir
+        container_path = local.container_mounted_vault_storage_dir
     }
-    mounts {
-        type = "bind"
-        source = local.host_certs_dir
-        target = local.container_certs_dir
+    volumes {
+        host_path = local.host_certs_dir
+        container_path = local.container_certs_dir
     }
     upload {
         file    = "/vault/config/quorum-vault.hcl"

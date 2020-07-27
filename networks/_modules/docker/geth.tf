@@ -38,10 +38,9 @@ resource "docker_container" "geth" {
     container_path = local.container_geth_datadir_mounted
     host_path      = var.geth_datadirs[count.index]
   }
-  mounts {
-    target = local.container_plugin_acctdir
-    source = length(local_file.plugin_acct_dir_files) != 0 ? dirname(local_file.plugin_acct_dir_files[count.index].filename) : dirname(local_file.plugin_acct_fallback_dir_files[count.index].filename)
-    type = "bind"
+  volumes {
+    container_path = local.container_plugin_acctdir
+    host_path      = length(local_file.plugin_acct_dir_files) != 0 ? dirname(local_file.plugin_acct_dir_files[count.index].filename) : dirname(local_file.plugin_acct_fallback_dir_files[count.index].filename)
   }
   networks_advanced {
     name         = docker_network.quorum.name
