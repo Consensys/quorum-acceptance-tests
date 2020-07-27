@@ -44,6 +44,7 @@ import org.web3j.quorum.methods.response.permissioning.*;
 import org.web3j.tx.Contract;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -425,11 +426,104 @@ public class Permissions extends AbstractSpecImplementation {
         assertThat(isPresent).isTrue();
     }
 
+    private void waitForOrgStatus(QuorumNetworkProperty.Node proposingNode, String orgId, String status) {
+        assertThat(permissionService.getPermissionOrgList(proposingNode)
+            .map(orgList -> {
+                boolean found = false;
+                for (PermissionOrgInfo orgInfo : orgList.getPermissionOrgList()) {
+                    if (orgId.equalsIgnoreCase(orgInfo.getOrgId()) && orgInfo.getStatus() == orgStatusMap.get(status)) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    throw new Exception("not found yet"); // to trigger retry
+                }
+                return true;
+            })
+            .doOnNext(found -> logger.debug("Org = {}, expected status = {}, ready = {}", orgId, status, found))
+            .retryWhen(errors -> errors
+                .zipWith(Observable.range(1, 5), (n, i) -> i) // how many retries
+                .flatMap(retryCount -> Observable.timer(1, TimeUnit.SECONDS))) // sleep x seconds between retry
+            .blockingFirst()
+        ).as("wait for the org " + orgId + " status to be " + status).isTrue();
+    }
+
+    private void waitForNodeStatus(QuorumNetworkProperty.Node proposingNode, String enodeId, String status) {
+        assertThat(permissionService.getPermissionNodeList(proposingNode)
+            .map(nodeList -> {
+                boolean found = false;
+                for (PermissionNodeInfo nodeInfo : nodeList.getPermissionNodeList()) {
+                    if (nodeInfo.getUrl().contains(enodeId) && nodeInfo.getStatus() == nodeStatusMap.get(status)) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    throw new Exception("not found yet"); // to trigger retry
+                }
+                return true;
+            })
+            .doOnNext(found -> logger.debug("Enode Id = {}, expected status = {}, ready = {}", enodeId, status, found))
+            .retryWhen(errors -> errors
+                .zipWith(Observable.range(1, 5), (n, i) -> i) // how many retries
+                .flatMap(retryCount -> Observable.timer(1, TimeUnit.SECONDS))) // sleep x seconds between retry
+            .blockingFirst()
+        ).as("wait for the node id " + enodeId + " status to be " + status).isTrue();
+    }
+
+    private void waitForRoleStatus(QuorumNetworkProperty.Node proposingNode, String orgId, String roleId) {
+        assertThat(permissionService.getPermissionRoleList(proposingNode)
+            .map(roleList -> {
+                boolean found = false;
+                for (PermissionRoleInfo roleInfo : roleList.getPermissionRoleList()) {
+                    if (orgId.equalsIgnoreCase(roleInfo.getOrgId()) && roleId.equalsIgnoreCase(roleInfo.getRoleId()) && roleInfo.getActive()) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    throw new Exception("not found yet"); // to trigger retry
+                }
+                return true;
+            })
+            .doOnNext(found -> logger.debug("Org = {}, Role Id = {} is active", orgId, roleId))
+            .retryWhen(errors -> errors
+                .zipWith(Observable.range(1, 5), (n, i) -> i) // how many retries
+                .flatMap(retryCount -> Observable.timer(1, TimeUnit.SECONDS))) // sleep x seconds between retry
+            .blockingFirst()
+        ).as("wait for the role id " + roleId + " status to be active").isTrue();
+    }
+
+    private void waitForAccountStatus(QuorumNetworkProperty.Node proposingNode, String account, String status) {
+        assertThat(permissionService.getPermissionAccountList(proposingNode)
+            .map(accountList -> {
+                boolean found = false;
+                for (PermissionAccountInfo accountInfo : accountList.getPermissionAccountList()) {
+                    if (account.equalsIgnoreCase(accountInfo.getAcctId()) && accountInfo.getStatus() == acctStatusMap.get(status)) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    throw new Exception("not found yet"); // to trigger retry
+                }
+                return true;
+            })
+            .doOnNext(found -> logger.debug("AccountId = {}, status = {}", account, status))
+            .retryWhen(errors -> errors
+                .zipWith(Observable.range(1, 5), (n, i) -> i) // how many retries
+                .flatMap(retryCount -> Observable.timer(1, TimeUnit.SECONDS))) // sleep x seconds between retry
+            .blockingFirst()
+        ).as("wait for the account id " + account + " status to be {}" + status).isTrue();
+    }
+
     @Step("From <proposingNode> propose new org <orgId> into the network with <node>'s enode id and <accountKey> account")
     public void proposeOrg(QuorumNetworkProperty.Node proposingNode, String orgId, QuorumNetworkProperty.Node node, String accountKey) {
         String acctId = node.getAccountAliases().get(accountKey);
         ExecStatusInfo execStatus = permissionService.addOrg(proposingNode, orgId, node.getEnodeUrl(), acctId).blockingFirst();
         assertThat(!execStatus.hasError());
+        waitForOrgStatus(proposingNode, orgId, "Proposed");
     }
 
     @Step("From <proposingNode> approve new org <orgId> into the network with <node>'s enode id and <accountKey> account")
@@ -437,6 +531,7 @@ public class Permissions extends AbstractSpecImplementation {
         String acctId = node.getAccountAliases().get(accountKey);
         ExecStatusInfo execStatus = permissionService.approveOrg(proposingNode, orgId, node.getEnodeUrl(), acctId).blockingFirst();
         assertThat(!execStatus.hasError());
+        waitForOrgStatus(proposingNode, orgId, "Approved");
     }
 
     @Step("Start stand alone <node> with <version>")
@@ -459,41 +554,12 @@ public class Permissions extends AbstractSpecImplementation {
             .blockingSubscribe();
     }
 
-    private boolean checkOrgStatusExists(QuorumNetworkProperty.Node fromNode, String org, String status)  {
-        org = getNetworkAdminOrg(org);
-        getNetworkDetails(fromNode);
-        List<PermissionOrgInfo> orgList = (ArrayList<PermissionOrgInfo>) DataStoreFactory.getScenarioDataStore().get("permOrgList");
-        assertThat(orgList.size()).isNotEqualTo(0);
-        int c = 0;
-        boolean isPresent = false;
-        for (PermissionOrgInfo i : orgList) {
-            ++c;
-            logger.debug("{} org: {} status: {}", c, i.getFullOrgId(), i.getStatus());
-            if (i.getFullOrgId().equalsIgnoreCase(org) && i.getStatus() == orgStatusMap.get(status)) {
-                isPresent = true;
-                break;
-            }
-        }
-        return isPresent;
-    }
-
-    private void waitForSomeSeconds(int seconds) {
-        try {
-            logger.debug("wating for {} seconds", seconds);
-            Thread.sleep(seconds * 1000);
-            logger.debug("wait is over");
-        } catch (InterruptedException e) {
-
-        }
-    }
-
     @Step("From <node> suspend org <org>, confirm that org status is <status>")
     public void suspendOrg(QuorumNetworkProperty.Node node, String org, String status) {
         org = getNetworkAdminOrg(org);
         ExecStatusInfo execStatus = permissionService.updateOrgStatus(node, org, 1).blockingFirst();
         assertThat(!execStatus.hasError());
-        waitForSomeSeconds(1);
-        assertThat(checkOrgStatusExists(node, org, status)).isTrue();
+        waitForOrgStatus(node, org, status);
     }
 
     @Step("From <node> approve org <org>'s suspension, confirm that org status is <status>")
@@ -501,8 +567,7 @@ public class Permissions extends AbstractSpecImplementation {
         org = getNetworkAdminOrg(org);
         ExecStatusInfo execStatus = permissionService.approveOrgStatus(node, org, 1).blockingFirst();
         assertThat(!execStatus.hasError());
-        waitForSomeSeconds(1);
-        assertThat(checkOrgStatusExists(node, org, status)).isTrue();
+        waitForOrgStatus(node, org, status);
     }
 
     @Step("From <node> revoke suspension of org <org>, confirm that org status is <status>")
@@ -510,8 +575,7 @@ public class Permissions extends AbstractSpecImplementation {
         org = getNetworkAdminOrg(org);
         ExecStatusInfo execStatus = permissionService.updateOrgStatus(node, org, 2).blockingFirst();
         assertThat(!execStatus.hasError());
-        waitForSomeSeconds(1);
-        assertThat(checkOrgStatusExists(node, org, status)).isTrue();
+        waitForOrgStatus(node, org, status);
     }
 
     @Step("From <node> approve org <org>'s suspension revoke, confirm that org status is <status>")
@@ -519,8 +583,7 @@ public class Permissions extends AbstractSpecImplementation {
         org = getNetworkAdminOrg(org);
         ExecStatusInfo execStatus = permissionService.approveOrgStatus(node, org, 2).blockingFirst();
         assertThat(!execStatus.hasError());
-        waitForSomeSeconds(1);
-        assertThat(checkOrgStatusExists(node, org, status)).isTrue();
+        waitForOrgStatus(node, org, status);
     }
 
     @Step("Deploy <contractName> smart contract with initial value <initialValue> from a default account in <node> fails with error <error>")
@@ -559,8 +622,7 @@ public class Permissions extends AbstractSpecImplementation {
         String fullEnodeId = getFullEnode(enodeId, node);
         assertThat(fullEnodeId).isNotNull();
         ExecStatusInfo execStatus = permissionService.updateNode(fromNode, org, fullEnodeId, 1).blockingFirst();
-        assertThat(!execStatus.hasError());
-        waitForSomeSeconds(1);
+        waitForNodeStatus(fromNode, enodeId, "Deactivated");
         getNetworkDetails(fromNode);
     }
 
@@ -578,5 +640,31 @@ public class Permissions extends AbstractSpecImplementation {
         EthBlockNumber newBlkNumber = utilService.getCurrentBlockNumberFrom(node).blockingFirst();
         logger.debug("block number old:{} new:{}", oldBlkNumber.getBlockNumber().intValue(), newBlkNumber.getBlockNumber().intValue());
         assertThat(newBlkNumber.getBlockNumber().intValue()).isEqualTo(oldBlkNumber.getBlockNumber().intValue());
+    }
+
+    @Step("From <fromNode> add a new org admin role named <roleId> to <org>")
+    public void addOrgAdminRole(QuorumNetworkProperty.Node fromNode, String roleId, String org) {
+        org = getNetworkAdminOrg(org);
+        ExecStatusInfo execStatus = permissionService.addNewRole(fromNode, org, roleId, 3, true, true).blockingFirst();
+        assertThat(!execStatus.hasError());
+        waitForRoleStatus(fromNode, org, roleId);
+    }
+
+    @Step("From <fromNode> assign <targetNode>'s default account to <org> org and <roleId> role")
+    public void assignAccountRole(QuorumNetworkProperty.Node fromNode, QuorumNetworkProperty.Node targetNode, String org, String roleId) {
+        org = getNetworkAdminOrg(org);
+        String account = accountService.getDefaultAccountAddress(targetNode).blockingFirst();
+        ExecStatusInfo execStatus = permissionService.assignAdminRole(fromNode, account, org, roleId).blockingFirst();
+        assertThat(!execStatus.hasError());
+        waitForAccountStatus(fromNode, account, "Pending");
+    }
+
+    @Step("From <fromNode> approve <targetNode>'s default account to <org> org and <roleId> role")
+    public void approveAccountRole(QuorumNetworkProperty.Node fromNode, QuorumNetworkProperty.Node targetNode, String org, String roleId) {
+        org = getNetworkAdminOrg(org);
+        String account = accountService.getDefaultAccountAddress(targetNode).blockingFirst();
+        ExecStatusInfo execStatus = permissionService.approveAdminRoleAssignment(fromNode, account, org).blockingFirst();
+        assertThat(!execStatus.hasError());
+        waitForAccountStatus(fromNode, account, "Active");
     }
 }
