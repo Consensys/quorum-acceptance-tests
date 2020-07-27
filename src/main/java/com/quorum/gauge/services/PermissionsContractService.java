@@ -173,7 +173,7 @@ public class PermissionsContractService extends AbstractService {
             return EeaPermissionsImplementation.deploy(
                 client,
                 transactionManager,
-                getPermContractGasProvider(),
+                getPermContractDepGasProvider(),
                 upgrAddr,
                 orgMgrAddr,
                 roleMgrAddr,

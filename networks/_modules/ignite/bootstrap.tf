@@ -96,7 +96,7 @@ resource "local_file" "genesis-file" {
         "ceil2Nby3Block": 0
       },
 %{endif~}
-      "maxCodeSize": 50
+      "maxCodeSize": 80
     },
     "difficulty": "${var.concensus == "istanbul" ? "0x1" : "0x0"}",
     "extraData": "${var.concensus == "istanbul" ? quorum_bootstrap_istanbul_extradata.this.extradata : "0x0000000000000000000000000000000000000000000000000000000000000000"}",
