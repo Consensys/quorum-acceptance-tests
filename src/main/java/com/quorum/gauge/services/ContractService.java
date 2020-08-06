@@ -19,9 +19,9 @@
 
 package com.quorum.gauge.services;
 
+import com.quorum.gauge.common.PrivacyFlag;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNetworkProperty.Node;
-import com.quorum.gauge.common.PrivacyFlag;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.ext.EnhancedClientTransactionManager;
 import com.quorum.gauge.ext.EthSendTransactionAsync;
@@ -319,18 +319,18 @@ public class ContractService extends AbstractService {
         TransactionManager transactionManager;
         if (isPrivate) {
             transactionManager = new ClientTransactionManager(
-                    client,
-                    fromAddress,
-                    null,
-                    Arrays.asList(privacyService.id(target)),
-                    DEFAULT_MAX_RETRY,
-                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                client,
+                fromAddress,
+                null,
+                Arrays.asList(privacyService.id(target)),
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS);
         } else {
             transactionManager = new org.web3j.tx.ClientTransactionManager(
-                    client,
-                    fromAddress,
-                    DEFAULT_MAX_RETRY,
-                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                client,
+                fromAddress,
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS);
         }
         switch (contractName.toLowerCase().trim()) {
             case "storea":
@@ -362,12 +362,12 @@ public class ContractService extends AbstractService {
         Quorum client = connectionFactory().getConnection(source);
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
             ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
-                    client,
-                    address,
-                    null,
-                    Arrays.asList(privacyService.id(target)),
-                    DEFAULT_MAX_RETRY,
-                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                client,
+                address,
+                null,
+                Arrays.asList(privacyService.id(target)),
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS);
             return ClientReceipt.deploy(client,
                     clientTransactionManager,
                     BigInteger.valueOf(0),
@@ -393,12 +393,12 @@ public class ContractService extends AbstractService {
         Quorum client = connectionFactory().getConnection(source);
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
             ClientTransactionManager txManager = new ClientTransactionManager(
-                    client,
-                    address,
-                    null,
-                    Arrays.asList(privacyService.id(target)),
-                    DEFAULT_MAX_RETRY,
-                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                client,
+                address,
+                null,
+                Arrays.asList(privacyService.id(target)),
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS);
             return ClientReceipt.load(contractAddress, client, txManager,
                     BigInteger.valueOf(0),
                     DEFAULT_GAS_LIMIT).deposit(new byte[32], value).flowable().toObservable();

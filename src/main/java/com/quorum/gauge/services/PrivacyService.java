@@ -30,16 +30,25 @@ import java.util.List;
 @Service
 public class PrivacyService extends AbstractService {
 
-    public String id(QuorumNode node) {
-        QuorumNetworkProperty.Node quorumNodeConfig = getQuorumNodeConfig(node);
-        String v = quorumNodeConfig.getPrivacyAddress();
+    private String getPrivacyAddress(QuorumNetworkProperty.Node node){
+        String v = node.getPrivacyAddress();
         if (StringUtils.isEmpty(v)) {
-            if (quorumNodeConfig.getPrivacyAddressAliases().isEmpty()) {
+            if (node.getPrivacyAddressAliases().isEmpty()) {
                 throw new RuntimeException("no privacy address is defined for node: " + node);
             }
-            v = quorumNodeConfig.getPrivacyAddressAliases().values().iterator().next();
+            v = node.getPrivacyAddressAliases().values().iterator().next();
         }
+
         return v;
+    }
+
+    public String id(QuorumNode node) {
+        QuorumNetworkProperty.Node quorumNodeConfig = getQuorumNodeConfig(node);
+        return getPrivacyAddress(quorumNodeConfig);
+    }
+
+    public String id(QuorumNetworkProperty.Node node) {
+        return getPrivacyAddress(node);
     }
 
     public String id(QuorumNetworkProperty.Node node, String alias) {

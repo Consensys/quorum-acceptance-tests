@@ -174,7 +174,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
             .isNotNull();
     }
 
-    // TODO PricacyEnhancements - check and merge the fail/Fails methods
+    // TODO PrivacyEnhancements - check and merge the fail/Fails methods
 
     @Step("Fire and forget execution of <flag> contract `C2`(<contractName>)'s `set()` function with new arbitrary value in <node> and it's private for <privateFor> fails simulation")
     public void fireAndForgetFails(PrivacyFlag flag, String contractName, QuorumNode node, String privateFor) {
@@ -238,7 +238,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
     }
 
 
-    // TODO PricacyEnhancements - check and merge the fail/Fails methods
+    // TODO PrivacyEnhancements - check and merge the fail/Fails methods
 
     @Step("Fire and forget execution of <flag> simple contract(<contractName>)'s `set()` function with new arbitrary value in <node> and it's private for <privateFor> fails simulation")
     public void fireAndForgetSimpleContractFails(PrivacyFlag flag, String contractName, QuorumNode node, String privateFor) {

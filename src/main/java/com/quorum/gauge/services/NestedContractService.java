@@ -25,6 +25,7 @@ import com.quorum.gauge.ext.EnhancedClientTransactionManager;
 import com.quorum.gauge.ext.EthStorageRoot;
 import com.quorum.gauge.sol.C1;
 import com.quorum.gauge.sol.C2;
+import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +37,6 @@ import org.web3j.quorum.tx.ClientTransactionManager;
 import org.web3j.tx.Contract;
 import org.web3j.tx.ReadonlyTransactionManager;
 import org.web3j.tx.exceptions.ContractCallException;
-import io.reactivex.Observable;
 
 import java.math.BigInteger;
 import java.util.Arrays;
