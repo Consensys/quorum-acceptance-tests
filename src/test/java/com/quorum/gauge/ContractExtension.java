@@ -35,7 +35,7 @@ public class ContractExtension extends AbstractSpecImplementation {
                                                       final QuorumNetworkProperty.Node creator,
                                                       final String contractName) throws InterruptedException {
 
-        PrivacyFlag privacyFlag = PrivacyFlag.Legacy;
+        PrivacyFlag privacyFlag = PrivacyFlag.StandardPrivate;
 
         DataStoreFactory.getScenarioDataStore().put("privacyFlag", privacyFlag);
 
@@ -74,7 +74,7 @@ public class ContractExtension extends AbstractSpecImplementation {
                                                          final String contractName,
                                                          final String errMsg) throws InterruptedException {
 
-        PrivacyFlag privacyFlag = PrivacyFlag.Legacy;
+        PrivacyFlag privacyFlag = PrivacyFlag.StandardPrivate;
 
         DataStoreFactory.getScenarioDataStore().put("privacyFlag", privacyFlag);
 
@@ -98,7 +98,7 @@ public class ContractExtension extends AbstractSpecImplementation {
                                                final QuorumNetworkProperty.Node newNode,
                                                final QuorumNetworkProperty.Node creator,
                                                final String expErrMsg) {
-        PrivacyFlag privacyFlag = PrivacyFlag.Legacy;
+        PrivacyFlag privacyFlag = PrivacyFlag.StandardPrivate;
         DataStoreFactory.getScenarioDataStore().put("privacyFlag", privacyFlag);
         final Set<QuorumNetworkProperty.Node> allNodes = Stream.of(newNode, creator)
             .collect(Collectors.toSet());
