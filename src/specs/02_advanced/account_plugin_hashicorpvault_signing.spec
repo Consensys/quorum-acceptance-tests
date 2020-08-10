@@ -1,6 +1,6 @@
 # Pluggable Architecture with Hashicorp Vault implementation of account plugin
 
- Tags: networks/plugins::raft-account-hashicorp-vault, networks/plugins::istanbul-account-hashicorp-vault, plugin-account, hashicorp-vault, signing
+ Tags: networks/plugins::raft-account-plugin-hashicorp-vault, networks/plugins::istanbul-account-plugin-hashicorp-vault, plugin-account, hashicorp-vault, signing
 
 * "Node1" does not have account 0x6038dc01869425004ca0b8370f6c81cf464213b3
 * Add Hashicorp Vault account 0x6038dc01869425004ca0b8370f6c81cf464213b3 to "Node1" with secret engine path "kv" and secret path "myacct"

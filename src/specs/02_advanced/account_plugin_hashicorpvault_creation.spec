@@ -1,6 +1,6 @@
 # Pluggable Architecture with Hashicorp Vault implementation of account plugin
 
- Tags: networks/plugins::raft-account-hashicorp-vault, networks/plugins::istanbul-account-hashicorp-vault, plugin-account, hashicorp-vault, account-creation
+ Tags: networks/plugins::raft-account-plugin-hashicorp-vault, networks/plugins::istanbul-account-plugin-hashicorp-vault, plugin-account, hashicorp-vault, account-creation
 
 * Delete all files in "Node1"'s account config directory
 
