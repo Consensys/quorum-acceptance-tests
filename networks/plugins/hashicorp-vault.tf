@@ -12,13 +12,13 @@ locals {
 
     container_entrypoint = "quorum-docker-entrypoint.sh"
 
-    host_certs_dir = abspath("vault-server/CertsWithQuorumRootCAandIntCA")
+    host_certs_dir = abspath("vault-server/dev-certs")
     container_certs_dir = "/certs"
-    container_server_cert = "${local.container_certs_dir}/localhost-with-san-chain.pem"
-    container_server_key  = "${local.container_certs_dir}/localhost-with-san.key"
-    container_client_cert = "${local.container_certs_dir}/quorum-client-chain.pem"
-    container_client_key = "${local.container_certs_dir}/quorum-client.key"
-    container_ca_cert = "${local.container_certs_dir}/caRoot.pem"
+    container_server_cert = "${local.container_certs_dir}/server-localhost-with-san-ca-chain.cert.pem"
+    container_server_key  = "${local.container_certs_dir}/server-localhost-with-san.key.pem"
+    container_client_cert = "${local.container_certs_dir}/client-ca-chain.cert.pem"
+    container_client_key = "${local.container_certs_dir}/client.key.pem"
+    container_ca_cert = "${local.container_certs_dir}/ca-root.cert.pem"
 }
 
 data "docker_registry_image" "vault" {

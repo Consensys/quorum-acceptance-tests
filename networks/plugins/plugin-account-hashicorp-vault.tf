@@ -1,7 +1,7 @@
 locals {
     vault_client_truststore = "${local.host_certs_dir}/truststore.jks"
     vault_client_truststore_pwd = "testtest"
-    vault_client_keystore = "${local.host_certs_dir}/quorum-client-keystore.jks"
+    vault_client_keystore = "${local.host_certs_dir}/client.jks"
     vault_client_keystore_pwd = "testtest"
 
     plugin_token_envvar_name = "HASHICORP_TOKEN"
@@ -55,7 +55,7 @@ JSON
 
 //TODO(cjh) configurable mounts/volumes on the quorum/tessera containers
 data "local_file" "host-ca-cert" {
-    filename = "${local.host_certs_dir}/caRoot.pem"
+    filename = "${local.host_certs_dir}/ca-root.cert.pem"
 }
 resource "local_file" "container-ca-cert" {
     count    = var.number_of_nodes
@@ -64,7 +64,7 @@ resource "local_file" "container-ca-cert" {
 }
 
 data "local_file" "host-client-cert" {
-    filename = "${local.host_certs_dir}/quorum-client-chain.pem"
+    filename = "${local.host_certs_dir}/client-ca-chain.cert.pem"
 }
 resource "local_file" "container-client-cert" {
     count    = var.number_of_nodes
@@ -73,7 +73,7 @@ resource "local_file" "container-client-cert" {
 }
 
 data "local_file" "host-client-key" {
-    filename = "${local.host_certs_dir}/quorum-client.key"
+    filename = "${local.host_certs_dir}/client.key.pem"
 }
 resource "local_file" "container-client-key" {
     count    = var.number_of_nodes
