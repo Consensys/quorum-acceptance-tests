@@ -254,7 +254,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
                 Arrays.asList(flag))
                 .blockingFirst()
         ).as("Expected exception thrown")
-            .hasMessageContaining("PrivacyMetadata unable to be found");
+            .hasMessageContaining("contract not found. cannot transact");
     }
 
     @Step("Execute contract `C2`(<contractName>)'s `set()` function with new value <newValue> in <source> and it's private for <privateFor>")
