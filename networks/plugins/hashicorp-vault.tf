@@ -11,18 +11,22 @@ locals {
     host_certs_zip = abspath("vault-server/certs.zip")
     host_vault_storage_zip = abspath("vault-server/vault.zip")
 
-    host_vault_storage_dir = abspath("vault-server/vault-storage")
-    container_mounted_vault_storage_dir = "/mounted-vault-storage"
-    container_vault_storage_dir = "/vault-storage"
+    vault_container_certs_zip = "/certs.zip"
+    vault_container_vault_storage_zip = "/vault.zip"
+    vault_container_certs_dir = "/certs"
+    vault_container_vault_storage_dir = "/vault-storage"
 
-
-    host_certs_dir = abspath("vault-server/dev-certs")
-    container_certs_dir = "/certs"
-    container_server_cert = "${local.container_certs_dir}/server-localhost-with-san-ca-chain.cert.pem"
-    container_server_key  = "${local.container_certs_dir}/server-localhost-with-san.key.pem"
-    container_client_cert = "${local.container_certs_dir}/client-ca-chain.cert.pem"
-    container_client_key = "${local.container_certs_dir}/client.key.pem"
-    container_ca_cert = "${local.container_certs_dir}/ca-root.cert.pem"
+//    host_vault_storage_dir = abspath("vault-server/vault-storage")
+//    container_mounted_vault_storage_dir = "/mounted-vault-storage"
+//
+//
+//    host_certs_dir = abspath("vault-server/dev-certs")
+//    container_certs_dir = "/certs"
+//    container_server_cert = "${local.container_certs_dir}/server-localhost-with-san-ca-chain.cert.pem"
+//    container_server_key  = "${local.container_certs_dir}/server-localhost-with-san.key.pem"
+//    container_client_cert = "${local.container_certs_dir}/client-ca-chain.cert.pem"
+//    container_client_key = "${local.container_certs_dir}/client.key.pem"
+//    container_ca_cert = "${local.container_certs_dir}/ca-root.cert.pem"
 }
 
 data "docker_registry_image" "vault" {
@@ -48,19 +52,19 @@ resource "docker_container" "vault_server" {
       internal = local.vault_server_port.internal
       external = local.vault_server_port.external
     }
-    volumes {
-        host_path = local.host_vault_storage_dir
-        container_path = local.container_mounted_vault_storage_dir
+    upload {
+        source = local.host_certs_zip
+        file = local.vault_container_certs_zip
     }
-    volumes {
-        host_path = local.host_certs_dir
-        container_path = local.container_certs_dir
+    upload {
+      source = local.host_vault_storage_zip
+      file = local.vault_container_vault_storage_zip
     }
     upload {
         file    = "/vault/config/quorum-vault.hcl"
         content = <<EOF
 storage "file" {
-	path = "${local.container_vault_storage_dir}"
+	path = "${local.vault_container_vault_storage_dir}"
 }
 
 listener "tcp" {
@@ -80,9 +84,9 @@ EOF
       content = <<EOF
 #!/usr/bin/dumb-init /bin/sh
 set -e
-echo "cp -a ${local.container_mounted_vault_storage_dir}/. ${local.container_vault_storage_dir}"
-cp -a ${local.container_mounted_vault_storage_dir}/. ${local.container_vault_storage_dir}
-chmod -R 777 ${local.container_vault_storage_dir}
+unzip ${local.vault_container_certs_zip} -d ${local.vault_container_certs_dir}
+unzip ${local.vault_container_vault_storage_zip} -d ${local.vault_container_vault_storage_dir}
+chmod -R 777 ${local.vault_container_vault_storage_dir}
 docker-entrypoint.sh "$@"
 EOF
     }
