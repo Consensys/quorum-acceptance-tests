@@ -6,11 +6,15 @@ locals {
     vault_server_token = "s.TZG2LuIkjcT9AYRNZfHrmuQn"
     vault_server_unseal_key = "Xg/nHOs0/uuckKjcszobas4aVNjFxyRP4GtsmlmnV4U="
 
+    container_entrypoint = "quorum-docker-entrypoint.sh"
+
+    host_certs_zip = abspath("vault-server/certs.zip")
+    host_vault_storage_zip = abspath("vault-server/vault.zip")
+
     host_vault_storage_dir = abspath("vault-server/vault-storage")
     container_mounted_vault_storage_dir = "/mounted-vault-storage"
     container_vault_storage_dir = "/vault-storage"
 
-    container_entrypoint = "quorum-docker-entrypoint.sh"
 
     host_certs_dir = abspath("vault-server/dev-certs")
     container_certs_dir = "/certs"
@@ -61,7 +65,7 @@ storage "file" {
 
 listener "tcp" {
         address = "0.0.0.0:${local.vault_server_port.internal}"
-        tls_disable = 0
+        tls_disable = 1
         tls_min_version = "tls12"
         tls_cert_file = "${local.container_server_cert}"
         tls_key_file = "${local.container_server_key}"
