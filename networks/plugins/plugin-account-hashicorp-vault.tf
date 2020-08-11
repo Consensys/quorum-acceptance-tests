@@ -1,4 +1,10 @@
 locals {
+    host_certs_dir = abspath("vault-server/dev-certs")
+
+    quorum_container_ca_cert = "certs/ca-root.cert.pem"
+    quorum_container_client_cert = "certs/client-ca-chain.cert.pem"
+    quorum_container_client_key = "certs/client.key.pem"
+
     vault_client_truststore = "${local.host_certs_dir}/truststore.jks"
     vault_client_truststore_pwd = "testtest"
     vault_client_keystore = "${local.host_certs_dir}/client.jks"
@@ -45,9 +51,9 @@ resource "local_file" "hashicorp-vault-account-plugin-config" {
         "token": "env://${local.plugin_token_envvar_name}"
     },
     "tls": {
-        "caCert": "${format("file:///data/qdata/%s", local.container_ca_cert)}",
-        "clientCert": "${format("file:///data/qdata/%s", local.container_client_cert)}",
-        "clientKey": "${format("file:///data/qdata/%s", local.container_client_key)}"
+        "caCert": "${format("file:///data/qdata/%s", local.quorum_container_ca_cert)}",
+        "clientCert": "${format("file:///data/qdata/%s", local.quorum_container_client_cert)}",
+        "clientKey": "${format("file:///data/qdata/%s", local.quorum_container_client_key)}"
     }
 }
 JSON
@@ -59,7 +65,7 @@ data "local_file" "host-ca-cert" {
 }
 resource "local_file" "container-ca-cert" {
     count    = var.number_of_nodes
-    filename = format("%s/%s", module.network.data_dirs[count.index], local.container_ca_cert)
+    filename = format("%s/%s", module.network.data_dirs[count.index], local.quorum_container_ca_cert)
     content  = data.local_file.host-ca-cert.content
 }
 
@@ -68,7 +74,7 @@ data "local_file" "host-client-cert" {
 }
 resource "local_file" "container-client-cert" {
     count    = var.number_of_nodes
-    filename = format("%s/%s", module.network.data_dirs[count.index], local.container_client_cert)
+    filename = format("%s/%s", module.network.data_dirs[count.index], local.quorum_container_client_cert)
     content  = data.local_file.host-client-cert.content
 }
 
@@ -77,6 +83,6 @@ data "local_file" "host-client-key" {
 }
 resource "local_file" "container-client-key" {
     count    = var.number_of_nodes
-    filename = format("%s/%s", module.network.data_dirs[count.index], local.container_client_key)
+    filename = format("%s/%s", module.network.data_dirs[count.index], local.quorum_container_client_key)
     content  = data.local_file.host-client-key.content
 }
