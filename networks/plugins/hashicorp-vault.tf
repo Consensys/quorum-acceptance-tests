@@ -75,7 +75,7 @@ storage "file" {
 
 listener "tcp" {
         address = "0.0.0.0:${local.vault_server_port.internal}"
-        tls_disable = 1
+        tls_disable = 0
         tls_min_version = "tls12"
         tls_cert_file = "${local.vault_container_server_cert}"
         tls_key_file = "${local.vault_container_server_key}"
@@ -90,6 +90,7 @@ EOF
       content = <<EOF
 #!/usr/bin/dumb-init /bin/sh
 set -e
+mkdir ${local.vault_container_certs_dir} ${local.vault_container_vault_storage_dir}
 unzip ${local.vault_container_certs_zip} -d ${local.vault_container_certs_dir}
 unzip ${local.vault_container_vault_storage_zip} -d ${local.vault_container_vault_storage_dir}
 chmod -R 777 ${local.vault_container_vault_storage_dir}
