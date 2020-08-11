@@ -9,12 +9,18 @@ locals {
     container_entrypoint = "quorum-docker-entrypoint.sh"
 
     host_certs_zip = abspath("vault-server/certs.zip")
-    host_vault_storage_zip = abspath("vault-server/vault.zip")
-
     vault_container_certs_zip = "/certs.zip"
-    vault_container_vault_storage_zip = "/vault.zip"
     vault_container_certs_dir = "/certs"
+    vault_container_server_cert = "${local.vault_container_certs_dir}/server-localhost-with-san-ca-chain.cert.pem"
+    vault_container_server_key = "${local.vault_container_certs_dir}/server-localhost-with-san.key.pem"
+    vault_container_client_cert = "${local.vault_container_certs_dir}/client-ca-chain.cert.pem"
+    vault_container_client_key = "${local.vault_container_certs_dir}/client.key.pem"
+    vault_container_ca_cert = "${local.vault_container_certs_dir}/ca-root.cert.pem"
+
+    host_vault_storage_zip = abspath("vault-server/vault.zip")
+    vault_container_vault_storage_zip = "/vault.zip"
     vault_container_vault_storage_dir = "/vault-storage"
+
 
 //    host_vault_storage_dir = abspath("vault-server/vault-storage")
 //    container_mounted_vault_storage_dir = "/mounted-vault-storage"
@@ -71,10 +77,10 @@ listener "tcp" {
         address = "0.0.0.0:${local.vault_server_port.internal}"
         tls_disable = 1
         tls_min_version = "tls12"
-        tls_cert_file = "${local.container_server_cert}"
-        tls_key_file = "${local.container_server_key}"
+        tls_cert_file = "${local.vault_container_server_cert}"
+        tls_key_file = "${local.vault_container_server_key}"
         tls_require_and_verify_client_cert = "true"
-        tls_client_ca_file = "${local.container_ca_cert}"
+        tls_client_ca_file = "${local.vault_container_ca_cert}"
 }
 EOF
     }
@@ -96,9 +102,9 @@ EOF
     }
     env = [
         "VAULT_ADDR=https://127.0.0.1:${local.vault_server_port.internal}",
-        "VAULT_CACERT=${local.container_ca_cert}",
-        "VAULT_CLIENT_CERT=${local.container_client_cert}",
-        "VAULT_CLIENT_KEY=${local.container_client_key}"
+        "VAULT_CACERT=${local.vault_container_ca_cert}",
+        "VAULT_CLIENT_CERT=${local.vault_container_client_cert}",
+        "VAULT_CLIENT_KEY=${local.vault_container_client_key}"
     ]
     entrypoint = [local.container_entrypoint]
     command = ["server"]
