@@ -5,6 +5,7 @@ locals {
   container_geth_datadir_mounted = "/data/qdata-mount"
   container_tm_datadir_mounted   = "/data/tm-mount"
   container_tm_ipc_file          = "/data/tm.ipc"
+  container_plugin_acctdir       = "/data/plugin-accts"
 
   node_indices              = range(local.number_of_nodes) // 0-based node index
   quorum_initial_paticipants = merge(
@@ -12,6 +13,12 @@ locals {
     { for id in var.exclude_initial_nodes : id => "false" }
   )
   must_start = [ for idx in local.node_indices : tobool(lookup(local.quorum_initial_paticipants, idx, "false")) && tobool(var.start_quorum) ]
+
+  unchangeable_geth_env = {
+    PRIVATE_CONFIG = local.container_tm_ipc_file
+  }
+  geth_env = [for k, v in merge(var.additional_geth_env, local.unchangeable_geth_env) : "${k}=${v}"]
+  tm_env = [for k, v in var.tm_env : "${k}=${v}"]
 }
 
 resource "docker_network" "quorum" {
