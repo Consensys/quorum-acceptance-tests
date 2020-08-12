@@ -23,9 +23,9 @@
  - check that SP transactions work as expected
  - check that PP transactions/contracts work as expected on Node1 (attempted interractions from Node3/Node4 are rejected by Node1 - as incoming transactions are received as SP)
  We upgrade Node4 to have both quorum and tessera versions that support PE (but PE are not enabled yet) and check that:
- - quorum starts successfully
- - when Node4 receives a PP transaction from Node1 it logs a warning that PE metadata is ignored (as PE are disabled)
- We enable PE on Node4 and check that:
+ - quorum starts successfully but it does not connect to Node1 (Fork ID rejected - local incompatible or needs update)
+ - when Node4 receives a PP transaction from Node1 it logs an error and stops (with BAD BLOCK). Error: Privacy enhanced transaction received while privacy enhancements are disabled. Please check your node configuration.
+ We enable PE on Node4 from the correct block height (same as in Node1) and check that (involves deleting the node stored data and forcing it to resync):
  - we deploy a PP contract from Node1 to Node4
  - we prove that a non party node (Node3) can't affect the state of the deployed PP contract on Node1 and Node4
  - we prove that PE party nodes can update the state of the PP contract
@@ -63,13 +63,13 @@
  PartyProtection transactions are rejected in quorum Node1 as privacy enhancemetns are not enabled yet
 * Deploying a "PartyProtection" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4" fails with message "PrivacyEnhancements are disabled"
  Run geth init with privacyEnhancementsBlock=currentBlockHeight-1
-* Record the current block number, named it as "recordedBlockNumber"
+* Record the current block number, named it as "peBlockNumber"
 * Stop "quorum" in "Node1"
-* Run gethInit in "Node1" with genesis file having privacyEnhancementsBlock set to "recordedBlockNumber" + "-1"
+* Run gethInit in "Node1" with genesis file having privacyEnhancementsBlock set to "peBlockNumber" + "-1"
  Geth init fails
 * Grep "quorum" in "Node1" for "mismatching Privacy Enhancements fork block in database"
 * Check that "quorum" in "Node1" is "down"
-* Run gethInit in "Node1" with genesis file having privacyEnhancementsBlock set to "recordedBlockNumber" + "1"
+* Run gethInit in "Node1" with genesis file having privacyEnhancementsBlock set to "peBlockNumber" + "1"
  Geth init succeeds but displays the warning message that quorum won't start unless the privacy manager supports privacy enhancements
 * Grep "quorum" in "Node1" for "Please ensure your privacy manager is upgraded and supports privacy enhancements"
  Tessera hasn't been updated so quorum should fail to start
@@ -83,21 +83,21 @@
 * Deploying a "PartyProtection" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4" fails with message "Transactions with enhanced privacy is not currently supported on recipient"
 * Stop and start "Node4" using quorum version <q_to_version> and tessera version <t_to_version>
  Node4 is now privacy enhancements capable but privacy enhancements are not enabled (geth init hasnt been run with a genesis file containing privacyEnhancementsBlock)
+ Node1 is not able to connect to Node4 (as they have different values for PrivacyEnhancementsBlock)
+* Grep "quorum" in "Node4" for "Fork ID rejected - local incompatible or needs update"
 * Deploying a "PartyProtection" simple smart contract with initial value "42" in "Node4"'s default account and it's private for "Node1" fails with message "PrivacyEnhancements are disabled"
 * Deploy a "StandardPrivate" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract17"
 * "contract17" is deployed "successfully" in "Node1,Node4"
 * Deploy a "PartyProtection" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract18"
- A warning should be written in Node4 logs stating that privacy metadata has been ignored
-* Grep "quorum" in "Node4" for "Non StandardPrivate transaction received but PrivacyEnhancements are disabled. Enhanced privacy metadata will be ignored."
- Run geth init to start geth with privacy enhancements enabled
-* Record the current block number, named it as "recordedBlockNumber"
-* Stop "quorum" in "Node4"
-* Run gethInit in "Node4" with genesis file having privacyEnhancementsBlock set to "recordedBlockNumber" + "1"
- Check that geth init issues the warning about the privacy manager supporting privacy enhancements
-* Grep "quorum" in "Node4" for "Please ensure your privacy manager is upgraded and supports privacy enhancements"
- Geth init is automatically followed by geth start so geth should already be started
+ Node4 for should now stop appending new blocks (due to BAD BLOCK error)
+* Grep "quorum" in "Node4" for "Privacy enhanced transaction received while privacy enhancements are disabled. Please check your node configuration."
+* Check that "quorum" in "Node4" is "down"
+
+* Clear quorum data in "Node4"
+ This is required so that Node4 can sync properly
+* Change raft leader
+* Run gethInit in "Node4" with genesis file having privacyEnhancementsBlock set to "peBlockNumber" + "1"
 * Check that "quorum" in "Node4" is "up"
- At this stage Node1 and Node4 are fully upgraded and have enabled privacy enhancements while Node2 and Node3 have the original versions
 
  Standard private transactions work as expected (in a mix of old/new nodes)
  Deploy a StandardPrivate simple contract from Node1 to Node2 and Node4

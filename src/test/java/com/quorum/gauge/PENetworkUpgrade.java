@@ -21,9 +21,11 @@ package com.quorum.gauge;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.services.InfrastructureService;
 import com.quorum.gauge.services.InfrastructureService.NetworkResources;
+import com.quorum.gauge.services.RaftService;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import org.slf4j.Logger;
@@ -45,6 +47,9 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     @Autowired
     private InfrastructureService infraService;
+
+    @Autowired
+    private RaftService raftService;
 
     private String getComponentContainerId(String component, String node) {
         NetworkResources existingNetworkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
@@ -116,6 +121,36 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
                 Thread.sleep(networkProperty.getConsensusGracePeriod().toMillis());
             })
             .blockingSubscribe();
+    }
+
+    @Step("Clear quorum data in <node>")
+    public void clearDataForNode(String node) {
+        String containerId = getComponentContainerId("quorum", node);
+        infraService.writeFile(containerId, "/data/qdata/cleanStorage", "true").blockingFirst();
+    }
+
+    @Step("Change raft leader")
+    public void changeRaftLeader() {
+        final String oldLeader = raftService.getLeaderWithLocalEnodeInfo(QuorumNode.Node1).name();
+        if (oldLeader.equals(QuorumNode.Node4)) {
+            // if node4 was the leader - a new one should be elected so no additional leader change is necessary
+            return;
+        }
+        String newLeader = oldLeader;
+        int retry = 5;
+        do {
+            String containerId = getComponentContainerId("quorum", oldLeader);
+            infraService.restartResource(containerId).blockingFirst();
+            try {
+                retry--;
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            newLeader = raftService.getLeaderWithLocalEnodeInfo(QuorumNode.Node1).name();
+        } while (newLeader == oldLeader && retry >= 0);
+        logger.debug("Old leader {} New leader {}", oldLeader, newLeader);
+        assertThat(newLeader).isNotEqualTo(oldLeader);
     }
 
     class GenesisConfigOverride implements InfrastructureService.FileContentModifier {
