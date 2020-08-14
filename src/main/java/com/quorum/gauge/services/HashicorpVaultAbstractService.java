@@ -1,28 +1,32 @@
 package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNetworkProperty;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
+import okhttp3.OkHttpClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.http.client.OkHttp3ClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.vault.authentication.ClientAuthentication;
 import org.springframework.vault.authentication.SessionManager;
 import org.springframework.vault.authentication.SimpleSessionManager;
 import org.springframework.vault.authentication.TokenAuthentication;
-import org.springframework.vault.client.ClientHttpRequestFactoryFactory;
 import org.springframework.vault.client.VaultEndpoint;
 import org.springframework.vault.core.VaultOperations;
 import org.springframework.vault.core.VaultTemplate;
 import org.springframework.vault.core.VaultVersionedKeyValueOperations;
 import org.springframework.vault.core.VaultVersionedKeyValueTemplate;
-import org.springframework.vault.support.ClientOptions;
-import org.springframework.vault.support.SslConfiguration;
 import org.springframework.vault.support.Versioned;
 
+import javax.net.ssl.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.*;
+import java.security.cert.CertificateException;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -32,6 +36,9 @@ import java.util.Optional;
  */
 @Service
 abstract class HashicorpVaultAbstractService extends AbstractService {
+
+    @Autowired
+    OkHttpClient okHttpClient;
 
     public QuorumNetworkProperty.HashicorpVaultServerProperty vaultProperties() {
         return Optional.ofNullable(
@@ -48,50 +55,74 @@ abstract class HashicorpVaultAbstractService extends AbstractService {
     }
 
     private VaultVersionedKeyValueOperations vaultClient(String secretEnginePath, QuorumNetworkProperty.HashicorpVaultServerProperty properties) {
-        VaultEndpoint vaultEndpoint;
-
+        final VaultEndpoint vaultEndpoint;
         try {
-            URI uri = new URI(properties.getUrl());
+            final URI uri = new URI(properties.getUrl());
             vaultEndpoint = VaultEndpoint.from(uri);
         } catch (URISyntaxException | NoSuchElementException | IllegalArgumentException e) {
             throw new RuntimeException("Provided Hashicorp Vault url is incorrectly formatted", e);
         }
 
-        SslConfiguration sslConfiguration = sslConfiguration(
-            properties.getTlsKeyStorePath(),
-            properties.getTlsKeyStorePassword(),
-            properties.getTlsTrustStorePath(),
-            properties.getTlsTrustStorePassword()
-        );
-        ClientOptions clientOptions = new ClientOptions();
-        ClientHttpRequestFactory clientHttpRequestFactory = ClientHttpRequestFactoryFactory.create(clientOptions, sslConfiguration);
+        final OkHttpClient.Builder builder = okHttpClient.newBuilder();
+        final SSLContext sslContext;
+        try {
+            sslContext = SSLContext.getInstance("TLS");
+            final KeyManager[] keyManagers = loadKeyStore(
+                Paths.get(properties.getTlsKeyStorePath()),
+                properties.getTlsKeyStorePassword().toCharArray()
+            );
+            final TrustManager[] trustManagers = loadTrustStore(
+                Paths.get(properties.getTlsTrustStorePath()),
+                properties.getTlsTrustStorePassword().toCharArray()
+            );
 
-        ClientAuthentication clientAuthentication = new TokenAuthentication(properties.getAuthToken());
+            sslContext.init(keyManagers, trustManagers, new SecureRandom());
 
-        SessionManager sessionManager = new SimpleSessionManager(clientAuthentication);
-        VaultOperations vaultOperations = new VaultTemplate(vaultEndpoint, clientHttpRequestFactory, sessionManager);
+            final X509TrustManager trustManager = (X509TrustManager) trustManagers[0];
+            builder.sslSocketFactory(sslContext.getSocketFactory(), trustManager);
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to set up SSL context for Hashicorp Vault client", e);
+        }
+
+        final OkHttpClient sslOkHttpClient = builder.build();
+
+        final ClientHttpRequestFactory clientHttpRequestFactory = new OkHttp3ClientHttpRequestFactory(sslOkHttpClient);
+
+        final ClientAuthentication clientAuthentication = new TokenAuthentication(properties.getAuthToken());
+        final SessionManager sessionManager = new SimpleSessionManager(clientAuthentication);
+
+        final VaultOperations vaultOperations = new VaultTemplate(vaultEndpoint, clientHttpRequestFactory, sessionManager);
 
         return new VaultVersionedKeyValueTemplate(vaultOperations, secretEnginePath);
     }
 
-    private SslConfiguration sslConfiguration(String tlsKeyStorePath, String tlsKeyStorePassword, String tlsTrustStorePath, String tlsTrustStorePassword) {
-        Path tlsKeyStore = Paths.get(tlsKeyStorePath);
-        Path tlsTrustStore = Paths.get(tlsTrustStorePath);
+    private static KeyManager[] loadKeyStore(Path keyStoreFile, char[] keyStorePassword) throws KeyStoreException, IOException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException {
 
-        Resource clientKeyStore = new FileSystemResource(tlsKeyStore.toFile());
-        Resource clientTrustStore = new FileSystemResource(tlsTrustStore.toFile());
+    final KeyStore keyStore = KeyStore.getInstance("JKS");
 
-        SslConfiguration.KeyStoreConfiguration keyStoreConfiguration = SslConfiguration.KeyStoreConfiguration.of(
-            clientKeyStore,
-            tlsKeyStorePassword.toCharArray()
-        );
+        try (InputStream in = Files.newInputStream(keyStoreFile)) {
+            keyStore.load(in, keyStorePassword);
+        }
 
-        SslConfiguration.KeyStoreConfiguration trustStoreConfiguration = SslConfiguration.KeyStoreConfiguration.of(
-            clientTrustStore,
-            tlsTrustStorePassword.toCharArray()
-        );
+        final KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        keyManagerFactory.init(keyStore, keyStorePassword);
 
-        return new SslConfiguration(keyStoreConfiguration, trustStoreConfiguration);
+        return keyManagerFactory.getKeyManagers();
+    }
+
+    private static TrustManager[] loadTrustStore(Path trustStoreFile, char[] trustStorePassword) throws KeyStoreException, IOException, CertificateException, NoSuchAlgorithmException {
+
+        final KeyStore trustStore = KeyStore.getInstance("JKS");
+
+        try (InputStream in = Files.newInputStream(trustStoreFile)) {
+            trustStore.load(in, trustStorePassword);
+        }
+
+        final TrustManagerFactory trustManagerFactory =
+            TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        trustManagerFactory.init(trustStore);
+
+        return trustManagerFactory.getTrustManagers();
     }
 }
 
