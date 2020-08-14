@@ -77,6 +77,15 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
         assertThat(infraService.stopResource(containerId).blockingFirst()).isTrue();
     }
 
+    @Step("Stop <component> in <node> if consensus is istanbul")
+    public void stopComponentInNodeIfIstanbul(String component, String node) {
+        if (!"istanbul".equalsIgnoreCase(networkProperty.getConsensus())){
+            logger.debug("Consensus algorithm is not istanbul. Skipping step.");
+            return;
+        }
+        stopComponentInNode(component, node);
+    }
+
     @Step("Run gethInit in <node> with genesis file having privacyEnhancementsBlock set to <blockNumberKey> + <decrement>")
     public void runGethInitOnNodeWithGenesisJson(String node, String blockNumberKey, String decrement) {
         BigInteger recordedBlockNumber = mustHaveValue(DataStoreFactory.getScenarioDataStore(), blockNumberKey, BigInteger.class);
@@ -131,6 +140,10 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
 
     @Step("Change raft leader")
     public void changeRaftLeader() {
+        if (!"raft".equalsIgnoreCase(networkProperty.getConsensus())){
+            logger.debug("Consensus algorithm is not raft. Skipping step.");
+            return;
+        }
         final String oldLeader = raftService.getLeaderWithLocalEnodeInfo(QuorumNode.Node1).name();
         if (oldLeader.equals(QuorumNode.Node4)) {
             // if node4 was the leader - a new one should be elected so no additional leader change is necessary

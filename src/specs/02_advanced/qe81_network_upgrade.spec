@@ -91,6 +91,7 @@
 * Deploy a "PartyProtection" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract18"
  Node4 for should now stop appending new blocks (due to BAD BLOCK error)
 * Grep "quorum" in "Node4" for "Privacy enhanced transaction received while privacy enhancements are disabled. Please check your node configuration."
+* Stop "quorum" in "Node4" if consensus is istanbul
 * Check that "quorum" in "Node4" is "down"
 
 * Clear quorum data in "Node4"
