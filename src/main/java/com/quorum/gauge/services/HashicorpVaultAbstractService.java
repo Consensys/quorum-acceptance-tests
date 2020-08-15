@@ -38,7 +38,7 @@ import java.util.Optional;
 abstract class HashicorpVaultAbstractService extends AbstractService {
 
     @Autowired
-    OkHttpClient okHttpClient;
+    private OkHttpClient okHttpClient;
 
     public QuorumNetworkProperty.HashicorpVaultServerProperty vaultProperties() {
         return Optional.ofNullable(
