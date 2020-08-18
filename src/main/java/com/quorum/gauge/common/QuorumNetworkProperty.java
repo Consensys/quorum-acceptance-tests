@@ -36,8 +36,9 @@ public class QuorumNetworkProperty {
     private Map<String, WalletData> wallets = new HashMap<>();
     private String consensus;
     private SocksProxy socksProxy;
-
+    private HashicorpVaultServerProperty hashicorpVaultServer;
     private DockerInfrastructureProperty dockerInfrastructure = new DockerInfrastructureProperty();
+    private OAuth2ServerProperty oauth2Server;
 
     public SocksProxy getSocksProxy() {
         return socksProxy;
@@ -77,6 +78,14 @@ public class QuorumNetworkProperty {
         return node;
     }
 
+    public HashicorpVaultServerProperty getHashicorpVaultServer() {
+        return hashicorpVaultServer;
+    }
+
+    public void setHashicorpVaultServer(HashicorpVaultServerProperty hashicorpVaultServer) {
+        this.hashicorpVaultServer = hashicorpVaultServer;
+    }
+
     public DockerInfrastructureProperty getDockerInfrastructure() {
         return dockerInfrastructure;
     }
@@ -107,6 +116,14 @@ public class QuorumNetworkProperty {
                 break;
         }
         return duration;
+    }
+
+    public OAuth2ServerProperty getOauth2Server() {
+        return oauth2Server;
+    }
+
+    public void setOauth2Server(OAuth2ServerProperty oauth2Server) {
+        this.oauth2Server = oauth2Server;
     }
 
     public static class SocksProxy {
@@ -334,6 +351,138 @@ public class QuorumNetworkProperty {
             public void setTesseraContainerId(String tesseraContainerId) {
                 this.tesseraContainerId = tesseraContainerId;
             }
+        }
+    }
+
+    public static class OAuth2ServerProperty {
+        private String clientEndpoint;
+        private String adminEndpoint;
+
+        public OAuth2ServerProperty() {
+        }
+
+        public String getClientEndpoint() {
+            return clientEndpoint;
+        }
+
+        public void setClientEndpoint(String clientEndpoint) {
+            this.clientEndpoint = clientEndpoint;
+        }
+
+        public String getAdminEndpoint() {
+            return adminEndpoint;
+        }
+
+        public void setAdminEndpoint(String adminEndpoint) {
+            this.adminEndpoint = adminEndpoint;
+        }
+    }
+
+    public static class HashicorpVaultServerProperty {
+        private String url;
+        private String caCertPath;
+        private String clientCertPath;
+        private String clientKeyPath;
+        private String tlsTrustStorePath;
+        private String tlsTrustStorePassword;
+        private String tlsKeyStorePath;
+        private String tlsKeyStorePassword;
+        private String authToken;
+        private Map<String, NodeAcctDirData> nodeAcctDirs;
+
+        public HashicorpVaultServerProperty() {
+        }
+
+        public String getUrl() {
+            return url;
+        }
+
+        public void setUrl(String url) {
+            this.url = url;
+        }
+
+        public String getCaCertPath() {
+            return caCertPath;
+        }
+
+        public void setCaCertPath(String caCertPath) {
+            this.caCertPath = caCertPath;
+        }
+
+        public String getClientCertPath() {
+            return clientCertPath;
+        }
+
+        public void setClientCertPath(String clientCertPath) {
+            this.clientCertPath = clientCertPath;
+        }
+
+        public String getClientKeyPath() {
+            return clientKeyPath;
+        }
+
+        public void setClientKeyPath(String clientKeyPath) {
+            this.clientKeyPath = clientKeyPath;
+        }
+
+        public String getTlsTrustStorePath() {
+            return tlsTrustStorePath;
+        }
+
+        public void setTlsTrustStorePath(String tlsTrustStorePath) {
+            this.tlsTrustStorePath = tlsTrustStorePath;
+        }
+
+        public String getTlsTrustStorePassword() {
+            return tlsTrustStorePassword;
+        }
+
+        public void setTlsTrustStorePassword(String tlsTrustStorePassword) {
+            this.tlsTrustStorePassword = tlsTrustStorePassword;
+        }
+
+        public String getTlsKeyStorePath() {
+            return tlsKeyStorePath;
+        }
+
+        public void setTlsKeyStorePath(String tlsKeyStorePath) {
+            this.tlsKeyStorePath = tlsKeyStorePath;
+        }
+
+        public String getTlsKeyStorePassword() {
+            return tlsKeyStorePassword;
+        }
+
+        public void setTlsKeyStorePassword(String tlsKeyStorePassword) {
+            this.tlsKeyStorePassword = tlsKeyStorePassword;
+        }
+
+        public String getAuthToken() {
+            return authToken;
+        }
+
+        public void setAuthToken(String authToken) {
+            this.authToken = authToken;
+        }
+
+        public Map<String, NodeAcctDirData> getNodeAcctDirs() {
+            return nodeAcctDirs;
+        }
+
+        public void setNodeAcctDirs(Map<String, NodeAcctDirData> nodeAcctDirs) {
+            this.nodeAcctDirs = nodeAcctDirs;
+        }
+    }
+
+    public static class NodeAcctDirData {
+        private String pluginAcctDir;
+
+        public String getPluginAcctDir() {
+            return pluginAcctDir;
+        }
+
+        public void setPluginAcctDir(String pluginAcctDir) {
+            this.pluginAcctDir = pluginAcctDir;
         }
     }
 }

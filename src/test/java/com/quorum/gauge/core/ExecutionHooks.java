@@ -21,6 +21,7 @@ package com.quorum.gauge.core;
 
 import com.google.common.collect.ImmutableMap;
 import com.quorum.gauge.common.QuorumNetworkProperty;
+import com.quorum.gauge.ext.ObjectResponse;
 import com.quorum.gauge.services.InfrastructureService;
 import com.quorum.gauge.services.InfrastructureService.NetworkResources;
 import com.quorum.gauge.services.UtilService;
@@ -31,8 +32,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.web3j.protocol.core.Request;
 
 import java.math.BigInteger;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -100,6 +103,8 @@ public class ExecutionHooks {
 
     @BeforeSuite
     public void setNetworkProperties() {
+        // really dummy!!! make sure request ID starts from 1
+        new Request<>("", Collections.emptyList(), null, ObjectResponse.class);
         DataStoreFactory.getSuiteDataStore().put("networkProperties", networkProperty);
     }
 

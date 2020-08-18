@@ -35,21 +35,21 @@ public class ValueTransferPrivateTransaction extends AbstractSpecImplementation 
 
     @Step("Send some Wei from a default account in <from> to a default account in <to> in a private transaction")
     public void sendTransaction(QuorumNode from, QuorumNode to) {
-        Response.Error err = transactionService.sendPrivateTransaction(new Random().nextInt(10), from, to).blockingFirst().getError();
+        Response.Error err = transactionService.sendPrivateTransaction(new Random().nextInt(10) + 1, from, to).blockingFirst().getError();
 
         DataStoreFactory.getScenarioDataStore().put("error", err);
     }
 
     @Step("Send some Wei from a default account in <from> to a default account in <to> in a signed private transaction")
     public void sendSignedTransaction(QuorumNode from, QuorumNode to) {
-        Response.Error err = transactionService.sendSignedPrivateTransaction(new Random().nextInt(10), from, to).blockingFirst().getError();
+        Response.Error err = transactionService.sendSignedPrivateTransaction(new Random().nextInt(10) + 1, from, to).blockingFirst().getError();
 
         DataStoreFactory.getScenarioDataStore().put("error", err);
     }
 
     @Step("Error message <expectedErrorMsg> is returned")
     public void verifyError(String expectedErrorMsg) {
-        Response.Error err =  mustHaveValue(DataStoreFactory.getScenarioDataStore(), "error", Response.Error.class);
+        Response.Error err = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "error", Response.Error.class);
 
         assertThat(err).as("An error must be returned").isNotNull();
         assertThat(err.getMessage()).isEqualTo(expectedErrorMsg);

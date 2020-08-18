@@ -32,6 +32,7 @@ resource "docker_container" "tessera" {
     ipv4_address = var.tm_networking[count.index].ip.private
     aliases      = [format("tm%d", count.index)]
   }
+  env = local.tm_env
   healthcheck {
     test         = ["CMD-SHELL", "[ -S ${local.container_tm_ipc_file} ] || exit 1"]
     interval     = "3s"

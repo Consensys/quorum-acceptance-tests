@@ -1,0 +1,32 @@
+# Deploy <privacyType> type `SimpleStorage` contract with initial value <initValue> between <node1> and <node2>. Name this contract as <contractName>. Ensure that its not visible from <node3>
+* Deploy a <privacyType> contract `SimpleStorage` with initial value <initValue> in <node1>'s default account and it's private for <node2>, named this contract as <contractName>
+* <contractName> is deployed "successfully" in <node1>
+* <contractName> is deployed "successfully" in <node2>
+
+* <contractName>'s `get()` function execution in <node1> returns <initValue>
+* <contractName>'s `get()` function execution in <node2> returns <initValue>
+* <contractName>'s `get()` function execution in <node3> returns "0"
+
+# Initiate <contractName> extension from <fromNode> to <toNode>. Contract extension accepted in receiving node. Check that state value in receiving node is <value>
+* Initiate contract extension to <toNode> with its default account as recipient from <fromNode> for contract <contractName>
+* <toNode> accepts the offer to extend the contract <contractName>
+* Wait for <contractName> to disappear from active extension in <toNode>
+* <contractName>'s `get()` function execution in <toNode> returns <value>
+
+# Initiate <contractName> extension from <fromNode> to <toNode>. Contract extension is rejected by receiving node. Check that state value in receiving node is <value>
+* Initiate contract extension to <toNode> with its default account as recipient from <fromNode> for contract <contractName>
+* <toNode> has <contractName> listed in all active extensions
+* <toNode> rejects contract extension of <contractName>
+* Wait for <contractName> to disappear from active extension in <toNode>
+* <contractName>'s `get()` function execution in <toNode> returns <value>
+* <fromNode> does not see <contractName> listed in all active extensions
+
+# Initiate <contractName> extension from <fromNode> to <toNode>. Contract extension cancelled by initiating node. Confirm that contract extension is not visible on receiving node
+* Initiate contract extension to <toNode> with its default account as recipient from <fromNode> for contract <contractName>
+* <toNode> has <contractName> listed in all active extensions
+* <fromNode> cancels <contractName>
+* Wait for <contractName> to disappear from active extension in <toNode>
+* <toNode> does not see <contractName> listed in all active extensions
+
+
+
