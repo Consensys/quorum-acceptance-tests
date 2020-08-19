@@ -135,17 +135,17 @@ contract storea {
 
  Tags: all-private
 
-* Deploy "storec" smart contract with initial value "1" from a default account in "Node1" and it's private for "Node2", named this contract as "c2"
+* Deploy "StandardPrivate" "storec" smart contract with initial value "1" from a default account in "Node1" and it's private for "Node2", named this contract as "c2"
 * "c2"'s "getc" function execution in "Node1" returns "1"
-* Deploy "storeb" smart contract with contract "c2" initial value "1" from a default account in "Node1" and it's private for "Node2", named this contract as "b2"
+* Deploy "StandardPrivate" "storeb" smart contract with contract "c2" initial value "1" from a default account in "Node1" and it's private for "Node2", named this contract as "b2"
 * "b2"'s "getb" function execution in "Node1" returns "1"
-* Deploy "storea" smart contract with contract "b2" initial value "1" from a default account in "Node1" and it's private for "Node2", named this contract as "a2"
+* Deploy "StandardPrivate" "storea" smart contract with contract "b2" initial value "1" from a default account in "Node1" and it's private for "Node2", named this contract as "a2"
 * "a2"'s "geta" function execution in "Node1" returns "1"
-* "a2"'s "setc" function execution in "Node1" with value "10" and its private for "Node2"
+* "a2"'s "setc" function execution with privacy flag as "StandardPrivate" in "Node1" with value "10" and its private for "Node2"
 * "a2"'s "getc" function execution in "Node1" returns "10"
-* "a2"'s "setb" function execution in "Node1" with value "10" and its private for "Node2"
+* "a2"'s "setb" function execution with privacy flag as "StandardPrivate" in "Node1" with value "10" and its private for "Node2"
 * "a2"'s "getb" function execution in "Node1" returns "100"
-* "a2"'s "seta" function execution in "Node1" with value "10" and its private for "Node2"
+* "a2"'s "seta" function execution with privacy flag as "StandardPrivate" in "Node1" with value "10" and its private for "Node2"
 * "a2"'s "geta" function execution in "Node1" returns "1000"
 * "b2"'s "getb" function execution in "Node1" returns "100"
 * "c2"'s "getc" function execution in "Node1" returns "10"
@@ -164,13 +164,13 @@ contract storea {
 * "c3"'s "getc" function execution in "Node1" returns "1"
 * Deploy "storeb" smart contract with contract "c3" initial value "1" from a default account in "Node1", named this contract as "b3"
 * "b3"'s "getb" function execution in "Node1" returns "1"
-* Deploy "storea" smart contract with contract "b3" initial value "1" from a default account in "Node1" and it's private for "Node2", named this contract as "a3"
+* Deploy "StandardPrivate" "storea" smart contract with contract "b3" initial value "1" from a default account in "Node1" and it's private for "Node2", named this contract as "a3"
 * "a3"'s "geta" function execution in "Node1" returns "1"
 * "a3"'s "setc" function execution in "Node1" with value "10" and its private for "Node2", should fail
 * "a3"'s "getc" function execution in "Node1" returns "1"
 * "a3"'s "setb" function execution in "Node1" with value "10" and its private for "Node2", should fail
 * "a3"'s "getb" function execution in "Node1" returns "1"
-* "a3"'s "seta" function execution in "Node1" with value "10" and its private for "Node2"
+* "a3"'s "seta" function execution with privacy flag as "StandardPrivate" in "Node1" with value "10" and its private for "Node2"
 * "a3"'s "geta" function execution in "Node1" returns "10"
 * "b3"'s "getb" function execution in "Node1" returns "1"
 * "c3"'s "getc" function execution in "Node1" returns "1"
@@ -180,9 +180,9 @@ contract storea {
 
  Tags: public-to-private
 
-* Deploy "storec" smart contract with initial value "1" from a default account in "Node1" and it's private for "Node2", named this contract as "c4"
+* Deploy "StandardPrivate" "storec" smart contract with initial value "1" from a default account in "Node1" and it's private for "Node2", named this contract as "c4"
 * "c4"'s "getc" function execution in "Node1" returns "1"
-* Deploy "storeb" smart contract with contract "c4" initial value "1" from a default account in "Node1" and it's private for "Node2", named this contract as "b4"
+* Deploy "StandardPrivate" "storeb" smart contract with contract "c4" initial value "1" from a default account in "Node1" and it's private for "Node2", named this contract as "b4"
 * "b4"'s "getb" function execution in "Node1" returns "1"
 * Deploy "storea" smart contract with contract "b4" initial value "1" from a default account in "Node1", named this contract as "a4"
 * "a4"'s "geta" function execution in "Node1" returns "1"

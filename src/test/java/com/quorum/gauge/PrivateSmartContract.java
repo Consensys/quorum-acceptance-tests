@@ -173,10 +173,10 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         assertThat(actualValue).isEqualTo(expectedValue);
     }
 
-    @Step("Execute <contractName>'s `set()` function with new value <newValue> in <source> and it's private for <target>")
-    public void updateNewValue(String contractName, int newValue, QuorumNode source, QuorumNode target) {
+    @Step("Execute <contractName>'s `set()` function with privacy type <flag> to set new value to <newValue> in <source> and it's private for <target>")
+    public void updateNewValue(String contractName, String flag, int newValue, QuorumNode source, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
-        TransactionReceipt receipt = contractService.updateSimpleContract(source, target, c.getContractAddress(), newValue, Arrays.asList(PrivacyFlag.StandardPrivate)).blockingFirst();
+        TransactionReceipt receipt = contractService.updateSimpleContract(source, target, c.getContractAddress(), newValue, Arrays.stream(flag.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())).blockingFirst();
 
         assertThat(receipt.getTransactionHash()).isNotBlank();
         assertThat(receipt.getBlockNumber()).isNotEqualTo(currentBlockNumber());

@@ -19,16 +19,16 @@
 
 package com.quorum.gauge;
 
-import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
-import io.reactivex.Observable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,7 +62,7 @@ public class ContractDeployment extends AbstractSpecImplementation {
         String transactionHash = mustHaveValue(contractName + "_transactionHash", String.class);
         List<Observable<Optional<TransactionReceipt>>> receiptObsevables = new ArrayList<>();
         for (String nodeStr : nodes) {
-            QuorumNode node = QuorumNode.valueOf(nodeStr);
+            QuorumNetworkProperty.Node node = networkProperty.getNode(nodeStr);
             receiptObsevables.add(transactionService.getTransactionReceipt(node, transactionHash)
                 .map(ethGetTransactionReceipt -> {
                     if (ethGetTransactionReceipt.getTransactionReceipt().isPresent()) {
