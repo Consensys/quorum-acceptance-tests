@@ -166,6 +166,7 @@ public class SmartContractDualState extends AbstractSpecImplementation {
             TransactionReceipt tr = contractService.setGenericStoreContractSetValue(node, c.getContractAddress(), contractName, methodName, value, false, null).blockingFirst();
             logger.debug("{} {} {}, txHash = {}", contractNameKey, contractName, methodName, tr.getTransactionHash());
         } catch (Exception txe) {
+            logger.debug("expected exception", txe);
             assertThat(txe).hasMessageContaining("Transaction has failed");
         }
     }

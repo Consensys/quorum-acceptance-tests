@@ -5,7 +5,9 @@
 - Install [Docker Engine](https://docs.docker.com/engine/) or [Docker Desktop](https://www.docker.com/products/docker-desktop)
 - Run basic acceptance tests against a new Quorum network using Raft consensus:
     ```
-    docker run --rm --network host -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/acctests:/tmp/acctests quorumengineering/acctests:latest test -Pauto -Dtags="basic || networks/typical::raft" -Dnetwork.forceDestroy=true
+    docker run --rm --network host -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/acctests:/tmp/acctests \
+            quorumengineering/acctests:latest test -Pauto -Dtags="basic || networks/typical::raft" \
+            -Dauto.outputDir=/tmp/acctests -Dnetwork.forceDestroy=true
     ```
 
 # Development
@@ -25,6 +27,8 @@ With built-in provisioning feature:
 * [Terraform](https://terraform.io) 0.12.x
 * [Terraform Provider Quorum](https://bintray.com/quorumengineering/terraform/terraform-provider-quorum)
    - Refer to [this guide](https://www.terraform.io/docs/configuration/providers.html#third-party-plugins) on how to install the provider manually
+
+**For more details on tools and versions being used, please refer to [Dockerfile](Dockerfile)**
 
 ## Writing Tests
 

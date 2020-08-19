@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-ARG TERRAFORM_VERSION=0.12.24
+ARG TERRAFORM_VERSION=0.12.26
 ARG SOLC_VERSION=0.5.5
 ARG GAUGE_VERSION=1.0.8
 # To have a consistent run, this must be the same as gauge-java.version in pom.xml
@@ -18,11 +18,10 @@ LABEL maintainer="info@goquorum.com" \
 WORKDIR /workspace
 COPY . .
 ENV JAVA_HOME="/usr/lib/jvm/default-jvm" \
-    PATH="/workspace/bin:/usr/local/maven/bin:${JAVA_HOME}/bin:${PATH}" \
-    TF_VAR_output_dir="/tmp/acctests"
+    PATH="/workspace/bin:/usr/local/maven/bin:${JAVA_HOME}/bin:${PATH}"
 # require BASH for gauge to work as gauge-java plugin runs a shell script (launch.sh) which requires #!/bin/bash
 RUN apk -q --no-cache --update add tar bash \
-    && mkdir -p /tmp/downloads /usr/local/maven ${TF_VAR_output_dir} bin \
+    && mkdir -p /tmp/downloads /usr/local/maven bin \
     && (pids=""; \
         (wget -O /tmp/downloads/terraform.zip -q https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip \
         && unzip -q -o /tmp/downloads/terraform.zip -d bin) & \
@@ -46,6 +45,5 @@ RUN apk -q --no-cache --update add tar bash \
     && mvn -q dependency:resolve dependency:resolve-plugins \
     && rm -rf /tmp/downloads
 
-VOLUME ${TF_VAR_output_dir}
 ENTRYPOINT ["mvn", "--no-transfer-progress", "-B"]
 CMD ["test", "-Dtags=basic"]

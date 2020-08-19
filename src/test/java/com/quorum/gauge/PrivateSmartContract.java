@@ -138,9 +138,9 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     public void verifyStorageRoot(String contractName, QuorumNode source, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         Observable.zip(
-                contractService.getStorageRoot(source, c.getContractAddress()).subscribeOn(Schedulers.io()),
-                contractService.getStorageRoot(target, c.getContractAddress()).subscribeOn(Schedulers.io()),
-                (s, t) -> assertThat(s).isEqualTo(t)
+            contractService.getStorageRoot(source, c.getContractAddress()).subscribeOn(Schedulers.io()),
+            contractService.getStorageRoot(target, c.getContractAddress()).subscribeOn(Schedulers.io()),
+            (s, t) -> assertThat(s).isEqualTo(t)
         );
     }
 
@@ -148,15 +148,26 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     public void verifyStorageRootForNonParticipatedNode(String contractName, QuorumNode source, QuorumNode stranger) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         Observable.zip(
-                contractService.getStorageRoot(source, c.getContractAddress()).subscribeOn(Schedulers.io()),
-                contractService.getStorageRoot(stranger, c.getContractAddress()).subscribeOn(Schedulers.io()),
-                (s, t) -> assertThat(s).isNotEqualTo(t)
+            contractService.getStorageRoot(source, c.getContractAddress()).subscribeOn(Schedulers.io()),
+            contractService.getStorageRoot(stranger, c.getContractAddress()).subscribeOn(Schedulers.io()),
+            (s, t) -> assertThat(s).isNotEqualTo(t)
         );
     }
 
     @Step("<contractName>'s `get()` function execution in <node> returns <expectedValue>")
     public void verifyPrivacyWithParticipatedNodes(String contractName, QuorumNode node, int expectedValue) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
+        // check transaction receipt to make sure the state is ready
+        assertThat(c.getTransactionReceipt().isPresent()).isTrue();
+        transactionService.getTransactionReceipt(node, c.getTransactionReceipt().get().getTransactionHash())
+                .map(ethGetTransactionReceipt -> {
+                    if (ethGetTransactionReceipt.getTransactionReceipt().isPresent()) {
+                        return ethGetTransactionReceipt;
+                    } else {
+                        throw new RuntimeException("retry");
+                    }
+                }).retryWhen(new RetryWithDelay(5, 1000))
+                .blockingSubscribe();
         int actualValue = contractService.readSimpleContractValue(node, c.getContractAddress());
 
         assertThat(actualValue).isEqualTo(expectedValue);
@@ -201,20 +212,20 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         if (targetContracts != null) {
             contracts.addAll(targetContracts);
         }
-        Scheduler scheduler = networkAwaredScheduler(contracts.size());
+        Scheduler scheduler = threadLocalDelegateScheduler(contracts.size());
         List<Observable<EthGetTransactionReceipt>> allObservableReceipts = new ArrayList<>();
         for (Contract c : contracts) {
             String txHash = c.getTransactionReceipt().orElseThrow(() -> new RuntimeException("no receipt for contract")).getTransactionHash();
             allObservableReceipts.add(transactionService.getTransactionReceipt(node, txHash)
-                    .map(ethGetTransactionReceipt -> {
-                        if (ethGetTransactionReceipt.getTransactionReceipt().isPresent()) {
-                            return ethGetTransactionReceipt;
-                        } else {
-                            throw new RuntimeException("retry");
-                        }
-                    })
-                    .retryWhen(new RetryWithDelay(20, 3000))
-                    .subscribeOn(scheduler));
+                .map(ethGetTransactionReceipt -> {
+                    if (ethGetTransactionReceipt.getTransactionReceipt().isPresent()) {
+                        return ethGetTransactionReceipt;
+                    } else {
+                        throw new RuntimeException("retry");
+                    }
+                })
+                .retryWhen(new RetryWithDelay(20, 3000))
+                .subscribeOn(scheduler));
         }
         Integer actualCount = Observable.zip(allObservableReceipts, args -> {
             int count = 0;
@@ -332,11 +343,11 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     @Step("Execute <contractName>'s `deposit()` function <count> times with arbitrary id and value from <source>. And it's private for <target>")
     public void executeDeposit(String contractName, int count, QuorumNode source, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
-        Scheduler scheduler = networkAwaredScheduler(count);
+        Scheduler scheduler = threadLocalDelegateScheduler(count);
         List<Observable<TransactionReceipt>> observables = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             observables.add(contractService.updateClientReceiptPrivate(source, target, c.getContractAddress(), BigInteger.ZERO)
-                    .subscribeOn(scheduler));
+                .subscribeOn(scheduler));
         }
         List<TransactionReceipt> receipts = Observable.zip(observables, objects -> Observable.fromArray(objects).map(o -> (TransactionReceipt) o).toList().blockingGet()).blockingFirst();
 

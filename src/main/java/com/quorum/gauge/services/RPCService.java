@@ -20,8 +20,11 @@
 package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNetworkProperty.Node;
+import com.quorum.gauge.ext.BatchRequest;
+import com.quorum.gauge.ext.BatchResponse;
 import io.reactivex.Observable;
 import org.springframework.stereotype.Service;
+import org.web3j.protocol.Web3jService;
 import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.Response;
 
@@ -32,6 +35,7 @@ import java.util.List;
  */
 @Service
 public class RPCService extends AbstractService {
+
     public <S, T extends Response> Observable<T> call(Node node, String method, List<S> params, Class<T> responseClass) {
         Request<S, T> request = new Request<>(
                 method,
@@ -40,5 +44,10 @@ public class RPCService extends AbstractService {
                 responseClass
         );
         return request.flowable().toObservable();
+    }
+
+    public Observable<BatchResponse> call(Node node, BatchRequest.Collector requestCollector) {
+        Web3jService client = connectionFactory().getWeb3jService(node);
+        return new BatchRequest(client, requestCollector.toList()).flowable().toObservable();
     }
 }
