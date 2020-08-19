@@ -53,7 +53,7 @@ resource "local_file" "gauge_env" {
 
 # These are environment variables being used by Gauge while running the tests.
 
-SPRING_PROFILES_ACTIVE = ${var.network_name}%{if var.remote_docker_config != null~},proxy%{endif}%{if local.include_security ~},security%{endif}
+SPRING_PROFILES_ACTIVE = ${var.network_name}%{if var.remote_docker_config != null~},proxy%{endif}%{if local.include_security ~},security%{endif}%{if local.with_hashicorp_plugin~},${local.hashicorp_vault_plugin_spring_profile}%{endif}
 SPRING_CONFIG_ADDITIONALLOCATION = file:${module.network.generated_dir}/
 
 EOT

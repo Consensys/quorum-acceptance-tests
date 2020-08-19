@@ -9,6 +9,8 @@ locals {
   node_indices = range(var.number_of_nodes)
 
   providers = { for k, v in var.plugins : k => { name = v.name, version = v.version, config = format("file://%s/plugins/%s-config.json", module.docker.container_geth_datadir, k) } }
+
+  with_hashicorp_plugin = contains(values(var.plugins)[*].name, "quorum-account-plugin-hashicorp-vault")
 }
 
 provider "docker" {
@@ -78,6 +80,11 @@ module "docker" {
 
   # provide additional geth args
   additional_geth_args = format("--rpcapi %s --plugins file://%s/plugin-settings.json %s", local.apis, "/data/qdata", local.more_args)
+  additional_geth_env = {
+    (local.plugin_token_envvar_name) = local.vault_server_token
+  }
+
+  host_plugin_account_dirs = local.host_plugin_acct_dirs
 }
 
 resource "local_file" "plugin-settings" {
