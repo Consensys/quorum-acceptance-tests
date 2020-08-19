@@ -136,7 +136,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
         TransactionReceipt receipt = nestedContractService.restoreFromC1(
             source,
             Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
-            c.getContractAddress(),  Arrays.asList(flag)).blockingFirst();
+            c.getContractAddress(), Arrays.asList(flag)).blockingFirst();
 
         assertThat(receipt.getTransactionHash()).isNotBlank();
         assertThat(receipt.getBlockNumber()).isNotEqualTo(currentBlockNumber());
@@ -174,7 +174,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
             .isNotNull();
     }
 
-    // TODO PrivacyEnhancements - check and merge the fail/Fails methods
+    // TODO PricacyEnhancements - check and merge the fail/Fails methods
 
     @Step("Fire and forget execution of <flag> contract `C2`(<contractName>)'s `set()` function with new arbitrary value in <node> and it's private for <privateFor> fails simulation")
     public void fireAndForgetFails(PrivacyFlag flag, String contractName, QuorumNode node, String privateFor) {
@@ -204,10 +204,11 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
             c.getContractAddress(),
             arbitraryValue,
             Arrays.asList(flag)).onExceptionResumeNext(Observable.empty()).blockingFirst();
-
-        String txHashKey = contractName + "_transactionHash";
-        DataStoreFactory.getSpecDataStore().put(txHashKey, receipt.getTransactionHash());
-        DataStoreFactory.getScenarioDataStore().put(txHashKey, receipt.getTransactionHash());
+        if (receipt != null) {
+            String txHashKey = contractName + "_transactionHash";
+            DataStoreFactory.getSpecDataStore().put(txHashKey, receipt.getTransactionHash());
+            DataStoreFactory.getScenarioDataStore().put(txHashKey, receipt.getTransactionHash());
+        }
     }
 
     @Step("Fire and forget execution of simple contract(<contractName>)'s `set()` function with new arbitrary value in <node> and it's private for <privateFor>")
@@ -232,9 +233,11 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
             c.getContractAddress(),
             intValue,
             Arrays.asList(flag)).onExceptionResumeNext(Observable.empty()).blockingFirst();
-        String txHashKey = contractName + "_transactionHash";
-        DataStoreFactory.getSpecDataStore().put(txHashKey, receipt.getTransactionHash());
-        DataStoreFactory.getScenarioDataStore().put(txHashKey, receipt.getTransactionHash());
+        if (receipt != null) {
+            String txHashKey = contractName + "_transactionHash";
+            DataStoreFactory.getSpecDataStore().put(txHashKey, receipt.getTransactionHash());
+            DataStoreFactory.getScenarioDataStore().put(txHashKey, receipt.getTransactionHash());
+        }
     }
 
 

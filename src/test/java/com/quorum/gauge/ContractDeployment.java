@@ -19,7 +19,7 @@
 
 package com.quorum.gauge;
 
-import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.thoughtworks.gauge.Step;
@@ -62,7 +62,7 @@ public class ContractDeployment extends AbstractSpecImplementation {
         String transactionHash = mustHaveValue(contractName + "_transactionHash", String.class);
         List<Observable<Optional<TransactionReceipt>>> receiptObsevables = new ArrayList<>();
         for (String nodeStr : nodes) {
-            QuorumNode node = QuorumNode.valueOf(nodeStr);
+            QuorumNetworkProperty.Node node = networkProperty.getNode(nodeStr);
             receiptObsevables.add(transactionService.getTransactionReceipt(node, transactionHash)
                 .map(ethGetTransactionReceipt -> {
                     if (ethGetTransactionReceipt.getTransactionReceipt().isPresent()) {

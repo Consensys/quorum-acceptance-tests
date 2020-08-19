@@ -1,6 +1,6 @@
 # Deny non-party sending private transactions to protected contracts
 
- Tags: privacy, non-party, privacy-enhancements, qe81
+ Tags: basic, privacy, non-party, privacy-enhancements, qe81
 
 Private smart contract is protected by having party protection flag enabled during its creation.
 
