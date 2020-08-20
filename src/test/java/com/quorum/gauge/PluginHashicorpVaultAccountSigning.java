@@ -1,7 +1,5 @@
 package com.quorum.gauge;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.core.AbstractSpecImplementation;
@@ -9,8 +7,6 @@ import com.quorum.gauge.ext.accountplugin.HashicorpAccountConfigFileJson;
 import com.quorum.gauge.ext.accountplugin.HashicorpNewAccountJson;
 import com.quorum.gauge.services.AccountService;
 import com.thoughtworks.gauge.Step;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.vault.support.Versioned;
 import org.web3j.protocol.admin.methods.response.BooleanResponse;
@@ -20,40 +16,17 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 @Service
 public class PluginHashicorpVaultAccountSigning extends AbstractSpecImplementation {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(PluginHashicorpVaultAccountSigning.class);
-
-    @Step("<node> does not have account 0x6038dc01869425004ca0b8370f6c81cf464213b3")
-    public void verifyNodeDoesNotHaveAccount(QuorumNetworkProperty.Node node) {
-        List<AccountService.Wallet> wallets = accountService
-            .personalListWallets(node)
-            .blockingFirst()
-            .getWallets();
-
-        assertThat(wallets).isNotNull();
-
-        List<AccountService.Wallet> filteredWallets = wallets.stream()
-            .filter(w -> w.contains("0x6038dc01869425004ca0b8370f6c81cf464213b3"))
-            .collect(Collectors.toList());
-
-        assertThat(filteredWallets).isEmpty();
-    }
 
     @Step("<node> has account 0x6038dc01869425004ca0b8370f6c81cf464213b3")
     public void verifyNodeHasAccount(QuorumNetworkProperty.Node node) {
@@ -74,6 +47,20 @@ public class PluginHashicorpVaultAccountSigning extends AbstractSpecImplementati
 
     @Step("Add Hashicorp Vault account 0x6038dc01869425004ca0b8370f6c81cf464213b3 to <node> with secret engine path <secretEnginePath> and secret path <secretPath>")
     public void createHashicorpVaultAccount(QuorumNetworkProperty.Node node, String secretEnginePath, String secretPath) {
+        // if the account is already added do nothing
+        List<AccountService.Wallet> wallets = accountService
+            .personalListWallets(node)
+            .blockingFirst()
+            .getWallets();
+
+        List<AccountService.Wallet> filteredWallets = wallets.stream()
+            .filter(w -> w.contains("0x6038dc01869425004ca0b8370f6c81cf464213b3"))
+            .collect(Collectors.toList());
+
+        if (filteredWallets.size() != 0) {
+            return;
+        }
+
         // write to Vault
         Map<String, Object> toWrite = new HashMap<>();
         toWrite.put("6038dc01869425004ca0b8370f6c81cf464213b3", "1fe8f1ad4053326db20529257ac9401f2e6c769ef1d736b8c2f5aba5f787c72b");
@@ -109,38 +96,6 @@ public class PluginHashicorpVaultAccountSigning extends AbstractSpecImplementati
         }
 
         // reload plugin so that new account is available to node
-        BooleanResponse res = rpcService.call(
-            node,
-            "admin_reloadPlugin",
-            Collections.singletonList("account"),
-            BooleanResponse.class
-        ).blockingFirst();
-        assertThat(res.success()).isTrue();
-    }
-
-    @Step("Remove Hashicorp Vault account 0x6038dc01869425004ca0b8370f6c81cf464213b3 from <node>")
-    public void removeHashicorpVaultAccount(QuorumNetworkProperty.Node node) {
-        String pluginAcctDirPath = hashicorpVaultSigningService.vaultProperties().getNodeAcctDirs().get(node.getName()).getPluginAcctDir();
-        Path acctDir = Paths.get(pluginAcctDirPath);
-
-        Stream<Path> acctFiles = null;
-        try {
-            acctFiles = Files.list(acctDir);
-        } catch (IOException e) {
-            fail("unable to list files in account directory: %s", e.getMessage());
-        }
-        assertThat(acctFiles).isNotNull();
-
-        acctFiles.filter(p -> p.getFileName().toString().contains("6038dc01869425004ca0b8370f6c81cf464213b3"))
-            .forEach(p -> {
-                try {
-                    Files.delete(p);
-                } catch (IOException e) {
-                    fail("unable to delete file %s: %s", p.toString(), e.getMessage());
-                }
-            });
-
-        // reload plugin so that the account is no longer available to node
         BooleanResponse res = rpcService.call(
             node,
             "admin_reloadPlugin",
