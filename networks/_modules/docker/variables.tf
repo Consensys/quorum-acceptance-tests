@@ -88,7 +88,7 @@ variable "network_id" {}
 
 variable "ethstats_secret" {}
 
-variable "ethstats_ip" {}
+variable  "ethstats_ip" {}
 
 variable "password_file_name" {}
 
