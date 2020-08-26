@@ -32,10 +32,7 @@ import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import io.reactivex.Observable;
 import io.reactivex.Scheduler;
 import io.reactivex.schedulers.Schedulers;
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.WebSocket;
-import okhttp3.WebSocketListener;
+import okhttp3.*;
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -245,14 +242,24 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         setupContractAsyncWithAccount(initialValue, source, null, target, contractName);
     }
 
+    /**
+     * This depends on waithook Docker container to be available. The solution here is to use "localhost" for websocket listener of the callback
+     * and use the container hostname for Quorum to send the response.
+     */
     private void setupContractAsyncWithAccount(int initialValue, QuorumNode source, String sourceAccount, QuorumNode target, String contractName) {
         CountDownLatch waitForCallback = new CountDownLatch(1);
         CountDownLatch waitForWebSocket = new CountDownLatch(1);
 
-        String baseUrl = "waithook.com/testing_quorum_" + Math.abs(new Random().nextLong());
+        String baseUrl = "waithook.local:3012/testing_quorum_" + Math.abs(new Random().nextLong());
         String callbackUrl = "http://" + baseUrl;
 
         Request callback = new Request.Builder().url("ws://" + baseUrl).build();
+        OkHttpClient okHttpClient = this.okHttpClient.newBuilder().dns(hostname -> {
+            if ("waithook.local".equalsIgnoreCase(hostname)) {
+                return Dns.SYSTEM.lookup("localhost");
+            }
+            return Dns.SYSTEM.lookup(hostname);
+        }).build();
         WebSocket ws = okHttpClient.newWebSocket(callback, new WebSocketListener() {
             @Override
             public void onOpen(WebSocket webSocket, Response response) {
@@ -294,6 +301,8 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
             waitForCallback.await(20, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
+        } finally {
+            ws.close(1000, "Finished");
         }
     }
 
