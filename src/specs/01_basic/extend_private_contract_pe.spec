@@ -1,6 +1,6 @@
-# Extend contract to new party
+# Extend contract to new party (privacy enhancements enabled)
 
- Tags: basic, extension
+ Tags: privacy-enhancements, extension
 
 This is to verify that a node must not be able to send transactions to private smart contract which it is not party to.
 
@@ -88,7 +88,8 @@ contract C2 {
   This spec will be executed for all 3 privacy flag values
 
       |privacyType      |
-      |StandardPrivate  |
+      |PartyProtection  |
+      |StateValidation  |
 
 
 

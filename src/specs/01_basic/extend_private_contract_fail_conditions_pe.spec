@@ -1,6 +1,6 @@
-# Extend nested private contracts to new party
+# Extend nested private contracts to new party (privacy enhancements enabled)
 
- Tags: basic, extension
+ Tags: privacy-enhancements, extension
 
 This is to verify that a node must not be able to send transactions to private smart contract which it is not party to.
 
@@ -85,17 +85,20 @@ contract C2 {
 }
 
 ```
-## Re-extend an already extended contract for StandardPrivate - state change should not happen
-* Deploy "StandardPrivate" type `SimpleStorage` contract with initial value "42" between "Node2" and "Node4". Name this contract as "contract5Extension". Ensure that its not visible from "Node1"
+## Re-extend an already extended contract for PartyProtection - state change should not happen
+* Deploy "PartyProtection" type `SimpleStorage` contract with initial value "42" between "Node2" and "Node4". Name this contract as "contract5Extension". Ensure that its not visible from "Node1"
 
 * Initiate "contract5Extension" extension from "Node2" to "Node1". Contract extension accepted in receiving node. Check that state value in receiving node is "42"
 
-* Execute "contract5Extension"'s `set()` function with privacy type "StandardPrivate" to set new value to "999" in "Node2" and it's private for "Node4"
+* Execute "contract5Extension"'s `set()` function with privacy type "PartyProtection" to set new value to "999" in "Node2" and it's private for "Node4"
 * "contract5Extension"'s `get()` function execution in "Node2" returns "999"
 * "contract5Extension"'s `get()` function execution in "Node4" returns "999"
 * "contract5Extension"'s `get()` function execution in "Node1" returns "42"
 
+## Only contract creator node can extend a PartyProtection contract
+* Deploy "PartyProtection" type `SimpleStorage` contract with initial value "42" between "Node2" and "Node4". Name this contract as "contract1Extension". Ensure that its not visible from "Node1"
+* Initiate "contract1Extension" extension from non creating node "Node4" to "Node1" should fail with error message "operation not allowed"
 
-## Allow any party to extend contract for StandardPrivate contract
-* Deploy "StandardPrivate" type `SimpleStorage` contract with initial value "42" between "Node2" and "Node4". Name this contract as "contract1Extension". Ensure that its not visible from "Node1"
-* Initiate "contract1Extension" extension from "Node4" to "Node1". Contract extension accepted in receiving node. Check that state value in receiving node is "42"
+## Only contract creator node can extend a StateValidation contract
+* Deploy "StateValidation" type `SimpleStorage` contract with initial value "42" between "Node2" and "Node4". Name this contract as "contract1Extension". Ensure that its not visible from "Node1"
+* Initiate "contract1Extension" extension from non creating node "Node4" to "Node1" should fail with error message "operation not allowed"
