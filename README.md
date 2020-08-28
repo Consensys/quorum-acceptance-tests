@@ -26,7 +26,8 @@ With built-in provisioning feature:
 * [Docker Engine](https://docs.docker.com/engine/) or [Docker Desktop](https://www.docker.com/products/docker-desktop)
 * [Terraform](https://terraform.io) 0.12.x
 * [Terraform Provider Quorum](https://bintray.com/quorumengineering/terraform/terraform-provider-quorum)
-   - Refer to [this guide](https://www.terraform.io/docs/configuration/providers.html#third-party-plugins) on how to install the provider manually
+   - The provider should be downloaded from the link and unzipped into the directory `~/.terraform.d/plugins/`
+   - Refer to [this guide](https://www.terraform.io/docs/configuration/providers.html#third-party-plugins) for more information regarding provider installation
 
 **For more details on tools and versions being used, please refer to [Dockerfile](Dockerfile)**
 
