@@ -68,9 +68,9 @@ public class GethArgBuilder {
 
     public GethArgBuilder permEeaFlag(boolean yes) {
         if (yes) {
-            args.put("--permeea", "");
+            args.put("--eeapermissions", "");
         } else {
-            args.remove("--permeea");
+            args.remove("--eeapermissions");
         }
         return this;
     }
