@@ -57,49 +57,49 @@ public class PermissionsContractService extends AbstractService {
         if(version.toLowerCase().equals("eea")){
             switch (contractName.toLowerCase().trim()) {
                 case "accountmanager":
-                    return EeaAccountManager.deploy(
+                    return AccountManager.deploy(
                         client,
                         transactionManager,
                         getPermContractGasProvider(),
                         upgrContractAddress).flowable().toObservable();
 
                 case "orgmanager":
-                    return EeaOrgManager.deploy(
+                    return OrgManager.deploy(
                         client,
                         transactionManager,
                         getPermContractGasProvider(),
                         upgrContractAddress).flowable().toObservable();
 
                 case "nodemanager":
-                    return EeaNodeManager.deploy(
+                    return NodeManager.deploy(
                         client,
                         transactionManager,
                         getPermContractGasProvider(),
                         upgrContractAddress).flowable().toObservable();
 
                 case "rolemanager":
-                    return EeaRoleManager.deploy(
+                    return RoleManager.deploy(
                         client,
                         transactionManager,
                         getPermContractGasProvider(),
                         upgrContractAddress).flowable().toObservable();
 
                 case "votermanager":
-                    return EeaVoterManager.deploy(
+                    return VoterManager.deploy(
                         client,
                         transactionManager,
                         getPermContractGasProvider(),
                         upgrContractAddress).flowable().toObservable();
 
                 case "permissionsupgradable":
-                    return EeaPermissionsUpgradable.deploy(
+                    return PermissionsUpgradable.deploy(
                         client,
                         transactionManager,
                         getPermContractGasProvider(),
                         accountService.getDefaultAccountAddress(node).blockingFirst()).flowable().toObservable();
 
                 case "permissionsinterface":
-                    return EeaPermissionsInterface.deploy(
+                    return PermissionsInterface.deploy(
                         client,
                         transactionManager,
                         getPermContractGasProvider(),
@@ -170,7 +170,7 @@ public class PermissionsContractService extends AbstractService {
         Web3j client = connectionFactory().getWeb3jConnection(node);
         TransactionManager transactionManager = getTxManager(node, client);
         if(version.toLowerCase().equals("eea")){
-            return EeaPermissionsImplementation.deploy(
+            return PermissionsImplementation.deploy(
                 client,
                 transactionManager,
                 getPermContractDepGasProvider(),
@@ -200,7 +200,7 @@ public class PermissionsContractService extends AbstractService {
         Web3j client = connectionFactory().getWeb3jConnection(node);
         TransactionManager transactionManager = getTxManager(node, client);
         if(version.toLowerCase().equals("eea")){
-            return EeaPermissionsUpgradable.load(
+            return PermissionsUpgradable.load(
                 upgrAddr,
                 client, transactionManager,
                 getPermContractGasProvider()

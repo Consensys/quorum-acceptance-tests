@@ -1,4 +1,4 @@
-pragma solidity ^0.5.3;
+pragma solidity ^0.5.0;
 
 import "./PermissionsUpgradable.sol";
 /** @title Role manager contract
@@ -8,8 +8,8 @@ import "./PermissionsUpgradable.sol";
     can be called directly. these are invoked by quorum for populating
     permissions data in cache
   */
-contract EeaRoleManager {
-    EeaPermissionsUpgradable private permUpgradable;
+contract RoleManager {
+    PermissionsUpgradable private permUpgradable;
 
     struct RoleDetails {
         string roleId;
@@ -39,7 +39,7 @@ contract EeaRoleManager {
     /** @notice constructor. sets the permissions upgradable address
       */
     constructor (address _permUpgradable) public {
-        permUpgradable = EeaPermissionsUpgradable(_permUpgradable);
+        permUpgradable = PermissionsUpgradable(_permUpgradable);
     }
 
     /** @notice function to add a new role definition to an organization
