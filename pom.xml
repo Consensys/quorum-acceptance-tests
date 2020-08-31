@@ -174,7 +174,7 @@
                     </flags>
                 </configuration>
             </plugin>
-            <plugin>
+            <!--<plugin>
                 <groupId>org.web3j</groupId>
                 <artifactId>web3j-maven-plugin</artifactId>
                 <version>${web3j-maven-plugin.version}</version>
@@ -183,7 +183,8 @@
                     <soliditySourceFiles>
                         <directory>${basedir}/src/main/sol</directory>
                         <includes>
-                            <include>**/*.sol</include>
+                            <include>*.sol</include>
+                            <include>permissions/eea/*.sol</include>
                         </includes>
                     </soliditySourceFiles>
                     <sourceDestination>${generated.sol.dir}</sourceDestination>
@@ -205,7 +206,7 @@
                         <version>${web3j-maven-plugin.version}</version>
                     </dependency>
                 </dependencies>
-            </plugin>
+            </plugin>-->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>

@@ -18,7 +18,7 @@ variable "geth" {
   })
   default = {
     container = {
-      image = { name = "amalrajmani/quorum:perm1", local = false }
+      image = { name = "amalrajmani/quorum:raft1", local = false }
       port  = { raft = 50400, p2p = 21000, http = 8545, ws = -1, graphql = -1 }
     }
     host = {
