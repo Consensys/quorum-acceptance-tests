@@ -35,6 +35,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>11</java.version>
         <generated.sol.dir>${project.build.directory}/generate-sources/sol</generated.sol.dir>
+        <permission.version>basic</permission.version>
 
         <!-- properties from gauge-maven-plugin configuration -->
         <tags>basic</tags> <!-- which tests to run by default -->
@@ -174,7 +175,7 @@
                     </flags>
                 </configuration>
             </plugin>
-            <!--<plugin>
+            <plugin>
                 <groupId>org.web3j</groupId>
                 <artifactId>web3j-maven-plugin</artifactId>
                 <version>${web3j-maven-plugin.version}</version>
@@ -184,7 +185,7 @@
                         <directory>${basedir}/src/main/sol</directory>
                         <includes>
                             <include>*.sol</include>
-                            <include>permissions/eea/*.sol</include>
+                            <include>permissions/${permission.version}/*.sol</include>
                         </includes>
                     </soliditySourceFiles>
                     <sourceDestination>${generated.sol.dir}</sourceDestination>
@@ -206,7 +207,7 @@
                         <version>${web3j-maven-plugin.version}</version>
                     </dependency>
                 </dependencies>
-            </plugin>-->
+            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
