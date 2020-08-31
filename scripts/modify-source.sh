@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 srcFilePath=$1
-echo "process java source files from $srcFilePath ..."
+tags=$2
+
+echo "process java source files from $srcFilePath ...tags=$tags"
+permissionBasic=`echo $tags|grep "permissions-basic"|wc -l`
+permissionEea=`echo $tags|grep "permissions-eea"|wc -l`
+echo "permissionBasic=$permissionBasic permissionEea=$permissionEea"
+
 cd $srcFilePath
 for file in `ls -1 ./*.java` ; do
     if [ -f $file ]; then

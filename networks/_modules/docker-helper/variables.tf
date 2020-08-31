@@ -40,7 +40,7 @@ variable "tessera" {
   })
   default = {
     container = {
-      image = { name = "quorumengineering/tessera:0.10.3", local = false }
+      image = { name = "quorumengineering/tessera:latest", local = false }
       port  = { thirdparty = 9080, p2p = 9000 }
     }
     host = {
