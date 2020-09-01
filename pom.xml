@@ -184,6 +184,7 @@
                         <directory>${basedir}/src/main/sol</directory>
                         <includes>
                             <include>*.sol</include>
+                            <include>permissions/${permission_type_name}/*.sol</include>
                         </includes>
                     </soliditySourceFiles>
                     <sourceDestination>${generated.sol.dir}</sourceDestination>
@@ -207,6 +208,7 @@
                 </dependencies>
             </plugin>
 
+
             <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>exec-maven-plugin</artifactId>
@@ -221,22 +223,7 @@
                             <executable>${project.basedir}/scripts/modify-source.sh</executable>
                             <arguments>
                                 <argument>${generated.sol.dir}/com/quorum/gauge/sol</argument>
-                                <argument>${tags}</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-
-                    <execution>
-                        <id>copy permission solidity files</id>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>${project.basedir}/scripts/copy-sol.sh</executable>
-                            <arguments>
-                                <argument>${basedir}/src/main/sol</argument>
-                                <argument>${tags}</argument>
+                                <argument>${permission_type_name}</argument>
                             </arguments>
                         </configuration>
                     </execution>
@@ -337,7 +324,7 @@
                             <execution>
                                 <id>extract</id>
                                 <goals><goal>run</goal></goals>
-                                <phase>process-test-resources</phase>
+                                <phase>initialize</phase>
                                 <configuration>
                                     <exportAntProperties>true</exportAntProperties>
                                     <target name="Extract network location and profile">
@@ -367,8 +354,16 @@
                                                                select="\2"
                                                                casesensitive="false"
                                                                defaultValue="@{defaultProfile}"/>
+                                                <propertyregex property="permission_type_name"
+                                                               input="@{raw}"
+                                                               regexp="permissions-([^\.]*) &amp;&amp; ([0-9a-zA-Z-_\.]+)"
+                                                               select="\1"
+                                                               casesensitive="false"
+                                                               defaultValue="basic"/>
+
                                                 <property name="@{folderPropertyName}" value="${folder_extract}" />
                                                 <property name="@{profilePropertyName}" value="${profile_extract}" />
+                                                <property name="permissionTypeName" value="${permission_type_extract}" />
                                                 <if>
                                                     <not><equals arg1="${profile_extract}" arg2="undefined" /></not>
                                                     <then>
@@ -377,6 +372,7 @@
                                                 </if>
                                                 <echo level="info" message="@{folderPropertyName}=${folder_extract}" />
                                                 <echo level="info" message="@{profilePropertyName}=${profile_extract}" />
+                                                <echo level="info" message="permissionTypeName=${permission_type_name}" />
                                                 <exec executable="terraform" dir="${folder_extract}"
                                                       failonerror="false" failifexecutionfails="false">
                                                     <arg line="workspace new ${profile_extract}"/>
