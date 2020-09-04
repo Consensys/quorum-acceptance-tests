@@ -75,7 +75,7 @@ public class PrivacyService extends AbstractService {
     }
 
     public String id(QuorumNode node, String name) {
-        return getQuorumNodeConfig(node).getAccountAliases().get(name);
+        return getQuorumNodeConfig(node).getPrivacyAddressAliases().get(name);
     }
 
     public String thirdPartyUrl(QuorumNode node) {

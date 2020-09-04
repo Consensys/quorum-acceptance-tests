@@ -53,3 +53,21 @@ variable "docker_registry" {
   type    = list(object({ name = string, username = string, password = string }))
   default = []
 }
+
+variable "additional_quorum_container_vol" {
+  type = map(list(object({container_path = string, host_path = string})))
+  default = {}
+  description = "Additional volume mounts for geth container. Each map key is the node index (0-based)"
+}
+
+variable "additional_tessera_container_vol" {
+  type        = map(list(object({ container_path = string, host_path = string })))
+  default     = {}
+  description = "Additional volume mounts for tessera container. Each map key is the node index (0-based)"
+}
+
+variable "tessera_app_container_path" {
+  type        = map(string)
+  default     = {}
+  description = "Path to Tessera app jar file in the container. Each map key is the node index (0-based)"
+}

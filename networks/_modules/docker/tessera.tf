@@ -27,6 +27,13 @@ resource "docker_container" "tessera" {
     container_path = local.container_tm_datadir_mounted
     host_path      = var.tessera_datadirs[count.index]
   }
+  dynamic "volumes" {
+    for_each = lookup(var.additional_tessera_container_vol, count.index, [])
+    content {
+      container_path = volumes.value["container_path"]
+      host_path      = volumes.value["host_path"]
+    }
+  }
   networks_advanced {
     name         = docker_network.quorum.name
     ipv4_address = var.tm_networking[count.index].ip.private
@@ -46,7 +53,8 @@ resource "docker_container" "tessera" {
     <<EOF
 #Tessera${count.index + 1}
 
-START_TESSERA="java -Xms128M -Xmx128M -jar /tessera/tessera-app.jar \
+START_TESSERA="java -Xms128M -Xmx128M \
+  -jar ${lookup(var.tessera_app_container_path, count.index, "/tessera/tessera-app.jar")} \
   --override jdbc.url=jdbc:h2:${local.container_tm_datadir}/db;MODE=Oracle;TRACE_LEVEL_SYSTEM_OUT=0 \
   --override serverConfigs[1].serverAddress=unix:${local.container_tm_ipc_file} \
   --override serverConfigs[2].sslConfig.serverKeyStore=${local.container_tm_datadir}/serverKeyStore \
@@ -85,7 +93,17 @@ if [ -f /data/tm/cleanStorage ]; then
 fi
 
 rm -f ${local.container_tm_ipc_file}
-exec $START_TESSERA
+exec java -Xms128M -Xmx128M \
+  -jar ${lookup(var.tessera_app_container_path, count.index, "/tessera/tessera-app.jar")} \
+  --override jdbc.url="jdbc:h2:${local.container_tm_datadir}/db;MODE=Oracle;TRACE_LEVEL_SYSTEM_OUT=0" \
+  --override serverConfigs[1].serverAddress="unix:${local.container_tm_ipc_file}" \
+  --override serverConfigs[2].sslConfig.serverKeyStore="${local.container_tm_datadir}/serverKeyStore" \
+  --override serverConfigs[2].sslConfig.serverTrustStore="${local.container_tm_datadir}/serverTrustStore" \
+  --override serverConfigs[2].sslConfig.knownClientsFile="${local.container_tm_datadir}/knownClientsFile" \
+  --override serverConfigs[2].sslConfig.clientKeyStore="${local.container_tm_datadir}/clientKeyStore" \
+  --override serverConfigs[2].sslConfig.clientTrustStore="${local.container_tm_datadir}/clientTrustStore" \
+  --override serverConfigs[2].sslConfig.knownServersFile="${local.container_tm_datadir}/knownServersFile" \
+  --configfile ${local.container_tm_datadir}/config.json
 EOF
   ]
 }

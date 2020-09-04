@@ -52,7 +52,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
             .map( s -> {
                 String newString = s;
                 for (QuorumNode node : networkProperty.getNodes().keySet()) {
-                    for (String namedKey : networkProperty.getNodes().get(node).getAccountAliases().keySet()) {
+                    for (String namedKey : networkProperty.getNodes().get(node).getPrivacyAddressAliases().keySet()) {
                         newString = StringUtils.replace(newString, "=" + namedKey, "=" + UriUtils.encode(privacyService.id(node, namedKey), StandardCharsets.UTF_8));
                     }
                 }

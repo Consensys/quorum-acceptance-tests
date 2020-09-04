@@ -60,6 +60,8 @@ module "network" {
   geth_networking      = module.helper.geth_networking
   tm_networking        = module.helper.tm_networking
   output_dir           = var.output_dir
+
+  override_tm_named_key_allocation = var.override_tm_named_key_allocation
 }
 
 module "docker" {
@@ -86,6 +88,10 @@ module "docker" {
   }
 
   host_plugin_account_dirs = local.host_plugin_acct_dirs
+
+  additional_geth_container_vol    = var.additional_quorum_container_vol
+  additional_tessera_container_vol = var.additional_tessera_container_vol
+  tessera_app_container_path       = var.tessera_app_container_path
 }
 
 resource "local_file" "plugin-settings" {

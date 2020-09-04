@@ -42,6 +42,13 @@ resource "docker_container" "geth" {
     container_path = local.container_plugin_acctdir
     host_path      = length(local_file.plugin_acct_dir_files) != 0 ? dirname(local_file.plugin_acct_dir_files[count.index].filename) : dirname(local_file.plugin_acct_fallback_dir_files[count.index].filename)
   }
+  dynamic "volumes" {
+    for_each = lookup(var.additional_geth_container_vol, count.index, [])
+    content {
+      container_path = volumes.value["container_path"]
+      host_path      = volumes.value["host_path"]
+    }
+  }
   networks_advanced {
     name         = docker_network.quorum.name
     ipv4_address = var.geth_networking[count.index].ip.private
