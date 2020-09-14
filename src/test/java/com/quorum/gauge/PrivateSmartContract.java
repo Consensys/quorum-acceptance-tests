@@ -59,12 +59,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
 
     @Step("Deploy a simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target>, named this contract as <contractName>")
     public void setupContract(int initialValue, QuorumNode source, QuorumNode target, String contractName) {
-        saveCurrentBlockNumber();
-        logger.debug("Setting up contract from {} to {}", source, target);
-        Contract contract = contractService.createSimpleContract(initialValue, source, target).blockingFirst();
-
-        DataStoreFactory.getSpecDataStore().put(contractName, contract);
-        DataStoreFactory.getScenarioDataStore().put(contractName, contract);
+        setupContract("StandardPrivate", initialValue, source, target, contractName);
     }
 
     @Step("Deploy a <privacyFlags> simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target>, named this contract as <contractName>")
@@ -177,6 +172,11 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
 
         assertThat(receipt.getTransactionHash()).isNotBlank();
         assertThat(receipt.getBlockNumber()).isNotEqualTo(currentBlockNumber());
+    }
+
+    @Step("Execute <contractName>'s `set()` function with new value <newValue> in <source> and it's private for <target>")
+    public void updateNewValue(String contractName, int newValue, QuorumNode source, QuorumNode target) {
+        updateNewValue(contractName, PrivacyFlag.StandardPrivate.name(), newValue, source, target);
     }
 
 
