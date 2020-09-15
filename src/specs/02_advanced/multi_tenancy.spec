@@ -104,7 +104,7 @@ tags: private, deploy
 
 ## Tenants can only access to private contracts which are privy to them
 
-tags: private
+tags: private, access
 
  `Tenant C` can not write to private contracts on which `C1` or `C2` are not participants
 

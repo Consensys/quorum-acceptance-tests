@@ -120,11 +120,12 @@ public class MultiTenancy extends AbstractSpecImplementation {
         List<String> requestScopes = Stream.of("rpc://eth_*", contractScope.toUriString()).collect(Collectors.toList());
         assertThat(oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
             .flatMap( t -> rawContractService.updateRawSimplePrivateContract(100, c.getContractAddress(), networkProperty.getWallets().get("Wallet1"), node, privateFrom, privateForList))
+            .map(Optional::of)
             .onErrorResumeNext(o -> {
-                return Observable.just(null);
+                return Observable.just(Optional.empty());
             })
             .doOnTerminate(Context::removeAccessToken)
-            .map( r -> r != null && r.isStatusOK()).blockingFirst()
+            .map( r -> r.isPresent() && r.get().isStatusOK()).blockingFirst()
         ).isTrue();
     }
 
@@ -147,15 +148,16 @@ public class MultiTenancy extends AbstractSpecImplementation {
                     return rawContractService.updateRawSimplePrivateContract(100, c.getContractAddress(), networkProperty.getWallets().get("Wallet1"), node, privateFrom, privateForList);
                 }
             })
+            .map(Optional::of)
             .doOnError(e -> {
                 logger.debug("On exception: {}", e.getMessage());
                 caughtException.set(e);
             })
             .onErrorResumeNext(o -> {
-                return Observable.just(null);
+                return Observable.just(Optional.empty());
             })
             .doOnTerminate(Context::removeAccessToken)
-            .map( r -> r != null && r.isStatusOK()).blockingFirst()
+            .map( r -> r.isPresent() && r.get().isStatusOK()).blockingFirst()
         ).isFalse();
         assertThat(caughtException.get()).hasMessageContaining("not authorized");
     }
@@ -184,11 +186,12 @@ public class MultiTenancy extends AbstractSpecImplementation {
         List<String> requestScopes = Stream.of("rpc://eth_*").collect(Collectors.toList());
         assertThat(oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
             .flatMap(t -> rawContractService.updateRawSimplePublicContract(node, networkProperty.getWallets().get("Wallet1"), contract.getContractAddress(), newValue))
+            .map(Optional::of)
             .onErrorResumeNext(o -> {
-                return Observable.just(null);
+                return Observable.just(Optional.empty());
             })
-            .doOnTerminate(() -> Context.removeAccessToken())
-            .map(r -> r != null && r.isStatusOK()).blockingFirst()
+            .doOnTerminate(Context::removeAccessToken)
+            .map(r -> r.isPresent() && r.get().isStatusOK()).blockingFirst()
         ).isTrue();
     }
 
@@ -247,15 +250,16 @@ public class MultiTenancy extends AbstractSpecImplementation {
             List<String> txHashes = new ArrayList<>();
             for (int i = 0; i < times; i++) {
                 assertThat(rawContractService.updateRawClientReceiptPrivateContract(c.getContractAddress(), networkProperty.getWallets().get("Wallet1"), node, privateFrom, privateForList)
+                    .map(Optional::of)
                     .onErrorResumeNext(o -> {
-                        return Observable.just(null);
+                        return Observable.just(Optional.empty());
                     })
                     .doOnNext(r -> {
-                        if (r != null) {
-                            txHashes.add(r.getTransactionHash());
+                        if (r.isPresent()) {
+                            txHashes.add(r.get().getTransactionHash());
                         }
                     })
-                    .map(r -> r != null && r.isStatusOK()).blockingFirst()
+                    .map(r -> r.isPresent() && r.get().isStatusOK()).blockingFirst()
                 ).isTrue();
             }
             DataStoreFactory.getScenarioDataStore().put("hashes", txHashes.toArray(new String[0]));
@@ -408,7 +412,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
                 }
             })
             .map(Optional::of)
-            .doOnError(e -> logger.error("Error while deploying private contract", e))
+            .doOnError(e -> logger.debug("Deploying private contract: {}", e.getMessage()))
             .onErrorResumeNext(o -> {
                 return Observable.just(Optional.empty());
             })

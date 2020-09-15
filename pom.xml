@@ -35,6 +35,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>11</java.version>
         <generated.sol.dir>${project.build.directory}/generate-sources/sol</generated.sol.dir>
+        <skipGenerateSol>false</skipGenerateSol>
+        <skipToolsCheck>false</skipToolsCheck>
 
         <!-- properties from gauge-maven-plugin configuration -->
         <tags>basic</tags> <!-- which tests to run by default -->
@@ -135,11 +137,6 @@
             <artifactId>spring-vault-core</artifactId>
             <version>2.2.2.RELEASE</version>
         </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.6</version>
-        </dependency>
     </dependencies>
 
     <build>
@@ -185,67 +182,13 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.web3j</groupId>
-                <artifactId>web3j-maven-plugin</artifactId>
-                <version>${web3j-maven-plugin.version}</version>
-                <configuration>
-                    <packageName>${project.groupId}.sol</packageName>
-                    <soliditySourceFiles>
-                        <directory>${basedir}/src/main/sol</directory>
-                        <includes>
-                            <include>*.sol</include>
-                            <include>permissions/${permission_type_name}/*.sol</include>
-                        </includes>
-                    </soliditySourceFiles>
-                    <sourceDestination>${generated.sol.dir}</sourceDestination>
-                    <outputFormat>java,bin,abi</outputFormat>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>01-generate-sol</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>generate-sources</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.web3j</groupId>
-                        <artifactId>codegen</artifactId>
-                        <version>${web3j-maven-plugin.version}</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
-
-            <plugin>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>replace-binary-string-in-gen-sol-java</id>
-                        <phase>process-sources</phase>
-                        <configuration>
-                            <target>
-                                <replace token= "private static final String BINARY =" value="private static String BINARY=&quot;&quot;; static {        String fullClassName = java.lang.invoke.MethodHandles.lookup().lookupClass().getName(); String[] classNameArr = fullClassName.split(&quot;\\.&quot;); String className = classNameArr[classNameArr.length-1]; String resourcePath = &quot;/com.quorum.gauge.sol/&quot;+className+&quot;.bin&quot;; try { BINARY = org.apache.commons.io.IOUtils.toString(java.lang.invoke.MethodHandles.lookup().lookupClass().getResourceAsStream(resourcePath)); } catch (java.io.IOException e) { e.printStackTrace(); } }//" dir="${generated.sol.dir}/com/quorum/gauge/sol">
-                                    <include name="**/*.java"/>
-                                </replace>
-                            </target>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
                 <version>${build-helper-maven-plugin.version}</version>
                 <executions>
                     <execution>
                         <id>02-add-source-folder</id>
-                        <phase>generate-sources</phase>
+                        <phase>process-sources</phase>
                         <goals>
                             <goal>add-source</goal>
                         </goals>
@@ -257,7 +200,7 @@
                     </execution>
                     <execution>
                         <id>02-add-sol-bin</id>
-                        <phase>generate-sources</phase>
+                        <phase>process-sources</phase>
                         <goals>
                             <goal>add-resource</goal>
                         </goals>
@@ -320,6 +263,7 @@
                                 <goals><goal>run</goal></goals>
                                 <phase>process-test-resources</phase>
                                 <configuration>
+                                    <skip>${skipToolsCheck}</skip>
                                     <!-- make sure we fail fast if tools are not installed -->
                                     <failOnError>true</failOnError>
                                     <exportAntProperties>false</exportAntProperties>
@@ -608,6 +552,72 @@
                                 <flag>--sort</flag>
                             </flags>
                         </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>generateSol</id>
+            <activation>
+                <property>
+                    <name>skipGenerateSol</name>
+                    <value>!true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.web3j</groupId>
+                        <artifactId>web3j-maven-plugin</artifactId>
+                        <version>${web3j-maven-plugin.version}</version>
+                        <configuration>
+                            <packageName>${project.groupId}.sol</packageName>
+                            <soliditySourceFiles>
+                                <directory>${basedir}/src/main/sol</directory>
+                                <includes>
+                                    <include>*.sol</include>
+                                    <include>permissions/${permission_type_name}/*.sol</include>
+                                </includes>
+                            </soliditySourceFiles>
+                            <sourceDestination>${generated.sol.dir}</sourceDestination>
+                            <outputFormat>java,bin,abi</outputFormat>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>01-generate-sol</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>generate-sources</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.web3j</groupId>
+                                <artifactId>codegen</artifactId>
+                                <version>${web3j-maven-plugin.version}</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+
+                    <plugin>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>replace-binary-string-in-gen-sol-java</id>
+                                <phase>process-sources</phase>
+                                <configuration>
+                                    <target>
+                                        <replace token= "private static final String BINARY =" value="private static String BINARY=&quot;&quot;; static {        String fullClassName = java.lang.invoke.MethodHandles.lookup().lookupClass().getName(); String[] classNameArr = fullClassName.split(&quot;\\.&quot;); String className = classNameArr[classNameArr.length-1]; String resourcePath = &quot;/com.quorum.gauge.sol/&quot;+className+&quot;.bin&quot;; try { BINARY = org.apache.commons.io.IOUtils.toString(java.lang.invoke.MethodHandles.lookup().lookupClass().getResourceAsStream(resourcePath)); } catch (java.io.IOException e) { e.printStackTrace(); } }//" dir="${generated.sol.dir}/com/quorum/gauge/sol">
+                                            <include name="**/*.java"/>
+                                        </replace>
+                                    </target>
+                                </configuration>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>
