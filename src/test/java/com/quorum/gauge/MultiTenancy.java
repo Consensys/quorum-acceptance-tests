@@ -65,14 +65,14 @@ public class MultiTenancy extends AbstractSpecImplementation {
     @Step("`<tenantName>` can deploy a <contractId> private contract to `<node>`, private from `<privateFrom>` and private for `<privateFor>`")
     public void deployPrivateContracts(String tenantName, String contractId, QuorumNode node, String privateFrom, String privateFor) {
         Observable<Boolean> deployPrivateContract = deployPrivateContract(tenantName, node, privateFrom, privateFor, contractId)
-            .map( c -> c != null && c.getTransactionReceipt().isPresent());
+            .map( c -> c.isPresent() && c.get().getTransactionReceipt().isPresent());
         assertThat(deployPrivateContract.blockingFirst()).isTrue();
     }
 
     @Step("`<tenantName>` can __NOT__ deploy a <contractId> private contract to `<node>`, private from `<privateFrom>` and private for `<privateFor>`")
     public void denyDeployPrivateContracts(String tenantName, String contractId, QuorumNode node, String privateFrom, String privateFor) {
         Observable<Boolean> deployPrivateContract = deployPrivateContract(tenantName, node, privateFrom, privateFor, contractId)
-            .map( c -> c != null && c.getTransactionReceipt().isPresent());
+            .map( c -> c.isPresent() && c.get().getTransactionReceipt().isPresent());
         assertThat(deployPrivateContract.blockingFirst()).isFalse();
     }
 
@@ -99,10 +99,10 @@ public class MultiTenancy extends AbstractSpecImplementation {
     @Step("`<tenantName>` deploys a <contractId> private contract, named <contractName>, by sending a transaction to `<node>` with its TM key `<privateFrom>` and private for `<privateFor>`")
     public void deployPrivateContractsPrivateFor(String tenantName, String contractId, String contractName, QuorumNode node, String privateFrom, String privateFor) {
         Contract contract = deployPrivateContract(tenantName, node, privateFrom, privateFor, contractId).doOnNext(c -> {
-            if (c == null || !c.getTransactionReceipt().isPresent()) {
+            if (c.isEmpty() || c.get().getTransactionReceipt().isEmpty()) {
                 throw new RuntimeException("contract not deployed");
             }
-        }).blockingFirst();
+        }).blockingFirst().get();
         logger.debug("Saving contract address {} with name {}", contract.getContractAddress(), contractName);
         DataStoreFactory.getScenarioDataStore().put(contractName + "_id", contractId);
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
@@ -120,7 +120,9 @@ public class MultiTenancy extends AbstractSpecImplementation {
         List<String> requestScopes = Stream.of("rpc://eth_*", contractScope.toUriString()).collect(Collectors.toList());
         assertThat(oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
             .flatMap( t -> rawContractService.updateRawSimplePrivateContract(100, c.getContractAddress(), networkProperty.getWallets().get("Wallet1"), node, privateFrom, privateForList))
-            .onExceptionResumeNext(Observable.just(null))
+            .onErrorResumeNext(o -> {
+                return Observable.just(null);
+            })
             .doOnTerminate(Context::removeAccessToken)
             .map( r -> r != null && r.isStatusOK()).blockingFirst()
         ).isTrue();
@@ -149,7 +151,9 @@ public class MultiTenancy extends AbstractSpecImplementation {
                 logger.debug("On exception: {}", e.getMessage());
                 caughtException.set(e);
             })
-            .onExceptionResumeNext(Observable.just(null))
+            .onErrorResumeNext(o -> {
+                return Observable.just(null);
+            })
             .doOnTerminate(Context::removeAccessToken)
             .map( r -> r != null && r.isStatusOK()).blockingFirst()
         ).isFalse();
@@ -180,7 +184,9 @@ public class MultiTenancy extends AbstractSpecImplementation {
         List<String> requestScopes = Stream.of("rpc://eth_*").collect(Collectors.toList());
         assertThat(oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
             .flatMap(t -> rawContractService.updateRawSimplePublicContract(node, networkProperty.getWallets().get("Wallet1"), contract.getContractAddress(), newValue))
-            .onExceptionResumeNext(Observable.just(null))
+            .onErrorResumeNext(o -> {
+                return Observable.just(null);
+            })
             .doOnTerminate(() -> Context.removeAccessToken())
             .map(r -> r != null && r.isStatusOK()).blockingFirst()
         ).isTrue();
@@ -241,7 +247,9 @@ public class MultiTenancy extends AbstractSpecImplementation {
             List<String> txHashes = new ArrayList<>();
             for (int i = 0; i < times; i++) {
                 assertThat(rawContractService.updateRawClientReceiptPrivateContract(c.getContractAddress(), networkProperty.getWallets().get("Wallet1"), node, privateFrom, privateForList)
-                    .onExceptionResumeNext(Observable.just(null))
+                    .onErrorResumeNext(o -> {
+                        return Observable.just(null);
+                    })
                     .doOnNext(r -> {
                         if (r != null) {
                             txHashes.add(r.getTransactionHash());
@@ -365,7 +373,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
         assertThat(ethLog.getError().getMessage()).contains(expectedErrorMsg);
     }
 
-    private Observable<? extends Contract> deployPrivateContract(String tenantName, QuorumNode node, String privateFrom, String privateFor, String contractId) {
+    private Observable<Optional<Contract>> deployPrivateContract(String tenantName, QuorumNode node, String privateFrom, String privateFor, String contractId) {
         List<String> privateForList = Arrays.stream(privateFor.split(",")).map(String::trim).collect(Collectors.toList());
         if (!assignedNamedKeys.containsKey(tenantName)) {
             throw new IllegalArgumentException(tenantName + " has no assigned TM keys");
@@ -399,9 +407,10 @@ public class MultiTenancy extends AbstractSpecImplementation {
                         throw new UnsupportedOperationException(contractId + " is not supported");
                 }
             })
+            .map(Optional::of)
             .doOnError(e -> logger.error("Error while deploying private contract", e))
             .onErrorResumeNext(o -> {
-                return Observable.just(null);
+                return Observable.just(Optional.empty());
             })
             .doOnTerminate(Context::removeAccessToken);
     }
