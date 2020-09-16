@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StreamUtils;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
@@ -53,6 +54,7 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -74,6 +76,32 @@ public class ContractService extends AbstractService {
             targetNode = QuorumNode.valueOf(target.getName());
         }
         return createSimpleContract(initialValue, QuorumNode.valueOf(source.getName()), targetNode, DEFAULT_GAS_LIMIT);
+    }
+    public Observable<? extends Contract> createSimpleContract(int initialValue, Node source, String privateFromAlias, List<String> privateForAliases, List<PrivacyFlag> flags) {
+        return createSimpleContract(initialValue, source, privateFromAlias, privateForAliases, flags, DEFAULT_GAS_LIMIT);
+    }
+
+    public Observable<? extends Contract> createSimpleContract(int initialValue, Node source, String privateFromAliases, List<String> privateForAliases, List<PrivacyFlag> flags,  BigInteger gas) {
+        if (CollectionUtils.isEmpty(flags)) {
+            flags = Collections.emptyList();
+        }
+        Quorum client = connectionFactory().getConnection(source);
+        List<PrivacyFlag> finalFlags = flags;
+        return accountService.getDefaultAccountAddress(source).flatMap(address -> {
+            EnhancedClientTransactionManager clientTransactionManager = new EnhancedClientTransactionManager(
+                client,
+                address,
+                privacyService.id(privateFromAliases),
+                privateForAliases.stream().map(privacyService::id).collect(Collectors.toList()),
+                finalFlags,
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS);
+            return SimpleStorage.deploy(client,
+                clientTransactionManager,
+                BigInteger.valueOf(0),
+                gas,
+                BigInteger.valueOf(initialValue)).flowable().toObservable();
+        });
     }
 
     public Observable<? extends Contract> createSimpleContract(int initialValue, QuorumNode source, QuorumNode target) {
@@ -159,6 +187,42 @@ public class ContractService extends AbstractService {
             ))
             .flatMap(txManager -> SimpleStorage.load(
                 contractAddress, client, txManager, BigInteger.ZERO, gasLimit).set(value).flowable().toObservable()
+            );
+    }
+
+    public Observable<TransactionReceipt> updateSimpleStorageContract(final int newValue, final String contractAddress, final Node source,
+                                                                      final String privateFromAlias,
+                                                                      final List<String> privateForAliases) {
+        final Quorum client = connectionFactory().getConnection(source);
+        final BigInteger value = BigInteger.valueOf(newValue);
+
+        return accountService.getDefaultAccountAddress(source)
+            .map(address -> new EnhancedClientTransactionManager(
+                client,
+                address,
+                privacyService.id(privateFromAlias),
+                privateForAliases.stream().map(privacyService::id).collect(Collectors.toList()),
+                Collections.EMPTY_LIST, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
+            ))
+            .flatMap(txManager -> SimpleStorage.load(
+                contractAddress, client, txManager, BigInteger.ZERO, DEFAULT_GAS_LIMIT).set(value).flowable().toObservable()
+            );
+    }
+
+    public Observable<TransactionReceipt> updateSimpleStorageDelegateContract(int newValue, String contractAddress, Node source, String privateFromAlias, List<String> privateForAliases) {
+        Quorum client = connectionFactory().getConnection(source);
+        final BigInteger value = BigInteger.valueOf(newValue);
+
+        return accountService.getDefaultAccountAddress(source)
+            .map(address -> new EnhancedClientTransactionManager(
+                client,
+                address,
+                privacyService.id(privateFromAlias),
+                privateForAliases.stream().map(privacyService::id).collect(Collectors.toList()),
+                Collections.EMPTY_LIST, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
+            ))
+            .flatMap(txManager -> SimpleStorageDelegate.load(
+                contractAddress, client, txManager, BigInteger.ZERO, DEFAULT_GAS_LIMIT).set(value).flowable().toObservable()
             );
     }
 
@@ -371,6 +435,22 @@ public class ContractService extends AbstractService {
         }
     }
 
+    public Observable<? extends Contract> createClientReceiptPrivateSmartContract(Node source, String privateFromAlias, List<String> privateForAliases) {
+        Quorum client = connectionFactory().getConnection(source);
+        return accountService.getDefaultAccountAddress(source).flatMap(address -> {
+            ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
+                client,
+                address,
+                privacyService.id(privateFromAlias),
+                privateForAliases.stream().map(privacyService::id).collect(Collectors.toList()),
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS);
+            return ClientReceipt.deploy(client,
+                clientTransactionManager,
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT).flowable().toObservable();
+        });
+    }
 
     public Observable<? extends Contract> createClientReceiptPrivateSmartContract(QuorumNode source, QuorumNode target) {
         Quorum client = connectionFactory().getConnection(source);
@@ -467,5 +547,25 @@ public class ContractService extends AbstractService {
     public Observable<EthLog> getFilterLogs(QuorumNode node, BigInteger filterId) {
         Quorum client = connectionFactory().getConnection(node);
         return client.ethGetFilterLogs(filterId).flowable().toObservable();
+    }
+
+    public Observable<? extends Contract> createSimpleDelegatePrivateContract(String delegateContractAddress, Node source, String privateFromAlias, List<String> privateForAliases) {
+        Quorum client = connectionFactory().getConnection(source);
+        return accountService.getDefaultAccountAddress(source)
+            .flatMap(address -> {
+                ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
+                    client,
+                    address,
+                    privacyService.id(privateFromAlias),
+                    privateForAliases.stream().map(privacyService::id).collect(Collectors.toList()),
+                    DEFAULT_MAX_RETRY,
+                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                return SimpleStorageDelegate.deploy(client,
+                    clientTransactionManager,
+                    BigInteger.valueOf(0),
+                    DEFAULT_GAS_LIMIT,
+                    delegateContractAddress)
+                    .flowable().toObservable();
+            });
     }
 }

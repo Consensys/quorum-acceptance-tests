@@ -95,19 +95,21 @@ tags: rpc
 * `"Tenant B"` can request for RPC modules available in `"Node1"`
 * `"Tenant B"` can request for RPC modules available in `"Node2"`
 
-## Tenants can only deploy private contracts from the allocated TM keys
+## Tenants using self-managed account keys can only deploy private contracts from the allocated TM keys
 
-tags: private, deploy
+tags: private, deploy, raw
+
+ Tenants who self-manage account keys use raw transaction flow to submit private transactions
 
 * `"Tenant A"` can deploy a "SimpleStorage" private contract to `"Node1"`, private from `"A1"` and private for `"A2"`
 * `"Tenant A"` can __NOT__ deploy a "SimpleStorage" private contract to `"Node1"`, private from `"B1"` and private for `"B2"`
 
-## Tenants can only access to private contracts which are privy to them
+## Tenants using self-managed account keys can only access to private contracts which are privy to them
 
-tags: private, access
+tags: private, access, raw
 
+ Tenants who self-manage account keys use raw transaction flow to submit private transactions
  `Tenant C` can not write to private contracts on which `C1` or `C2` are not participants
-
  `Tenant D` can not write to its private contract that manipulates other private contracts on which `D1` is not a participant
 
 * `"Tenant A"` deploys a "SimpleStorage" private contract, named "contract1", by sending a transaction to `"Node1"` with its TM key `"A1"` and private for `"B2"`
@@ -116,10 +118,11 @@ tags: private, access
 * `"Tenant D"` deploys a "SimpleStorageDelegate(contract1)" private contract, named "delegateContract", by sending a transaction to `"Node2"` with its TM key `"D1"` and private for `"D1"`
 * `"Tenant D"` fails to write a new arbitrary value to "delegateContract" by sending a transaction to `"Node2"` with its TM key `"D1"` and private for `"D1"`
 
-## Tenants can only receive events from private contracts which are privy to them
+## Tenants using self-managed account keys can only receive events from private contracts which are privy to them
 
-tags: private, events
+tags: private, events, raw
 
+ Tenants who self-manage account keys use raw transaction flow to submit private transactions
  Tenants can access to events via the following methods:
 
  - Call `eth_getTransactionReceipt` API
@@ -150,3 +153,23 @@ tags: public
 * `"Tenant A"` deploys a "SimpleStorage" public contract, named "contract1", by sending a transaction to `"Node1"`
 * `"Tenant B"` writes a new value "123" to "contract1" successfully by sending a transaction to `"Node2"`
 * `"Tenant C"` reads the value from "contract1" successfully by sending a request to `"Node3"` and the value returns "123"
+
+## Tenants using node-managed account keys can only deploy private contracts from the allocated TM keys
+
+tags: private, deploy, node-managed-account
+
+* `"Tenant A"` can deploy a "SimpleStorage" private contract to `"Node1"` using node's default account, private from `"A1"` and private for `"A2"`
+* `"Tenant A"` can __NOT__ deploy a "SimpleStorage" private contract to `"Node1"` using node's default account, private from `"B1"` and private for `"B2"`
+
+## Tenants using node-managed account keys can only access to private contracts which are privy to them
+
+tags: private, access, node-managed-account
+
+ `Tenant C` can not write to private contracts on which `C1` or `C2` are not participants
+ `Tenant D` can not write to its private contract that manipulates other private contracts on which `D1` is not a participant
+
+* `"Tenant A"` deploys a "SimpleStorage" private contract, named "contract1", by sending a transaction to `"Node1"` with its TM key `"A1"` using node's default account and private for `"B2"`
+* `"Tenant B"` writes a new arbitrary value to "contract1" successfully by sending a transaction to `"Node2"` with its TM key `"B2"` private for `"A1"`
+* `"Tenant C"` fails to write a new arbitrary value to "contract1" by sending a transaction to `"Node1"` with its TM key `"C1"` using node's default account and private for `"B2"`
+* `"Tenant D"` deploys a "SimpleStorageDelegate(contract1)" private contract, named "delegateContract", by sending a transaction to `"Node2"` with its TM key `"D1"` using node's default account and private for `"D1"`
+* `"Tenant D"` fails to write a new arbitrary value to "delegateContract" by sending a transaction to `"Node2"` with its TM key `"D1"` and private for `"D1"`
