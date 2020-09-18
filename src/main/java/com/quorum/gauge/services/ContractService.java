@@ -60,6 +60,8 @@ import java.util.stream.Collectors;
 
 import static java.util.Collections.singletonList;
 
+import static java.util.Collections.emptyList;
+
 @Service
 public class ContractService extends AbstractService {
     private static final Logger logger = LoggerFactory.getLogger(ContractService.class);
@@ -77,13 +79,18 @@ public class ContractService extends AbstractService {
         }
         return createSimpleContract(initialValue, QuorumNode.valueOf(source.getName()), targetNode, DEFAULT_GAS_LIMIT);
     }
+
+    public Observable<? extends Contract> createPublicSimpleContract(int initialValue, Node source) {
+        return createSimpleContract(initialValue, QuorumNode.valueOf(source.getName()), null, DEFAULT_GAS_LIMIT, emptyList());
+    }
+
     public Observable<? extends Contract> createSimpleContract(int initialValue, Node source, String privateFromAlias, List<String> privateForAliases, List<PrivacyFlag> flags) {
         return createSimpleContract(initialValue, source, privateFromAlias, privateForAliases, flags, DEFAULT_GAS_LIMIT);
     }
 
     public Observable<? extends Contract> createSimpleContract(int initialValue, Node source, String privateFromAliases, List<String> privateForAliases, List<PrivacyFlag> flags,  BigInteger gas) {
         if (CollectionUtils.isEmpty(flags)) {
-            flags = Collections.emptyList();
+            flags = emptyList();
         }
         Quorum client = connectionFactory().getConnection(source);
         List<PrivacyFlag> finalFlags = flags;
@@ -203,6 +210,25 @@ public class ContractService extends AbstractService {
                 privacyService.id(privateFromAlias),
                 privateForAliases.stream().map(privacyService::id).collect(Collectors.toList()),
                 Collections.EMPTY_LIST, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
+            ))
+            .flatMap(txManager -> SimpleStorage.load(
+                contractAddress, client, txManager, BigInteger.ZERO, DEFAULT_GAS_LIMIT).set(value).flowable().toObservable()
+            );
+    }
+
+    public Observable<TransactionReceipt> updatePublicSimpleStorageContract(final int newValue,
+                                                                            final String contractAddress,
+                                                                            final Node source) {
+        final Quorum client = connectionFactory().getConnection(source);
+        final BigInteger value = BigInteger.valueOf(newValue);
+
+        return accountService.getDefaultAccountAddress(source)
+            .map(address -> new EnhancedClientTransactionManager(
+                client,
+                address,
+                null,
+                null,
+                Collections.emptyList(), DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
             ))
             .flatMap(txManager -> SimpleStorage.load(
                 contractAddress, client, txManager, BigInteger.ZERO, DEFAULT_GAS_LIMIT).set(value).flowable().toObservable()

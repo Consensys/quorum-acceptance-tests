@@ -146,14 +146,6 @@ tags: private, events, raw
 * `"Tenant D"`, initially allocated with key(s) `"D1"`, sees "not authorized" when retrieving logs from transaction receipts in `"Node2"`
 * `"Tenant D"`, initially allocated with key(s) `"D1"`, sees "not authorized" when filtering logs by "contract1" address in `"Node2"`
 
-## Tenants can access public states
-
-tags: public
-
-* `"Tenant A"` deploys a "SimpleStorage" public contract, named "contract1", by sending a transaction to `"Node1"`
-* `"Tenant B"` writes a new value "123" to "contract1" successfully by sending a transaction to `"Node2"`
-* `"Tenant C"` reads the value from "contract1" successfully by sending a request to `"Node3"` and the value returns "123"
-
 ## Tenants using node-managed account keys can only deploy private contracts from the allocated TM keys
 
 tags: private, deploy, node-managed-account
@@ -173,3 +165,19 @@ tags: private, access, node-managed-account
 * `"Tenant C"` fails to write a new arbitrary value to "contract1" by sending a transaction to `"Node1"` with its TM key `"C1"` using node's default account and private for `"B2"`
 * `"Tenant D"` deploys a "SimpleStorageDelegate(contract1)" private contract, named "delegateContract", by sending a transaction to `"Node2"` with its TM key `"D1"` using node's default account and private for `"D1"`
 * `"Tenant D"` fails to write a new arbitrary value to "delegateContract" by sending a transaction to `"Node2"` with its TM key `"D1"` and private for `"D1"`
+
+## Tenants using self-managed account keys can access public states
+
+tags: public, raw
+
+* `"Tenant A"` deploys a "SimpleStorage" public contract, named "contract1", by sending a transaction to `"Node1"`
+* `"Tenant B"` writes a new value "123" to "contract1" successfully by sending a transaction to `"Node2"`
+* `"Tenant C"` reads the value from "contract1" successfully by sending a request to `"Node3"` and the value returns "123"
+
+## Tenants using node-managed account keys can access public states
+
+tags: public, node-managed-account
+
+* `"Tenant A"` deploys a "SimpleStorage" public contract, named "contract1", by sending a transaction to `"Node1"` using node's default account
+* `"Tenant B"` writes a new value "123" to "contract1" successfully by sending a transaction to `"Node2"` using node's default account
+* `"Tenant C"` reads the value from "contract1" successfully by sending a request to `"Node3"` and the value returns "123"

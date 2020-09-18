@@ -181,6 +181,23 @@ public class MultiTenancy extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
     }
 
+    @Step("`<tenantName>` deploys a <contractId> public contract, named <contractName>, by sending a transaction to `<node>` using node's default account")
+    public void deployNodeManagedPublicContract(String tenantName, String contractId, String contractName, QuorumNetworkProperty.Node node) {
+        // only need to request access to eth_* apis
+        List<String> requestScopes = Stream.of("rpc://eth_*").collect(Collectors.toList());
+        Contract contract = oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.getName()), requestScopes)
+            .flatMap(t -> contractService.createPublicSimpleContract(42, node))
+            .doOnTerminate(Context::removeAccessToken)
+            .doOnNext(c -> {
+                if (c == null || !c.getTransactionReceipt().isPresent()) {
+                    throw new RuntimeException("contract not deployed");
+                }
+            })
+            .blockingFirst();
+        logger.debug("Saving contract address {} with name {}", contract.getContractAddress(), contractName);
+        DataStoreFactory.getScenarioDataStore().put(contractName, contract);
+    }
+
     @Step("`<tenantName>` writes a new value <newValue> to <contractName> successfully by sending a transaction to `<node>`")
     public void setSimpleContractValue(String tenantName, int newValue, String contractName, QuorumNode node) {
         Contract contract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
@@ -188,6 +205,22 @@ public class MultiTenancy extends AbstractSpecImplementation {
         List<String> requestScopes = Stream.of("rpc://eth_*").collect(Collectors.toList());
         assertThat(oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
             .flatMap(t -> rawContractService.updateRawSimplePublicContract(node, networkProperty.getWallets().get("Wallet1"), contract.getContractAddress(), newValue))
+            .map(Optional::of)
+            .onErrorResumeNext(o -> {
+                return Observable.just(Optional.empty());
+            })
+            .doOnTerminate(Context::removeAccessToken)
+            .map(r -> r.isPresent() && r.get().isStatusOK()).blockingFirst()
+        ).isTrue();
+    }
+
+    @Step("`<tenantName>` writes a new value <newValue> to <contractName> successfully by sending a transaction to `<node>` using node's default account")
+    public void setNodeManagedPublicSimpleContractValue(String tenantName, int newValue, String contractName, QuorumNetworkProperty.Node node) {
+        Contract contract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
+        // only need to request access to eth_* apis
+        List<String> requestScopes = Stream.of("rpc://eth_*").collect(Collectors.toList());
+        assertThat(oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.getName()), requestScopes)
+            .flatMap(t -> contractService.updatePublicSimpleStorageContract(newValue, contract.getContractAddress(), node))
             .map(Optional::of)
             .onErrorResumeNext(o -> {
                 return Observable.just(Optional.empty());
