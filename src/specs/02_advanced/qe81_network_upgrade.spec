@@ -94,11 +94,15 @@
 * Stop "quorum" in "Node4" if consensus is istanbul
 * Check that "quorum" in "Node4" is "down"
 
+* Record the current block number, named it as "catchUpBlockNumber"
+
 * Clear quorum data in "Node4"
  This is required so that Node4 can sync properly
 * Change raft leader
 * Run gethInit in "Node4" with genesis file having privacyEnhancementsBlock set to "peBlockNumber" + "1"
 * Check that "quorum" in "Node4" is "up"
+
+* Wait for node "Node4" to catch up to "catchUpBlockNumber"
 
  Standard private transactions work as expected (in a mix of old/new nodes)
  Deploy a StandardPrivate simple contract from Node1 to Node2 and Node4
@@ -148,10 +152,138 @@
 * "contract20"'s `get()` function execution in "Node4" returns "42"
  PP transaction from Node4 updates all party nodes state
 * Fire and forget execution of "PartyProtection" simple contract("contract20")'s `set()` function with new value "55" in "Node4" and it's private for "Node1"
-* Transaction Receipt is "successfully" available in "Node1,Node4" for "contract19"
+* Transaction Receipt is "successfully" available in "Node1,Node4" for "contract20"
 * "contract20"'s `get()` function execution in "Node1" returns "55"
 * "contract20"'s `get()` function execution in "Node2" returns "0"
 * "contract20"'s `get()` function execution in "Node3" returns "0"
 * "contract20"'s `get()` function execution in "Node4" returns "55"
 
-// TODO - Check with Nam if we could add some resend steps here (or leave it for a separate upgrade & resend scenario)
+ PSV transaction from Node1 to Node4 - useful for extending to Node2 after it is upgraded
+* Deploy a "StateValidation" contract `SimpleStorage` with initial value "45" in "Node1"'s default account and it's private for "Node4", named this contract as "contract25"
+* "contract25" is deployed "successfully" in "Node1,Node4"
+* "contract25"'s `get()` function execution in "Node1" returns "45"
+* "contract25"'s `get()` function execution in "Node2" returns "0"
+* "contract25"'s `get()` function execution in "Node3" returns "0"
+* "contract25"'s `get()` function execution in "Node4" returns "45"
+
+// prepare two SP transactions between Node2 and Node3 (so that we can test the resend in a mixed network scenario)
+* Deploy a "StandardPrivate" contract `SimpleStorage` with initial value "42" in "Node2"'s default account and it's private for "Node3", named this contract as "contract21"
+* "contract21" is deployed "successfully" in "Node2,Node3"
+* "contract21"'s `get()` function execution in "Node1" returns "0"
+* "contract21"'s `get()` function execution in "Node2" returns "42"
+* "contract21"'s `get()` function execution in "Node3" returns "42"
+* "contract21"'s `get()` function execution in "Node4" returns "0"
+
+* Deploy a "StandardPrivate" contract `SimpleStorage` with initial value "43" in "Node3"'s default account and it's private for "Node2", named this contract as "contract22"
+* "contract22" is deployed "successfully" in "Node2,Node3"
+* "contract22"'s `get()` function execution in "Node1" returns "0"
+* "contract22"'s `get()` function execution in "Node2" returns "43"
+* "contract22"'s `get()` function execution in "Node3" returns "43"
+* "contract22"'s `get()` function execution in "Node4" returns "0"
+
+// Upgrade Node2
+
+* Record the current block number, named it as "catchUpBlockNumber"
+
+* Stop and start "Node2" using quorum version <q_to_version> and tessera version <t_to_version>
+ Node2 is now privacy enhancements capable but privacy enhancements are not enabled (geth init hasnt been run with a genesis file containing privacyEnhancementsBlock)
+ Node1 is not able to connect to Node2 (as they have different values for PrivacyEnhancementsBlock)
+* Grep "quorum" in "Node2" for "Fork ID rejected - local incompatible or needs update"
+* Stop "quorum" in "Node2"
+* Check that "quorum" in "Node2" is "down"
+* Clear quorum data in "Node2"
+ This is required so that Node2 can sync properly
+* Change raft leader
+* Run gethInit in "Node2" with genesis file having privacyEnhancementsBlock set to "peBlockNumber" + "1"
+* Check that "quorum" in "Node2" is "up"
+
+* Wait for node "Node2" to catch up to "catchUpBlockNumber"
+
+ Node2 is now updated and it has privacy enhancements enabled
+
+* Initiate "contract20" extension from "Node1" to "Node2". Contract extension accepted in receiving node. Check that state value in receiving node is "55"
+
+* Fire and forget execution of "PartyProtection" simple contract("contract20")'s `set()` function with new value "56" in "Node2" and it's private for "Node1,Node4"
+* Transaction Receipt is "successfully" available in "Node1,Node2,Node4" for "contract20"
+* "contract20"'s `get()` function execution in "Node1" returns "56"
+* "contract20"'s `get()` function execution in "Node2" returns "56"
+* "contract20"'s `get()` function execution in "Node3" returns "0"
+* "contract20"'s `get()` function execution in "Node4" returns "56"
+
+* Initiate "contract25" extension from "Node1" to "Node2". Contract extension accepted in receiving node. Check that state value in receiving node is "45"
+
+* Fire and forget execution of "StateValidation" simple contract("contract25")'s `set()` function with new value "46" in "Node2" and it's private for "Node1,Node4"
+* Transaction Receipt is "successfully" available in "Node1,Node2,Node4" for "contract25"
+* "contract25"'s `get()` function execution in "Node1" returns "46"
+* "contract25"'s `get()` function execution in "Node2" returns "46"
+* "contract25"'s `get()` function execution in "Node3" returns "0"
+* "contract25"'s `get()` function execution in "Node4" returns "46"
+
+* Deploy a "StateValidation" contract `SimpleStorage` with initial value "35" in "Node2"'s default account and it's private for "Node4", named this contract as "contract26"
+* "contract26" is deployed "successfully" in "Node1,Node4"
+* "contract26"'s `get()` function execution in "Node1" returns "0"
+* "contract26"'s `get()` function execution in "Node2" returns "35"
+* "contract26"'s `get()` function execution in "Node3" returns "0"
+* "contract26"'s `get()` function execution in "Node4" returns "35"
+
+* Initiate "contract26" extension from "Node2" to "Node1". Contract extension accepted in receiving node. Check that state value in receiving node is "35"
+
+* Fire and forget execution of "StateValidation" simple contract("contract26")'s `set()` function with new value "36" in "Node2" and it's private for "Node1,Node4"
+* Transaction Receipt is "successfully" available in "Node1,Node2,Node4" for "contract26"
+* "contract26"'s `get()` function execution in "Node1" returns "36"
+* "contract26"'s `get()` function execution in "Node2" returns "36"
+* "contract26"'s `get()` function execution in "Node3" returns "0"
+* "contract26"'s `get()` function execution in "Node4" returns "36"
+
+
+* Record the current block number, named it as "catchUpBlockNumber"
+
+ Stop Node2, clear the storage and kick off a tessera resend
+
+* Stop "quorum" in "Node2"
+* Check that "quorum" in "Node2" is "down"
+* Clear quorum data in "Node2"
+* Clear tessera data in "Node2"
+* Restart "tessera" in "Node2"
+* Grep "tessera" in "Node2" for "Cleaning tessera storage"
+* Grep "tessera" in "Node2" for "Tessera resend successful"
+* Change raft leader
+* Run gethInit in "Node2" with genesis file having privacyEnhancementsBlock set to "peBlockNumber" + "1"
+* Check that "quorum" in "Node2" is "up"
+
+* Wait for node "Node2" to catch up to "catchUpBlockNumber"
+
+ Now that Node2 should have recovered and rebuilt it's state (after tessera resend) check the values for the various contracts
+
+StandardPrivate
+* "contract19"'s `get()` function execution in "Node2" returns "9"
+* "contract21"'s `get()` function execution in "Node2" returns "42"
+* "contract22"'s `get()` function execution in "Node2" returns "43"
+
+PartyProtection
+* "contract20"'s `get()` function execution in "Node2" returns "56"
+
+* Fire and forget execution of "PartyProtection" simple contract("contract20")'s `set()` function with new value "57" in "Node1" and it's private for "Node2,Node4"
+* Transaction Receipt is "successfully" available in "Node1,Node2,Node4" for "contract20"
+* "contract20"'s `get()` function execution in "Node1" returns "57"
+* "contract20"'s `get()` function execution in "Node2" returns "57"
+* "contract20"'s `get()` function execution in "Node3" returns "0"
+* "contract20"'s `get()` function execution in "Node4" returns "57"
+
+ StateValidation
+* "contract25"'s `get()` function execution in "Node2" returns "46"
+* "contract26"'s `get()` function execution in "Node2" returns "36"
+
+* Fire and forget execution of "StateValidation" simple contract("contract25")'s `set()` function with new value "47" in "Node1" and it's private for "Node2,Node4"
+* Transaction Receipt is "successfully" available in "Node1,Node2,Node4" for "contract25"
+* "contract25"'s `get()` function execution in "Node1" returns "47"
+* "contract25"'s `get()` function execution in "Node2" returns "47"
+* "contract25"'s `get()` function execution in "Node3" returns "0"
+* "contract25"'s `get()` function execution in "Node4" returns "47"
+
+* Fire and forget execution of "StateValidation" simple contract("contract26")'s `set()` function with new value "37" in "Node1" and it's private for "Node2,Node4"
+* Transaction Receipt is "successfully" available in "Node1,Node2,Node4" for "contract26"
+* "contract26"'s `get()` function execution in "Node1" returns "37"
+* "contract26"'s `get()` function execution in "Node2" returns "37"
+* "contract26"'s `get()` function execution in "Node3" returns "0"
+* "contract26"'s `get()` function execution in "Node4" returns "37"

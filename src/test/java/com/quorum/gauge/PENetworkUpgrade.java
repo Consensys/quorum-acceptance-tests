@@ -77,6 +77,13 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
         assertThat(infraService.stopResource(containerId).blockingFirst()).isTrue();
     }
 
+    @Step("Restart <component> in <node>")
+    public void restartComponentInNode(String component, String node) {
+        String containerId = getComponentContainerId(component, node);
+        logger.debug("Restarting component {} in node {} - container ID {}", component, node, containerId);
+        assertThat(infraService.restartResource(containerId).blockingFirst()).isTrue();
+    }
+
     @Step("Stop <component> in <node> if consensus is istanbul")
     public void stopComponentInNodeIfIstanbul(String component, String node) {
         if (!"istanbul".equalsIgnoreCase(networkProperty.getConsensus())){
@@ -136,6 +143,12 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
     public void clearDataForNode(String node) {
         String containerId = getComponentContainerId("quorum", node);
         infraService.writeFile(containerId, "/data/qdata/cleanStorage", "true").blockingFirst();
+    }
+
+    @Step("Clear tessera data in <node>")
+    public void clearTesseraDataForNode(String node) {
+        String containerId = getComponentContainerId("tessera", node);
+        infraService.writeFile(containerId, "/data/tm/cleanStorage", "true").blockingFirst();
     }
 
     @Step("Change raft leader")

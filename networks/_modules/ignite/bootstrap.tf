@@ -202,7 +202,8 @@ resource "local_file" "tmconfigs-generator" {
     },
     "alwaysSendTo": [],
     "features" : {
-      "enableRemoteKeyValidation" : "true"
+      "enableRemoteKeyValidation" : "true",
+      "enableEnhancedPrivacy" : "true"
     }
 }
 JSON
