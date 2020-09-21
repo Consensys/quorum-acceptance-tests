@@ -15,21 +15,28 @@
  We start a 4 node network (with pre PE versions).
  We upgrade Node1 to a quorum version that supports PE and check that:
  - SP/PSV transactions are rejected by the node (as PE are disabled)
- - we try to enable PE (geth init) with a block height lower than the current block height - expecting error from geth init
+ - we try to enable PE (geth init) with a block height lower than the current block height - expecting an error from geth init
  - we try to enable PE (geth init) with a block height higher than the current block height - expecting successs and a warning message that informs that the privacy manager must support PE
  - we try to start geth after enabling PE with the original version of tessera that does not support PE - expecting geth to exit and print error message
  We upgrade Node1 to have both quorum and tessera versions that support PE and check that:
  - quorum starts successfully
  - check that SP transactions work as expected
- - check that PP transactions/contracts work as expected on Node1 (attempted interractions from Node3/Node4 are rejected by Node1 - as incoming transactions are received as SP)
+ - check that PP/PSV transactions/contracts are rejected by Node1 as no other node supports them yet (the tessera node is not able to exchange privacy enhanced transactions with any other tessera node)
  We upgrade Node4 to have both quorum and tessera versions that support PE (but PE are not enabled yet) and check that:
  - quorum starts successfully but it does not connect to Node1 (Fork ID rejected - local incompatible or needs update)
- - when Node4 receives a PP transaction from Node1 it logs an error and stops (with BAD BLOCK). Error: Privacy enhanced transaction received while privacy enhancements are disabled. Please check your node configuration.
- We enable PE on Node4 from the correct block height (same as in Node1) and check that (involves deleting the node stored data and forcing it to resync):
+ - when Node4 receives a PP transaction from Node1 it logs an error and stops[raft]/retries[istanbul] (with BAD BLOCK). Error: Privacy enhanced transaction received while privacy enhancements are disabled. Please check your node configuration.
+ We enable PE on Node4 from the correct block height (same as in Node1) and check that (it involves deleting the node stored data and forcing it to resync):
  - we deploy a PP contract from Node1 to Node4
  - we prove that a non party node (Node3) can't affect the state of the deployed PP contract on Node1 and Node4
  - we prove that PE party nodes can update the state of the PP contract
  - run the above scenario with a SP contract (and heighlight that non party can alter the state of party nodes)
+ We enable PE on Node3 from the correct block height (same as in Node1) and check that (it involves deleting the node stored data and forcing it to resync):
+ - we extend and create a numer of contracts involving Node2 as either the sender or receiver
+ - we stop quorum and tessera and clean their respective storage
+ - we start tessera in resend mode and wait for resend to finish successfully (it should be a mixed network resend where Node1 and Node4 are upgraded and
+ should use batch resend while Node3 would use legacy resend)
+ - we start quorum and wait for it to synchronize with the rest of the nodes
+ - we verify that Node2 has access and holds the expected storage values for all the contracts it had access to before recovery
 
  Tags: privacy-enhancements-upgrade, pre-condition/no-record-blocknumber
 
@@ -134,7 +141,7 @@
 * "contract19"'s `get()` function execution in "Node3" returns "0"
 * "contract19"'s `get()` function execution in "Node4" returns "9"
 
- Party protection transactions only work as expected between the upgraded nodes
+ Party protection transactions work between the upgraded nodes
 * Deploy a "PartyProtection" contract `SimpleStorage` with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract20"
 * "contract20" is deployed "successfully" in "Node1,Node4"
 * "contract20"'s `get()` function execution in "Node1" returns "42"
