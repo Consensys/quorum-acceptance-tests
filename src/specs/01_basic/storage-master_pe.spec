@@ -1,4 +1,4 @@
-# Storage Master - privacy enhancements
+# Storage Master - exercise parent child relationships including creating two children from parent with a single transaction (privacy enhancements)
 
  Tags: privacy-enhancements
 

@@ -40,7 +40,7 @@ public class SmartContractDualState extends AbstractSpecImplementation {
 
     @Step("Deploy <contractName> smart contract with initial value <initialValue> from a default account in <node>, named this contract as <contractNameKey>")
     public void setupStorecAsPublicDependentContract(String contractName, int initialValue, QuorumNetworkProperty.Node node, String contractNameKey) {
-        Contract c = contractService.createGenericStoreContract(node, contractName, initialValue, null, false, null, PrivacyFlag.StandardPrivate).blockingFirst();
+        Contract c = contractService.createGenericStoreContract(node, contractName, initialValue, null, false, null, null).blockingFirst();
         logger.debug("{} contract address is:{}", contractName, c.getContractAddress());
 
         assertThat(c.getContractAddress()).isNotBlank();

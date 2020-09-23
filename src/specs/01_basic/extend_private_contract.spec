@@ -2,7 +2,7 @@
 
  Tags: basic, extension
 
-This is to verify that a node must not be able to send transactions to private smart contract which it is not party to.
+This is to verify the contract extension APIs (success scenarios).
 
 There are 2 set of contracts to be used selectively in the below scenarios.
 
@@ -85,7 +85,7 @@ contract C2 {
 }
 
 ```
-  This spec will be executed for all 3 privacy flag values
+  This spec will be executed for all 3 privacy flag values (PartyProtection and StateValidation in a separate privacy enhanced spec)
 
       |privacyType      |
       |StandardPrivate  |

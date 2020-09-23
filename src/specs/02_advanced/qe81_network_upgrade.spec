@@ -86,6 +86,10 @@
 * Stop and start "Node1" using quorum version <q_to_version> and tessera version <t_to_version>
 * Deploy a "StandardPrivate" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract16"
 * "contract16" is deployed "successfully" in "Node1,Node4"
+ Node1 will reject any attempt to send privacy enhanced transactions as privacy enhancements are not yet enabled in tessera
+* Deploying a "PartyProtection" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4" fails with message "Enhanced Privacy is not enabled"
+* Enable privacy enhancements in tessera "Node1"
+* Wait for tessera to discover "4" keys in "Node1"
  A PartyProtection contract will not be deployed on Node1 as the tessera process on Node1 will detect that the tessera process on Node4 does not support privacy enhancements
 * Deploying a "PartyProtection" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4" fails with message "Transactions with enhanced privacy is not currently supported on recipient"
 * Stop and start "Node4" using quorum version <q_to_version> and tessera version <t_to_version>
@@ -95,6 +99,8 @@
 * Deploying a "PartyProtection" simple smart contract with initial value "42" in "Node4"'s default account and it's private for "Node1" fails with message "PrivacyEnhancements are disabled"
 * Deploy a "StandardPrivate" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract17"
 * "contract17" is deployed "successfully" in "Node1,Node4"
+* Enable privacy enhancements in tessera "Node4"
+* Wait for tessera to discover "4" keys in "Node4,Node1"
 * Deploy a "PartyProtection" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract18"
  Node4 for should now stop appending new blocks (due to BAD BLOCK error)
 * Grep "quorum" in "Node4" for "Privacy enhanced transaction received while privacy enhancements are disabled. Please check your node configuration."
@@ -195,6 +201,8 @@
 * Stop and start "Node2" using quorum version <q_to_version> and tessera version <t_to_version>
  Node2 is now privacy enhancements capable but privacy enhancements are not enabled (geth init hasnt been run with a genesis file containing privacyEnhancementsBlock)
  Node1 is not able to connect to Node2 (as they have different values for PrivacyEnhancementsBlock)
+* Enable privacy enhancements in tessera "Node2"
+* Wait for tessera to discover "4" keys in "Node2,Node1,Node4"
 * Grep "quorum" in "Node2" for "Fork ID rejected - local incompatible or needs update"
 * Stop "quorum" in "Node2"
 * Check that "quorum" in "Node2" is "down"

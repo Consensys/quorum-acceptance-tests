@@ -2,7 +2,7 @@
 
  Tags: basic, extension
 
-This is to verify that a node must not be able to send transactions to private smart contract which it is not party to.
+This is to verify the contract extension APIs (failure scenarios).
 
 There are 2 set of contracts to be used selectively in the below scenarios.
 

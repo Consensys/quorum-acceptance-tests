@@ -84,39 +84,38 @@ public class StorageMasterService extends AbstractService {
         final Quorum client = connectionFactory().getConnection(source);
         final List<String> privateFor = target.stream().map(q -> privacyService.id(q)).collect(Collectors.toList());
 
-        final String acctAdress = accountService.getDefaultAccountAddress(source).blockingFirst();
-
-        EnhancedClientTransactionManager txManager = new EnhancedClientTransactionManager(
-            client, acctAdress, null, privateFor, flags, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
-        );
-
-        return Observable.just(createSSFromSM(txManager, client, contractAddress, gasLimit, newValue));
+        return accountService.getDefaultAccountAddress(source).flatMap(acctAddress -> {
+            EnhancedClientTransactionManager txManager = new EnhancedClientTransactionManager(
+                client, acctAddress, null, privateFor, flags, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
+            );
+            return createSSFromSM(txManager, client, contractAddress, gasLimit, newValue);
+        });
     }
 
-    private SimpleStorage createSSFromSM(final TransactionManager txManager,
-                                         final Quorum client,
-                                         final String contractAddress,
-                                         final BigInteger gasLimit,
-                                         final int newValue) {
+    private Observable<SimpleStorage> createSSFromSM(final TransactionManager txManager,
+                                                     final Quorum client,
+                                                     final String contractAddress,
+                                                     final BigInteger gasLimit,
+                                                     final int newValue) {
         final BigInteger value = BigInteger.valueOf(newValue);
 
         StorageMaster storageMaster = StorageMaster.load(
             contractAddress, client, txManager, BigInteger.ZERO, gasLimit);
 
-        TransactionReceipt receipt = storageMaster.createSimpleStorage(value).flowable().toObservable().blockingFirst();
+        return storageMaster.createSimpleStorage(value).flowable().toObservable().flatMap(receipt -> {
+            final List<StorageMaster.ContractCreatedEventResponse> contractCreatedEvents = storageMaster.getContractCreatedEvents(receipt);
 
-        final List<StorageMaster.ContractCreatedEventResponse> contractCreatedEvents = storageMaster.getContractCreatedEvents(receipt);
+            if (contractCreatedEvents.size() < 1) {
+                throw new RuntimeException("StorageMaster createSimpleStorage Receipt has no logs");
+            }
 
-        if (contractCreatedEvents.size() < 1) {
-            throw new RuntimeException("StorageMaster createSimpleStorage Receipt has no logs");
-        }
+            StorageMaster.ContractCreatedEventResponse contractCreatedEvent = contractCreatedEvents.get(0);
 
-        StorageMaster.ContractCreatedEventResponse contractCreatedEvent = contractCreatedEvents.get(0);
+            SimpleStorage simpleStorage = SimpleStorage.load(contractCreatedEvent._addr, client, txManager, BigInteger.ZERO, gasLimit);
+            simpleStorage.setTransactionReceipt(receipt);
 
-        SimpleStorage simpleStorage = SimpleStorage.load(contractCreatedEvent._addr, client, txManager, BigInteger.ZERO, gasLimit);
-        simpleStorage.setTransactionReceipt(receipt);
-
-        return simpleStorage;
+            return Observable.just(simpleStorage);
+        });
     }
 
     public Observable<TransactionReceipt> createSimpleStorageC2C3FromStorageMaster(final QuorumNode source,
@@ -129,18 +128,13 @@ public class StorageMasterService extends AbstractService {
         final BigInteger value = BigInteger.valueOf(newValue);
         final List<String> privateFor = target.stream().map(q -> privacyService.id(q)).collect(Collectors.toList());
 
-        final String acctAdress = accountService.getDefaultAccountAddress(source).blockingFirst();
-
-        EnhancedClientTransactionManager txManager = new EnhancedClientTransactionManager(
-            client, acctAdress, null, privateFor, flags, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
-        );
-
-        StorageMaster storageMaster = StorageMaster.load(
-            contractAddress, client, txManager, BigInteger.ZERO, gasLimit);
-
-        TransactionReceipt receipt = storageMaster.createSimpleStorageC2C3(value).flowable().toObservable().blockingFirst();
-
-        return Observable.just(receipt);
+        return accountService.getDefaultAccountAddress(source).flatMap(acctAdress -> {
+            EnhancedClientTransactionManager txManager = new EnhancedClientTransactionManager(
+                client, acctAdress, null, privateFor, flags, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
+            );
+            StorageMaster storageMaster = StorageMaster.load(contractAddress, client, txManager, BigInteger.ZERO, gasLimit);
+            return storageMaster.createSimpleStorageC2C3(value).flowable().toObservable();
+        });
     }
 
     public Observable<TransactionReceipt> setC2C3ValueFromStorageMaster(final QuorumNode source,
@@ -153,18 +147,14 @@ public class StorageMasterService extends AbstractService {
         final BigInteger value = BigInteger.valueOf(newValue);
         final List<String> privateFor = target.stream().map(q -> privacyService.id(q)).collect(Collectors.toList());
 
-        final String acctAdress = accountService.getDefaultAccountAddress(source).blockingFirst();
-
-        EnhancedClientTransactionManager txManager = new EnhancedClientTransactionManager(
-            client, acctAdress, null, privateFor, flags, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
-        );
-
-        StorageMaster storageMaster = StorageMaster.load(
-            contractAddress, client, txManager, BigInteger.ZERO, gasLimit);
-
-        TransactionReceipt receipt = storageMaster.setC2C3Value(value).flowable().toObservable().blockingFirst();
-
-        return Observable.just(receipt);
+        return accountService.getDefaultAccountAddress(source).flatMap(acctAddress -> {
+            EnhancedClientTransactionManager txManager = new EnhancedClientTransactionManager(
+                client, acctAddress, null, privateFor, flags, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
+            );
+            StorageMaster storageMaster = StorageMaster.load(
+                contractAddress, client, txManager, BigInteger.ZERO, gasLimit);
+            return storageMaster.setC2C3Value(value).flowable().toObservable();
+        });
     }
 
     public Observable<? extends Contract> createStorageMasterPublicContract(QuorumNode source, BigInteger gas) {
@@ -188,13 +178,12 @@ public class StorageMasterService extends AbstractService {
                                                                                      final BigInteger gasLimit,
                                                                                      final int newValue) {
         final Quorum client = connectionFactory().getConnection(source);
-        final String acctAdress = accountService.getDefaultAccountAddress(source).blockingFirst();
-
-        org.web3j.tx.ClientTransactionManager txManager = new org.web3j.tx.ClientTransactionManager(
-            client, acctAdress, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
-        );
-
-        return Observable.just(createSSFromSM(txManager, client, contractAddress, gasLimit, newValue));
+        return accountService.getDefaultAccountAddress(source).flatMap(acctAddress -> {
+            org.web3j.tx.ClientTransactionManager txManager = new org.web3j.tx.ClientTransactionManager(
+                client, acctAddress, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
+            );
+            return createSSFromSM(txManager, client, contractAddress, gasLimit, newValue);
+        });
     }
 
 

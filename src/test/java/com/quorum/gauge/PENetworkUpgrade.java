@@ -28,11 +28,14 @@ import com.quorum.gauge.services.InfrastructureService.NetworkResources;
 import com.quorum.gauge.services.RaftService;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Map;
 import java.util.Vector;
@@ -86,7 +89,7 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
 
     @Step("Stop <component> in <node> if consensus is istanbul")
     public void stopComponentInNodeIfIstanbul(String component, String node) {
-        if (!"istanbul".equalsIgnoreCase(networkProperty.getConsensus())){
+        if (!"istanbul".equalsIgnoreCase(networkProperty.getConsensus())) {
             logger.debug("Consensus algorithm is not istanbul. Skipping step.");
             return;
         }
@@ -105,10 +108,52 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
         infraService.startResource(quorumId).blockingFirst();
     }
 
+    @Step("Enable privacy enhancements in tessera <node>")
+    public void enablePrivacyEnhancementsInTesseraNode(String node) {
+        String tesseraId = getComponentContainerId("tessera", node);
+        logger.debug("Changing tessera config to include feature 'enableEnhancedPrivacy' : 'true'");
+        infraService.modifyFile(tesseraId, "/data/tm/config.json",
+            new TesseraFeaturesOverride(Map.of("enableEnhancedPrivacy", "true"))).blockingFirst();
+        infraService.restartResource(tesseraId).blockingFirst();
+    }
+
     @Step("Grep <component> in <node> for <message>")
     public void grepComponent(String component, String node, String message) {
         String containerId = getComponentContainerId(component, node);
         assertThat(infraService.grepLog(containerId, message, 30, TimeUnit.SECONDS).blockingFirst()).isTrue();
+    }
+
+    @Step("Wait for tessera to discover <keyCount> keys in <node>")
+    public void waitForTesseraToDiscoverKeysInNodes(int keyCount, String nodes) {
+        String[] split = nodes.split(",");
+        for (String node : split) {
+            waitForTesseraToDiscoverKeysInNode(keyCount, QuorumNode.valueOf(node));
+        }
+    }
+
+    public void waitForTesseraToDiscoverKeysInNode(int keyCount, QuorumNode node) {
+        final String tessera3rdPartyUrl = privacyService.thirdPartyUrl(node);
+        Request request = new Request.Builder().url(tessera3rdPartyUrl + "/partyinfo/keys").build();
+        int count = 30;
+        do {
+            try {
+                Response response = okHttpClient.newCall(request).execute();
+                String responseBody = response.body().string();
+                if (responseBody.split("\"key\"").length > keyCount) {
+                    return;
+                }
+            } catch (IOException e) {
+                logger.debug("Error while trying to retrieve tessera keys.", e);
+            }
+            try {
+                Thread.sleep(1000L);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            count--;
+        } while (count > 0);
+
+        assertThat(count).isNotZero();
     }
 
     @Step("Check that <component> in <node> is <state>")
@@ -153,7 +198,7 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
 
     @Step("Change raft leader")
     public void changeRaftLeader() {
-        if (!"raft".equalsIgnoreCase(networkProperty.getConsensus())){
+        if (!"raft".equalsIgnoreCase(networkProperty.getConsensus())) {
             logger.debug("Consensus algorithm is not raft. Skipping step.");
             return;
         }
@@ -197,6 +242,30 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
                 Map<String, Object> data = m.readValue(content, Map.class);
                 Map<String, Object> config = (Map<String, Object>) data.get("config");
                 config.putAll(configOverrides);
+                return m.writeValueAsString(data);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException("unable to modify the content", e);
+            }
+        }
+    }
+
+    class TesseraFeaturesOverride implements InfrastructureService.FileContentModifier {
+
+        final Map<String, Object> configOverrides;
+
+        TesseraFeaturesOverride(Map<String, Object> configOverrides) {
+            this.configOverrides = configOverrides;
+        }
+
+        @Override
+        public String modify(String content) {
+            if (configOverrides == null) {
+                return content;
+            }
+            ObjectMapper m = new ObjectMapper();
+            try {
+                Map<String, Object> data = m.readValue(content, Map.class);
+                Map<String, Object> config = (Map<String, Object>) data.get("features");
                 return m.writeValueAsString(data);
             } catch (JsonProcessingException e) {
                 throw new RuntimeException("unable to modify the content", e);
