@@ -79,11 +79,18 @@ contract StorageMaster {
 * "ssPrivate1"'s `get()` function execution in "Node1" returns "10"
 * "ssPrivate1"'s `get()` function execution in "Node2" returns "0"
 * "ssPrivate1"'s `get()` function execution in "Node4" returns "10"
-* Deploy a "StandardPrivate" simple storage C2C3 with value "5" from master storage contract "smPrivate1" in "Node1"'s default account and it's private for "Node4"
-* "smPrivate1"'s `getC2C3Value()` function execution in "Node1" returns "10"
-* "smPrivate1"'s `getC2C3Value()` function execution in "Node2" returns "0"
-* "smPrivate1"'s `getC2C3Value()` function execution in "Node4" returns "10"
-* Invoke a "StandardPrivate" setC2C3Value with value "15" in master storage contract "smPrivate1" in "Node1"'s default account and it's private for "Node4"
-* "smPrivate1"'s `getC2C3Value()` function execution in "Node1" returns "30"
-* "smPrivate1"'s `getC2C3Value()` function execution in "Node2" returns "0"
-* "smPrivate1"'s `getC2C3Value()` function execution in "Node4" returns "30"
+
+## Deploy a private storage master and create two simple storage contracts from it with a single transaction
+
+* Deploy a "StandardPrivate" storage master contract in "Node1"'s default account and it's private for "Node4", named this contract as "smPrivate2"
+
+* Transaction Hash is returned for "smPrivate2"
+* Transaction Receipt is present in "Node1" for "smPrivate2" from "Node1"'s default account
+* Deploy a "StandardPrivate" simple storage C2C3 with value "5" from master storage contract "smPrivate2" in "Node1"'s default account and it's private for "Node4"
+* "smPrivate2"'s `getC2C3Value()` function execution in "Node1" returns "10"
+* "smPrivate2"'s `getC2C3Value()` function execution in "Node2" returns "0"
+* "smPrivate2"'s `getC2C3Value()` function execution in "Node4" returns "10"
+* Invoke a "StandardPrivate" setC2C3Value with value "15" in master storage contract "smPrivate2" in "Node1"'s default account and it's private for "Node4"
+* "smPrivate2"'s `getC2C3Value()` function execution in "Node1" returns "30"
+* "smPrivate2"'s `getC2C3Value()` function execution in "Node2" returns "0"
+* "smPrivate2"'s `getC2C3Value()` function execution in "Node4" returns "30"

@@ -266,6 +266,7 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
             try {
                 Map<String, Object> data = m.readValue(content, Map.class);
                 Map<String, Object> config = (Map<String, Object>) data.get("features");
+                config.putAll(this.configOverrides);
                 return m.writeValueAsString(data);
             } catch (JsonProcessingException e) {
                 throw new RuntimeException("unable to modify the content", e);
