@@ -52,9 +52,9 @@ public class SmartContractDualState extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(typeKey, contractName);
     }
 
-    @Step("Deploy <privacyType> <contractName> smart contract with initial value <initialValue> from a default account in <node> and it's private for <target>, named this contract as <contractNameKey>")
-    public void setupStorecAsPrivateDependentContract(PrivacyFlag privacyType, String contractName, int initialValue, QuorumNetworkProperty.Node node, QuorumNode target, String contractNameKey) {
-        Contract c = contractService.createGenericStoreContract(node, contractName, initialValue, null, true, target, privacyType).blockingFirst();
+    @Step("Deploy <contractName> smart contract with initial value <initialValue> from a default account in <node> and it's private for <target>, named this contract as <contractNameKey>")
+    public void setupStorecAsPrivateDependentContract(String contractName, int initialValue, QuorumNetworkProperty.Node node, QuorumNode target, String contractNameKey) {
+        Contract c = contractService.createGenericStoreContract(node, contractName, initialValue, null, true, target, PrivacyFlag.StandardPrivate).blockingFirst();
         logger.debug("{} contract address is:{}", contractName, c.getContractAddress());
 
         assertThat(c.getContractAddress()).isNotBlank();
@@ -82,6 +82,11 @@ public class SmartContractDualState extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(typeKey, contractName);
     }
 
+    @Step("Deploy <contractName> smart contract with contract <dependentContractName> initial value <initialValue> from a default account in <source> and it's private for <target>, named this contract as <contractNameKey>")
+    public void setupStoreaOrStorebAsPrivateContract(String contractName, String dependentContractName, int initialValue, QuorumNetworkProperty.Node source, QuorumNode target, String contractNameKey) {
+        setupStoreaOrStorebAsPrivateContract(PrivacyFlag.StandardPrivate, contractName, dependentContractName, initialValue, source, target, contractNameKey);
+    }
+
     @Step("Deploy <privacyType> <contractName> smart contract with contract <dependentContractName> initial value <initialValue> from a default account in <source> and it's private for <target>, named this contract as <contractNameKey>")
     public void setupStoreaOrStorebAsPrivateContract(PrivacyFlag privacyType, String contractName, String dependentContractName, int initialValue, QuorumNetworkProperty.Node source, QuorumNode target, String contractNameKey) {
         Contract dc = mustHaveValue(DataStoreFactory.getSpecDataStore(), dependentContractName, Contract.class);
@@ -106,6 +111,11 @@ public class SmartContractDualState extends AbstractSpecImplementation {
         logger.debug("{} {} {} = {}", contractNameKey, contractName, methodName, actualValue);
 
         assertThat(actualValue).isEqualTo(expectedValue);
+    }
+
+    @Step("<contractNameKey>'s <methodName> function execution in <node> with value <value> and its private for <target>")
+    public void setStoreContractValueInPrivate(String contractNameKey, String methodName, QuorumNetworkProperty.Node node, int value, QuorumNode target) {
+        setStoreContractValueInPrivate(contractNameKey, methodName, PrivacyFlag.StandardPrivate, node, value, target);
     }
 
     @Step("<contractNameKey>'s <methodName> function execution with privacy flag as <privacyType> in <node> with value <value> and its private for <target>")
