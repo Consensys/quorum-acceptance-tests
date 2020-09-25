@@ -32,7 +32,10 @@ import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import io.reactivex.Observable;
 import io.reactivex.Scheduler;
 import io.reactivex.schedulers.Schedulers;
-import okhttp3.*;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.WebSocket;
+import okhttp3.WebSocketListener;
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -268,17 +271,11 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         CountDownLatch waitForCallback = new CountDownLatch(1);
         CountDownLatch waitForWebSocket = new CountDownLatch(1);
 
-        String baseUrl = "waithook.local:3012/testing_quorum_" + Math.abs(new Random().nextLong());
-        String callbackUrl = "http://" + baseUrl;
+        String baseUrl = "/testing_quorum_" + Math.abs(new Random().nextLong());
+        String callbackUrl = "http://waithook.local:3012" + baseUrl;
 
-        Request callback = new Request.Builder().url("ws://" + baseUrl).build();
-        OkHttpClient okHttpClient = this.okHttpClient.newBuilder().dns(hostname -> {
-            if ("waithook.local".equalsIgnoreCase(hostname)) {
-                return Dns.SYSTEM.lookup("localhost");
-            }
-            return Dns.SYSTEM.lookup(hostname);
-        }).build();
-        WebSocket ws = okHttpClient.newWebSocket(callback, new WebSocketListener() {
+        Request websocketCallback = new Request.Builder().url("ws://localhost:3012" + baseUrl).build();
+        WebSocket ws = okHttpClient.newWebSocket(websocketCallback, new WebSocketListener() {
             @Override
             public void onOpen(WebSocket webSocket, Response response) {
                 logger.debug("Connected to callback listener");
@@ -312,7 +309,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         });
 
         try {
-            waitForWebSocket.await();
+            waitForWebSocket.await(3, TimeUnit.SECONDS);
 
             contractService.createClientReceiptContractAsync(initialValue, source, sourceAccount, target, callbackUrl).blockingFirst();
 
