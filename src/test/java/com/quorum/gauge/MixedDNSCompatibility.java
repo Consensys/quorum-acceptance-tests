@@ -22,7 +22,6 @@ package com.quorum.gauge;
 import com.quorum.gauge.common.GethArgBuilder;
 import com.quorum.gauge.common.NodeType;
 import com.quorum.gauge.common.QuorumNetworkProperty;
-import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.services.InfrastructureService;
 import com.quorum.gauge.services.RaftService;
@@ -114,10 +113,23 @@ public class MixedDNSCompatibility extends AbstractSpecImplementation {
     @Step("Restart all nodes in the network <id>")
     public void restartAllNodes(String id) {
         InfrastructureService.NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", InfrastructureService.NetworkResources.class);
-        // start all nodes
+        // stop all nodes
         Observable.fromIterable(networkResources.allResourceIds())
-            .flatMap(infraService::restartResource)
+            .flatMap(infraService::stopResource)
             .blockingSubscribe();
+
+        // start tessera nodes first
+        Observable.fromIterable(networkResources.allResourceIds())
+            .filter(resId -> !infraService.isGeth(resId).blockingFirst())
+            .flatMap(infraService::startResource)
+            .blockingSubscribe();
+        // start quorum nodes
+        Observable.fromIterable(networkResources.allResourceIds())
+            .filter(resId -> infraService.isGeth(resId).blockingFirst())
+            .flatMap(infraService::startResource)
+            .blockingSubscribe();
+
+
         // wait for them to be healthy
         Observable.fromIterable(networkResources.allResourceIds())
             .flatMap(infraService::wait)

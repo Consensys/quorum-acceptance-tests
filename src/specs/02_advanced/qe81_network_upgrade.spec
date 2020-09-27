@@ -41,7 +41,7 @@
  Tags: privacy-enhancements-upgrade, pre-condition/no-record-blocknumber
 
         | q_from_version | q_to_version | t_from_version | t_to_version |
-        | v2.5.0         | pe           | 0.10.5         | pe           |
+        | v2.5.0         | latest       | 0.10.5         | latest       |
 
 * Start the network with:
     | node  | quorum           | tessera          |

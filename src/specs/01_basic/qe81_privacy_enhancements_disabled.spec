@@ -1,4 +1,4 @@
-# Party protection and PSV transaction are rejected by quorum when privacy enhancements are disabled
+# Party protection and PSV transactions are rejected by quorum when privacy enhancements are disabled
 
  Tags: privacy, privacy-enhancements-disabled
 

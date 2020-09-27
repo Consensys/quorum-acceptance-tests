@@ -54,7 +54,12 @@ public class SmartContractDualState extends AbstractSpecImplementation {
 
     @Step("Deploy <contractName> smart contract with initial value <initialValue> from a default account in <node> and it's private for <target>, named this contract as <contractNameKey>")
     public void setupStorecAsPrivateDependentContract(String contractName, int initialValue, QuorumNetworkProperty.Node node, QuorumNode target, String contractNameKey) {
-        Contract c = contractService.createGenericStoreContract(node, contractName, initialValue, null, true, target, PrivacyFlag.StandardPrivate).blockingFirst();
+        setupStorecAsPrivateDependentContract(PrivacyFlag.StandardPrivate, contractName, initialValue, node, target, contractNameKey);
+    }
+
+    @Step("Deploy <privacyType> <contractName> smart contract with initial value <initialValue> from a default account in <node> and it's private for <target>, named this contract as <contractNameKey>")
+    public void setupStorecAsPrivateDependentContract(PrivacyFlag privacyType, String contractName, int initialValue, QuorumNetworkProperty.Node node, QuorumNode target, String contractNameKey) {
+        Contract c = contractService.createGenericStoreContract(node, contractName, initialValue, null, true, target, privacyType).blockingFirst();
         logger.debug("{} contract address is:{}", contractName, c.getContractAddress());
 
         assertThat(c.getContractAddress()).isNotBlank();
@@ -64,7 +69,6 @@ public class SmartContractDualState extends AbstractSpecImplementation {
         String typeKey = contractNameKey + "Type";
         DataStoreFactory.getSpecDataStore().put(typeKey, contractName);
         DataStoreFactory.getScenarioDataStore().put(typeKey, contractName);
-
     }
 
     @Step("Deploy <contractName> smart contract with contract <depContractName> initial value <initialValue> from a default account in <node>, named this contract as <contractNameKey>")
