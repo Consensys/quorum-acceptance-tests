@@ -175,6 +175,8 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
 
         assertThat(receipt.getTransactionHash()).isNotBlank();
         assertThat(receipt.getBlockNumber()).isNotEqualTo(currentBlockNumber());
+
+        transactionService.waitForTransactionReceipt(target, receipt.getTransactionHash());
     }
 
     @Step("Execute <contractName>'s `set()` function with new value <newValue> in <source> and it's private for <target>")
