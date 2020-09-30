@@ -203,7 +203,7 @@ resource "local_file" "tmconfigs-generator" {
     "alwaysSendTo": [],
     "features" : {
 %{if var.privacy_enhancements.enabled ~}
-      "enableEnhancedPrivacy" : "true",
+      "enablePrivacyEnhancements" : "true",
 %{endif~}
       "enableRemoteKeyValidation" : "true"
     }

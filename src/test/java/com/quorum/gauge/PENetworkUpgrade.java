@@ -111,9 +111,9 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
     @Step("Enable privacy enhancements in tessera <node>")
     public void enablePrivacyEnhancementsInTesseraNode(String node) {
         String tesseraId = getComponentContainerId("tessera", node);
-        logger.debug("Changing tessera config to include feature 'enableEnhancedPrivacy' : 'true'");
+        logger.debug("Changing tessera config to include feature 'enablePrivacyEnhancements' : 'true'");
         infraService.modifyFile(tesseraId, "/data/tm/config.json",
-            new TesseraFeaturesOverride(Map.of("enableEnhancedPrivacy", "true"))).blockingFirst();
+            new TesseraFeaturesOverride(Map.of("enablePrivacyEnhancements", "true"))).blockingFirst();
         infraService.restartResource(tesseraId).blockingFirst();
     }
 
