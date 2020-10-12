@@ -67,6 +67,15 @@
 * "contract15" is deployed "successfully" in "Node1,Node4"
 * Deploy a "StandardPrivate" simple smart contract with initial value "42" in "Node4"'s default account and it's private for "Node1", named this contract as "contract16"
 * "contract16" is deployed "successfully" in "Node1,Node4"
+ Raw transactions work as expected when quorum is upgraded but tessera isn't
+* Deploy a simple smart contract with initial value "23" signed by external wallet "Wallet1" in "Node1" and it's private for "Node4", name this contract as "rawContract1"
+* Transaction Hash is returned for "rawContract1"
+* Transaction Receipt is present in "Node1" for "rawContract1" from external wallet "Wallet1"
+* Transaction Receipt is present in "Node4" for "rawContract1" from external wallet "Wallet1"
+* "rawContract1"'s `get()` function execution in "Node1" returns "23"
+* "rawContract1"'s `get()` function execution in "Node4" returns "23"
+* "rawContract1"'s `get()` function execution in "Node3" returns "0"
+
  PartyProtection transactions are rejected in quorum Node1 as privacy enhancemetns are not enabled yet
 * Deploying a "PartyProtection" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4" fails with message "PrivacyEnhancements are disabled"
  Run geth init with privacyEnhancementsBlock=currentBlockHeight-1
@@ -302,3 +311,12 @@ PartyProtection
 * "contract26"'s `get()` function execution in "Node2" returns "37"
 * "contract26"'s `get()` function execution in "Node3" returns "0"
 * "contract26"'s `get()` function execution in "Node4" returns "37"
+
+ Raw contracts work as expected when both quorum and tessera are upgraded (/sendsignedtx uses the json payload)
+* Deploy a simple smart contract with initial value "25" signed by external wallet "Wallet1" in "Node1" and it's private for "Node4", name this contract as "rawContract2"
+* Transaction Hash is returned for "rawContract2"
+* Transaction Receipt is present in "Node1" for "rawContract2" from external wallet "Wallet1"
+* Transaction Receipt is present in "Node4" for "rawContract2" from external wallet "Wallet1"
+* "rawContract2"'s `get()` function execution in "Node1" returns "25"
+* "rawContract2"'s `get()` function execution in "Node4" returns "25"
+* "rawContract2"'s `get()` function execution in "Node3" returns "0"
