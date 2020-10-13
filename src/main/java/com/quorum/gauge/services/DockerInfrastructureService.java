@@ -85,12 +85,10 @@ public class DockerInfrastructureService
         dockerClient = DockerClientImpl.getInstance(config, httpClient);
         quorumDockerImageCatalog = ImmutableMap.of(
         "v2.5.0", new QuorumImageConfig("quorumengineering/quorum:2.5.0", GethArgBuilder.newBuilder()),
-        "latest", new QuorumImageConfig("quorumengineering/quorum:latest", GethArgBuilder.newBuilder().allowInsecureUnlock(true)),
-        "pe", new QuorumImageConfig("quorumengineering/quorum:pe", GethArgBuilder.newBuilder().allowInsecureUnlock(true))
+        "latest", new QuorumImageConfig("quorumengineering/quorum:latest", GethArgBuilder.newBuilder().allowInsecureUnlock(true))
         );
         tesseraDockerImageCatalog =  ImmutableMap.of(
         "latest", "quorumengineering/tessera:latest",
-        "pe", "quorumengineering/tessera:pe",
         "0.10.5", "quorumengineering/tessera:0.10.5"
         );
     }

@@ -16,13 +16,11 @@ Note that intrinsic gas for the simple contract is approx 57352 and total requir
 * Get number of nodes and store as "nodecount"
 
 * Private transaction where minter is a participant and gas value is "25100", name this contract as "contract1"
-If privacy enhancements are enabled the failure occurs during transaction simulation and the error is: contract creation code storage out of gas
-If privacy enhancements are disabled the failure occurs while adding the transaction to the tx pool and the error is: intrinsic gas too low
-* Contract "contract1" had exception related to insufficient gas
+* Contract "contract1" had exception with message "intrinsic gas too low"
 * No transactions are pending on node for "contract1"
 
 * Private transaction where minter is not a participant and gas value is "25100", name this contract as "contract2"
-* Contract "contract2" had exception related to insufficient gas
+* Contract "contract2" had exception with message "intrinsic gas too low"
 * No transactions are pending on node for "contract2"
 
 * Check "nodecount" nodes are still running
