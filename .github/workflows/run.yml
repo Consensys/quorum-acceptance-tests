@@ -95,21 +95,30 @@ jobs:
       matrix:
         # list of tag expression being executed in parallel
         tag:
-          - 'basic || basic-raft || (advanced && raft) || networks/typical::raft'
-          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
+          - 'basic || privacy-enhancements-disabled || basic-raft || (advanced && raft) || networks/typical::raft'
+          - 'basic || privacy-enhancements-disabled || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
           - 'gcmode && block-sync && networks/template::raft-3plus1'
           - 'gcmode && block-sync && networks/template::istanbul-3plus1'
           - 'learner-peer-management || raftdnsenable && networks/template::raft-3plus1'
           - 'validator-management && networks/template::istanbul-3plus1'
-          - 'basic || basic-raft || (advanced && raft) || networks/plugins::raft'
-          - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul'
-          - 'basic || basic-raft || (advanced && raft) || networks/plugins::raft-account-plugin-hashicorp-vault'
-          - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul-account-plugin-hashicorp-vault'
+          - 'basic || privacy-enhancements-disabled || basic-raft || (advanced && raft) || networks/plugins::raft'
+          - 'basic || privacy-enhancements-disabled || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul'
+          - 'basic || privacy-enhancements-disabled || basic-raft || (advanced && raft) || networks/plugins::raft-account-plugin-hashicorp-vault'
+          - 'basic || privacy-enhancements-disabled || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul-account-plugin-hashicorp-vault'
           - 'basic-rpc-security || networks/plugins::raft-rpc-security'
           - 'basic-rpc-security || networks/plugins::istanbul-rpc-security'
           - 'migration && networks/template::raft-4nodes'
           - 'migration && networks/template::istanbul-4nodes'
           - 'permissions && networks/template::raft-3plus1'
+          - 'privacy-enhancements-upgrade || networks/template::raft-4nodes-pe'
+          - 'privacy-enhancements-upgrade || networks/template::istanbul-4nodes-pe'
+        privacy-enhancements:
+          - 'false'
+        include:
+          - tag: 'basic || privacy-enhancements || basic-raft || (advanced && raft) || networks/typical::raft'
+            privacy-enhancements: 'true'
+          - tag: 'basic || privacy-enhancements || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
+            privacy-enhancements: 'true'
     runs-on: ubuntu-latest
     steps:
       - name: 'Download docker image'
@@ -143,12 +152,20 @@ jobs:
           docker run \
               --name acctests-run ${{ steps.setup.outputs.dockerEnv }} \
               -v ${{ steps.setup.outputs.outputDir }}:${{ steps.setup.outputs.outputDir }} \
+              -e TF_VAR_privacy_enhancements='{ block = 0, enabled = ${{ matrix.privacy-enhancements }} }' \
               ${{ needs.docker-build.outputs.image_name }} test \
                 -PgaugeFailSafe \
                 -Pauto \
                 -Dtags="${{ matrix.tag }}" ${{ steps.setup.outputs.mvnArg }} \
                 -Dauto.outputDir=${{ steps.setup.outputs.outputDir }} \
                 -Dauto.jobid=${{ steps.setup.outputs.tag }}
+      - name: 'Failure info'
+        if: ${{ failure() }}
+        run: |
+            echo "acceptance tests failures"
+            docker images
+            docker ps -a
+            for containerId in $(docker ps -qa); do echo "container: $containerId"; docker container inspect $containerId; docker container logs $containerId; done
       - name: 'Read test report'
         if: always()
         run: |
