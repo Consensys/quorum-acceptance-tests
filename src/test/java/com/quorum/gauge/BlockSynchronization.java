@@ -263,6 +263,25 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(name, currentBlockNumber);
     }
 
+    @Step("Wait for node <node> to catch up to <block>")
+    public void waitForNodeToReachBlockNumber(Node node, String name) {
+        final BigInteger lastBlockHeight = mustHaveValue(DataStoreFactory.getScenarioDataStore(), name, BigInteger.class);
+        BigInteger currentBlockHeight = utilService.getCurrentBlockNumberFrom(node).blockingFirst().getBlockNumber();
+        int i = 0;
+        final int MAX_COUNT = 20;
+        while (currentBlockHeight.compareTo(lastBlockHeight) < 0) {
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            currentBlockHeight = utilService.getCurrentBlockNumberFrom(node).blockingFirst().getBlockNumber();
+            logger.debug("Current block number on host {} is {}", node.getName(), currentBlockHeight);
+            i++;
+            assertThat(i).isLessThanOrEqualTo(MAX_COUNT);
+        }
+    }
+
     @Step("Stop all nodes in the network <id>")
     public void stopAllNodes(String id) {
         NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);

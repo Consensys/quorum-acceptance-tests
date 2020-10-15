@@ -46,6 +46,19 @@ resource "docker_container" "tessera" {
     <<EOF
 #Tessera${count.index + 1}
 
+START_TESSERA="java -Xms128M -Xmx128M -jar /tessera/tessera-app.jar \
+  --override jdbc.url=jdbc:h2:${local.container_tm_datadir}/db;MODE=Oracle;TRACE_LEVEL_SYSTEM_OUT=0 \
+  --override serverConfigs[1].serverAddress=unix:${local.container_tm_ipc_file} \
+  --override serverConfigs[2].sslConfig.serverKeyStore=${local.container_tm_datadir}/serverKeyStore \
+  --override serverConfigs[2].sslConfig.serverTrustStore=${local.container_tm_datadir}/serverTrustStore \
+  --override serverConfigs[2].sslConfig.knownClientsFile=${local.container_tm_datadir}/knownClientsFile \
+  --override serverConfigs[2].sslConfig.clientKeyStore=${local.container_tm_datadir}/clientKeyStore \
+  --override serverConfigs[2].sslConfig.clientTrustStore=${local.container_tm_datadir}/clientTrustStore \
+  --override serverConfigs[2].sslConfig.knownServersFile=${local.container_tm_datadir}/knownServersFile \
+  --configfile ${local.container_tm_datadir}/config.json"
+
+echo $START_TESSERA
+
 if [ "$ALWAYS_REFRESH" == "true" ]; then
   echo "Deleting ${local.container_tm_datadir} to refresh with original datadir"
   rm -rf ${local.container_tm_datadir}
@@ -54,18 +67,25 @@ if [ ! -d "${local.container_tm_datadir}" ]; then
   echo "Copying mounted datadir to ${local.container_tm_datadir}"
   cp -r ${local.container_tm_datadir_mounted} ${local.container_tm_datadir}
 fi
+
+if [ -f /data/tm/cleanStorage ]; then
+  echo "Cleaning tessera storage."
+  rm -rf /data/tm/db*
+  echo "Starting tessera resend."
+  $START_TESSERA -r
+  status=$?
+  echo "Tessera resend result: $status"
+  rm /data/tm/cleanStorage
+  if [ $status -eq 0 ]; then
+    echo "Tessera resend successful."
+  else
+    echo "Tessera resend failed."
+    exit 1
+  fi
+fi
+
 rm -f ${local.container_tm_ipc_file}
-exec java -Xms128M -Xmx128M \
-  -jar /tessera/tessera-app.jar \
-  --override jdbc.url="jdbc:h2:${local.container_tm_datadir}/db;MODE=Oracle;TRACE_LEVEL_SYSTEM_OUT=0" \
-  --override serverConfigs[1].serverAddress="unix:${local.container_tm_ipc_file}" \
-  --override serverConfigs[2].sslConfig.serverKeyStore="${local.container_tm_datadir}/serverKeyStore" \
-  --override serverConfigs[2].sslConfig.serverTrustStore="${local.container_tm_datadir}/serverTrustStore" \
-  --override serverConfigs[2].sslConfig.knownClientsFile="${local.container_tm_datadir}/knownClientsFile" \
-  --override serverConfigs[2].sslConfig.clientKeyStore="${local.container_tm_datadir}/clientKeyStore" \
-  --override serverConfigs[2].sslConfig.clientTrustStore="${local.container_tm_datadir}/clientTrustStore" \
-  --override serverConfigs[2].sslConfig.knownServersFile="${local.container_tm_datadir}/knownServersFile" \
-  --configfile ${local.container_tm_datadir}/config.json
+exec $START_TESSERA
 EOF
   ]
 }

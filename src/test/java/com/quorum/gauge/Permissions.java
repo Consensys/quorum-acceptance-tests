@@ -590,7 +590,7 @@ public class Permissions extends AbstractSpecImplementation {
         Contract c = null;
         String exMsg = "";
         try {
-            c = contractService.createGenericStoreContract(node, contractName, initialValue, null, false, null).blockingFirst();
+            c = contractService.createGenericStoreContract(node, contractName, initialValue, null, false, null, null).blockingFirst();
 
         } catch (Exception ex) {
             exMsg = ex.getMessage();

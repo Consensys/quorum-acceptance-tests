@@ -24,6 +24,7 @@ import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.command.HealthState;
 import com.github.dockerjava.api.command.InspectContainerResponse;
+import com.github.dockerjava.api.exception.NotModifiedException;
 import com.github.dockerjava.api.model.*;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
@@ -87,7 +88,8 @@ public class DockerInfrastructureService
         "latest", new QuorumImageConfig("quorumengineering/quorum:latest", GethArgBuilder.newBuilder().allowInsecureUnlock(true))
         );
         tesseraDockerImageCatalog =  ImmutableMap.of(
-        "latest", "quorumengineering/tessera:latest"
+        "latest", "quorumengineering/tessera:latest",
+        "0.10.5", "quorumengineering/tessera:0.10.5"
         );
     }
 
@@ -120,7 +122,11 @@ public class DockerInfrastructureService
         return Observable.fromIterable(resourceIds)
                 .doOnNext(id -> logger.debug("Deleting container {}", StringUtils.substring(id, 0, 12)))
                 .map(id -> {
-                    dockerClient.stopContainerCmd(id).exec();
+                    try {
+                        dockerClient.stopContainerCmd(id).exec();
+                    }catch (NotModifiedException e){
+                        logger.debug("container {} already stopped", id);
+                    }
                     dockerClient.removeContainerCmd(id).exec();
                     return true;
                 });
@@ -334,18 +340,30 @@ public class DockerInfrastructureService
         Pattern regex = Pattern.compile(grepStr);
         return Observable.just(resourceId)
                 .map(id -> dockerClient.logContainerCmd(id)
-                        .withStdOut(true)
-                        .withStdErr(true)
-                        .withFollowStream(true)
-                        .exec(new ResultCallback.Adapter<>(){
-                            @Override
-                            public void onNext(Frame object) {
-                                if (regex.matcher(object.toString()).find()) {
-                                    onComplete();
+                            .withStdOut(true)
+                            .withStdErr(true)
+                            .withFollowStream(true)
+                            .exec(new ResultCallback.Adapter<>() {
+                                // TODO this should probably be replaced with some Observable wrapper that tracks an externally defined flag
+                                // I think onComplete is automatically called when the container is shut down
+                                // which causes awaitCompletion to return true - which in turn causes a false positive
+                                // pattern match result
+                                boolean patternFound = false;
+                                @Override
+                                public void onNext(Frame object) {
+                                    if (regex.matcher(object.toString()).find()) {
+                                        patternFound = true;
+                                        onComplete();
+                                    }
                                 }
-                            }
-                        })
-                        .awaitCompletion(timeoutAmount, timeoutUnit)
+
+                                @Override
+                                public boolean awaitCompletion(long timeout, TimeUnit timeUnit) throws InterruptedException {
+                                    // mix complete success with whether the pattern was found
+                                    return super.awaitCompletion(timeout, timeUnit) && patternFound;
+                                }
+                            })
+                            .awaitCompletion(timeoutAmount, timeoutUnit)
                 );
     }
 

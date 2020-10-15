@@ -20,7 +20,7 @@
 package com.quorum.gauge.common;
 
 public enum PrivacyFlag {
-    Legacy(0), PartyProtection(1), StateValidation(3);
+    StandardPrivate(0), PartyProtection(1), StateValidation(3);
 
     private int i;
 

@@ -54,7 +54,7 @@ public class NestedContractService extends AbstractService {
     AccountService accountService;
 
     public Observable<? extends Contract> createC1Contract(int initialValue, QuorumNode source, QuorumNode target) {
-        return createC1Contract(initialValue, source, Arrays.asList(target), Arrays.asList(PrivacyFlag.Legacy));
+        return createC1Contract(initialValue, source, Arrays.asList(target), Arrays.asList(PrivacyFlag.StandardPrivate));
     }
 
     public Observable<? extends Contract> createC1Contract(int initialValue, QuorumNode source, List<QuorumNode> target, List<PrivacyFlag> flags) {
@@ -95,7 +95,7 @@ public class NestedContractService extends AbstractService {
     }
 
     public Observable<? extends Contract> createC2Contract(String c1Address, QuorumNode source, QuorumNode target) {
-        return createC2Contract(c1Address, source, Arrays.asList(target), Arrays.asList(PrivacyFlag.Legacy));
+        return createC2Contract(c1Address, source, Arrays.asList(target), Arrays.asList(PrivacyFlag.StandardPrivate));
     }
 
     public Observable<? extends Contract> createC2Contract(String c1Address, QuorumNode source, List<QuorumNode> target, List<PrivacyFlag> flags) {

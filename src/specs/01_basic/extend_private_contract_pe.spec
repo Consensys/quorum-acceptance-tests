@@ -1,8 +1,8 @@
-# Extend contract to new party
+# Extend contract to new party (privacy enhancements enabled)
 
- Tags: basic, extension
+ Tags: privacy-enhancements, extension
 
-This is to verify the contract extension APIs (success scenarios).
+This is to verify the contract extension APIs (success scenarios - with privacy enhancements enabled).
 
 There are 2 set of contracts to be used selectively in the below scenarios.
 
@@ -85,10 +85,11 @@ contract C2 {
 }
 
 ```
-  This spec will be executed for all 3 privacy flag values (PartyProtection and StateValidation in a separate privacy enhanced spec)
+  This spec will be executed for all 3 privacy flag values
 
       |privacyType      |
-      |StandardPrivate  |
+      |PartyProtection  |
+      |StateValidation  |
 
 
 

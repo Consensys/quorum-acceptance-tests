@@ -35,7 +35,7 @@ public class ContractExtension extends AbstractSpecImplementation {
                                                       final QuorumNetworkProperty.Node creator,
                                                       final String contractName) throws InterruptedException {
 
-        PrivacyFlag privacyFlag = PrivacyFlag.Legacy;
+        PrivacyFlag privacyFlag = PrivacyFlag.StandardPrivate;
 
         DataStoreFactory.getScenarioDataStore().put("privacyFlag", privacyFlag);
 
@@ -68,13 +68,36 @@ public class ContractExtension extends AbstractSpecImplementation {
 
     }
 
+    @Step("Initiate <contractName> extension from non creating node <fromNode> to <newNode> should fail with error message <errMsg>")
+    public void createInvalidExtensionProposition(final String contractName,
+                                                  final QuorumNetworkProperty.Node fromNode,
+                                                  final QuorumNetworkProperty.Node newNode,
+                                                  final String errMsg) throws InterruptedException {
+        PrivacyFlag privacyFlag = PrivacyFlag.StandardPrivate;
+
+        DataStoreFactory.getScenarioDataStore().put("privacyFlag", privacyFlag);
+
+
+        final Set<QuorumNetworkProperty.Node> allNodes = Stream.of(fromNode, newNode)
+            .collect(Collectors.toSet());
+        DataStoreFactory.getScenarioDataStore().put("extensionAllNodes", allNodes);
+
+        final Contract existingContract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
+
+        final QuorumExtendContract result = extensionService
+            .initiateContractExtension(fromNode, existingContract.getContractAddress(), newNode, privacyFlag)
+            .blockingFirst();
+
+        assertThat(result.getError().getMessage()).isEqualTo(errMsg);
+    }
+
     @Step("Initiating contract extension to <newNode> with its default account as recipient from <creator> for contract <contractName> should fail with error <errMsg>")
     public void createFailedContractExtensionProposition(final QuorumNetworkProperty.Node newNode,
                                                          final QuorumNetworkProperty.Node creator,
                                                          final String contractName,
                                                          final String errMsg) throws InterruptedException {
 
-        PrivacyFlag privacyFlag = PrivacyFlag.Legacy;
+        PrivacyFlag privacyFlag = PrivacyFlag.StandardPrivate;
 
         DataStoreFactory.getScenarioDataStore().put("privacyFlag", privacyFlag);
 
@@ -98,7 +121,7 @@ public class ContractExtension extends AbstractSpecImplementation {
                                                final QuorumNetworkProperty.Node newNode,
                                                final QuorumNetworkProperty.Node creator,
                                                final String expErrMsg) {
-        PrivacyFlag privacyFlag = PrivacyFlag.Legacy;
+        PrivacyFlag privacyFlag = PrivacyFlag.StandardPrivate;
         DataStoreFactory.getScenarioDataStore().put("privacyFlag", privacyFlag);
         final Set<QuorumNetworkProperty.Node> allNodes = Stream.of(newNode, creator)
             .collect(Collectors.toSet());
