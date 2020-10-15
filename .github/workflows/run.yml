@@ -95,16 +95,16 @@ jobs:
       matrix:
         # list of tag expression being executed in parallel
         tag:
-          - 'basic || privacy-enhancements-disabled || basic-raft || (advanced && raft) || networks/typical::raft'
-          - 'basic || privacy-enhancements-disabled || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
+          - 'basic || basic-raft || (advanced && raft) || networks/typical::raft'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
           - 'gcmode && block-sync && networks/template::raft-3plus1'
           - 'gcmode && block-sync && networks/template::istanbul-3plus1'
           - 'learner-peer-management || raftdnsenable && networks/template::raft-3plus1'
           - 'validator-management && networks/template::istanbul-3plus1'
-          - 'basic || privacy-enhancements-disabled || basic-raft || (advanced && raft) || networks/plugins::raft'
-          - 'basic || privacy-enhancements-disabled || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul'
-          - 'basic || privacy-enhancements-disabled || basic-raft || (advanced && raft) || networks/plugins::raft-account-plugin-hashicorp-vault'
-          - 'basic || privacy-enhancements-disabled || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul-account-plugin-hashicorp-vault'
+          - 'basic || basic-raft || (advanced && raft) || networks/plugins::raft'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul'
+          - 'basic || basic-raft || (advanced && raft) || networks/plugins::raft-account-plugin-hashicorp-vault'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul-account-plugin-hashicorp-vault'
           - 'basic-rpc-security || networks/plugins::raft-rpc-security'
           - 'basic-rpc-security || networks/plugins::istanbul-rpc-security'
           - 'migration && networks/template::raft-4nodes'
@@ -115,9 +115,9 @@ jobs:
         privacy-enhancements:
           - 'false'
         include:
-          - tag: 'basic || privacy-enhancements || basic-raft || (advanced && raft) || networks/typical::raft'
+          - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || basic-raft || (advanced && raft) || networks/typical::raft'
             privacy-enhancements: 'true'
-          - tag: 'basic || privacy-enhancements || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
+          - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
             privacy-enhancements: 'true'
     runs-on: ubuntu-latest
     steps:

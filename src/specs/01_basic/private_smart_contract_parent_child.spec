@@ -1,6 +1,6 @@
 # Storage Master - exercise parent child relationships including creating two children from parent with a single transaction
 
- Tags: basic, single
+ Tags: basic
 
 This is to verify that a SimpleStorage smart contract created via a parent StorageMaster works as expected when used in
 both public and private transactions.
@@ -56,7 +56,7 @@ contract StorageMaster {
 
 ## Deploy a public storage master and create a simple storage contract from it
 
- Tags: private, mining
+ Tags: public, parent-child
 
 * Deploy a public storage master contract in "Node1"'s default account, named this contract as "smPublic1"
 
@@ -69,7 +69,7 @@ contract StorageMaster {
 
 ## Deploy a private storage master and create a simple storage contract from it
 
- Tags: private, mining
+ Tags: private, parent-child
 
 * Deploy a "StandardPrivate" storage master contract in "Node1"'s default account and it's private for "Node4", named this contract as "smPrivate1"
 
@@ -81,6 +81,8 @@ contract StorageMaster {
 * "ssPrivate1"'s `get()` function execution in "Node4" returns "10"
 
 ## Deploy a private storage master and create two simple storage contracts from it with a single transaction
+
+  Tags: private, parent-child
 
 * Deploy a "StandardPrivate" storage master contract in "Node1"'s default account and it's private for "Node4", named this contract as "smPrivate2"
 

@@ -118,7 +118,7 @@ Transactions, regardless if it succeeds or not, sent by non-party node must not 
 
 * Deploy a "PartyProtection" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract14"
 * "contract14" is deployed "successfully" in "Node1,Node4"
-* Fail to execute "PartyProtection" simple contract("contract14")'s `set()` function with new arbitrary value in "Node3" and it's private for "Node1"
+* Fail to execute "PartyProtection" simple contract("contract14")'s `set()` function with new arbitrary value in "Node3" and it's private for "Node1" with error "contract not found. cannot transact"
 
 ## Privacy is maintained when non-party node trying to send a transaction to a simple contract
 
@@ -128,7 +128,7 @@ Transactions, regardless if it succeeds or not, sent by non-party node must not 
 
 * Deploy a "PartyProtection" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract14"
 * "contract14" is deployed "successfully" in "Node1,Node4"
-* Fire and forget execution of "PartyProtection" simple contract("contract14")'s `set()` function with new arbitrary value in "Node3" and it's private for "Node1" fails simulation
+* Fail to execute "PartyProtection" simple contract("contract14")'s `set()` function with new arbitrary value in "Node3" and it's private for "Node1" with error "contract not found. cannot transact"
 * "contract14"'s `get()` function execution in "Node1" returns "42"
 * "contract14"'s `get()` function execution in "Node4" returns "42"
 * "contract14"'s `get()` function execution in "Node3" returns "0"
@@ -141,7 +141,7 @@ Transactions, regardless if it succeeds or not, sent by non-party node must not 
 * "parentContractC1_14" is deployed "successfully" in "Node1,Node4"
 * Deploy a "PartyProtection" C2 contract with initial value "parentContractC1_14" in "Node1"'s default account and it's private for "Node2", named this contract as "childContractC2_12"
 * "childContractC2_12" is deployed "successfully" in "Node1,Node2"
-* Fail to execute "PartyProtection" contract `C2`("childContractC2_12")'s `set()` function with new arbitrary value in "Node2" and it's private for "Node1"
+* Fail to execute "PartyProtection" contract `C2`("childContractC2_12")'s `set()` function with new arbitrary value in "Node2" and it's private for "Node1" with error "evm: execution reverted"
 
 
 ## Privacy is maintained when non-party node trying to send a transaction to a nested contract
@@ -154,7 +154,7 @@ Transactions, regardless if it succeeds or not, sent by non-party node must not 
 * "parentContractC1_14" is deployed "successfully" in "Node1,Node4"
 * Deploy a "PartyProtection" C2 contract with initial value "parentContractC1_14" in "Node1"'s default account and it's private for "Node2", named this contract as "childContractC2_12"
 * "childContractC2_12" is deployed "successfully" in "Node1,Node2"
-* Fire and forget execution of "PartyProtection" contract `C2`("childContractC2_12")'s `set()` function with new arbitrary value in "Node2" and it's private for "Node1" fails simulation
+* Fail to execute "PartyProtection" contract `C2`("childContractC2_12")'s `set()` function with new arbitrary value in "Node2" and it's private for "Node1" with error "evm: execution reverted"
 * Contract `C1`("parentContractC1_14")'s `get()` function execution in "Node1" returns "30"
 * Contract `C1`("parentContractC1_14")'s `get()` function execution in "Node4" returns "30"
 * Contract `C1`("parentContractC1_14")'s `get()` function execution in "Node2" returns "0"

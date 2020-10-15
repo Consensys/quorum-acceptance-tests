@@ -129,8 +129,8 @@ C1 is PSV contract and C2 is not. Transactions to C2 that impacts C1 are not all
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
 * Deploy a "StandardPrivate" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
-* Fail to execute "StandardPrivate" contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node4"
-* Fail to execute "StateValidation" contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node4"
+* Fail to execute "StandardPrivate" contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node4" with error "sent privacy flag doesn't match all affected contract flags"
+* Fail to execute "StateValidation" contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node4" with error "PrivacyMetadata not found"
 
 ## Deny transactions that are sent to a PSV nested contract executing a function in a non-PSV parent contract
 
@@ -144,8 +144,8 @@ C1 is non-PSV contract and C2 is PSV. Transactions to C2 that impacts C1 are not
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
 * Deploy a "StateValidation" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
-* Fail to execute "StandardPrivate" contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node4"
-* Fail to execute "StateValidation" contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node4"
+* Fail to execute "StandardPrivate" contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node4" with error "sent privacy flag doesn't match all affected contract flags"
+* Fail to execute "StateValidation" contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node4" with error "PrivacyMetadata not found"
 
 ## Deny transactions that are sent to a non-PSV contract reading from a PSV contract and non-PSV contract gets updated
 
@@ -211,7 +211,7 @@ Failure = error response from tessera
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
 * Deploy a "StateValidation" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node2", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node2"
-* Fail to execute "StateValidation" contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
+* Fail to execute "StateValidation" contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2" with error "Recipients mismatched for Affected Txn"
 
 ## Deny transactions sending to a nested contract with a different set of participants
 
@@ -222,7 +222,7 @@ Failure = error response from tessera
 * "contractC1_14" is deployed "successfully" in "Node1,Node4"
 * Deploy a "StateValidation" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
-* Fail to execute "StateValidation" contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
+* Fail to execute "StateValidation" contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2" with error "Recipients mismatched for Affected Txn"
 
 ## Deny transactions sending to a PSV contract that affects another PSV contract with different set of participants
 
@@ -233,7 +233,7 @@ Failure = error response from tessera
 * "contractC1_123" is deployed "successfully" in "Node1,Node2,Node3"
 * Deploy a "StateValidation" contract `C2` with initial value "contractC1_123" in "Node1"'s default account and it's private for "Node2", named this contract as "contractC2_12"
 * "contractC2_12" is deployed "successfully" in "Node1,Node2"
-* Fail to execute "StateValidation" contract `C2`("contractC2_12")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2"
+* Fail to execute "StateValidation" contract `C2`("contractC2_12")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node2" with error "Recipients mismatched for Affected Txn"
 
 ## Allow transactions sending to PSV contract reading a public contract and updating PSV contract
 
@@ -253,4 +253,4 @@ C1 is a public contract and C2 is PSV. Transactions to C2 that impacts C1 are no
 * "contractC1_14" is deployed "successfully" in "Node1,Node2,Node3,Node4"
 * Deploy a "StateValidation" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
-* Fail to execute "StateValidation" contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node4"
+* Fail to execute "StateValidation" contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node4" with error "evm: execution reverted"

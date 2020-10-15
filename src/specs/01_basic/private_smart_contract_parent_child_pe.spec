@@ -65,7 +65,7 @@ contract StorageMaster {
 
 ## Deploy a private storage master and create a simple storage contract from it
 
- Tags: private, mining
+ Tags: parent-child
 
 * Deploy a <privacyType> storage master contract in "Node1"'s default account and it's private for "Node4", named this contract as "smPrivate1"
 
@@ -77,6 +77,8 @@ contract StorageMaster {
 * "ssPrivate1"'s `get()` function execution in "Node4" returns "10"
 
 ## Deploy a private storage master and create two simple storage contracts from it with a single transaction
+
+  Tags: parent-child
 
 * Deploy a <privacyType> storage master contract in "Node1"'s default account and it's private for "Node4", named this contract as "smPrivate2"
 

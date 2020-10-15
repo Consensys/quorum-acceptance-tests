@@ -142,8 +142,8 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
         assertThat(receipt.getBlockNumber()).isNotEqualTo(currentBlockNumber());
     }
 
-    @Step("Fail to execute <flag> contract `C2`(<contractName>)'s `set()` function with new arbitrary value in <node> and it's private for <privateFor>")
-    public void failSetExecution(PrivacyFlag flag, String contractName, QuorumNode node, String privateFor) {
+    @Step("Fail to execute <flag> contract `C2`(<contractName>)'s `set()` function with new arbitrary value in <node> and it's private for <privateFor> with error <error>")
+    public void failSetExecution(PrivacyFlag flag, String contractName, QuorumNode node, String privateFor, String error) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         int arbitraryValue = new Random().nextInt(100) + 1000;
 
@@ -155,11 +155,11 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
                 arbitraryValue,
                 Arrays.asList(flag)).blockingFirst()
         ).as("Expected exception thrown")
-            .isNotNull();
+            .hasMessageContaining(error);
     }
 
-    @Step("Fail to execute <flag> simple contract(<contractName>)'s `set()` function with new arbitrary value in <node> and it's private for <privateFor>")
-    public void failSetExecutionSimpleContract(PrivacyFlag flag, String contractName, QuorumNode node, String privateFor) {
+    @Step("Fail to execute <flag> simple contract(<contractName>)'s `set()` function with new arbitrary value in <node> and it's private for <privateFor> with error <error>")
+    public void failSetExecutionSimpleContract(PrivacyFlag flag, String contractName, QuorumNode node, String privateFor, String error) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         int arbitraryValue = new Random().nextInt(100) + 1000;
 
@@ -171,26 +171,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
                 arbitraryValue,
                 Arrays.asList(flag)).blockingFirst()
         ).as("Expected exception thrown")
-            .isNotNull();
-    }
-
-    // TODO PricacyEnhancements - check and merge the fail/Fails methods
-
-    @Step("Fire and forget execution of <flag> contract `C2`(<contractName>)'s `set()` function with new arbitrary value in <node> and it's private for <privateFor> fails simulation")
-    public void fireAndForgetFails(PrivacyFlag flag, String contractName, QuorumNode node, String privateFor) {
-        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
-        int arbitraryValue = new Random().nextInt(100) + 1000;
-
-        assertThatThrownBy(
-            () -> nestedContractService.updateC2Contract(
-                node,
-                Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
-                c.getContractAddress(),
-                arbitraryValue,
-                Arrays.asList(flag))
-                .blockingFirst()
-        ).as("Expected exception thrown")
-            .hasMessageContaining("evm: execution reverted");
+            .hasMessageContaining(error);
     }
 
     @Step("Fire and forget execution of <flag> contract `C2`(<contractName>)'s `set()` function with new arbitrary value in <node> and it's private for <privateFor>")
@@ -238,26 +219,6 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
             DataStoreFactory.getSpecDataStore().put(txHashKey, receipt.getTransactionHash());
             DataStoreFactory.getScenarioDataStore().put(txHashKey, receipt.getTransactionHash());
         }
-    }
-
-
-    // TODO PrivacyEnhancements - check and merge the fail/Fails methods
-
-    @Step("Fire and forget execution of <flag> simple contract(<contractName>)'s `set()` function with new arbitrary value in <node> and it's private for <privateFor> fails simulation")
-    public void fireAndForgetSimpleContractFails(PrivacyFlag flag, String contractName, QuorumNode node, String privateFor) {
-        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
-        int arbitraryValue = new Random().nextInt(100) + 1000;
-
-        assertThatThrownBy(
-            () -> contractService.updateSimpleContract(
-                node,
-                Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
-                c.getContractAddress(),
-                arbitraryValue,
-                Arrays.asList(flag))
-                .blockingFirst()
-        ).as("Expected exception thrown")
-            .hasMessageContaining("contract not found. cannot transact");
     }
 
     @Step("Execute contract `C2`(<contractName>)'s `set()` function with new value <newValue> in <source> and it's private for <privateFor>")
