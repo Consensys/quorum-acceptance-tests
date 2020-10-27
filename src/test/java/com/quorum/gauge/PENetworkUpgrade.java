@@ -163,6 +163,23 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
         assertThat(containerState).isEqualTo(state);
     }
 
+    @Step("Wait for <component> state in <node> to be <state>")
+    public void waitForNodeState(String component, String node, String state) {
+        String containerId = getComponentContainerId(component, node);
+        String containerState = infraService.wait(containerId).blockingFirst() ? "up" : "down";
+        int count = 20;
+        while (!containerState.equals(state) && count > 0){
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            count--;
+            containerState = infraService.wait(containerId).blockingFirst() ? "up" : "down";
+        }
+        assertThat(containerState).isEqualTo(state);
+    }
+
     @Step("Stop and start <node> using quorum version <qVersionKey> and tessera version <tVersionKey>")
     public void stopAndStartNodes(String node, String qVersionKey, String tVersionKey) {
         NetworkResources existingNetworkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);

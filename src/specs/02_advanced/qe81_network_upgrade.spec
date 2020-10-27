@@ -114,7 +114,7 @@
  Node4 for should now stop appending new blocks (due to BAD BLOCK error)
 * Grep "quorum" in "Node4" for "Privacy enhanced transaction received while privacy enhancements are disabled. Please check your node configuration."
 * Stop "quorum" in "Node4" if consensus is istanbul
-* Check that "quorum" in "Node4" is "down"
+* Wait for "quorum" state in "Node4" to be "down"
 
 * Record the current block number, named it as "catchUpBlockNumber"
 
