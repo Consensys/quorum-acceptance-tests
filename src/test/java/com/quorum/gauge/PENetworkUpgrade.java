@@ -148,7 +148,7 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
             try {
                 Thread.sleep(1000L);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                throw new RuntimeException("Sleep interrupted during waitForTesseraToDiscoverKeysInNode", e);
             }
             count--;
         } while (count > 0);
@@ -172,7 +172,7 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
             try {
                 Thread.sleep(3000);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                throw new RuntimeException("Sleep interrupted during waitForNodeState", e);
             }
             count--;
             containerState = infraService.wait(containerId).blockingFirst() ? "up" : "down";
@@ -233,7 +233,7 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
                 retry--;
                 Thread.sleep(5000);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                throw new RuntimeException("Sleep interrupted during changeRaftLeader", e);
             }
             newLeader = raftService.getLeaderWithLocalEnodeInfo(QuorumNode.Node1).name();
         } while (newLeader == oldLeader && retry >= 0);
