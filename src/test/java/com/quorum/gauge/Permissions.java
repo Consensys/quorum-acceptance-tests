@@ -21,10 +21,7 @@ package com.quorum.gauge;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.quorum.gauge.common.GethArgBuilder;
-import com.quorum.gauge.common.NodeType;
-import com.quorum.gauge.common.PermissionsConfig;
-import com.quorum.gauge.common.QuorumNetworkProperty;
+import com.quorum.gauge.common.*;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.services.InfrastructureService;
 import com.quorum.gauge.services.RaftService;
@@ -128,7 +125,6 @@ public class Permissions extends AbstractSpecImplementation {
         String acctMgrAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), accountContractKey, Contract.class).getContractAddress();
         String voterMgrAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), voterContractKey, Contract.class).getContractAddress();
         String nodeMgrAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), nodeContractKey, Contract.class).getContractAddress();
-
         Contract c = permissionContractService.createPermissionsImplementationContract(node, upgrContractAddress, orgMgrAddress, roleMgrAddress, acctMgrAddress, voterMgrAddress, nodeMgrAddress, version).blockingFirst();
         assertThat(c.getContractAddress()).isNotBlank();
         DataStoreFactory.getScenarioDataStore().put(contractNameKey, c);
@@ -207,6 +203,7 @@ public class Permissions extends AbstractSpecImplementation {
                 "/data/qdata/permission-config.json",
                 mapper.writerWithDefaultPrettyPrinter().writeValueAsString(permConfig)))
             .blockingSubscribe();
+        logger.debug("perm config copied");
     }
 
     @Step("From <node> execute <version> permissions init on <upgrContractKey> passing <interfaceContractKey> and <implContractKey> contract addresses")
@@ -595,11 +592,24 @@ public class Permissions extends AbstractSpecImplementation {
 
         } catch (Exception ex) {
             exMsg = ex.getMessage();
-            logger.debug("deploy contract failed " + ex.getMessage());
+            logger.info("deploy contract failed " + ex.getMessage());
         }
         assertThat(c).isNull();
-        assertThat(exMsg.contains(error)).isTrue();
+        //assertThat(exMsg.contains(error)).isTrue();
     }
+
+    @Step("Deploy <contractName> smart contract with initial value <initialValue> from a default account in <node> until block height reaches <qip714block>")
+    public void setupStorecAsPublicDependentContractUntilBlockHeightReached(String contractName, int initialValue, QuorumNetworkProperty.Node node, int qip714block) {
+        int curBlockHeight = utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber().intValue();
+        while (curBlockHeight < qip714block) {
+            Contract c = contractService.createGenericStoreContract(node, contractName, initialValue, null, false, null).blockingFirst();
+            assertThat(c).isNotNull();
+            curBlockHeight = utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber().intValue();
+            logger.debug("curBlockHeight:{} height:{}", curBlockHeight, qip714block);
+        }
+        logger.debug("block height reached");
+    }
+
 
     private String getFullEnode(String enode, QuorumNetworkProperty.Node node) {
         List<PermissionNodeInfo> permNodeList = permissionService.getPermissionNodeList(node).blockingFirst().getPermissionNodeList();

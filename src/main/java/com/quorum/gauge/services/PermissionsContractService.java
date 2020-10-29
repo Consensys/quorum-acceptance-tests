@@ -169,6 +169,9 @@ public class PermissionsContractService extends AbstractService {
     public Observable<? extends Contract> createPermissionsImplementationContract(QuorumNetworkProperty.Node node, String upgrAddr, String orgMgrAddr, String roleMgrAddr, String acctMgrAddr, String voterMgrAddr, String nodeMgrAddr, String version) {
         Web3j client = connectionFactory().getWeb3jConnection(node);
         TransactionManager transactionManager = getTxManager(node, client);
+        logger.debug("getPermContractDepGasProvider gas limit {}", getPermContractDepGasProvider().getGasLimit(""));
+        logger.debug("getPermContractGasProvider gas limit {}", getPermContractGasProvider().getGasLimit(""));
+        logger.debug("upgr:{} org:{} role:{} acct:{} vote:{} node:{}", upgrAddr, orgMgrAddr, roleMgrAddr, acctMgrAddr, voterMgrAddr, nodeMgrAddr);
         if(version.toLowerCase().equals("eea")){
             return PermissionsImplementation.deploy(
                 client,

@@ -1,8 +1,9 @@
-# Start permission network <networkType> <version> <id>
+# Start permission network <networkType> <version> <id> <qip714block>
 * Start a <networkType> <version> Quorum Network, named it <id>, consisting of "Node1,Node2,Node3"
 * Deploy permissions model contracts from "Node1" with <version>
 * Create permissions config file and write the file to "Node1,Node2,Node3"
 * Restart network <id>
+* Deploy "storec" smart contract with initial value "5" from a default account in "Node1" until block height reaches <qip714block>
 
 # Validate network admin role
 * Validate that org "NWADMIN" is approved, has "Node1" linked and has role "NWADMIN"

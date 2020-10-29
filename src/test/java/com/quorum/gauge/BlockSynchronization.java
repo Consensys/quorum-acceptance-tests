@@ -71,6 +71,8 @@ public class BlockSynchronization extends AbstractSpecImplementation {
     @Step("Start a <networkType> <version> Quorum Network, named it <id>, consisting of <nodes>")
     public void startNetwork(String networkType, String version, String id, List<Node> nodes) {
         startQuorumNetwork(networkType, id, nodes, null, version);
+        BigInteger blockNumber = utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber();
+        logger.debug("network started blockNumber:{}", blockNumber);
     }
 
     @Step("Start a <networkType> Quorum Network, named it <id>, consisting of <nodes> with <gcmode> `gcmode`")
@@ -297,6 +299,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
                     Thread.sleep(duration.toMillis());
                 })
                 .blockingSubscribe();
+        logger.debug("started all nodes");
     }
 
     @Step("Verify block heights in all nodes are greater or equals to <blockHeightName> in the network <id>")

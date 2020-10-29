@@ -9,10 +9,10 @@ For more information, visit https://docs.goquorum.com/en/latest/Permissioning/En
 
 The test scenarios are based on the following setup:
 
-      |id        |networkType      |version |
-      |r2        |permissioned     |eea     |
+      |id        |networkType      |version |qip714block |
+      |r2        |permissioned     |eea     |20          |
 
-* Start permission network <networkType> <version> <id>
+* Start permission network <networkType> <version> <id> <qip714block>
 
 ## Network Admin Organization and Role are initialized successfully
 

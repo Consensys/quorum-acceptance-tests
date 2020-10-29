@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
 
 import "./RoleManager.sol";
 import "./AccountManager.sol";
@@ -327,9 +327,13 @@ contract PermissionsImplementation {
       * @param _admin bool indicates if the role is an admin role
       * @dev account access type can have of the following four values:
             0 - Read only
-            1 - Transact access
-            2 - Contract deployment access. Can transact as well
-            3 - Full access
+            1 - value transfer
+            2 - contract deploy
+            3 - full access
+            4 - contract call
+            5 - value transfer and contract call
+            6 - value transfer and contract deploy
+            7 - contract call and deploy
       */
     function addNewRole(string calldata _roleId, string calldata _orgId,
         uint256 _access, bool _voter, bool _admin, address _caller) external
@@ -717,33 +721,32 @@ contract PermissionsImplementation {
     }
 
     /** @notice checks if the account is allowed to transact or not
-      * @param _srcaccount source account
-      * @param _tgtaccount target account
+      * @param _sender source account
+      * @param _target target account
+      * @param _value value being transferred
+      * @param _gasPrice gas price
+      * @param _gasLimit gas limit
+      * @param _payload payload for transactions on contracts
       * @return bool indicating if the account is allowed to transact or not
       */
-    function transactionAllowed(address _srcaccount, address _tgtaccount)
+    function transactionAllowed(address _sender, address _target, uint256 _value, uint256 _gasPrice, uint256 _gasLimit, bytes calldata _payload)
     external view returns (bool) {
-
-        if (accountManager.getAccountStatus(_srcaccount) == 2 ) {
-            (string memory act_org, string memory act_role) = accountManager.getAccountOrgRole(_srcaccount);
+        if (accountManager.getAccountStatus(_sender) == 2) {
+            (string memory act_org, string memory act_role) = accountManager.getAccountOrgRole(_sender);
             string memory act_uOrg = _getUltimateParent(act_org);
             if (orgManager.checkOrgActive(act_org)) {
-                if (isNetworkAdmin(_srcaccount) || isOrgAdmin(_srcaccount, act_org)) {
+                if (isNetworkAdmin(_sender) || isOrgAdmin(_sender, act_org)) {
                     return true;
                 }
-                uint256 roleAccess = roleManager.roleAccess(act_role, act_org, act_uOrg);
-                //readOnly
-                if (roleAccess == 0) {
-                    return false;
+
+                uint256 typeOfxn = 1;
+                if (_target == address(0)) {
+                    typeOfxn = 2;
                 }
-                //transact, not contract deployment
-                if (roleAccess == 1 && _tgtaccount == address(0)) {
-                    return true;
+                else if (_payload.length > 0) {
+                    typeOfxn = 3;
                 }
-                //fullaccess / admin role
-                if (roleAccess == 3 || roleAccess == 2) {
-                    return true;
-                }
+                return roleManager.transactionAllowed(act_role, act_org, act_uOrg, typeOfxn);
             }
         }
         return false;

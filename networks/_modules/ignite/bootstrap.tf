@@ -88,6 +88,7 @@ resource "local_file" "genesis-file" {
       "eip155Block": 0,
       "eip150Hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
       "eip158Block": 0,
+      "qip714Block": 20,
       "isQuorum": true,
 %{if var.concensus == "istanbul"~}
       "istanbul": {
@@ -105,6 +106,15 @@ resource "local_file" "genesis-file" {
     "nonce": "0x0",
     "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
     "timestamp": "0x00"
+}
+EOF
+}
+
+resource "local_file" "nodekey-file" {
+    filename = format("%s/nodekeys-tmp.json", quorum_bootstrap_network.this.network_dir_abs)
+    content  = <<-EOF
+    {
+    ${join(",", quorum_bootstrap_node_key.nodekeys-generator[*].hex_node_id)}
 }
 EOF
 }
