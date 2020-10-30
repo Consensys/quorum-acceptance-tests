@@ -56,8 +56,8 @@
   |-------------------------------------------------------|
   | `rpc://eth_*`                                         |
   | `rpc://rpc_modules`                                   |
-  | `private://0x0/_/contracts?owned.eoa=0x0&party.tm=A1` |
-  | `private://0x0/_/contracts?owned.eoa=0x0&party.tm=A2` |
+  | `private://0x0/_/contracts?owned.eoa=0x0&from.tm=A1` |
+  | `private://0x0/_/contracts?owned.eoa=0x0&from.tm=A2` |
 
 * Setup `"Tenant B"` access controls restricted to `"Node1, Node2"`, assigned TM keys `"B1,B2"` and with the following scopes
 
@@ -65,8 +65,8 @@
   |-------------------------------------------------------|
   | `rpc://eth_*`                                         |
   | `rpc://rpc_modules`                                   |
-  | `private://0x0/_/contracts?owned.eoa=0x0&party.tm=B1` |
-  | `private://0x0/_/contracts?owned.eoa=0x0&party.tm=B2` |
+  | `private://0x0/_/contracts?owned.eoa=0x0&from.tm=B1` |
+  | `private://0x0/_/contracts?owned.eoa=0x0&from.tm=B2` |
 
 * Setup `"Tenant C"` access controls restricted to `"Node1, Node3"`, assigned TM keys `"C1,C2"` and with the following scopes
 
@@ -74,8 +74,8 @@
   |-------------------------------------------------------|
   | `rpc://eth_*`                                         |
   | `rpc://rpc_modules`                                   |
-  | `private://0x0/_/contracts?owned.eoa=0x0&party.tm=C1` |
-  | `private://0x0/_/contracts?owned.eoa=0x0&party.tm=C2` |
+  | `private://0x0/_/contracts?owned.eoa=0x0&from.tm=C1` |
+  | `private://0x0/_/contracts?owned.eoa=0x0&from.tm=C2` |
 
 * Setup `"Tenant D"` access controls restricted to `"Node2"`, assigned TM keys `"D1"` and with the following scopes
 
@@ -83,7 +83,7 @@
   |-------------------------------------------------------|
   | `rpc://eth_*`                                         |
   | `rpc://rpc_modules`                                   |
-  | `private://0x0/_/contracts?owned.eoa=0x0&party.tm=D1` |
+  | `private://0x0/_/contracts?owned.eoa=0x0&from.tm=D1` |
 
 
 ## Tenants can only interact with the Quorum Nodes which are assigned to them

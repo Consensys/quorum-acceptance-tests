@@ -117,7 +117,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
         List<String> privateForList = Arrays.stream(privateFor.split(",")).map(String::trim).collect(Collectors.toList());
         UriComponents contractScope = UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
             .queryParam("owned.eoa", "0x0")
-            .queryParam("party.tm", UriUtils.encode(privacyService.id(node, privateFrom), StandardCharsets.UTF_8))
+            .queryParam("from.tm", UriUtils.encode(privacyService.id(node, privateFrom), StandardCharsets.UTF_8))
             .build();
         List<String> requestScopes = Stream.of("rpc://eth_*", contractScope.toUriString()).collect(Collectors.toList());
         assertThat(oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
@@ -138,7 +138,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
         List<String> privateForList = Arrays.stream(privateFor.split(",")).map(String::trim).collect(Collectors.toList());
         UriComponents contractScope = UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
             .queryParam("owned.eoa", "0x0")
-            .queryParam("party.tm", UriUtils.encode(privacyService.id(node, privateFrom), StandardCharsets.UTF_8))
+            .queryParam("from.tm", UriUtils.encode(privacyService.id(node, privateFrom), StandardCharsets.UTF_8))
             .build();
         List<String> requestScopes = Stream.of("rpc://eth_*", contractScope.toUriString()).collect(Collectors.toList());
         AtomicReference<Throwable> caughtException = new AtomicReference<>();
@@ -250,7 +250,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
             Arrays.stream(namedKey.split(",")).map(String::trim).distinct()
                 .map(k -> UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
                     .queryParam("owned.eoa", "0x0")
-                    .queryParam("party.tm", UriUtils.encode(privacyService.id(node, k), StandardCharsets.UTF_8))
+                    .queryParam("from.tm", UriUtils.encode(privacyService.id(node, k), StandardCharsets.UTF_8))
                     .build())
                 .map(UriComponents::toUriString))
             .collect(Collectors.toList());
@@ -277,7 +277,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
         List<String> privateForList = Arrays.stream(privateFor.split(",")).map(String::trim).collect(Collectors.toList());
         UriComponents writeContractScope = UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
             .queryParam("owned.eoa", "0x0")
-            .queryParam("party.tm", UriUtils.encode(privacyService.id(node, privateFrom), StandardCharsets.UTF_8))
+            .queryParam("from.tm", UriUtils.encode(privacyService.id(node, privateFrom), StandardCharsets.UTF_8))
             .build();
         List<String> requestScopes = Stream.of("rpc://eth_*", writeContractScope.toUriString()).collect(Collectors.toList());
         oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes).blockingFirst();
@@ -314,7 +314,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
             Arrays.stream(namedKey.split(",")).map(String::trim).distinct()
                 .map(k -> UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
                     .queryParam("owned.eoa", "0x0")
-                    .queryParam("party.tm", UriUtils.encode(privacyService.id(node, k), StandardCharsets.UTF_8))
+                    .queryParam("from.tm", UriUtils.encode(privacyService.id(node, k), StandardCharsets.UTF_8))
                     .build())
                 .map(UriComponents::toUriString))
             .collect(Collectors.toList());
@@ -339,7 +339,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
         String[] txHashes = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "hashes", String[].class);
         UriComponents contractScope = UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
             .queryParam("owned.eoa", "0x0")
-            .queryParam("party.tm", UriUtils.encode(privacyService.id(node, namedKey), StandardCharsets.UTF_8))
+            .queryParam("from.tm", UriUtils.encode(privacyService.id(node, namedKey), StandardCharsets.UTF_8))
             .build();
         List<String> requestScopes = Stream.of("rpc://eth_*", contractScope.toUriString()).collect(Collectors.toList());
         oAuth2Service
@@ -362,7 +362,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
         Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
         UriComponents contractScope = UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
             .queryParam("owned.eoa", "0x0")
-            .queryParam("party.tm", UriUtils.encode(privacyService.id(node, namedKey), StandardCharsets.UTF_8))
+            .queryParam("from.tm", UriUtils.encode(privacyService.id(node, namedKey), StandardCharsets.UTF_8))
             .build();
         List<String> requestScopes = Stream.of("rpc://eth_*", contractScope.toUriString()).collect(Collectors.toList());
         oAuth2Service
@@ -381,7 +381,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
         String[] txHashes = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "hashes", String[].class);
         UriComponents contractScope = UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
             .queryParam("owned.eoa", "0x0")
-            .queryParam("party.tm", UriUtils.encode(privacyService.id(node, namedKey), StandardCharsets.UTF_8))
+            .queryParam("from.tm", UriUtils.encode(privacyService.id(node, namedKey), StandardCharsets.UTF_8))
             .build();
         List<String> requestScopes = Stream.of("rpc://eth_*", contractScope.toUriString()).collect(Collectors.toList());
         EthGetTransactionReceipt ethTxReceipt = oAuth2Service
@@ -399,7 +399,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
         Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
         UriComponents contractScope = UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
             .queryParam("owned.eoa", "0x0")
-            .queryParam("party.tm", UriUtils.encode(privacyService.id(node, namedKey), StandardCharsets.UTF_8))
+            .queryParam("from.tm", UriUtils.encode(privacyService.id(node, namedKey), StandardCharsets.UTF_8))
             .build();
         List<String> requestScopes = Stream.of("rpc://eth_*", contractScope.toUriString()).collect(Collectors.toList());
         EthLog ethLog = oAuth2Service
@@ -421,7 +421,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
             Stream.of("rpc://eth_*"),
             assignedNamedKeys.get(tenantName).stream().map(k -> UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
                 .queryParam("owned.eoa", "0x0")
-                .queryParam("party.tm", UriUtils.encode(privacyService.id(node, k), StandardCharsets.UTF_8))
+                .queryParam("from.tm", UriUtils.encode(privacyService.id(node, k), StandardCharsets.UTF_8))
                 .build()).map(UriComponents::toUriString)
         ).collect(Collectors.toList());
         return oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
@@ -501,7 +501,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
         List<String> privateForList = Arrays.stream(privateFor.split(",")).map(String::trim).collect(Collectors.toList());
         UriComponents contractScope = UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
             .queryParam("owned.eoa", "0x0")
-            .queryParam("party.tm", UriUtils.encode(privacyService.id(node, privateFrom), StandardCharsets.UTF_8))
+            .queryParam("from.tm", UriUtils.encode(privacyService.id(node, privateFrom), StandardCharsets.UTF_8))
             .build();
         List<String> requestScopes = Stream.of("rpc://eth_*", contractScope.toUriString()).collect(Collectors.toList());
         AtomicReference<Throwable> caughtException = new AtomicReference<>();
