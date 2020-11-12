@@ -83,7 +83,6 @@ public class BlockSynchronization extends AbstractSpecImplementation {
     public void startQuorumNetwork(String networkType, String id, List<Node> nodes, String gcmode, String permissionVersion) {
         GethArgBuilder additionalGethArgs = GethArgBuilder.newBuilder()
                 .permissioned("permissioned".equalsIgnoreCase(networkType))
-                .permEeaFlag(permissionVersion.equals("eea"))
                 .gcmode(gcmode);
 
         NetworkResources networkResources = new NetworkResources();

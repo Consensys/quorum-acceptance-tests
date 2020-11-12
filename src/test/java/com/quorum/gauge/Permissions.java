@@ -168,6 +168,27 @@ public class Permissions extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(objectName, permConfig);
     }
 
+    @Step("Update <objectName>. Add permission <version> in config")
+    public void addVersionToConfig(String objectName, String version) {
+        PermissionsConfig permConfig = mustHaveValue(DataStoreFactory.getScenarioDataStore(), objectName, PermissionsConfig.class);
+        logger.debug("perm config object is {}", permConfig.toString());
+
+        switch (version.toLowerCase().trim()){
+            case "eea":
+                permConfig.setPermissionModel("EEA");
+                break;
+            case "basic":
+                permConfig.setPermissionModel("BASIC");
+                break;
+            default:
+                throw new RuntimeException("unsupported permission version");
+        }
+
+
+        logger.debug("perm config object is {}", permConfig.toString());
+        DataStoreFactory.getScenarioDataStore().put(objectName, permConfig);
+    }
+
     @Step("Update <objectName>. Add <nwAdminOrg> as network admin org, <nwAdminRole> network admin role, <orgAdminRole> as the org admin role")
     public void setNetworkDetails(String objectName, String nwAdminOrg, String nwAdminRole, String orgAdminRole) {
         PermissionsConfig permConfig = mustHaveValue(DataStoreFactory.getScenarioDataStore(), objectName, PermissionsConfig.class);
@@ -193,9 +214,7 @@ public class Permissions extends AbstractSpecImplementation {
     public void writePermissionConfig(String objectName, List<QuorumNetworkProperty.Node> nodes) {
         InfrastructureService.NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", InfrastructureService.NetworkResources.class);
         PermissionsConfig permConfig = mustHaveValue(DataStoreFactory.getScenarioDataStore(), objectName, PermissionsConfig.class);
-
         ObjectMapper mapper = new ObjectMapper();
-
         Observable.fromIterable(networkResources.allResourceIds())
             .filter(containerId -> infraService.isGeth(containerId).blockingFirst())
             .doOnNext(gethContainerId -> logger.debug("Writing permissions-config.json {}", StringUtils.substring(gethContainerId, 0, 12)))
@@ -531,8 +550,8 @@ public class Permissions extends AbstractSpecImplementation {
         waitForOrgStatus(proposingNode, orgId, "Approved");
     }
 
-    @Step("Start stand alone <node> with <version>")
-    public void startOneNodes(QuorumNetworkProperty.Node node, String version) {
+    @Step("Start stand alone <node>")
+    public void startOneNodes(QuorumNetworkProperty.Node node) {
         GethArgBuilder additionalGethArgs = GethArgBuilder.newBuilder();
         InfrastructureService.NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", InfrastructureService.NetworkResources.class);
         raftService.addPeer(networkResources.aNodeName(), node.getEnodeUrl(), NodeType.peer)
@@ -544,7 +563,6 @@ public class Permissions extends AbstractSpecImplementation {
             .flatMap(raftId -> infraService.startNode(
                 InfrastructureService.NodeAttributes.forNode(node.getName())
                     .withAdditionalGethArgs(additionalGethArgs.raftjoinexisting(raftId))
-                    .withAdditionalGethArgs(additionalGethArgs.permEeaFlag(version.toLowerCase().equals("eea")))
                     .withAdditionalGethArgs(additionalGethArgs.permissioned(true)),
                 resourceId -> networkResources.add(node.getName(), resourceId)
             ))
@@ -592,7 +610,7 @@ public class Permissions extends AbstractSpecImplementation {
 
         } catch (Exception ex) {
             exMsg = ex.getMessage();
-            logger.info("deploy contract failed " + ex.getMessage());
+            logger.debug("deploy contract failed " + ex.getMessage());
         }
         assertThat(c).isNull();
         //assertThat(exMsg.contains(error)).isTrue();

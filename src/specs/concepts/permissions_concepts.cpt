@@ -1,7 +1,7 @@
 # Start permission network <networkType> <version> <id> <qip714block>
 * Start a <networkType> <version> Quorum Network, named it <id>, consisting of "Node1,Node2,Node3"
 * Deploy permissions model contracts from "Node1" with <version>
-* Create permissions config file and write the file to "Node1,Node2,Node3"
+* Create permissions config file with <version> and write the file to "Node1,Node2,Node3"
 * Restart network <id>
 * Deploy "storec" smart contract with initial value "5" from a default account in "Node1" until block height reaches <qip714block>
 
@@ -15,7 +15,7 @@
 * Validate that org "NWADMIN" is approved, has "Node1" linked and has role "NWADMIN"
 * Check "Node1"'s default account is from org "NWADMIN" and has role "NWADMIN" and is org admin and is active
 * From "Node1" propose and approve new org "ORG1" with "Node4"'s enode id and "Default" account
-* Start stand alone "Node4" with <version>
+* Start stand alone "Node4"
 * Write "permissionsConfig" to the data directory of "Node4"
 * Restart network <id>
 * Validate that org "ORG1" is approved, has "Node4" linked and has role "ORGADMIN"
@@ -24,7 +24,7 @@
 * Validate that org "NWADMIN" is approved, has "Node1" linked and has role "NWADMIN"
 * Check "Node1"'s default account is from org "NWADMIN" and has role "NWADMIN" and is org admin and is active
 * From "Node1" propose and approve new org "ORG1" with "Node4"'s enode id and "Default" account
-* Start stand alone "Node4" with <version>
+* Start stand alone "Node4"
 * Write "permissionsConfig" to the data directory of "Node4"
 * Restart network <id>
 * Validate that org "ORG1" is approved, has "Node4" linked and has role "ORGADMIN"
@@ -40,7 +40,7 @@
 * Validate that org "NWADMIN" is approved, has "Node1" linked and has role "NWADMIN"
 * Check "Node1"'s default account is from org "NWADMIN" and has role "NWADMIN" and is org admin and is active
 * From "Node1" propose and approve new org "ORG1" with "Node4"'s enode id and "Default" account
-* Start stand alone "Node4" with <version>
+* Start stand alone "Node4"
 * Write "permissionsConfig" to the data directory of "Node4"
 * Restart network <id>
 * Validate that org "ORG1" is approved, has "Node4" linked and has role "ORGADMIN"
@@ -62,8 +62,9 @@
 * From <node> deploy <version> implementation contract passing addresses of "upgradable", "orgmgr", "rolemgr", "accountmgr", "votermgr", "nodemgr". Name this as "implementation"
 * From <node> execute <version> permissions init on "upgradable" passing "interface" and "implementation" contract addresses
 
-# Create permissions config file and write the file to <nodes>
+# Create permissions config file with <version> and write the file to <nodes>
 * Create permissions-config.json object using the contract addersses of "upgradable", "interface", "implementation", "orgmgr", "rolemgr",  "accountmgr", "votermgr", "nodemgr". Name it "permissionsConfig"
+* Update "permissionsConfig". Add permission <version> in config
 * Update "permissionsConfig". Add "Node1"'s default account to accounts in config
 * Update "permissionsConfig". Add "NWADMIN" as network admin org, "NWADMIN" network admin role, "ORGADMIN" as the org admin role
 * Update "permissionsConfig". Set suborg depth as "4", suborg breadth as "4"
