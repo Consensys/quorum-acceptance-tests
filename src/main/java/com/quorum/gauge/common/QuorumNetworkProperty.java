@@ -53,9 +53,7 @@ public class QuorumNetworkProperty {
     }
 
     public void setNodes(Map<String, Node> nodes) {
-        for (Map.Entry<String, Node> entry : nodes.entrySet()) {
-            entry.getValue().setName(entry.getKey());
-        }
+        nodes.forEach( (key,val) -> val.setName(key));
         this.nodes = nodes;
     }
 
@@ -218,6 +216,7 @@ public class QuorumNetworkProperty {
         private String istanbulValidatorId;
         private String enodeUrl;
         private String graphqlUrl;
+        private String psi;
 
         public String getPrivacyAddress() {
             return privacyAddress;
@@ -295,6 +294,14 @@ public class QuorumNetworkProperty {
 
         public void setAccountAliases(Map<String, String> accountAliases) {
             this.accountAliases = accountAliases;
+        }
+
+        public String getPsi() {
+            return psi;
+        }
+
+        public void setPsi(String psi) {
+            this.psi = psi;
         }
     }
 
