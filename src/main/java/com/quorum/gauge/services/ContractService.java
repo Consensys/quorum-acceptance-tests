@@ -35,10 +35,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StreamUtils;
+import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.FunctionReturnDecoder;
+import org.web3j.abi.TypeReference;
+import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
+import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.Request;
+import org.web3j.protocol.core.Response;
 import org.web3j.protocol.core.methods.request.EthFilter;
+import org.web3j.protocol.core.methods.request.Transaction;
+import org.web3j.protocol.core.methods.response.EthCall;
 import org.web3j.protocol.core.methods.response.EthLog;
 import org.web3j.protocol.core.methods.response.EthUninstallFilter;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
@@ -58,6 +68,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.quorum.gauge.sol.SimpleStorage.FUNC_GET;
 import static java.util.Collections.singletonList;
 
 import static java.util.Collections.emptyList;
@@ -145,6 +156,44 @@ public class ContractService extends AbstractService {
         });
     }
 
+    /**
+     * Need to use EthCall to manipulate the error as webj3 doesn't
+     * @param node
+     * @param contractAddress
+     * @return
+     */
+    public Observable<BigInteger> readSimpleContractValue(Node node, String contractAddress) {
+        Quorum client = connectionFactory().getConnection(node);
+        Function function = new Function(FUNC_GET,
+            Arrays.<Type>asList(),
+            Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}));
+        return client.ethCoinbase().flowable().toObservable()
+            .map(Response::getResult)
+            .flatMap(address -> {
+                Request<?, EthCall> req = client.ethCall(Transaction.createEthCallTransaction(address, contractAddress, FunctionEncoder.encode(function)), DefaultBlockParameterName.LATEST);
+                return req.flowable().toObservable();
+            })
+            .map(ec -> {
+                if (ec.hasError()) {
+                    throw new ContractCallException(ec.getError().getMessage());
+                }
+                List<Type> values = FunctionReturnDecoder.decode(ec.getValue(), function.getOutputParameters());
+                Type result;
+                if (!values.isEmpty()) {
+                    result = values.get(0);
+                } else {
+                    throw new ContractCallException("Empty value (0x) returned from contract");
+                }
+                Object value = result.getValue();
+                if (BigInteger.class.isAssignableFrom(value.getClass())) {
+                    return (BigInteger) value;
+                } else {
+                    throw new ContractCallException(
+                        "Unable to convert response: " + value
+                            + " to expected type: " + BigInteger.class.getSimpleName());
+                }
+            });
+    }
 
     // Read-only contract
     public int readSimpleContractValue(QuorumNode node, String contractAddress) {

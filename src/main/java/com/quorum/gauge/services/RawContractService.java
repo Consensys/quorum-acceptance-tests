@@ -437,6 +437,7 @@ public class RawContractService extends AbstractService {
     }
 
     public Observable<? extends Contract> createRawSimpleDelegatePrivateContract(String delegateContractAddress, WalletData wallet, QuorumNode source, String sourceNamedKey, List<String> targetNamedKeys) {
+        logger.debug("Create SimpleStorageDelegateContract({}) using a private raw transaction", delegateContractAddress);
         Quorum client = connectionFactory().getConnection(source);
         Enclave enclave = buildEnclave(source, client);
 
@@ -458,6 +459,7 @@ public class RawContractService extends AbstractService {
     }
 
     public Observable<TransactionReceipt> updateRawSimpleDelegatePrivateContract(int newValue, String contractAddress, WalletData wallet, QuorumNode source, String sourceNamedKey, List<String> targetNamedKeys) {
+        logger.debug("Update SimpleStorageDelegateContract@{} via a private raw transaction", contractAddress);
         Quorum client = connectionFactory().getConnection(source);
         Enclave enclave = buildEnclave(source, client);
 

@@ -3,7 +3,8 @@ locals {
   plugin_apis   = [for k, v in var.plugins : "plugin@${k}" if v.expose_api]
   apis          = "${local.standard_apis},${join(",", local.plugin_apis)}"
   more_args = join(" ", [
-    "--allow-insecure-unlock" # since 1.9.7 upgrade
+    "--allow-insecure-unlock", # since 1.9.7 upgrade
+    var.enable_multitenancy ? "--multitenancy" : ""
   ])
 
   node_indices = range(var.number_of_nodes)

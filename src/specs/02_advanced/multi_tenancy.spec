@@ -1,6 +1,6 @@
 # Multi-tenancy in a Quorum Network
 
- Tags: multitenancy, networks/plugins::istanbul-rpc-security, networks/plugins::raft-rpc-security, pre-condition/no-record-blocknumber
+ Tags: multitenancy, networks/plugins::raft-multitenancy, networks/plugins::istanbul-multitenancy, pre-condition/no-record-blocknumber
 
  __OAuth2 Authorization__
 
@@ -109,14 +109,16 @@ tags: private, deploy, raw
 tags: private, access, raw
 
  Tenants who self-manage account keys use raw transaction flow to submit private transactions
- `Tenant C` can not write to private contracts on which `C1` or `C2` are not participants
- `Tenant D` can not write to its private contract that manipulates other private contracts on which `D1` is not a participant
+ `Tenant B` can not write to private contracts on which `B1` or `B2` are not participants
+ `Tenant B` fails when attempting to use its private contract that manipulates other private contracts on which `B1` or `B2` are not participants
 
-* `"Tenant A"` deploys a "SimpleStorage" private contract, named "contract1", by sending a transaction to `"Node1"` with its TM key `"A1"` and private for `"B2"`
-* `"Tenant B"` writes a new arbitrary value to "contract1" successfully by sending a transaction to `"Node2"` with its TM key `"B2"` private for `"A1"`
-* `"Tenant C"` fails to write a new arbitrary value to "contract1" by sending a transaction to `"Node1"` with its TM key `"C1"` and private for `"B2"`
-* `"Tenant D"` deploys a "SimpleStorageDelegate(contract1)" private contract, named "delegateContract", by sending a transaction to `"Node2"` with its TM key `"D1"` and private for `"D1"`
-* `"Tenant D"` fails to write a new arbitrary value to "delegateContract" by sending a transaction to `"Node2"` with its TM key `"D1"` and private for `"D1"`
+* `"Tenant A"` deploys a "SimpleStorage" private contract, named "contract1", by sending a transaction to `"Node1"` with its TM key `"A1"` and private for `"A2"`
+* `"Tenant A"` writes a new arbitrary value to "contract1" successfully by sending a transaction to `"Node1"` with its TM key `"A1"` private for `"A2"`
+* `"Tenant A"` can read "contract1" from "Node1"
+* `"Tenant B"` fails to read "contract1" from "Node1"
+* `"Tenant B"` fails to write a new arbitrary value to "contract1" by sending a transaction to `"Node1"` with its TM key `"B1"` and private for `"A1"`
+* `"Tenant B"` deploys a "SimpleStorageDelegate(contract1)" private contract, named "delegateContract", by sending a transaction to `"Node1"` with its TM key `"B1"` and private for `"B2"`
+* `"Tenant B"` fails to write a new arbitrary value to "delegateContract" by sending a transaction to `"Node1"` with its TM key `"B1"` and private for `"B2"`
 
 ## Tenants using self-managed account keys can only receive events from private contracts which are privy to them
 
@@ -157,14 +159,16 @@ tags: private, deploy, node-managed-account
 
 tags: private, access, node-managed-account
 
- `Tenant C` can not write to private contracts on which `C1` or `C2` are not participants
- `Tenant D` can not write to its private contract that manipulates other private contracts on which `D1` is not a participant
+ `Tenant B` can not write to private contracts on which `B1` or `B2` are not participants
+ `Tenant B` fails when attempting to use its private contract that manipulates other private contracts on which `B1` or `B2` are not participants
 
-* `"Tenant A"` deploys a "SimpleStorage" private contract, named "contract1", by sending a transaction to `"Node1"` with its TM key `"A1"` using node's default account and private for `"B2"`
-* `"Tenant B"` writes a new arbitrary value to "contract1" successfully by sending a transaction to `"Node2"` with its TM key `"B2"` private for `"A1"`
-* `"Tenant C"` fails to write a new arbitrary value to "contract1" by sending a transaction to `"Node1"` with its TM key `"C1"` using node's default account and private for `"B2"`
-* `"Tenant D"` deploys a "SimpleStorageDelegate(contract1)" private contract, named "delegateContract", by sending a transaction to `"Node2"` with its TM key `"D1"` using node's default account and private for `"D1"`
-* `"Tenant D"` fails to write a new arbitrary value to "delegateContract" by sending a transaction to `"Node2"` with its TM key `"D1"` and private for `"D1"`
+* `"Tenant A"` deploys a "SimpleStorage" private contract, named "contract1", by sending a transaction to `"Node1"` with its TM key `"A1"` using node's default account and private for `"A2"`
+* `"Tenant A"` writes a new arbitrary value to "contract1" successfully by sending a transaction to `"Node1"` with its TM key `"A1"` private for `"A2"`
+* `"Tenant A"` can read "contract1" from "Node1"
+* `"Tenant B"` fails to read "contract1" from "Node1"
+* `"Tenant B"` fails to write a new arbitrary value to "contract1" by sending a transaction to `"Node1"` with its TM key `"B1"` using node's default account and private for `"B2"`
+* `"Tenant B"` deploys a "SimpleStorageDelegate(contract1)" private contract, named "delegateContract", by sending a transaction to `"Node1"` with its TM key `"B1"` using node's default account and private for `"B2"`
+* `"Tenant B"` fails to write a new arbitrary value to "delegateContract" by sending a transaction to `"Node1"` with its TM key `"B1"` and private for `"B2"`
 
 ## Tenants using self-managed account keys can access public states
 

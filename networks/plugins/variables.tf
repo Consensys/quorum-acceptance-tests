@@ -90,3 +90,8 @@ E.g.: use 2 named keys: A1, A2 for node 1
 }
 EOT
 }
+
+variable "enable_multitenancy" {
+  type = bool
+  default = false
+}

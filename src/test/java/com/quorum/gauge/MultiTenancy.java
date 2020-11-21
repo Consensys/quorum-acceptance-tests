@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Service
 public class MultiTenancy extends AbstractSpecImplementation {
@@ -109,6 +110,57 @@ public class MultiTenancy extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(contractName + "_id", contractId);
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
         DataStoreFactory.getScenarioDataStore().put(tenantName + contractId + contractName, new Object[]{node, privateFrom, privateFor});
+    }
+
+    @Step("`<tenantName>` can read <contractName> from <node>")
+    public void tenantCanReadContract(String tenantName, String contractName, QuorumNetworkProperty.Node node) {
+        String contractId = mustHaveValue(contractName + "_id", String.class);
+        Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
+        List<String> requestScopes = Stream.concat(
+            Stream.of("rpc://eth_*"),
+            assignedNamedKeys.get(tenantName).stream().map(k -> UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
+                .queryParam("owned.eoa", "0x0")
+                .queryParam("from.tm", UriUtils.encode(privacyService.id(k), StandardCharsets.UTF_8))
+                .build()).map(UriComponents::toUriString)
+        ).collect(Collectors.toList());
+        oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.getName()), requestScopes)
+            .doOnNext(s -> {
+                switch (contractId) {
+                    case "SimpleStorage":
+                        assertThat(contractService.readSimpleContractValue(node, c.getContractAddress()).blockingFirst()).isNotZero();
+                        break;
+                    default:
+                        throw new RuntimeException("unknown contract " + contractId + " with name " + contractName);
+                }
+            })
+            .doOnTerminate(Context::removeAccessToken)
+            .blockingSubscribe();
+    }
+
+    @Step("`<tenantName>` fails to read <contractName> from <node>")
+    public void tenantCanNotReadContract(String tenantName, String contractName, QuorumNetworkProperty.Node node) {
+        String contractId = mustHaveValue(contractName + "_id", String.class);
+        Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
+        List<String> requestScopes = Stream.concat(
+            Stream.of("rpc://eth_*"),
+            assignedNamedKeys.get(tenantName).stream().map(k -> UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
+                .queryParam("owned.eoa", "0x0")
+                .queryParam("from.tm", UriUtils.encode(privacyService.id(k), StandardCharsets.UTF_8))
+                .build()).map(UriComponents::toUriString)
+        ).collect(Collectors.toList());
+        assertThatThrownBy(() -> oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.getName()), requestScopes)
+            .doOnNext(s -> {
+                switch (contractId) {
+                    case "SimpleStorage":
+                        contractService.readSimpleContractValue(node, c.getContractAddress()).blockingSubscribe();
+                        break;
+                    default:
+                        throw new RuntimeException("unknown contract " + contractId + " with name " + contractName);
+                }
+            })
+            .doOnTerminate(Context::removeAccessToken)
+            .blockingSubscribe()
+        ).hasMessageContaining("not authorized");
     }
 
     @Step("`<tenantName>` writes a new arbitrary value to <contractName> successfully by sending a transaction to `<node>` with its TM key `<privateFrom>` private for `<privateFor>`")
@@ -421,7 +473,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
             Stream.of("rpc://eth_*"),
             assignedNamedKeys.get(tenantName).stream().map(k -> UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
                 .queryParam("owned.eoa", "0x0")
-                .queryParam("from.tm", UriUtils.encode(privacyService.id(node, k), StandardCharsets.UTF_8))
+                .queryParam("from.tm", UriUtils.encode(privacyService.id(k), StandardCharsets.UTF_8))
                 .build()).map(UriComponents::toUriString)
         ).collect(Collectors.toList());
         return oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)

@@ -8,17 +8,11 @@ plugins = {
   }
 }
 
-number_of_nodes = 5
+enable_multitenancy = true
 
-quorum_docker_image = { name = "local/quorum:multitenant", local = true }
-tessera_docker_image = { name = "local/tessera:multitenant", local = true }
-
-// TM key aliases
-// start with one key pair per node
+# this is to setup the TM keys allocation per acceptance tests requirement
 override_tm_named_key_allocation = {
-  0 = ["A1"]
-  1 = ["B1"]
-  2 = ["C1"]
-  3 = ["D1"]
-  4 = ["E1"]
+  0 = ["A1", "A2", "B1", "C1"]
+  1 = ["B2", "D1"]
+  2 = ["C2"]
 }
