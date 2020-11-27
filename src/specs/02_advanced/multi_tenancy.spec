@@ -185,3 +185,34 @@ tags: public, node-managed-account
 * `"Tenant A"` deploys a "SimpleStorage" public contract, named "contract1", by sending a transaction to `"Node1"` using node's default account
 * `"Tenant B"` writes a new value "123" to "contract1" successfully by sending a transaction to `"Node2"` using node's default account
 * `"Tenant C"` reads the value from "contract1" successfully by sending a request to `"Node3"` and the value returns "123"
+
+## Tenants using self-managed account keys can bypass access controls to private contracts which are not privy to
+
+tags: private, access, raw
+
+ Tenants who self-manage account keys use raw transaction flow to submit private transactions
+ `Tenant B` can not write to private contracts on which `B1` or `B2` are not participants
+ `Tenant B` fails when attempting to use its private contract that manipulates other private contracts on which `B1` or `B2` are not participants
+
+* `"Tenant A"` deploys a "SimpleStorage" private contract, named "contract1", by sending a transaction to `"Node1"` with its TM key `"A1"` and private for `"A2"`
+* `"Tenant A"` writes a new arbitrary value to "contract1" successfully by sending a transaction to `"Node1"` with its TM key `"A1"` private for `"A2"`
+* `"Tenant A"` can read "contract1" from "Node1"
+* `"Tenant B"` fails to read "contract1" from "Node1"
+* `"Tenant B"` fails to write a new arbitrary value to "contract1" by sending a transaction to `"Node1"` with its TM key `"B1"` and private for `"A1"`
+* `"Tenant B"` deploys a "SimpleStorageDelegate(contract1)" private contract, named "delegateContract", by sending a transaction to `"Node1"` with its TM key `"B1"` and private for `"B2"`
+* `"Tenant B"` fails to write a new arbitrary value to "delegateContract" by sending a transaction to `"Node1"` with its TM key `"B1"` and private for `"B2"`
+ Tenant B sends two transactions (the first one has a nonce higer than the second):
+    1. TX1 - getFromDelegate with nonce=accountTxCount+1
+    2. TX2 - setDelegate with noce=accountTxCount
+ TX1 cannot be minted as there is a nonce gap so it goes to the TX pool in pending status. During simulation the "delegate" property is false so there is
+ no attempt from sneakyDelegateContract to interact with contract1 (so everything passes validation).
+ When TX2 is submitted - they both become "available" in the tx pool and are minted in the next block. The transaction order in the block is TX2, TX1.
+ This means that when the block is executed the "delegate" property in the SneakyWrapper is true and sneakyDelegateContract interacts (and reads) the
+ value from contract1 (and sets the value in it's own local variable).
+ This highlights that simulation checks ARE NOT ENOUGH to ensure the behavior of multiple transactions (when mined together).
+ By comparisson privacy enhancements performs checks in both phases (tx sumbmittion and new block appended) and does not apply transactions if the checks
+ are not satisfied.
+* `"Tenant B"` deploys a "SneakyWrapper(contract1)" private contract, named "sneakyDelegateContract", by sending a transaction to `"Node1"` with its TM key `"B1"` and private for `"B2"`
+* `"Tenant B"` invokes getFromDelgate with nonce shift "1" in "sneakyDelegateContract" by sending a transaction to `"Node1"` with its TM key `"B1"` and private for `"B2"`
+* `"Tenant B"` invokes setDelegate to "true" in "sneakyDelegateContract" by sending a transaction to `"Node1"` with its TM key `"B1"` private for `"B2"`
+* `"Tenant B"` invokes get in "sneakyDelegateContract" on `"Node1"` and gets value "100"

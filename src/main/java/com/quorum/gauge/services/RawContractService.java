@@ -22,11 +22,13 @@ package com.quorum.gauge.services;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.common.config.WalletData;
+import com.quorum.gauge.ext.OpenQuorumTransactionManager;
 import com.quorum.gauge.ext.filltx.FillTransactionResponse;
 import com.quorum.gauge.ext.filltx.PrivateFillTransaction;
 import com.quorum.gauge.sol.ClientReceipt;
 import com.quorum.gauge.sol.SimpleStorage;
 import com.quorum.gauge.sol.SimpleStorageDelegate;
+import com.quorum.gauge.sol.SneakyWrapper;
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
@@ -57,6 +59,8 @@ import org.web3j.quorum.methods.request.PrivateTransaction;
 import org.web3j.quorum.tx.QuorumTransactionManager;
 import org.web3j.tx.Contract;
 import org.web3j.tx.RawTransactionManager;
+import org.web3j.tx.ReadonlyTransactionManager;
+import org.web3j.tx.exceptions.ContractCallException;
 import org.web3j.utils.Numeric;
 
 import java.io.File;
@@ -477,5 +481,96 @@ public class RawContractService extends AbstractService {
                 BigInteger.valueOf(0),
                 DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue))
                     .flowable().toObservable());
+    }
+
+
+    public Observable<? extends Contract> createRawSneakyWrapperPrivateContract(String delegateContractAddress, WalletData wallet, QuorumNode source, String sourceNamedKey, List<String> targetNamedKeys) {
+        logger.debug("Create SimpleStorageDelegateContract({}) using a private raw transaction", delegateContractAddress);
+        Quorum client = connectionFactory().getConnection(source);
+        Enclave enclave = buildEnclave(source, client);
+
+        return Observable.fromCallable(() -> wallet)
+            .flatMap(walletData -> Observable.fromCallable(() -> WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath())))
+            .flatMap(cred -> Observable.just(new QuorumTransactionManager(client,
+                cred,
+                privacyService.id(source, sourceNamedKey),
+                targetNamedKeys.stream().map(privacyService::id).collect(Collectors.toList()),
+                enclave,
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS)))
+            .flatMap(qrtxm -> SneakyWrapper.deploy(client,
+                qrtxm,
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT,
+                delegateContractAddress)
+                .flowable().toObservable());
+    }
+
+    public Observable<TransactionReceipt> updateDelegateInSneakyWrapperContract(boolean newValue, String contractAddress, WalletData wallet, QuorumNode source, String sourceNamedKey, List<String> targetNamedKeys) {
+        Quorum client = connectionFactory().getConnection(source);
+        Enclave enclave = buildEnclave(source, client);
+
+        return Observable.fromCallable(() -> wallet)
+            .flatMap(walletData -> Observable.fromCallable(() -> WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath())))
+            .flatMap(cred -> Observable.just(new QuorumTransactionManager(client,
+                cred,
+                privacyService.id(source, sourceNamedKey),
+                targetNamedKeys.stream().map(privacyService::id).collect(Collectors.toList()),
+                enclave,
+                DEFAULT_MAX_RETRY,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS)))
+            .flatMap(qrtxm -> SneakyWrapper.load(contractAddress, client,
+                qrtxm,
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT).setDelegate(newValue)
+                .flowable().toObservable());
+    }
+
+    public Observable<TransactionReceipt> invokeGetFromDelegateInSneakyWrapper(int nonceShift, String contractAddress, WalletData wallet, QuorumNode source, String sourceNamedKey, List<String> targetNamedKeys) {
+        logger.debug("Update SimpleStorageDelegateContract@{} via a private raw transaction", contractAddress);
+        Quorum client = connectionFactory().getConnection(source);
+        Enclave enclave = buildEnclave(source, client);
+
+        return Observable.fromCallable(() -> wallet)
+            .flatMap(walletData -> Observable.fromCallable(() -> WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath())))
+            .flatMap(cred -> Observable.just(new OpenQuorumTransactionManager(client,
+                cred,
+                privacyService.id(source, sourceNamedKey),
+                targetNamedKeys.stream().map(privacyService::id).collect(Collectors.toList()),
+                enclave,
+                // for this specific case do not wait for the transaction receipt (as we will only get a receipt after we send the next transaction)
+                1,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS){
+                @Override
+                protected BigInteger getNonce() throws IOException {
+                    return super.getNonce().add(BigInteger.valueOf(nonceShift));
+                }
+            }))
+            .flatMap(qrtxm -> SneakyWrapper.load(contractAddress, client,
+                qrtxm,
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT).getFromDelegate()
+                .flowable().toObservable());
+    }
+
+    public int invokeGetInSneakyWrapper(QuorumNode node, String contractAddress) {
+        Quorum client = connectionFactory().getConnection(node);
+        String address;
+        try {
+            address = client.ethCoinbase().send().getAddress();
+            ReadonlyTransactionManager txManager = new ReadonlyTransactionManager(client, address);
+            return SneakyWrapper.load(contractAddress, client, txManager,
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT).get().send().intValue();
+        } catch (ContractCallException cce) {
+            if (cce.getMessage().contains("Empty value (0x)")) {
+                return 0;
+            }
+            logger.error("readSimpleContractValue()", cce);
+            throw new RuntimeException(cce);
+        } catch (Exception e) {
+            logger.error("readSimpleContractValue()", e);
+            throw new RuntimeException(e);
+        }
     }
 }

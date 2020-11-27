@@ -216,6 +216,75 @@ public class MultiTenancy extends AbstractSpecImplementation {
         assertThat(caughtException.get()).hasMessageContaining("not authorized");
     }
 
+    @Step("`<tenantName>` invokes getFromDelgate with nonce shift <nonceShift> in <contractName> by sending a transaction to `<node>` with its TM key `<privateFrom>` and private for `<privateForList>`")
+    public void invokeGetFromDelegate(String tenantName, int nonceShift, String contractName, QuorumNode node, String privateFrom, String privateFor) {
+        Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
+        String contractId = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "_id", String.class);
+        List<String> privateForList = Arrays.stream(privateFor.split(",")).map(String::trim).collect(Collectors.toList());
+        UriComponents contractScope = UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
+            .queryParam("owned.eoa", "0x0")
+            .queryParam("from.tm", UriUtils.encode(privacyService.id(node, privateFrom), StandardCharsets.UTF_8))
+            .build();
+        List<String> requestScopes = Stream.of("rpc://eth_*", contractScope.toUriString()).collect(Collectors.toList());
+        AtomicReference<Throwable> caughtException = new AtomicReference<>();
+        assertThat(oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
+            .flatMap(t -> {
+                return rawContractService.invokeGetFromDelegateInSneakyWrapper(nonceShift, c.getContractAddress(), networkProperty.getWallets().get("Wallet1"), node, privateFrom, privateForList);
+            })
+            .map(Optional::of)
+            .doOnError(e -> {
+                logger.debug("On exception: {}", e.getMessage());
+                caughtException.set(e);
+            })
+            .onErrorResumeNext(o -> {
+                return Observable.just(Optional.empty());
+            })
+            .doOnTerminate(Context::removeAccessToken)
+            // do not check the receipt - as we won't get any (as this transaction will wait for the next transaction)
+            .map(r -> true).blockingFirst()
+        ).isTrue();
+        assertThat(caughtException.get()).hasMessageContaining("Transaction receipt was not generated after");
+    }
+
+    @Step("`<tenantName>` invokes setDelegate to <value> in <contractName> by sending a transaction to `<node>` with its TM key `<privateFrom>` private for `<privateFor>`")
+    public void invokeSetDelegate(String tenantName, boolean value, String contractName, QuorumNode node, String privateFrom, String privateFor) {
+        Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
+        List<String> privateForList = Arrays.stream(privateFor.split(",")).map(String::trim).collect(Collectors.toList());
+        UriComponents contractScope = UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
+            .queryParam("owned.eoa", "0x0")
+            .queryParam("from.tm", UriUtils.encode(privacyService.id(node, privateFrom), StandardCharsets.UTF_8))
+            .build();
+        List<String> requestScopes = Stream.of("rpc://eth_*", contractScope.toUriString()).collect(Collectors.toList());
+        assertThat(oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
+            .flatMap(t -> rawContractService.updateDelegateInSneakyWrapperContract(value, c.getContractAddress(), networkProperty.getWallets().get("Wallet1"), node, privateFrom, privateForList))
+            .map(Optional::of)
+            .onErrorResumeNext(o -> {
+                return Observable.just(Optional.empty());
+            })
+            .doOnTerminate(Context::removeAccessToken)
+            .map(r -> r.isPresent() && r.get().isStatusOK()).blockingFirst()
+        ).isTrue();
+    }
+
+    @Step("`<tenantName>` invokes get in <contractName> on `<node>` and gets value <value>")
+    public void invokeGetOnSkeakyWrapper(String tenantName, String contractName, QuorumNode node, int value) {
+        Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
+        List<String> requestScopes = Stream.concat(
+            Stream.of("rpc://eth_*", "rpc://rpc_modules"),
+            assignedNamedKeys.get(tenantName).stream().map(k -> UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
+                .queryParam("owned.eoa", "0x0")
+                .queryParam("from.tm", UriUtils.encode(privacyService.id(k), StandardCharsets.UTF_8))
+                .build()).map(UriComponents::toUriString)
+        ).collect(Collectors.toList());
+        oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
+            .doOnNext(s -> {
+                logger.info("token {}",s);
+               assertThat(rawContractService.invokeGetInSneakyWrapper(node, c.getContractAddress())).isEqualTo( value);
+            })
+            .doOnTerminate(Context::removeAccessToken)
+            .blockingSubscribe();
+    }
+
     @Step("`<tenantName>` deploys a <contractId> public contract, named <contractName>, by sending a transaction to `<node>`")
     public void deployPublicContract(String tenantName, String contractId, String contractName, QuorumNode node) {
         // only need to request access to eth_* apis
@@ -486,6 +555,14 @@ public class MultiTenancy extends AbstractSpecImplementation {
                     Contract delegateContractInstance = mustHaveValue(DataStoreFactory.getScenarioDataStore(), delegateContractName, Contract.class);
                     delegateContractAddress = delegateContractInstance.getContractAddress();
                 }
+
+                if (realContractId.startsWith("SneakyWrapper")) {
+                    realContractId = "SneakyWrapper";
+                    String delegateContractName = contractId.replaceAll("^.+\\((.+)\\)$", "$1");
+                    Contract delegateContractInstance = mustHaveValue(DataStoreFactory.getScenarioDataStore(), delegateContractName, Contract.class);
+                    delegateContractAddress = delegateContractInstance.getContractAddress();
+                }
+
                 QuorumNetworkProperty.Node source = networkProperty.getNode(node.name());
                 switch (realContractId) {
                     case "SimpleStorage":
@@ -505,6 +582,10 @@ public class MultiTenancy extends AbstractSpecImplementation {
                             return contractService.createSimpleDelegatePrivateContract(delegateContractAddress, source, privateFrom, privateForList);
                         } else {
                             return rawContractService.createRawSimpleDelegatePrivateContract(delegateContractAddress, wallet, node, privateFrom, privateForList);
+                        }
+                    case "SneakyWrapper":
+                        if (wallet != null) {
+                            return rawContractService.createRawSneakyWrapperPrivateContract(delegateContractAddress, wallet, node, privateFrom, privateForList);
                         }
                     default:
                         return Observable.error(new UnsupportedOperationException(contractId + " is not supported"));
