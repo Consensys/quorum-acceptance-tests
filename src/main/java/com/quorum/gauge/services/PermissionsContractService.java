@@ -54,7 +54,7 @@ public class PermissionsContractService extends AbstractService {
 
         TransactionManager transactionManager = getTxManager(node, client);
 
-        if(version.toLowerCase().equals("eea")){
+        if(version.toLowerCase().equals("v2")){
             switch (contractName.toLowerCase().trim()) {
                 case "accountmanager":
                     return AccountManager.deploy(
@@ -172,7 +172,7 @@ public class PermissionsContractService extends AbstractService {
         logger.debug("getPermContractDepGasProvider gas limit {}", getPermContractDepGasProvider().getGasLimit(""));
         logger.debug("getPermContractGasProvider gas limit {}", getPermContractGasProvider().getGasLimit(""));
         logger.debug("upgr:{} org:{} role:{} acct:{} vote:{} node:{}", upgrAddr, orgMgrAddr, roleMgrAddr, acctMgrAddr, voterMgrAddr, nodeMgrAddr);
-        if(version.toLowerCase().equals("eea")){
+        if(version.toLowerCase().equals("v2")){
             return PermissionsImplementation.deploy(
                 client,
                 transactionManager,
@@ -202,7 +202,7 @@ public class PermissionsContractService extends AbstractService {
     public Observable<TransactionReceipt> executeNetworkInit(QuorumNetworkProperty.Node node, String upgrAddr, String interfaceAddr, String implAddress, String version) {
         Web3j client = connectionFactory().getWeb3jConnection(node);
         TransactionManager transactionManager = getTxManager(node, client);
-        if(version.toLowerCase().equals("eea")){
+        if(version.toLowerCase().equals("v2")){
             return PermissionsUpgradable.load(
                 upgrAddr,
                 client, transactionManager,

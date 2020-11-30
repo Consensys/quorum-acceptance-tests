@@ -359,7 +359,7 @@
                                                                regexp="permissions-([^\.]*) &amp;&amp; ([0-9a-zA-Z-_\.]+)"
                                                                select="\1"
                                                                casesensitive="false"
-                                                               defaultValue="basic"/>
+                                                               defaultValue="v1"/>
 
                                                 <property name="@{folderPropertyName}" value="${folder_extract}" />
                                                 <property name="@{profilePropertyName}" value="${profile_extract}" />

@@ -77,7 +77,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
 
     @Step("Start a <networkType> Quorum Network, named it <id>, consisting of <nodes> with <gcmode> `gcmode`")
     public void startNetwork(String networkType, String id, List<Node> nodes, String gcmode) {
-        startQuorumNetwork(networkType, id, nodes, gcmode, "basic");
+        startQuorumNetwork(networkType, id, nodes, gcmode, "v1");
     }
 
     public void startQuorumNetwork(String networkType, String id, List<Node> nodes, String gcmode, String permissionVersion) {

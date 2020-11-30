@@ -1,6 +1,6 @@
-# Enhanced EEA Permissions Model
+# Enhanced EEA(v2) Permissions Model
 
- Tags: networks/template::raft-3plus1, pre-condition/no-record-blocknumber, permissions-eea
+ Tags: networks/template::raft-3plus1, pre-condition/no-record-blocknumber, permissions-v2
 
 The Enhanced Permissions Model caters for enterprise-level needs by having a smart contract-based permissioning model.
 This allows for significant flexibility to manage nodes, accounts, and account-level access controls.
@@ -10,7 +10,7 @@ For more information, visit https://docs.goquorum.com/en/latest/Permissioning/En
 The test scenarios are based on the following setup:
 
       |id        |networkType      |version |qip714block |
-      |r2        |permissioned     |eea     |20          |
+      |r2        |permissioned     |v2      |20          |
 
 * Start permission network <networkType> <version> <id> <qip714block>
 

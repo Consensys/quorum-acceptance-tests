@@ -174,11 +174,11 @@ public class Permissions extends AbstractSpecImplementation {
         logger.debug("perm config object is {}", permConfig.toString());
 
         switch (version.toLowerCase().trim()){
-            case "eea":
-                permConfig.setPermissionModel("EEA");
+            case "v2":
+                permConfig.setPermissionModel("v2");
                 break;
-            case "basic":
-                permConfig.setPermissionModel("BASIC");
+            case "v1":
+                permConfig.setPermissionModel("v1");
                 break;
             default:
                 throw new RuntimeException("unsupported permission version");
