@@ -211,4 +211,6 @@ tags: private, access, raw
 * `"Tenant B"` deploys a "SneakyWrapper(contract1)" private contract, named "sneakyDelegateContract", by sending a transaction to `"Node1"` with its TM key `"B1"` and private for `"B2"`
 * `"Tenant B"` invokes getFromDelgate with nonce shift "1" in "sneakyDelegateContract" by sending a transaction to `"Node1"` with its TM key `"B1"` and private for `"B2"`
 * `"Tenant B"` invokes setDelegate to "true" in "sneakyDelegateContract" by sending a transaction to `"Node1"` with its TM key `"B1"` private for `"B2"`
-* `"Tenant B"` invokes get in "sneakyDelegateContract" on `"Node1"` and gets value "100"
+ TODO - find a way to extract the transaciton hash and confirm that TX1 has failed (possibly get the block for TX2 then lookup the other transaction in the block and check the status - as it should be TX1)
+ After adding post execution checks the SneakyWrapper is unable to copy the data from contract1
+* `"Tenant B"` invokes get in "sneakyDelegateContract" on `"Node1"` and gets value "0"

@@ -278,7 +278,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
         ).collect(Collectors.toList());
         oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
             .doOnNext(s -> {
-                logger.info("token {}",s);
+               logger.debug("token {}",s);
                assertThat(rawContractService.invokeGetInSneakyWrapper(node, c.getContractAddress())).isEqualTo( value);
             })
             .doOnTerminate(Context::removeAccessToken)
