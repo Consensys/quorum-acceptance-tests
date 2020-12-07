@@ -368,7 +368,7 @@
 
                                                 <property name="@{folderPropertyName}" value="${folder_extract}" />
                                                 <property name="@{profilePropertyName}" value="${profile_extract}" />
-                                                <property name="permissionTypeName" value="${permission_type_extract}" />
+                                                <property name="permissionTypeName" value="${permission_type_name}" />
                                                 <if>
                                                     <not><equals arg1="${profile_extract}" arg2="undefined" /></not>
                                                     <then>

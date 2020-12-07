@@ -47,7 +47,7 @@ variable "plugins" {
 
 variable "quorum_docker_image" {
   type        = object({ name = string, local = bool })
-  default     = { name = "amalrajmani/quorum:raft1", local = false }
+  default     = { name = "quorumengineering/quorum:latest", local = false }
   description = "Local=true indicates that the image is already available locally and don't need to pull from registry"
 }
 

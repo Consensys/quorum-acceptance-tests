@@ -620,7 +620,7 @@ public class Permissions extends AbstractSpecImplementation {
     public void setupStorecAsPublicDependentContractUntilBlockHeightReached(String contractName, int initialValue, QuorumNetworkProperty.Node node, int qip714block) {
         int curBlockHeight = utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber().intValue();
         while (curBlockHeight < qip714block) {
-            Contract c = contractService.createGenericStoreContract(node, contractName, initialValue, null, false, null).blockingFirst();
+            Contract c = contractService.createGenericStoreContract(node, contractName, initialValue, null, false, null, PrivacyFlag.StandardPrivate).blockingFirst();
             assertThat(c).isNotNull();
             curBlockHeight = utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber().intValue();
             logger.debug("curBlockHeight:{} height:{}", curBlockHeight, qip714block);
