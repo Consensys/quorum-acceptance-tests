@@ -182,7 +182,7 @@ tags: public, node-managed-account
 * `"Tenant B"` writes a new value "123" to "contract1" successfully by sending a transaction to `"Node2"` using node's default account
 * `"Tenant C"` reads the value from "contract1" successfully by sending a request to `"Node3"` and the value returns "123"
 
-## Tenants using self-managed account keys can bypass access controls to private contracts which are not privy to them
+## Tenants using self-managed account keys can NOT bypass access controls to private contracts which are not privy to by using nonce shifts
 
 tags: private, access, raw
 
@@ -209,8 +209,8 @@ tags: private, access, raw
  By comparisson privacy enhancements performs checks in both phases (tx sumbmittion and new block appended) and does not apply transactions if the checks
  are not satisfied.
 * `"Tenant B"` deploys a "SneakyWrapper(contract1)" private contract, named "sneakyDelegateContract", by sending a transaction to `"Node1"` with its TM key `"B1"` and private for `"B2"`
-* `"Tenant B"` invokes getFromDelgate with nonce shift "1" in "sneakyDelegateContract" by sending a transaction to `"Node1"` with its TM key `"B1"` and private for `"B2"`
+* `"Tenant B"` invokes getFromDelgate with nonce shift "1" in "sneakyDelegateContract" by sending a transaction to `"Node1"` with its TM key `"B1"` and private for `"B2"` name this transaction "sneakyDelegateContract_TX1"
 * `"Tenant B"` invokes setDelegate to "true" in "sneakyDelegateContract" by sending a transaction to `"Node1"` with its TM key `"B1"` private for `"B2"`
- TODO - find a way to extract the transaciton hash and confirm that TX1 has failed (possibly get the block for TX2 then lookup the other transaction in the block and check the status - as it should be TX1)
+* `"Tenant B"` checks the transaction "sneakyDelegateContract_TX1" on `"Node1"` has failed
  After adding post execution checks the SneakyWrapper is unable to copy the data from contract1
 * `"Tenant B"` invokes get in "sneakyDelegateContract" on `"Node1"` and gets value "0"

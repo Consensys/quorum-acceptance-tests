@@ -21,6 +21,8 @@ import org.web3j.protocol.core.Response;
 import org.web3j.protocol.core.methods.response.EthFilter;
 import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
 import org.web3j.protocol.core.methods.response.EthLog;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.exceptions.TransactionException;
 import org.web3j.tx.Contract;
 
 import java.math.BigInteger;
@@ -216,8 +218,8 @@ public class MultiTenancy extends AbstractSpecImplementation {
         assertThat(caughtException.get()).hasMessageContaining("not authorized");
     }
 
-    @Step("`<tenantName>` invokes getFromDelgate with nonce shift <nonceShift> in <contractName> by sending a transaction to `<node>` with its TM key `<privateFrom>` and private for `<privateForList>`")
-    public void invokeGetFromDelegate(String tenantName, int nonceShift, String contractName, QuorumNode node, String privateFrom, String privateFor) {
+    @Step("`<tenantName>` invokes getFromDelgate with nonce shift <nonceShift> in <contractName> by sending a transaction to `<node>` with its TM key `<privateFrom>` and private for `<privateForList>` name this transaction <transactionName>")
+    public void invokeGetFromDelegate(String tenantName, int nonceShift, String contractName, QuorumNode node, String privateFrom, String privateFor, String transactionName) {
         Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
         String contractId = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "_id", String.class);
         List<String> privateForList = Arrays.stream(privateFor.split(",")).map(String::trim).collect(Collectors.toList());
@@ -244,6 +246,9 @@ public class MultiTenancy extends AbstractSpecImplementation {
             .map(r -> true).blockingFirst()
         ).isTrue();
         assertThat(caughtException.get()).hasMessageContaining("Transaction receipt was not generated after");
+        TransactionException txe = (TransactionException) caughtException.get();
+        assertThat(txe.getTransactionHash()).isNotEmpty();
+        DataStoreFactory.getScenarioDataStore().put(transactionName, txe.getTransactionHash().get());
     }
 
     @Step("`<tenantName>` invokes setDelegate to <value> in <contractName> by sending a transaction to `<node>` with its TM key `<privateFrom>` private for `<privateFor>`")
@@ -280,6 +285,27 @@ public class MultiTenancy extends AbstractSpecImplementation {
             .doOnNext(s -> {
                logger.debug("token {}",s);
                assertThat(rawContractService.invokeGetInSneakyWrapper(node, c.getContractAddress())).isEqualTo( value);
+            })
+            .doOnTerminate(Context::removeAccessToken)
+            .blockingSubscribe();
+    }
+
+    @Step("`<tenantName>` checks the transaction <transactionName> on `<node>` has failed")
+    public void checkTransactionStatus(String tenantName, String transactionName, QuorumNode node) {
+        String transactionHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), transactionName, String.class);
+        List<String> requestScopes = Stream.concat(
+            Stream.of("rpc://eth_*", "rpc://rpc_modules"),
+            assignedNamedKeys.get(tenantName).stream().map(k -> UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
+                .queryParam("owned.eoa", "0x0")
+                .queryParam("from.tm", UriUtils.encode(privacyService.id(k), StandardCharsets.UTF_8))
+                .build()).map(UriComponents::toUriString)
+        ).collect(Collectors.toList());
+        oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
+            .doOnNext(s -> {
+                logger.debug("token {}",s);
+                Optional<TransactionReceipt> transactionReceipt = transactionService.getTransactionReceipt(node, transactionHash).blockingFirst().getTransactionReceipt();
+                assertThat(transactionReceipt).isNotEmpty();
+                assertThat(transactionReceipt.get().isStatusOK()).isFalse();
             })
             .doOnTerminate(Context::removeAccessToken)
             .blockingSubscribe();
