@@ -21,10 +21,7 @@ package com.quorum.gauge;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.quorum.gauge.common.GethArgBuilder;
-import com.quorum.gauge.common.NodeType;
-import com.quorum.gauge.common.PermissionsConfig;
-import com.quorum.gauge.common.QuorumNetworkProperty;
+import com.quorum.gauge.common.*;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.services.InfrastructureService;
 import com.quorum.gauge.services.RaftService;
@@ -98,29 +95,29 @@ public class Permissions extends AbstractSpecImplementation {
     public Permissions() {
     }
 
-    @Step("Deploy <contractName> smart contract setting default account of <node> as the guardian account, name this as <contractNameKey>")
-    public void deployPermissionsContracts(String contractName, QuorumNetworkProperty.Node node, String contractNameKey) {
-        Contract c = permissionContractService.createPermissionsGenericContracts(node, contractName, null).blockingFirst();
+    @Step("Deploy <version> <contractName> smart contract setting default account of <node> as the guardian account, name this as <contractNameKey>")
+    public void deployPermissionsContracts(String version, String contractName, QuorumNetworkProperty.Node node, String contractNameKey) {
+        Contract c = permissionContractService.createPermissionsGenericContracts(node, contractName, null, version).blockingFirst();
         logger.debug("{} contract address is:{}", contractName, c.getContractAddress());
 
         assertThat(c.getContractAddress()).isNotBlank();
         DataStoreFactory.getScenarioDataStore().put(contractNameKey, c);
     }
 
-    @Step("From <node> deploy <contractName> contract passing <upgrContractKey> address, name it <contractNameKey>")
-    public void deployPermissionsGenericContracts(QuorumNetworkProperty.Node node, String contractName, String upgrContractKey, String contractNameKey) {
+    @Step("From <node> deploy <version> <contractName> contract passing <upgrContractKey> address, name it <contractNameKey>")
+    public void deployPermissionsGenericContracts(QuorumNetworkProperty.Node node, String version, String contractName, String upgrContractKey, String contractNameKey) {
         // get the upgradable contract address from store, pass it to deploy call
         String upgrContractAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), upgrContractKey, Contract.class).getContractAddress();
         logger.debug("upgradable contract address is:{}", upgrContractAddress);
-        Contract c = permissionContractService.createPermissionsGenericContracts(node, contractName, upgrContractAddress).blockingFirst();
+        Contract c = permissionContractService.createPermissionsGenericContracts(node, contractName, upgrContractAddress, version).blockingFirst();
         logger.debug("{} contract address is:{}", contractName, c.getContractAddress());
 
         assertThat(c.getContractAddress()).isNotBlank();
         DataStoreFactory.getScenarioDataStore().put(contractNameKey, c);
     }
 
-    @Step("From <node> deploy implementation contract passing addresses of <upgrContractKey>, <orgContractKey>, <roleContractKey>, <accountContractKey>, <voterContractKey>, <nodeContractKey>. Name this as <contractNameKey>")
-    public void deployPermissionsImpementation(QuorumNetworkProperty.Node node, String upgrContractKey, String orgContractKey, String roleContractKey, String accountContractKey, String voterContractKey, String nodeContractKey, String contractNameKey) {
+    @Step("From <node> deploy <version> implementation contract passing addresses of <upgrContractKey>, <orgContractKey>, <roleContractKey>, <accountContractKey>, <voterContractKey>, <nodeContractKey>. Name this as <contractNameKey>")
+    public void deployPermissionsImpementation(QuorumNetworkProperty.Node node, String version, String upgrContractKey, String orgContractKey, String roleContractKey, String accountContractKey, String voterContractKey, String nodeContractKey, String contractNameKey) {
         // get the address of all deployed contracts
         String upgrContractAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), upgrContractKey, Contract.class).getContractAddress();
         String orgMgrAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), orgContractKey, Contract.class).getContractAddress();
@@ -128,8 +125,7 @@ public class Permissions extends AbstractSpecImplementation {
         String acctMgrAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), accountContractKey, Contract.class).getContractAddress();
         String voterMgrAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), voterContractKey, Contract.class).getContractAddress();
         String nodeMgrAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), nodeContractKey, Contract.class).getContractAddress();
-
-        Contract c = permissionContractService.createPermissionsImplementationContract(node, upgrContractAddress, orgMgrAddress, roleMgrAddress, acctMgrAddress, voterMgrAddress, nodeMgrAddress).blockingFirst();
+        Contract c = permissionContractService.createPermissionsImplementationContract(node, upgrContractAddress, orgMgrAddress, roleMgrAddress, acctMgrAddress, voterMgrAddress, nodeMgrAddress, version).blockingFirst();
         assertThat(c.getContractAddress()).isNotBlank();
         DataStoreFactory.getScenarioDataStore().put(contractNameKey, c);
     }
@@ -172,6 +168,27 @@ public class Permissions extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(objectName, permConfig);
     }
 
+    @Step("Update <objectName>. Add permission <version> in config")
+    public void addVersionToConfig(String objectName, String version) {
+        PermissionsConfig permConfig = mustHaveValue(DataStoreFactory.getScenarioDataStore(), objectName, PermissionsConfig.class);
+        logger.debug("perm config object is {}", permConfig.toString());
+
+        switch (version.toLowerCase().trim()){
+            case "v2":
+                permConfig.setPermissionModel("v2");
+                break;
+            case "v1":
+                permConfig.setPermissionModel("v1");
+                break;
+            default:
+                throw new RuntimeException("unsupported permission version");
+        }
+
+
+        logger.debug("perm config object is {}", permConfig.toString());
+        DataStoreFactory.getScenarioDataStore().put(objectName, permConfig);
+    }
+
     @Step("Update <objectName>. Add <nwAdminOrg> as network admin org, <nwAdminRole> network admin role, <orgAdminRole> as the org admin role")
     public void setNetworkDetails(String objectName, String nwAdminOrg, String nwAdminRole, String orgAdminRole) {
         PermissionsConfig permConfig = mustHaveValue(DataStoreFactory.getScenarioDataStore(), objectName, PermissionsConfig.class);
@@ -197,9 +214,7 @@ public class Permissions extends AbstractSpecImplementation {
     public void writePermissionConfig(String objectName, List<QuorumNetworkProperty.Node> nodes) {
         InfrastructureService.NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", InfrastructureService.NetworkResources.class);
         PermissionsConfig permConfig = mustHaveValue(DataStoreFactory.getScenarioDataStore(), objectName, PermissionsConfig.class);
-
         ObjectMapper mapper = new ObjectMapper();
-
         Observable.fromIterable(networkResources.allResourceIds())
             .filter(containerId -> infraService.isGeth(containerId).blockingFirst())
             .doOnNext(gethContainerId -> logger.debug("Writing permissions-config.json {}", StringUtils.substring(gethContainerId, 0, 12)))
@@ -207,15 +222,16 @@ public class Permissions extends AbstractSpecImplementation {
                 "/data/qdata/permission-config.json",
                 mapper.writerWithDefaultPrettyPrinter().writeValueAsString(permConfig)))
             .blockingSubscribe();
+        logger.debug("perm config copied");
     }
 
-    @Step("From <node> execute permissions init on <upgrContractKey> passing <interfaceContractKey> and <implContractKey> contract addresses")
-    public void executePermInit(QuorumNetworkProperty.Node node, String upgrContractKey, String interfaceContractKey, String implContractKey) {
+    @Step("From <node> execute <version> permissions init on <upgrContractKey> passing <interfaceContractKey> and <implContractKey> contract addresses")
+    public void executePermInit(QuorumNetworkProperty.Node node, String version, String upgrContractKey, String interfaceContractKey, String implContractKey) {
         String upgrContractAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), upgrContractKey, Contract.class).getContractAddress();
         String interfaceContractAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), interfaceContractKey, Contract.class).getContractAddress();
         String implContractAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), implContractKey, Contract.class).getContractAddress();
 
-        TransactionReceipt tx = permissionContractService.executeNetworkInit(node, upgrContractAddress, interfaceContractAddress, implContractAddress).blockingFirst();
+        TransactionReceipt tx = permissionContractService.executeNetworkInit(node, upgrContractAddress, interfaceContractAddress, implContractAddress, version).blockingFirst();
 
         assertThat(tx.getTransactionHash()).isNotBlank();
     }
@@ -534,8 +550,8 @@ public class Permissions extends AbstractSpecImplementation {
         waitForOrgStatus(proposingNode, orgId, "Approved");
     }
 
-    @Step("Start stand alone <node> in <networkId>")
-    public void startOneNodes(QuorumNetworkProperty.Node node, String networkId) {
+    @Step("Start stand alone <node>")
+    public void startOneNodes(QuorumNetworkProperty.Node node) {
         GethArgBuilder additionalGethArgs = GethArgBuilder.newBuilder();
         InfrastructureService.NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", InfrastructureService.NetworkResources.class);
         raftService.addPeer(networkResources.aNodeName(), node.getEnodeUrl(), NodeType.peer)
@@ -597,8 +613,21 @@ public class Permissions extends AbstractSpecImplementation {
             logger.debug("deploy contract failed " + ex.getMessage());
         }
         assertThat(c).isNull();
-        assertThat(exMsg.contains(error)).isTrue();
+        //assertThat(exMsg.contains(error)).isTrue();
     }
+
+    @Step("Deploy <contractName> smart contract with initial value <initialValue> from a default account in <node> until block height reaches <qip714block>")
+    public void setupStorecAsPublicDependentContractUntilBlockHeightReached(String contractName, int initialValue, QuorumNetworkProperty.Node node, int qip714block) {
+        int curBlockHeight = utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber().intValue();
+        while (curBlockHeight < qip714block) {
+            Contract c = contractService.createGenericStoreContract(node, contractName, initialValue, null, false, null, PrivacyFlag.StandardPrivate).blockingFirst();
+            assertThat(c).isNotNull();
+            curBlockHeight = utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber().intValue();
+            logger.debug("curBlockHeight:{} height:{}", curBlockHeight, qip714block);
+        }
+        logger.debug("block height reached");
+    }
+
 
     private String getFullEnode(String enode, QuorumNetworkProperty.Node node) {
         List<PermissionNodeInfo> permNodeList = permissionService.getPermissionNodeList(node).blockingFirst().getPermissionNodeList();

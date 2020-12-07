@@ -20,7 +20,7 @@ COPY . .
 ENV JAVA_HOME="/usr/lib/jvm/default-jvm" \
     PATH="/workspace/bin:/usr/local/maven/bin:${JAVA_HOME}/bin:${PATH}"
 # require BASH for gauge to work as gauge-java plugin runs a shell script (launch.sh) which requires #!/bin/bash
-RUN apk -q --no-cache --update add tar bash \
+RUN apk -q --no-cache --update add tar bash gawk \
     && mkdir -p /tmp/downloads /usr/local/maven bin \
     && (pids=""; \
         (wget -O /tmp/downloads/terraform.zip -q https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip \

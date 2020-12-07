@@ -18,7 +18,7 @@ variable "geth" {
   })
   default = {
     container = {
-      image = { name = "quorumengineering/quorum:2.5.0", local = false }
+      image = { name = "quorumengineering/quorum:latest", local = false }
       port  = { raft = 50400, p2p = 21000, http = 8545, ws = -1, graphql = -1 }
     }
     host = {
@@ -40,7 +40,7 @@ variable "tessera" {
   })
   default = {
     container = {
-      image = { name = "quorumengineering/tessera:0.10.3", local = false }
+      image = { name = "quorumengineering/tessera:latest", local = false }
       port  = { thirdparty = 9080, p2p = 9000 }
     }
     host = {

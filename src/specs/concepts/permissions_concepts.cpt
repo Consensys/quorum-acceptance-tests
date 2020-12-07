@@ -1,16 +1,70 @@
-# Deploy permissions model contracts from <node>
-* Deploy "PermissionsUpgradable" smart contract setting default account of "Node1" as the guardian account, name this as "upgradable"
-* From <node> deploy "AccountManager" contract passing "upgradable" address, name it "accountmgr"
-* From <node> deploy "OrgManager" contract passing "upgradable" address, name it "orgmgr"
-* From <node> deploy "RoleManager" contract passing "upgradable" address, name it "rolemgr"
-* From <node> deploy "NodeManager" contract passing "upgradable" address, name it "nodemgr"
-* From <node> deploy "VoterManager" contract passing "upgradable" address, name it "votermgr"
-* From <node> deploy "PermissionsInterface" contract passing "upgradable" address, name it "interface"
-* From <node> deploy implementation contract passing addresses of "upgradable", "orgmgr", "rolemgr", "accountmgr", "votermgr", "nodemgr". Name this as "implementation"
-* From <node> execute permissions init on "upgradable" passing "interface" and "implementation" contract addresses
+# Start permission network <networkType> <version> <id> <qip714block>
+* Start a <networkType> <version> Quorum Network, named it <id>, consisting of "Node1,Node2,Node3"
+* Deploy permissions model contracts from "Node1" with <version>
+* Create permissions config file with <version> and write the file to "Node1,Node2,Node3"
+* Restart network <id>
+* Deploy "storec" smart contract with initial value "5" from a default account in "Node1" until block height reaches <qip714block>
 
-# Create permissions config file and write the file to <nodes>
+# Validate network admin role
+* Validate that org "NWADMIN" is approved, has "Node1" linked and has role "NWADMIN"
+* Validate that org "NWADMIN" is approved, has "Node2" linked and has role "NWADMIN"
+* Validate that org "NWADMIN" is approved, has "Node3" linked and has role "NWADMIN"
+* Check "Node1"'s default account is from org "NWADMIN" and has role "NWADMIN" and is org admin and is active
+
+# Propose new organization to the network <version> <id>
+* Validate that org "NWADMIN" is approved, has "Node1" linked and has role "NWADMIN"
+* Check "Node1"'s default account is from org "NWADMIN" and has role "NWADMIN" and is org admin and is active
+* From "Node1" propose and approve new org "ORG1" with "Node4"'s enode id and "Default" account
+* Start stand alone "Node4"
+* Write "permissionsConfig" to the data directory of "Node4"
+* Restart network <id>
+* Validate that org "ORG1" is approved, has "Node4" linked and has role "ORGADMIN"
+
+# Suspend an org <version> <id>
+* Validate that org "NWADMIN" is approved, has "Node1" linked and has role "NWADMIN"
+* Check "Node1"'s default account is from org "NWADMIN" and has role "NWADMIN" and is org admin and is active
+* From "Node1" propose and approve new org "ORG1" with "Node4"'s enode id and "Default" account
+* Start stand alone "Node4"
+* Write "permissionsConfig" to the data directory of "Node4"
+* Restart network <id>
+* Validate that org "ORG1" is approved, has "Node4" linked and has role "ORGADMIN"
+* From "Node1" suspend org "ORG1", confirm that org status is "PendingSuspension"
+* From "Node1" approve org "ORG1"'s suspension, confirm that org status is "Suspended"
+* Deploy "storec" smart contract with initial value "5" from a default account in "Node4" fails with error "read only account. cannot transact"
+* From "Node1" revoke suspension of org "ORG1", confirm that org status is "RevokeSuspension"
+* From "Node1" approve org "ORG1"'s suspension revoke, confirm that org status is "Approved"
+* Deploy "storec" smart contract with initial value "5" from a default account in "Node4", named this contract as "c1"
+* "c1"'s "getc" function execution in "Node4" returns "5"
+
+# Deactivate an org <version> <id>
+* Validate that org "NWADMIN" is approved, has "Node1" linked and has role "NWADMIN"
+* Check "Node1"'s default account is from org "NWADMIN" and has role "NWADMIN" and is org admin and is active
+* From "Node1" propose and approve new org "ORG1" with "Node4"'s enode id and "Default" account
+* Start stand alone "Node4"
+* Write "permissionsConfig" to the data directory of "Node4"
+* Restart network <id>
+* Validate that org "ORG1" is approved, has "Node4" linked and has role "ORGADMIN"
+* From "Node1" deactivate org "NWADMIN"'s node "Node3"
+* Check org "NWADMIN" has "Node3" with status "Deactivated"
+* Save current blocknumber from "Node3"
+* Deploy "storec" smart contract with initial value "1" from a default account in "Node1", named this contract as "c2"
+* Deploy "storec" smart contract with initial value "1" from a default account in "Node1", named this contract as "c3"
+* Ensure current blocknumber from "Node3" has not changed
+
+# Deploy permissions model contracts from <node> with <version>
+* Deploy <version> "PermissionsUpgradable" smart contract setting default account of "Node1" as the guardian account, name this as "upgradable"
+* From <node> deploy <version> "AccountManager" contract passing "upgradable" address, name it "accountmgr"
+* From <node> deploy <version> "OrgManager" contract passing "upgradable" address, name it "orgmgr"
+* From <node> deploy <version> "RoleManager" contract passing "upgradable" address, name it "rolemgr"
+* From <node> deploy <version> "NodeManager" contract passing "upgradable" address, name it "nodemgr"
+* From <node> deploy <version> "VoterManager" contract passing "upgradable" address, name it "votermgr"
+* From <node> deploy <version> "PermissionsInterface" contract passing "upgradable" address, name it "interface"
+* From <node> deploy <version> implementation contract passing addresses of "upgradable", "orgmgr", "rolemgr", "accountmgr", "votermgr", "nodemgr". Name this as "implementation"
+* From <node> execute <version> permissions init on "upgradable" passing "interface" and "implementation" contract addresses
+
+# Create permissions config file with <version> and write the file to <nodes>
 * Create permissions-config.json object using the contract addersses of "upgradable", "interface", "implementation", "orgmgr", "rolemgr",  "accountmgr", "votermgr", "nodemgr". Name it "permissionsConfig"
+* Update "permissionsConfig". Add permission <version> in config
 * Update "permissionsConfig". Add "Node1"'s default account to accounts in config
 * Update "permissionsConfig". Add "NWADMIN" as network admin org, "NWADMIN" network admin role, "ORGADMIN" as the org admin role
 * Update "permissionsConfig". Set suborg depth as "4", suborg breadth as "4"
