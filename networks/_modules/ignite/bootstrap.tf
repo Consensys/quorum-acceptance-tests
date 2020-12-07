@@ -90,6 +90,9 @@ resource "local_file" "genesis-file" {
       "eip158Block": 0,
       "qip714Block": 20,
       "isQuorum": true,
+%{if var.privacy_enhancements.enabled ~}
+      "privacyEnhancementsBlock": ${var.privacy_enhancements.block},
+%{endif~}
 %{if var.concensus == "istanbul"~}
       "istanbul": {
         "epoch": 30000,
@@ -97,7 +100,12 @@ resource "local_file" "genesis-file" {
         "ceil2Nby3Block": 0
       },
 %{endif~}
-      "maxCodeSize": 80
+      "maxCodeSizeConfig" : [
+        {
+          "block" : 0,
+          "size" : 80
+        }
+      ]
     },
     "difficulty": "${var.concensus == "istanbul" ? "0x1" : "0x0"}",
     "extraData": "${var.concensus == "istanbul" ? quorum_bootstrap_istanbul_extradata.this.extradata : "0x0000000000000000000000000000000000000000000000000000000000000000"}",
@@ -141,6 +149,12 @@ resource "local_file" "passwords" {
   count    = local.number_of_nodes
   filename = format("%s/%s", quorum_bootstrap_data_dir.datadirs-generator[count.index].data_dir_abs, local.password_file)
   content  = ""
+}
+
+resource "local_file" "genesisfile" {
+    count    = local.number_of_nodes
+    filename = format("%s/%s", quorum_bootstrap_data_dir.datadirs-generator[count.index].data_dir_abs, local.genesis_file)
+    content  = quorum_bootstrap_data_dir.datadirs-generator[count.index].genesis
 }
 
 resource "local_file" "tmconfigs-generator" {
@@ -196,7 +210,13 @@ resource "local_file" "tmconfigs-generator" {
       "passwords": [],
       "keyData": [${data.null_data_source.meta[count.index].inputs.tmKeys}]
     },
-    "alwaysSendTo": []
+    "alwaysSendTo": [],
+    "features" : {
+%{if var.privacy_enhancements.enabled ~}
+      "enablePrivacyEnhancements" : "true",
+%{endif~}
+      "enableRemoteKeyValidation" : "true"
+    }
 }
 JSON
 }

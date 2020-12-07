@@ -2,7 +2,7 @@
 
  Tags: basic, extension
 
-This is to verify that a node must not be able to send transactions to private smart contract which it is not party to.
+This is to verify the contract extension APIs (success scenarios).
 
 There are 2 set of contracts to be used selectively in the below scenarios.
 
@@ -85,107 +85,57 @@ contract C2 {
 }
 
 ```
+  This spec will be executed for all 3 privacy flag values (PartyProtection and StateValidation in a separate privacy enhanced spec)
+
+      |privacyType      |
+      |StandardPrivate  |
+
+
+
 ## Extend a contract to a new party, new party accepts the extension
-* Deploy a C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract1Extension"
-* "contract1Extension" is deployed "successfully" in "Node2,Node4"
-
-* "contract1Extension"'s `get()` function execution in "Node2" returns "42"
-* "contract1Extension"'s `get()` function execution in "Node4" returns "42"
-* "contract1Extension"'s `get()` function execution in "Node1" returns "0"
-
-* Initiate contract extension to "Node1" with its default account as recipient from "Node2" for contract "contract1Extension"
-* "Node1" accepts the offer to extend the contract "contract1Extension"
-* Wait for "contract1Extension" to disappear from active extension in "Node1"
-* "contract1Extension"'s `get()` function execution in "Node1" returns "42"
+* Deploy <privacyType> type `SimpleStorage` contract with initial value "42" between "Node2" and "Node4". Name this contract as "contract1Extension". Ensure that its not visible from "Node1"
+* Initiate "contract1Extension" extension from "Node2" to "Node1". Contract extension accepted in receiving node. Check that state value in receiving node is "42"
 
 ## Extend contract to a new party, new party rejects the extension
-* Deploy a C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract2Extension"
-* "contract2Extension" is deployed "successfully" in "Node2,Node4"
-* "contract2Extension"'s `get()` function execution in "Node2" returns "42"
-* "contract2Extension"'s `get()` function execution in "Node4" returns "42"
-* "contract2Extension"'s `get()` function execution in "Node1" returns "0"
-
-* Initiate contract extension to "Node1" with its default account as recipient from "Node2" for contract "contract2Extension"
-* "Node1" has "contract2Extension" listed in all active extensions
-* "Node1" rejects contract extension of "contract2Extension"
-* Wait for "contract2Extension" to disappear from active extension in "Node1"
-* "contract2Extension"'s `get()` function execution in "Node1" returns "0"
-* "Node2" does not see "contract2Extension" listed in all active extensions
+* Deploy <privacyType> type `SimpleStorage` contract with initial value "42" between "Node2" and "Node4". Name this contract as "contract2Extension". Ensure that its not visible from "Node1"
+* Initiate "contract2Extension" extension from "Node2" to "Node1". Contract extension is rejected by receiving node. Check that state value in receiving node is "0"
 
 ## Extend contract to a new party, creator cancels extension
-* Deploy a C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract3Extension"
-* "contract3Extension" is deployed "successfully" in "Node2,Node4"
-
-* Initiate contract extension to "Node1" with its default account as recipient from "Node2" for contract "contract3Extension"
-* "Node1" has "contract3Extension" listed in all active extensions
-* "Node2" cancels "contract3Extension"
-* Wait for "contract3Extension" to disappear from active extension in "Node1"
-* "Node1" does not see "contract3Extension" listed in all active extensions
+* Deploy <privacyType> type `SimpleStorage` contract with initial value "42" between "Node2" and "Node4". Name this contract as "contract3Extension". Ensure that its not visible from "Node1"
+* Initiate "contract3Extension" extension from "Node2" to "Node1". Contract extension cancelled by initiating node. Confirm that contract extension is not visible on receiving node
 
 ## Extend a contract to a new party - extending contract after initial state change
-* Deploy a C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract4Extension"
-* "contract4Extension" is deployed "successfully" in "Node2,Node4"
-* "contract4Extension"'s `get()` function execution in "Node2" returns "42"
-* "contract4Extension"'s `get()` function execution in "Node4" returns "42"
-* "contract4Extension"'s `get()` function execution in "Node1" returns "0"
+* Deploy <privacyType> type `SimpleStorage` contract with initial value "42" between "Node2" and "Node4". Name this contract as "contract4Extension". Ensure that its not visible from "Node1"
 
-* Execute "contract4Extension"'s `set()` function with new value "129" in "Node2" and it's private for "Node4"
+* Execute "contract4Extension"'s `set()` function with privacy type <privacyType> to set new value to "129" in "Node2" and it's private for "Node4"
 * "contract4Extension"'s `get()` function execution in "Node2" returns "129"
 * "contract4Extension"'s `get()` function execution in "Node4" returns "129"
 * "contract4Extension"'s `get()` function execution in "Node1" returns "0"
 
-* Execute "contract4Extension"'s `set()` function with new value "999" in "Node2" and it's private for "Node4"
+* Execute "contract4Extension"'s `set()` function with privacy type <privacyType> to set new value to "999" in "Node2" and it's private for "Node4"
 * "contract4Extension"'s `get()` function execution in "Node2" returns "999"
 * "contract4Extension"'s `get()` function execution in "Node4" returns "999"
 * "contract4Extension"'s `get()` function execution in "Node1" returns "0"
 
-* Initiate contract extension to "Node1" with its default account as recipient from "Node2" for contract "contract4Extension"
-* "Node1" accepts the offer to extend the contract "contract4Extension"
-* Wait for "contract4Extension" to disappear from active extension in "Node1"
+* Initiate "contract4Extension" extension from "Node2" to "Node1". Contract extension accepted in receiving node. Check that state value in receiving node is "999"
 
-* "contract4Extension"'s `get()` function execution in "Node2" returns "999"
-* "contract4Extension"'s `get()` function execution in "Node4" returns "999"
-* "contract4Extension"'s `get()` function execution in "Node1" returns "999"
+## Extend a non-existent private contract - should fail
+* Deploy <privacyType> type `SimpleStorage` contract with initial value "42" between "Node2" and "Node4". Name this contract as "contract6Extension". Ensure that its not visible from "Node1"
 
-
-## Re-extend an already extended contract - state change should not happen
-* Deploy a C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract5Extension"
-* "contract5Extension" is deployed "successfully" in "Node2,Node4"
-* "contract5Extension"'s `get()` function execution in "Node2" returns "42"
-* "contract5Extension"'s `get()` function execution in "Node4" returns "42"
-* "contract5Extension"'s `get()` function execution in "Node1" returns "0"
-
-* Initiate contract extension to "Node1" with its default account as recipient from "Node2" for contract "contract5Extension"
-* "Node1" accepts the offer to extend the contract "contract5Extension"
-* Wait for "contract5Extension" to disappear from active extension in "Node1"
-* "contract5Extension"'s `get()` function execution in "Node2" returns "42"
-* "contract5Extension"'s `get()` function execution in "Node4" returns "42"
-* "contract5Extension"'s `get()` function execution in "Node1" returns "42"
-
-* Execute "contract5Extension"'s `set()` function with new value "999" in "Node2" and it's private for "Node4"
-* "contract5Extension"'s `get()` function execution in "Node2" returns "999"
-* "contract5Extension"'s `get()` function execution in "Node4" returns "999"
-* "contract5Extension"'s `get()` function execution in "Node1" returns "42"
-
-* Initiate contract extension to "Node1" with its default account as recipient from "Node2" for contract "contract5Extension"
-* "Node1" accepts the offer to extend the contract "contract5Extension"
-* Wait for "contract5Extension" to disappear from active extension in "Node1"
-* "contract5Extension"'s `get()` function execution in "Node2" returns "999"
-* "contract5Extension"'s `get()` function execution in "Node4" returns "999"
-* "contract5Extension"'s `get()` function execution in "Node1" returns "42"
+* Initiating contract extension to "Node1" with its default account as recipient from "Node3" for contract "contract6Extension" should fail with error "extending a non-existent private contract!!! not allowed"
 
 ## Extend nested contracts and check state once all contracts are extended - state should be visible
-* Deploy "storec" smart contract with initial value "1" from a default account in "Node1" and it's private for "Node2", named this contract as "c2"
+* Deploy <privacyType> "storec" smart contract with initial value "1" from a default account in "Node1" and it's private for "Node2", named this contract as "c2"
 * "c2"'s "getc" function execution in "Node1" returns "1"
-* Deploy "storeb" smart contract with contract "c2" initial value "1" from a default account in "Node1" and it's private for "Node2", named this contract as "b2"
+* Deploy <privacyType> "storeb" smart contract with contract "c2" initial value "1" from a default account in "Node1" and it's private for "Node2", named this contract as "b2"
 * "b2"'s "getb" function execution in "Node1" returns "1"
-* Deploy "storea" smart contract with contract "b2" initial value "1" from a default account in "Node1" and it's private for "Node2", named this contract as "a2"
+* Deploy <privacyType> "storea" smart contract with contract "b2" initial value "1" from a default account in "Node1" and it's private for "Node2", named this contract as "a2"
 * "a2"'s "geta" function execution in "Node1" returns "1"
-* "a2"'s "setc" function execution in "Node1" with value "10" and its private for "Node2"
+* "a2"'s "setc" function execution with privacy flag as <privacyType> in "Node1" with value "10" and its private for "Node2"
 * "a2"'s "getc" function execution in "Node1" returns "10"
-* "a2"'s "setb" function execution in "Node1" with value "10" and its private for "Node2"
+* "a2"'s "setb" function execution with privacy flag as <privacyType> in "Node1" with value "10" and its private for "Node2"
 * "a2"'s "getb" function execution in "Node1" returns "100"
-* "a2"'s "seta" function execution in "Node1" with value "10" and its private for "Node2"
+* "a2"'s "seta" function execution with privacy flag as <privacyType> in "Node1" with value "10" and its private for "Node2"
 * "a2"'s "geta" function execution in "Node1" returns "1000"
 * "b2"'s "getb" function execution in "Node1" returns "100"
 * "c2"'s "getc" function execution in "Node1" returns "10"
@@ -206,13 +156,3 @@ contract C2 {
 * "b2"'s "getb" function execution in "Node4" returns "100"
 * "a2"'s "geta" function execution in "Node4" returns "1000"
 
-## Extend a non-existent private contract - should fail
-* Deploy a C1 contract with initial value "42" in "Node2"'s default account and it's private for "Node4", named this contract as "contract6Extension"
-
-* "contract6Extension" is deployed "successfully" in "Node2,Node4"
-
-* "contract6Extension"'s `get()` function execution in "Node2" returns "42"
-* "contract6Extension"'s `get()` function execution in "Node4" returns "42"
-* "contract6Extension"'s `get()` function execution in "Node1" returns "0"
-
-* Initiating contract extension to "Node1" with its default account as recipient from "Node3" for contract "contract6Extension" should fail with error "extending a non-existent private contract!!! not allowed"

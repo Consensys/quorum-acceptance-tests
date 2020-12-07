@@ -19,6 +19,7 @@
 
 package com.quorum.gauge;
 
+import com.quorum.gauge.common.PrivacyFlag;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
@@ -39,7 +40,7 @@ public class SmartContractDualState extends AbstractSpecImplementation {
 
     @Step("Deploy <contractName> smart contract with initial value <initialValue> from a default account in <node>, named this contract as <contractNameKey>")
     public void setupStorecAsPublicDependentContract(String contractName, int initialValue, QuorumNetworkProperty.Node node, String contractNameKey) {
-        Contract c = contractService.createGenericStoreContract(node, contractName, initialValue, null, false, null).blockingFirst();
+        Contract c = contractService.createGenericStoreContract(node, contractName, initialValue, null, false, null, null).blockingFirst();
         logger.debug("{} contract address is:{}", contractName, c.getContractAddress());
 
         assertThat(c.getContractAddress()).isNotBlank();
@@ -53,7 +54,12 @@ public class SmartContractDualState extends AbstractSpecImplementation {
 
     @Step("Deploy <contractName> smart contract with initial value <initialValue> from a default account in <node> and it's private for <target>, named this contract as <contractNameKey>")
     public void setupStorecAsPrivateDependentContract(String contractName, int initialValue, QuorumNetworkProperty.Node node, QuorumNode target, String contractNameKey) {
-        Contract c = contractService.createGenericStoreContract(node, contractName, initialValue, null, true, target).blockingFirst();
+        setupStorecAsPrivateDependentContract(PrivacyFlag.StandardPrivate, contractName, initialValue, node, target, contractNameKey);
+    }
+
+    @Step("Deploy <privacyType> <contractName> smart contract with initial value <initialValue> from a default account in <node> and it's private for <target>, named this contract as <contractNameKey>")
+    public void setupStorecAsPrivateDependentContract(PrivacyFlag privacyType, String contractName, int initialValue, QuorumNetworkProperty.Node node, QuorumNode target, String contractNameKey) {
+        Contract c = contractService.createGenericStoreContract(node, contractName, initialValue, null, true, target, privacyType).blockingFirst();
         logger.debug("{} contract address is:{}", contractName, c.getContractAddress());
 
         assertThat(c.getContractAddress()).isNotBlank();
@@ -63,13 +69,12 @@ public class SmartContractDualState extends AbstractSpecImplementation {
         String typeKey = contractNameKey + "Type";
         DataStoreFactory.getSpecDataStore().put(typeKey, contractName);
         DataStoreFactory.getScenarioDataStore().put(typeKey, contractName);
-
     }
 
     @Step("Deploy <contractName> smart contract with contract <depContractName> initial value <initialValue> from a default account in <node>, named this contract as <contractNameKey>")
     public void setupStoreaOrStorebAsPublicContract(String contractName, String depContractName, int initialValue, QuorumNetworkProperty.Node node, String contractNameKey) {
         Contract dc = mustHaveValue(DataStoreFactory.getSpecDataStore(), depContractName, Contract.class);
-        Contract c = contractService.createGenericStoreContract(node, contractName, initialValue, dc.getContractAddress(), false, null).blockingFirst();
+        Contract c = contractService.createGenericStoreContract(node, contractName, initialValue, dc.getContractAddress(), false, null, null).blockingFirst();
         logger.debug("{} contract address is:{} with dc contract address: {}", contractName, c.getContractAddress(), dc.getContractAddress());
 
         assertThat(c.getContractAddress()).isNotBlank();
@@ -83,9 +88,14 @@ public class SmartContractDualState extends AbstractSpecImplementation {
 
     @Step("Deploy <contractName> smart contract with contract <dependentContractName> initial value <initialValue> from a default account in <source> and it's private for <target>, named this contract as <contractNameKey>")
     public void setupStoreaOrStorebAsPrivateContract(String contractName, String dependentContractName, int initialValue, QuorumNetworkProperty.Node source, QuorumNode target, String contractNameKey) {
+        setupStoreaOrStorebAsPrivateContract(PrivacyFlag.StandardPrivate, contractName, dependentContractName, initialValue, source, target, contractNameKey);
+    }
+
+    @Step("Deploy <privacyType> <contractName> smart contract with contract <dependentContractName> initial value <initialValue> from a default account in <source> and it's private for <target>, named this contract as <contractNameKey>")
+    public void setupStoreaOrStorebAsPrivateContract(PrivacyFlag privacyType, String contractName, String dependentContractName, int initialValue, QuorumNetworkProperty.Node source, QuorumNode target, String contractNameKey) {
         Contract dc = mustHaveValue(DataStoreFactory.getSpecDataStore(), dependentContractName, Contract.class);
         logger.debug("Setting up contract from {} to {}", source, target);
-        Contract contract = contractService.createGenericStoreContract(source, contractName, initialValue, dc.getContractAddress(), true, target).blockingFirst();
+        Contract contract = contractService.createGenericStoreContract(source, contractName, initialValue, dc.getContractAddress(), true, target, privacyType).blockingFirst();
         logger.debug("{} contract address is:{} with dc contract address: {}", contractName, contract.getContractAddress(), dc.getContractAddress());
 
         assertThat(contract.getContractAddress()).isNotBlank();
@@ -109,10 +119,15 @@ public class SmartContractDualState extends AbstractSpecImplementation {
 
     @Step("<contractNameKey>'s <methodName> function execution in <node> with value <value> and its private for <target>")
     public void setStoreContractValueInPrivate(String contractNameKey, String methodName, QuorumNetworkProperty.Node node, int value, QuorumNode target) {
+        setStoreContractValueInPrivate(contractNameKey, methodName, PrivacyFlag.StandardPrivate, node, value, target);
+    }
+
+    @Step("<contractNameKey>'s <methodName> function execution with privacy flag as <privacyType> in <node> with value <value> and its private for <target>")
+    public void setStoreContractValueInPrivate(String contractNameKey, String methodName, PrivacyFlag privacyType, QuorumNetworkProperty.Node node, int value, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey, Contract.class);
         String contractName = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey + "Type", String.class);
         logger.debug("{} contract address is:{}", contractNameKey, c.getContractAddress());
-        TransactionReceipt tr = contractService.setGenericStoreContractSetValue(node, c.getContractAddress(), contractName, methodName, value, true, target).blockingFirst();
+        TransactionReceipt tr = contractService.setGenericStoreContractSetValue(node, c.getContractAddress(), contractName, methodName, value, true, target, privacyType).blockingFirst();
         logger.debug("{} {} {}, txHash = {}", contractNameKey, contractName, methodName, tr.getTransactionHash());
 
         assertThat(tr.getTransactionHash()).isNotBlank();
@@ -124,11 +139,14 @@ public class SmartContractDualState extends AbstractSpecImplementation {
         String contractName = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey + "Type", String.class);
         logger.debug("{} contract address is:{}", contractNameKey, c.getContractAddress());
         try {
-            TransactionReceipt tr = contractService.setGenericStoreContractSetValue(node, c.getContractAddress(), contractName, methodName, value, true, target).blockingFirst();
+            TransactionReceipt tr = contractService.setGenericStoreContractSetValue(node, c.getContractAddress(), contractName, methodName, value, true, target, PrivacyFlag.StandardPrivate).blockingFirst();
             logger.debug("{} {} {}, txHash = {}", contractNameKey, contractName, methodName, tr.getTransactionHash());
+            assertThat(false).as("An exception should have been raised.").isTrue();
         } catch (Exception txe) {
+            // TODO add an API to check if privacy enhancements are enabled and invoke it in order decide what
+            // error message to test for
             logger.debug("expected exception", txe);
-            assertThat(txe).hasMessageContaining("Transaction has failed with status: 0x0");
+            assertThat( txe.getMessage().contains("Transaction has failed")).isTrue();
         }
     }
 
@@ -137,7 +155,7 @@ public class SmartContractDualState extends AbstractSpecImplementation {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey, Contract.class);
         String contractName = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey + "Type", String.class);
         logger.debug("{} contract address is:{}, {} {}", contractNameKey, c.getContractAddress(), methodName, value);
-        TransactionReceipt tr = contractService.setGenericStoreContractSetValue(node, c.getContractAddress(), contractName, methodName, value, false, null).blockingFirst();
+        TransactionReceipt tr = contractService.setGenericStoreContractSetValue(node, c.getContractAddress(), contractName, methodName, value, false, null, PrivacyFlag.StandardPrivate).blockingFirst();
         logger.debug("{} {} {}, txHash = {}", contractNameKey, contractName, methodName, tr.getTransactionHash());
 
         assertThat(tr.getTransactionHash()).isNotBlank();
@@ -160,7 +178,7 @@ public class SmartContractDualState extends AbstractSpecImplementation {
         String contractName = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractNameKey + "Type", String.class);
         logger.debug("{} contract address is:{}", contractNameKey, c.getContractAddress());
         try {
-            TransactionReceipt tr = contractService.setGenericStoreContractSetValue(node, c.getContractAddress(), contractName, methodName, value, false, null).blockingFirst();
+            TransactionReceipt tr = contractService.setGenericStoreContractSetValue(node, c.getContractAddress(), contractName, methodName, value, false, null, PrivacyFlag.StandardPrivate).blockingFirst();
             logger.debug("{} {} {}, txHash = {}", contractNameKey, contractName, methodName, tr.getTransactionHash());
         } catch (Exception txe) {
             logger.debug("expected exception", txe);

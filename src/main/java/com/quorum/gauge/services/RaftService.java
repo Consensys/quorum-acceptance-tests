@@ -118,6 +118,32 @@ public class RaftService extends AbstractService {
         throw new RuntimeException("Leader enode not found in peers: " + leaderEnode);
     }
 
+    /**
+     * Retrieve the enode for the raft leader and compare it with the enode of
+     * all the peers to convert it into a QuorumNode identity.
+     */
+    public QuorumNode getLeaderWithLocalEnodeInfo(QuorumNode node) {
+        Request<String, RaftLeader> request = new Request<>(
+            "raft_leader",
+            null,
+            connectionFactory().getWeb3jService(node),
+            RaftLeader.class);
+        RaftLeader response = request.flowable().toObservable().blockingFirst();
+        String leaderEnode = response.getResult();
+        logger.debug("Retrieved leader enode: {}", leaderEnode);
+
+        Map<QuorumNode, Node> nodes = connectionFactory().getNetworkProperty().getNodes();
+        for (Map.Entry<QuorumNode,Node> nodeEntry : nodes.entrySet()) {
+            String thisEnode = nodeEntry.getValue().getEnodeUrl();
+            logger.debug("Retrieved enode info: {}", thisEnode);
+            if (thisEnode.contains(leaderEnode)) {
+                return nodeEntry.getKey();
+            }
+        }
+
+        throw new RuntimeException("Leader enode not found in peers: " + leaderEnode);
+    }
+
     public static class RaftAddPeer extends Response<Integer> {
         private QuorumNode node;
 

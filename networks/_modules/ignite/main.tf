@@ -6,6 +6,7 @@ locals {
   node_dir_prefix           = "node-"
   tm_dir_prefix             = "tm-"
   password_file             = "password.txt"
+  genesis_file              = "genesis.json"
   number_of_nodes           = max(length(var.geth_networking), length(var.tm_networking))
   node_indices              = range(local.number_of_nodes) // 0-based node index
   // by default we allocate one named key per TM: K0, K1 ... Kn

@@ -133,7 +133,8 @@ public class EstimateGas extends AbstractSpecImplementation {
         final BigInteger estimatedGasLimit = estimatedGasResult.getAmountUsed();
 
         final TransactionReceipt receipt = contractService
-            .updateSimpleContractWithGasLimit(from, Arrays.asList(privateFor), contractAddress, estimatedGasLimit, value, Arrays.asList(PrivacyFlag.Legacy))
+            .updateSimpleContractWithGasLimit(from, Arrays.asList(privateFor), contractAddress, estimatedGasLimit, value,
+                Arrays.asList(PrivacyFlag.StandardPrivate))
             .blockingFirst();
 
         assertThat(receipt.isStatusOK()).isTrue();

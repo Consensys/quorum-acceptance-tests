@@ -28,7 +28,8 @@ Note that intrinsic gas for the simple contract is approx 57352 and total requir
 ## Private contract with gas between intrinsic gas and required gas should be rejected (and not remain pending).
 
 * Get number of nodes and store as "nodecount"
-
+Privacy enhancements are not currently deducting the intrinsic gas so these transactions fail after the transaction is
+successfully simulated and minted (the behavior is the same as if privacy enhancements are disabled).
 * Private transaction where minter is a participant and gas value is "60352", name this contract as "contract3"
 * Contract "contract3" had exception with message "not-enough gas"
 * No transactions are pending on node for "contract3"

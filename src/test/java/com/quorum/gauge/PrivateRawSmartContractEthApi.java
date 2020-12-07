@@ -62,6 +62,8 @@ public class PrivateRawSmartContractEthApi extends AbstractSpecImplementation {
         assertThat(receipt.isPresent()).isTrue();
         assertThat(receipt.get().getTransactionHash()).isNotBlank();
         assertThat(receipt.get().getBlockNumber()).isNotEqualTo(currentBlockNumber());
+
+        transactionService.waitForTransactionReceipt(target, receipt.get().getTransactionHash());
     }
 
     @Step("Transaction Hash is returned for API signed <contractName>")

@@ -49,6 +49,9 @@ public abstract class AbstractSpecImplementation {
     protected ContractService contractService;
 
     @Autowired
+    protected StorageMasterService storageMasterService;
+
+    @Autowired
     protected NestedContractService nestedContractService;
 
     @Autowired
@@ -86,6 +89,12 @@ public abstract class AbstractSpecImplementation {
 
     @Autowired
     protected OAuth2Service oAuth2Service;
+
+    @Autowired
+    protected HashicorpVaultAccountCreationService hashicorpVaultAccountCreationService;
+
+    @Autowired
+    protected HashicorpVaultSigningService hashicorpVaultSigningService;
 
     protected BigInteger currentBlockNumber() {
         return mustHaveValue(DataStoreFactory.getScenarioDataStore(), "blocknumber", BigInteger.class);

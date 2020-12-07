@@ -62,12 +62,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
 
     @Step("Deploy a simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target>, named this contract as <contractName>")
     public void setupContract(int initialValue, QuorumNode source, QuorumNode target, String contractName) {
-        saveCurrentBlockNumber();
-        logger.debug("Setting up contract from {} to {}", source, target);
-        Contract contract = contractService.createSimpleContract(initialValue, source, target).blockingFirst();
-
-        DataStoreFactory.getSpecDataStore().put(contractName, contract);
-        DataStoreFactory.getScenarioDataStore().put(contractName, contract);
+        setupContract("StandardPrivate", initialValue, source, target, contractName);
     }
 
     @Step("Deploy a <privacyFlags> simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target>, named this contract as <contractName>")
@@ -84,6 +79,24 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
+    }
+
+    @Step("Deploying a <privacyFlags> simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target> fails with message <failureMessage>")
+    public void setupContractFailsWithMessage(String privacyFlags, int initialValue, QuorumNode source, QuorumNode target, String failureMessage) {
+        saveCurrentBlockNumber();
+        logger.debug("Setting up contract from {} to {}", source, target);
+        try {
+            contractService.createSimpleContract(
+                initialValue,
+                source,
+                Arrays.asList(target),
+                AbstractService.DEFAULT_GAS_LIMIT,
+                Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())
+            ).blockingFirst();
+            assertThat(false).as("An exception should have been raised during contract creation.").isTrue();
+        } catch (Exception txe){
+            assertThat(txe).hasMessageContaining(failureMessage);
+        }
     }
 
     @Step("Transaction Hash is returned for <contractName>")
@@ -155,13 +168,20 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         assertThat(actualValue).isEqualTo(expectedValue);
     }
 
-    @Step("Execute <contractName>'s `set()` function with new value <newValue> in <source> and it's private for <target>")
-    public void updateNewValue(String contractName, int newValue, QuorumNode source, QuorumNode target) {
+    @Step("Execute <contractName>'s `set()` function with privacy type <flag> to set new value to <newValue> in <source> and it's private for <target>")
+    public void updateNewValue(String contractName, String flag, int newValue, QuorumNode source, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
-        TransactionReceipt receipt = contractService.updateSimpleContract(source, target, c.getContractAddress(), newValue, Arrays.asList(PrivacyFlag.Legacy)).blockingFirst();
+        TransactionReceipt receipt = contractService.updateSimpleContract(source, target, c.getContractAddress(), newValue, Arrays.stream(flag.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())).blockingFirst();
 
         assertThat(receipt.getTransactionHash()).isNotBlank();
         assertThat(receipt.getBlockNumber()).isNotEqualTo(currentBlockNumber());
+
+        transactionService.waitForTransactionReceipt(target, receipt.getTransactionHash());
+    }
+
+    @Step("Execute <contractName>'s `set()` function with new value <newValue> in <source> and it's private for <target>")
+    public void updateNewValue(String contractName, int newValue, QuorumNode source, QuorumNode target) {
+        updateNewValue(contractName, PrivacyFlag.StandardPrivate.name(), newValue, source, target);
     }
 
 
@@ -245,15 +265,19 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         setupContractAsyncWithAccount(initialValue, source, null, target, contractName);
     }
 
+    /**
+     * This depends on waithook Docker container to be available. The solution here is to use "localhost" for websocket listener of the callback
+     * and use the container hostname for Quorum to send the response.
+     */
     private void setupContractAsyncWithAccount(int initialValue, QuorumNode source, String sourceAccount, QuorumNode target, String contractName) {
         CountDownLatch waitForCallback = new CountDownLatch(1);
         CountDownLatch waitForWebSocket = new CountDownLatch(1);
 
-        String baseUrl = "waithook.com/testing_quorum_" + Math.abs(new Random().nextLong());
-        String callbackUrl = "http://" + baseUrl;
+        String baseUrl = "/testing_quorum_" + Math.abs(new Random().nextLong());
+        String callbackUrl = "http://waithook.local:3012" + baseUrl;
 
-        Request callback = new Request.Builder().url("ws://" + baseUrl).build();
-        WebSocket ws = okHttpClient.newWebSocket(callback, new WebSocketListener() {
+        Request websocketCallback = new Request.Builder().url("ws://localhost:3012" + baseUrl).build();
+        WebSocket ws = okHttpClient.newWebSocket(websocketCallback, new WebSocketListener() {
             @Override
             public void onOpen(WebSocket webSocket, Response response) {
                 logger.debug("Connected to callback listener");
@@ -287,13 +311,15 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         });
 
         try {
-            waitForWebSocket.await();
+            waitForWebSocket.await(3, TimeUnit.SECONDS);
 
             contractService.createClientReceiptContractAsync(initialValue, source, sourceAccount, target, callbackUrl).blockingFirst();
 
             waitForCallback.await(20, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
+        } finally {
+            ws.close(1000, "Finished");
         }
     }
 

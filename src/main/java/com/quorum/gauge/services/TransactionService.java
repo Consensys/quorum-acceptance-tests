@@ -21,9 +21,11 @@ package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.ext.EthGetQuorumPayload;
 import com.quorum.gauge.ext.EthSignTransaction;
 import com.quorum.gauge.ext.ExtendedPrivateTransaction;
+import com.quorum.gauge.ext.StringResponse;
 import io.reactivex.schedulers.Schedulers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,10 +39,7 @@ import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.request.Transaction;
-import org.web3j.protocol.core.methods.response.EthEstimateGas;
-import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
-import org.web3j.protocol.core.methods.response.EthLog;
-import org.web3j.protocol.core.methods.response.EthSendTransaction;
+import org.web3j.protocol.core.methods.response.*;
 import org.web3j.quorum.Quorum;
 import org.web3j.quorum.methods.request.PrivateTransaction;
 import org.web3j.tx.Contract;
@@ -52,6 +51,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static com.quorum.gauge.sol.SimpleStorage.FUNC_SET;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 
 @Service
@@ -63,6 +63,21 @@ public class TransactionService extends AbstractService {
 
     @Autowired
     PrivacyService privacyService;
+
+    public TransactionReceipt waitForTransactionReceipt(QuorumNode node, String transactionHash) {
+        Optional<TransactionReceipt> receipt = getTransactionReceipt(node, transactionHash)
+            .map(ethGetTransactionReceipt -> {
+                if (ethGetTransactionReceipt.getTransactionReceipt().isPresent()) {
+                    return ethGetTransactionReceipt;
+                } else {
+                    throw new RuntimeException("retry");
+                }
+            }).retryWhen(new RetryWithDelay(20, 3000))
+            .blockingFirst().getTransactionReceipt();
+
+        assertThat(receipt.isPresent()).isTrue();
+        return receipt.get();
+    }
 
     public Observable<EthGetTransactionReceipt> getTransactionReceipt(QuorumNode node, String transactionHash) {
         Quorum client = connectionFactory().getConnection(node);
@@ -397,6 +412,35 @@ public class TransactionService extends AbstractService {
                     );
                     return client.ethEstimateGas(tx).flowable().toObservable();
                 });
+    }
+
+    public Observable<EthSignTransaction> personalSignTransaction(QuorumNetworkProperty.Node node, Transaction toSign, String acctPwd) {
+        List<Object> params = new ArrayList<>();
+        params.add(toSign);
+        params.add(acctPwd);
+
+        Request<?, EthSignTransaction> request = new Request<>(
+            "personal_signTransaction",
+            params,
+            connectionFactory().getWeb3jService(node),
+            EthSignTransaction.class);
+
+        return request.flowable().toObservable();
+    }
+
+    public Observable<StringResponse> personalSign(QuorumNetworkProperty.Node node, String toSign, String from, String acctPwd) {
+        List<Object> params = new ArrayList<>();
+        params.add(toSign);
+        params.add(from);
+        params.add(acctPwd);
+
+        Request<?, StringResponse> request = new Request<>(
+            "personal_sign",
+            params,
+            connectionFactory().getWeb3jService(node),
+            StringResponse.class);
+
+        return request.flowable().toObservable();
     }
 
 }
