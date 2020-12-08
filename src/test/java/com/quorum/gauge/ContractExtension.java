@@ -13,7 +13,10 @@ import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 
-import java.util.*;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -341,8 +344,7 @@ public class ContractExtension extends AbstractSpecImplementation {
 
             }
         }
-
-
+        assertThat(status).describedAs("Extension must be successfully completed").isEqualTo("DONE");
     }
 
 }

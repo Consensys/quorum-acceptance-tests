@@ -36,10 +36,6 @@
 
     - `TM3` manages keys: `C2`
 
-   The setup can be depicted as below:
-
-    ![image](http://www.plantuml.com/plantuml/png/ZP5FSu8m4CNl-HGxz8mEoSrXClBdsfuyUecmGcf8EY7KyTiNGqLWQlMsk-plxIDlspfXNTSeqfwa_X9MDD3MeZHdgIiu2jKY8GgF3fm1AwlQGIaj5auQJOYmHIqRuH3UBgYKEKEmGosqWoG0qK82SUomgBLHfhg49NxB0ZcVSfLHvKYbdagVKwrGZT4ZbtakUyvPSn7ge3g482xwDRivrz8X_zN9uxMVSg-NFz2R2kx6xn1yc18ZJ_ggfpyxxL-Ay_yOEZBqPOQD39ipZw3TUxJNOHZkTNmGnMapvCMJA5vVUxwSqyNycXDFbzj33ZoxpRsh_bJlgJ92SVxO3lLsvlBBesDSV9PM7jrocf-bBvnb_kpIFvqBiRiG6R9ShQw_vHiwDDGtR6WO8GdqkaFo9FspfYIRpEyr8_baPukwx1hr0m00)
-
  __Onboarding tenants__
 
  In this context, onboarding activities are Authorization Server configuration activities so the access controls are setup
@@ -186,7 +182,7 @@ tags: public, node-managed-account
 * `"Tenant B"` writes a new value "123" to "contract1" successfully by sending a transaction to `"Node2"` using node's default account
 * `"Tenant C"` reads the value from "contract1" successfully by sending a request to `"Node3"` and the value returns "123"
 
-## Tenants using self-managed account keys can bypass access controls to private contracts which are not privy to
+## Tenants using self-managed account keys can bypass access controls to private contracts which are not privy to them
 
 tags: private, access, raw
 
