@@ -2,17 +2,21 @@ package com.quorum.gauge;
 
 import com.google.common.primitives.Ints;
 import com.quorum.gauge.common.Context;
+import com.quorum.gauge.common.PrivacyFlag;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.common.config.WalletData;
 import com.quorum.gauge.core.AbstractSpecImplementation;
+import com.quorum.gauge.services.ExtensionService;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.Table;
+import com.thoughtworks.gauge.datastore.DataStore;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import io.reactivex.Observable;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -38,8 +42,16 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @Service
 public class MultiTenancy extends AbstractSpecImplementation {
 
+    @Autowired
+    ExtensionService extensionService;
+
     private static final Logger logger = LoggerFactory.getLogger(MultiTenancy.class);
+    // tenant -> namedKeys
     private Map<String, List<String>> assignedNamedKeys = new HashMap<>();
+    // tenant -> nodes
+    private Map<String, List<String>> assignedNodes = new HashMap<>();
+    // tenant -> scopes
+    private Map<String, List<String>> assignedScopes = new HashMap<>();
 
     @Step("Setup `<tenantName>` access controls restricted to `<nodes>`, assigned TM keys `<namedKeys>` and with the following scopes <table>")
     public void configureAuthorizationServer(String tenantName, String nodes, String namedKeys, Table scopes) {
@@ -47,6 +59,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
             .map(String::trim)
             .collect(Collectors.toList()));
         List<String> nodeList = Arrays.stream(nodes.split(",")).map(String::trim).map(QuorumNode::valueOf).map(QuorumNode::name).collect(Collectors.toList());
+        assignedNodes.put(tenantName, nodeList);
         List<String> scopeList = scopes.getTableRows().stream()
             .map(r -> r.getCell("scope"))
             .map(StringUtils::trim)
@@ -63,6 +76,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
                 logger.debug("{} -> {}", s, newString);
                 return newString;
             }).collect(Collectors.toList());
+        assignedScopes.put(tenantName, scopeList);
         assertThat(oAuth2Service.updateOrInsert(tenantName, scopeList, nodeList).blockingFirst()).isEqualTo(true);
     }
 
@@ -112,6 +126,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(contractName + "_id", contractId);
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
         DataStoreFactory.getScenarioDataStore().put(tenantName + contractId + contractName, new Object[]{node, privateFrom, privateFor});
+        DataStoreFactory.getScenarioDataStore().put(contractName + "_privateFrom", privacyService.id(privateFrom));
     }
 
     @Step("`<tenantName>` can read <contractName> from <node>")
@@ -565,7 +580,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
             throw new IllegalArgumentException(tenantName + " has no assigned TM keys");
         }
         List<String> requestScopes = Stream.concat(
-            Stream.of("rpc://eth_*"),
+            assignedScopes.get(tenantName).stream().filter(s -> s.startsWith("rpc://")),
             assignedNamedKeys.get(tenantName).stream().map(k -> UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
                 .queryParam("owned.eoa", "0x0")
                 .queryParam("from.tm", UriUtils.encode(privacyService.id(k), StandardCharsets.UTF_8))
@@ -685,5 +700,95 @@ public class MultiTenancy extends AbstractSpecImplementation {
             .map(r -> r.isPresent() && r.get().isStatusOK()).blockingFirst()
         ).isFalse();
         assertThat(caughtException.get()).hasMessageContaining("not authorized");
+    }
+
+    @Step("<tenantName> requests access token from authorization server")
+    public void requestAccessToken(String tenantName) {
+        List<String> nodeList = assignedNodes.get(tenantName);
+        List<String> requestScopes = assignedScopes.get(tenantName);
+        oAuth2Service.requestAccessToken(tenantName, nodeList, requestScopes)
+            .doOnNext(token -> DataStoreFactory.getScenarioDataStore().put("access_token", token))
+            .doOnTerminate(Context::removeAccessToken)
+            .blockingSubscribe();
+    }
+
+    @Step("Initiate contract extension to <newPartyNamedKey> with <fromNode>'s default account as recipient for contract <contractName>")
+    public void inititateContractExtension(String newPartyNamedKey, QuorumNetworkProperty.Node fromNode, String contractName) {
+        Contract existingContract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
+        String privateFrom = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "_privateFrom", String.class);
+
+        Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
+        accessToken.ifPresent(Context::storeAccessToken);
+        String extensionAddress = extensionService
+            .initiateContractExtension(fromNode, privateFrom, existingContract.getContractAddress(), newPartyNamedKey, PrivacyFlag.StandardPrivate)
+            .map(res -> {
+                assertThat(res.getError()).as("failed to initiate contract extension").isNull();
+                return res.getResult();
+            })
+            .map(txHash -> {
+                Optional<TransactionReceipt> transactionReceipt = transactionService
+                    .pollTransactionReceipt(fromNode, txHash).blockingFirst();
+                assertThat(transactionReceipt.isPresent()).isTrue();
+                assertThat(transactionReceipt.get().getStatus()).isEqualTo("0x1");
+                return transactionReceipt.get().getContractAddress();
+            })
+            .doOnTerminate(Context::removeAccessToken)
+            .blockingFirst();
+
+        DataStoreFactory.getScenarioDataStore().put(contractName + "extensionAddress", extensionAddress);
+        DataStoreFactory.getScenarioDataStore().put(contractName + "extendedFrom", extensionAddress);
+    }
+
+    @Step("New party <newParty> accepts the offer to extend the contract <contractName>")
+    public void acceptContractExtension(String newPartyNamedKey, String contractName) {
+        DataStore store = DataStoreFactory.getScenarioDataStore();
+        PrivacyFlag privacyFlag = mustHaveValue(store, "privacyFlag", PrivacyFlag.class);
+        String contractAddress = mustHaveValue(store, contractName + "extensionAddress", String.class);
+        QuorumNetworkProperty.Node toNode = privacyService.nodeById(newPartyNamedKey);
+
+        Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
+        accessToken.ifPresent(Context::storeAccessToken);
+
+        List<String> privateFor = Stream.of(newPartyNamedKey).map(privacyService::id).collect(Collectors.toList());
+        Optional<TransactionReceipt> transactionReceipt = extensionService
+            .acceptExtension(toNode, true, contractAddress, privateFor, privacyFlag)
+            .map(res -> {
+                assertThat(res.getError()).isNull();
+                return res.getResult();
+            })
+            .flatMap(txHash -> transactionService.pollTransactionReceipt(toNode, txHash))
+            .doOnTerminate(Context::removeAccessToken)
+            .blockingFirst();
+
+        assertThat(transactionReceipt.isPresent()).isTrue();
+        assertThat(transactionReceipt.get().getStatus()).isEqualTo("0x1");
+    }
+
+    @Step("`<tenant>` can read contract <contractName> from `<node>`")
+    public void canReadContract(String tenantName, String contractName, QuorumNetworkProperty.Node node) {
+        Contract existingContract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
+
+        Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
+        accessToken.ifPresent(Context::storeAccessToken);
+
+        BigInteger actualValue = contractService.readSimpleContractValue(node, existingContract.getContractAddress())
+            .doOnTerminate(Context::removeAccessToken)
+            .blockingFirst();
+
+        assertThat(actualValue).isNotZero();
+    }
+
+    @Step("`<tenant>` can __NOT__ read contract <contractName> from `<node>`")
+    public void canNotReadContract(String tenantName, String contractName, QuorumNetworkProperty.Node node) {
+        Contract existingContract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
+
+        Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
+        accessToken.ifPresent(Context::storeAccessToken);
+
+        BigInteger actualValue = contractService.readSimpleContractValue(node, existingContract.getContractAddress())
+            .doOnTerminate(Context::removeAccessToken)
+            .blockingFirst();
+
+        assertThat(actualValue).isZero();
     }
 }

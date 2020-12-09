@@ -1,0 +1,5 @@
+# `<tenantName>` extends contract <contractName> from `<fromNode>` to `<newParty>` in `<toNode>` with acceptance
+* <tenantName> requests access token from authorization server
+* Initiate contract extension to <newParty> with <fromNode>'s default account as recipient for contract <contractName>
+* New party <newParty> accepts the offer to extend the contract <contractName>
+* Wait for <contractName> to disappear from active extension in <toNode>

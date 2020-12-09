@@ -91,6 +91,17 @@ E.g.: use 2 named keys: A1, A2 for node 1
 EOT
 }
 
+variable "override_named_account_allocation" {
+  default     = {}
+  description = <<-EOT
+Override default allocation of accounts
+E.g.: use 2 named account: ACC1, ACC2 for node 1
+{
+  0 = ["ACC1", "ACC2"]
+}
+EOT
+}
+
 variable "enable_multitenancy" {
   type = bool
   default = false
