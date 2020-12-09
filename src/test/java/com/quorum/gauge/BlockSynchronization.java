@@ -68,9 +68,9 @@ public class BlockSynchronization extends AbstractSpecImplementation {
     @Autowired
     private IstanbulService istanbulService;
 
-    @Step("Start a <networkType> <version> Quorum Network, named it <id>, consisting of <nodes>")
-    public void startNetwork(String networkType, String version, String id, List<Node> nodes) {
-        startQuorumNetwork(networkType, id, nodes, null, version);
+    @Step("Start a <networkType> <permissionVersion> Quorum Network, named it <id>, consisting of <nodes>")
+    public void startNetwork(String networkType, String permissionVersion, String id, List<Node> nodes) {
+        startQuorumNetwork(networkType, id, nodes, null, permissionVersion);
         BigInteger blockNumber = utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber();
         logger.debug("network started blockNumber:{}", blockNumber);
     }

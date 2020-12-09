@@ -1,6 +1,6 @@
-# Enhanced Basic(v1) Permissions Model
+# Enhanced EEA(v2) Permissions Model
 
- Tags: networks/template::raft-3plus1, pre-condition/no-record-blocknumber, permissions-v1
+ Tags: networks/template::raft-3plus1, pre-condition/no-record-blocknumber, permissions-v2
 
 The Enhanced Permissions Model caters for enterprise-level needs by having a smart contract-based permissioning model.
 This allows for significant flexibility to manage nodes, accounts, and account-level access controls.
@@ -9,10 +9,10 @@ For more information, visit https://docs.goquorum.com/en/latest/Permissioning/En
 
 The test scenarios are based on the following setup:
 
-      |id        |networkType      |version |qip714block |
-      |r1        |permissioned     |v1      |20          |
+      |id        |networkType      |permissionVersion |qip714block |
+      |r2        |permissioned     |v2                |20          |
 
-* Start permission network <networkType> <version> <id> <qip714block>
+* Start permission network <networkType> <permissionVersion> <id> <qip714block>
 
 ## Network Admin Organization and Role are initialized successfully
 
@@ -33,7 +33,7 @@ This role will be assigned to the network admin accounts
 Once the network is up, the network admin accounts can then propose a new organization into the network.
 Majority approval from the network admin accounts is required before an organization is approved.
 
-* Propose new organization to the network <version> <id>
+* Propose new organization to the network <permissionVersion> <id>
 
 ## Suspending an organization temporarily
 
@@ -42,11 +42,11 @@ Majority approval from the network admin accounts is required before an organiza
 The network admin accounts can suspend/revoke-suspension all activities (e.g.: transaction processing)
 of an organization and will require majority voting.
 
-* Suspend an org <version> <id>
+* Suspend an org <permissionVersion> <id>
 
 ## Deactivating an organization to stop block synchronization in a node
 
  Tags: post-condition/datadir-cleanup, post-condition/network-cleanup
 
-* Deactivate an org <version> <id>
+* Deactivate an org <permissionVersion> <id>
 
