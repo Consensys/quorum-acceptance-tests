@@ -75,7 +75,9 @@ public class PrivacyService extends AbstractService {
     }
 
     public QuorumNetworkProperty.Node nodeById(String alias) {
-        for (QuorumNetworkProperty.Node node : networkProperty().getNodes().values()) {
+        for (QuorumNode n : networkProperty().getNodes().keySet()) {
+            QuorumNetworkProperty.Node node = networkProperty().getNodes().get(n);
+            node.setName(n.name());
             if (node.getPrivacyAddressAliases().containsKey(alias)) {
                 return node;
             }

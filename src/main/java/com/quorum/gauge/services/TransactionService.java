@@ -89,14 +89,16 @@ public class TransactionService extends AbstractService {
         return client.ethGetTransactionReceipt(transactionHash).flowable().toObservable();
     }
 
-    public Observable<Optional<TransactionReceipt>> pollTransactionReceipt(QuorumNetworkProperty.Node node, String transactionHash) {
-        return getTransactionReceipt(node, transactionHash)
-            .repeatWhen(completed -> completed.delay(2, TimeUnit.SECONDS))
-            .takeUntil(ethGetTransactionReceipt -> {
-                return ethGetTransactionReceipt.getTransactionReceipt().isPresent();
-            })
-            .timeout(30, TimeUnit.SECONDS)
-            .map(EthGetTransactionReceipt::getTransactionReceipt);
+    public Optional<TransactionReceipt> pollTransactionReceipt(QuorumNetworkProperty.Node node, String transactionHash) {
+        for (int i = 0; i < 30; i++) {
+            EthGetTransactionReceipt r = getTransactionReceipt(node, transactionHash)
+                .delay(3, TimeUnit.SECONDS)
+                .blockingFirst();
+            if (r.getTransactionReceipt().isPresent()) {
+                return r.getTransactionReceipt();
+            }
+        }
+        return Optional.empty();
     }
 
     public Observable<EthSendTransaction> sendPublicTransaction(int value, QuorumNode from, QuorumNode to) {

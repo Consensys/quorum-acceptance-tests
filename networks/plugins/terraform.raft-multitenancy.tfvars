@@ -1,5 +1,4 @@
 consensus    = "raft"
-network_name = "raft-multitenancy"
 plugins = {
   security = {
     name       = "quorum-security-plugin-enterprise"

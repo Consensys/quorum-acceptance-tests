@@ -1,5 +1,6 @@
 package com.quorum.gauge;
 
+import com.quorum.gauge.common.Context;
 import com.quorum.gauge.common.PrivacyFlag;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.core.AbstractSpecImplementation;
@@ -300,51 +301,56 @@ public class ContractExtension extends AbstractSpecImplementation {
     public void extensionCompleted(final String contractName, final QuorumNetworkProperty.Node node) {
 
         final Contract contract = mustHaveValue(contractName, Contract.class);
+        Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
+        accessToken.ifPresent(Context::storeAccessToken);
+        try {
+            int count = 0;
 
-        int count = 0;
-
-        while (true) {
-            count++;
-            final QuorumActiveExtensionContracts result = this.extensionService
-                .getExtensionContracts(node)
-                .blockingFirst();
-
-            final Optional<Map<Object, Object>> first = result.getResult()
-                .stream()
-                .filter(contractStatus -> contractStatus.containsValue(contract.getContractAddress()))
-                .findFirst();
-            if ((!first.isPresent()) || (count > 25)) {
-                break;
-            } else {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        final DataStore store = DataStoreFactory.getScenarioDataStore();
-
-        final String contractAddress = mustHaveValue(store, contractName + "extensionAddress", String.class);
-        String status = extensionService.getExtensionStatus(node, contractAddress);
-        int i = 0;
-        if (!status.equals("DONE")) {
             while (true) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                i++;
-                status = extensionService.getExtensionStatus(node, contractAddress);
-                if ((i > 25) || status.equals("DONE")) {
-                    break;
-                }
+                count++;
+                final QuorumActiveExtensionContracts result = this.extensionService
+                    .getExtensionContracts(node)
+                    .blockingFirst();
 
+                final Optional<Map<Object, Object>> first = result.getResult()
+                    .stream()
+                    .filter(contractStatus -> contractStatus.containsValue(contract.getContractAddress()))
+                    .findFirst();
+                if ((!first.isPresent()) || (count > 25)) {
+                    break;
+                } else {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
+
+            final DataStore store = DataStoreFactory.getScenarioDataStore();
+
+            final String contractAddress = mustHaveValue(store, contractName + "extensionAddress", String.class);
+            String status = extensionService.getExtensionStatus(node, contractAddress);
+            int i = 0;
+            if (!status.equals("DONE")) {
+                while (true) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    i++;
+                    status = extensionService.getExtensionStatus(node, contractAddress);
+                    if ((i > 25) || status.equals("DONE")) {
+                        break;
+                    }
+
+                }
+            }
+            assertThat(status).describedAs("Extension must be successfully completed").isEqualTo("DONE");
+        } finally {
+            Context.removeAccessToken();
         }
-        assertThat(status).describedAs("Extension must be successfully completed").isEqualTo("DONE");
     }
 
 }

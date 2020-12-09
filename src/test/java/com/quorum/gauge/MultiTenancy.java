@@ -716,18 +716,18 @@ public class MultiTenancy extends AbstractSpecImplementation {
     public void inititateContractExtension(String newPartyNamedKey, QuorumNetworkProperty.Node fromNode, String contractName) {
         Contract existingContract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
         String privateFrom = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "_privateFrom", String.class);
-
+        PrivacyFlag privacyFlag = PrivacyFlag.StandardPrivate;
         Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
         accessToken.ifPresent(Context::storeAccessToken);
         String extensionAddress = extensionService
-            .initiateContractExtension(fromNode, privateFrom, existingContract.getContractAddress(), newPartyNamedKey, PrivacyFlag.StandardPrivate)
+            .initiateContractExtension(fromNode, privateFrom, existingContract.getContractAddress(), newPartyNamedKey, privacyFlag)
             .map(res -> {
                 assertThat(res.getError()).as("failed to initiate contract extension").isNull();
                 return res.getResult();
             })
             .map(txHash -> {
                 Optional<TransactionReceipt> transactionReceipt = transactionService
-                    .pollTransactionReceipt(fromNode, txHash).blockingFirst();
+                    .pollTransactionReceipt(fromNode, txHash);
                 assertThat(transactionReceipt.isPresent()).isTrue();
                 assertThat(transactionReceipt.get().getStatus()).isEqualTo("0x1");
                 return transactionReceipt.get().getContractAddress();
@@ -737,6 +737,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
 
         DataStoreFactory.getScenarioDataStore().put(contractName + "extensionAddress", extensionAddress);
         DataStoreFactory.getScenarioDataStore().put(contractName + "extendedFrom", extensionAddress);
+        DataStoreFactory.getScenarioDataStore().put("privacyFlag", privacyFlag);
     }
 
     @Step("New party <newParty> accepts the offer to extend the contract <contractName>")
@@ -744,21 +745,21 @@ public class MultiTenancy extends AbstractSpecImplementation {
         DataStore store = DataStoreFactory.getScenarioDataStore();
         PrivacyFlag privacyFlag = mustHaveValue(store, "privacyFlag", PrivacyFlag.class);
         String contractAddress = mustHaveValue(store, contractName + "extensionAddress", String.class);
+        String originalSender = mustHaveValue(store, contractName + "_privateFrom", String.class);
         QuorumNetworkProperty.Node toNode = privacyService.nodeById(newPartyNamedKey);
 
         Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
         accessToken.ifPresent(Context::storeAccessToken);
 
-        List<String> privateFor = Stream.of(newPartyNamedKey).map(privacyService::id).collect(Collectors.toList());
         Optional<TransactionReceipt> transactionReceipt = extensionService
-            .acceptExtension(toNode, true, contractAddress, privateFor, privacyFlag)
+            .acceptExtension(toNode, true, privacyService.id(newPartyNamedKey), contractAddress, List.of(originalSender), privacyFlag)
             .map(res -> {
                 assertThat(res.getError()).isNull();
                 return res.getResult();
             })
-            .flatMap(txHash -> transactionService.pollTransactionReceipt(toNode, txHash))
+            .map(txHash -> transactionService.pollTransactionReceipt(toNode, txHash))
             .doOnTerminate(Context::removeAccessToken)
-            .blockingFirst();
+            .blockingLast();
 
         assertThat(transactionReceipt.isPresent()).isTrue();
         assertThat(transactionReceipt.get().getStatus()).isEqualTo("0x1");
@@ -768,6 +769,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
     public void canReadContract(String tenantName, String contractName, QuorumNetworkProperty.Node node) {
         Contract existingContract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
 
+        requestAccessToken(tenantName);
         Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
         accessToken.ifPresent(Context::storeAccessToken);
 
@@ -782,13 +784,13 @@ public class MultiTenancy extends AbstractSpecImplementation {
     public void canNotReadContract(String tenantName, String contractName, QuorumNetworkProperty.Node node) {
         Contract existingContract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
 
+        requestAccessToken(tenantName);
         Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
         accessToken.ifPresent(Context::storeAccessToken);
 
-        BigInteger actualValue = contractService.readSimpleContractValue(node, existingContract.getContractAddress())
+        assertThatThrownBy(() -> contractService.readSimpleContractValue(node, existingContract.getContractAddress())
             .doOnTerminate(Context::removeAccessToken)
-            .blockingFirst();
-
-        assertThat(actualValue).isZero();
+            .blockingSubscribe()
+        ).hasMessageContaining("not authorized");
     }
 }
