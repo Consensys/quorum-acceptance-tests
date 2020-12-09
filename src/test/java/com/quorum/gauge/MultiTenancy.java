@@ -3,7 +3,7 @@ package com.quorum.gauge;
 import com.google.common.primitives.Ints;
 import com.quorum.gauge.common.Context;
 import com.quorum.gauge.common.PrivacyFlag;
-import com.quorum.gauge.common.QuorumNetworkProperty;
+import com.quorum.gauge.common.QuorumNetworkProperty.Node;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.common.config.WalletData;
 import com.quorum.gauge.core.AbstractSpecImplementation;
@@ -114,6 +114,21 @@ public class MultiTenancy extends AbstractSpecImplementation {
         ).isEqualTo(false);
     }
 
+    @Step("`<tenantName>` deploys a <privacyFlag> `SimpleStorage` private contract, named <contractName>, by sending a transaction to `<node>` with its TM key `<privateFrom>` and private for `<privateFor>`")
+    public void deploySimpleStorageContractWithFlag(String tenantName, PrivacyFlag privacyFlag, String contractName, Node node, String privateFrom, String privateFor) {
+        List<String> privateForList = Arrays.stream(privateFor.split(",")).map(String::trim).collect(Collectors.toList());
+        requestAccessToken(tenantName);
+        Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
+        accessToken.ifPresent(Context::storeAccessToken);
+
+        Contract contract = contractService.createSimpleContract(42, node, privateFrom, privateForList, List.of(privacyFlag))
+            .doOnTerminate(Context::removeAccessToken)
+            .blockingFirst();
+
+        DataStoreFactory.getScenarioDataStore().put(contractName, contract);
+        DataStoreFactory.getScenarioDataStore().put(contractName + "_privateFrom", privacyService.id(privateFrom));
+    }
+
     @Step("`<tenantName>` deploys a <contractId> private contract, named <contractName>, by sending a transaction to `<node>` with its TM key `<privateFrom>` and private for `<privateFor>`")
     public void deployPrivateContractsPrivateFor(String tenantName, String contractId, String contractName, QuorumNode node, String privateFrom, String privateFor) {
         Contract contract = deployPrivateContract(tenantName, node, privateFrom, privateFor, contractId, networkProperty.getWallets().get("Wallet1"))
@@ -130,7 +145,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
     }
 
     @Step("`<tenantName>` can read <contractName> from <node>")
-    public void tenantCanReadContract(String tenantName, String contractName, QuorumNetworkProperty.Node node) {
+    public void tenantCanReadContract(String tenantName, String contractName, Node node) {
         String contractId = mustHaveValue(contractName + "_id", String.class);
         Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
         List<String> requestScopes = Stream.concat(
@@ -155,7 +170,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
     }
 
     @Step("`<tenantName>` fails to read <contractName> from <node>")
-    public void tenantCanNotReadContract(String tenantName, String contractName, QuorumNetworkProperty.Node node) {
+    public void tenantCanNotReadContract(String tenantName, String contractName, Node node) {
         String contractId = mustHaveValue(contractName + "_id", String.class);
         Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
         List<String> requestScopes = Stream.concat(
@@ -344,7 +359,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
     }
 
     @Step("`<tenantName>` deploys a <contractId> public contract, named <contractName>, by sending a transaction to `<node>` using node's default account")
-    public void deployNodeManagedPublicContract(String tenantName, String contractId, String contractName, QuorumNetworkProperty.Node node) {
+    public void deployNodeManagedPublicContract(String tenantName, String contractId, String contractName, Node node) {
         // only need to request access to eth_* apis
         List<String> requestScopes = Stream.of("rpc://eth_*").collect(Collectors.toList());
         Contract contract = oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.getName()), requestScopes)
@@ -377,7 +392,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
     }
 
     @Step("`<tenantName>` writes a new value <newValue> to <contractName> successfully by sending a transaction to `<node>` using node's default account")
-    public void setNodeManagedPublicSimpleContractValue(String tenantName, int newValue, String contractName, QuorumNetworkProperty.Node node) {
+    public void setNodeManagedPublicSimpleContractValue(String tenantName, int newValue, String contractName, Node node) {
         Contract contract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
         // only need to request access to eth_* apis
         List<String> requestScopes = Stream.of("rpc://eth_*").collect(Collectors.toList());
@@ -604,7 +619,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
                     delegateContractAddress = delegateContractInstance.getContractAddress();
                 }
 
-                QuorumNetworkProperty.Node source = networkProperty.getNode(node.name());
+                Node source = networkProperty.getNode(node.name());
                 switch (realContractId) {
                     case "SimpleStorage":
                         if (wallet == null) {
@@ -681,7 +696,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
         AtomicReference<Throwable> caughtException = new AtomicReference<>();
         assertThat(oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
             .flatMap(t -> {
-                QuorumNetworkProperty.Node source = networkProperty.getNode(node.name());
+                Node source = networkProperty.getNode(node.name());
                 if (contractId.startsWith("SimpleStorageDelegate")) {
                     return contractService.updateSimpleStorageDelegateContract(100, c.getContractAddress(), source, privateFrom, privateForList);
                 } else {
@@ -713,7 +728,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
     }
 
     @Step("Initiate contract extension to <newPartyNamedKey> with <fromNode>'s default account as recipient for contract <contractName>")
-    public void inititateContractExtension(String newPartyNamedKey, QuorumNetworkProperty.Node fromNode, String contractName) {
+    public void inititateContractExtension(String newPartyNamedKey, Node fromNode, String contractName) {
         Contract existingContract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
         String privateFrom = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "_privateFrom", String.class);
         PrivacyFlag privacyFlag = PrivacyFlag.StandardPrivate;
@@ -746,7 +761,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
         PrivacyFlag privacyFlag = mustHaveValue(store, "privacyFlag", PrivacyFlag.class);
         String contractAddress = mustHaveValue(store, contractName + "extensionAddress", String.class);
         String originalSender = mustHaveValue(store, contractName + "_privateFrom", String.class);
-        QuorumNetworkProperty.Node toNode = privacyService.nodeById(newPartyNamedKey);
+        Node toNode = privacyService.nodeById(newPartyNamedKey);
 
         Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
         accessToken.ifPresent(Context::storeAccessToken);
@@ -766,7 +781,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
     }
 
     @Step("`<tenant>` can read contract <contractName> from `<node>`")
-    public void canReadContract(String tenantName, String contractName, QuorumNetworkProperty.Node node) {
+    public void canReadContract(String tenantName, String contractName, Node node) {
         Contract existingContract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
 
         requestAccessToken(tenantName);
@@ -781,7 +796,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
     }
 
     @Step("`<tenant>` can __NOT__ read contract <contractName> from `<node>`")
-    public void canNotReadContract(String tenantName, String contractName, QuorumNetworkProperty.Node node) {
+    public void canNotReadContract(String tenantName, String contractName, Node node) {
         Contract existingContract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
 
         requestAccessToken(tenantName);

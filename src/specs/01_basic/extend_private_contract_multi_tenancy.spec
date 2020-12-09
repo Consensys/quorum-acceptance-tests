@@ -8,6 +8,13 @@ In this spec, 4-node network allocates TM keys as below:
  - Node1 manages A1, A2, B1, B3
  - Node2 manages B2, D1
 
+We run the scenarios with each of the following privacy flag
+    | privacyFlag |
+    | StandardPrivate |
+    | PartyProtection |
+    | StateValidation |
+
+
 * Setup `"Tenant A"` access controls restricted to `"Node1"`, assigned TM keys `"A1,A2"` and with the following scopes
 
   | scope                                                |
@@ -41,7 +48,7 @@ This is to verify that tentants' state are isolated in the context of contract e
 This test case is important as the contract extension's implementation indeed
 copies states rather than replaying the transactions.
 
-* `"Tenant B"` deploys a "SimpleStorage" private contract, named "contractB", by sending a transaction to `"Node1"` with its TM key `"B1"` and private for `"B3"`
+* `"Tenant B"` deploys a <privacyFlag> `SimpleStorage` private contract, named "contractB", by sending a transaction to `"Node1"` with its TM key `"B1"` and private for `"B3"`
 * `"Tenant B"` extends contract "contractB" from `"Node1"` to `"B2"` in `"Node2"` with acceptance
 * `"Tenant B"` can read contract "contractB" from `"Node2"`
 * `"Tenant A"` can __NOT__ read contract "contractB" from `"Node1"`

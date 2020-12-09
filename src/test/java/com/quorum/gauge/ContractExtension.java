@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -59,7 +58,7 @@ public class ContractExtension extends AbstractSpecImplementation {
 
         final String transactionHash = result.getResult();
 
-        final Optional<TransactionReceipt> transactionReceipt = this.getTransactionReceipt(creator, transactionHash);
+        final Optional<TransactionReceipt> transactionReceipt = transactionService.pollTransactionReceipt(creator, transactionHash);
 
         assertThat(transactionReceipt.isPresent()).isTrue();
         assertThat(transactionReceipt.get().getStatus()).isEqualTo("0x1");
@@ -154,7 +153,7 @@ public class ContractExtension extends AbstractSpecImplementation {
 
         assertThat(result.getError()).isNull();
 
-        final Optional<TransactionReceipt> transactionReceipt = this.getTransactionReceipt(newNode, result.getResult());
+        final Optional<TransactionReceipt> transactionReceipt = transactionService.pollTransactionReceipt(newNode, result.getResult());
 
         assertThat(transactionReceipt.isPresent()).isTrue();
         assertThat(transactionReceipt.get().getStatus()).isEqualTo("0x1");
@@ -175,7 +174,7 @@ public class ContractExtension extends AbstractSpecImplementation {
         assertThat(voteResult.getError()).isNull();
 
         final Optional<TransactionReceipt> transactionReceipt
-            = this.getTransactionReceipt(node, voteResult.getResult());
+            = transactionService.pollTransactionReceipt(node, voteResult.getResult());
 
         assertThat(transactionReceipt.isPresent()).isTrue();
         assertThat(transactionReceipt.get().getStatus()).isEqualTo("0x1");
@@ -201,7 +200,7 @@ public class ContractExtension extends AbstractSpecImplementation {
 
         assertThat(result.getError()).isNull();
 
-        final Optional<TransactionReceipt> transactionReceipt = this.getTransactionReceipt(node, result.getResult());
+        final Optional<TransactionReceipt> transactionReceipt = transactionService.pollTransactionReceipt(node, result.getResult());
 
         assertThat(transactionReceipt.isPresent()).isTrue();
         assertThat(transactionReceipt.get().getStatus()).isEqualTo("0x1");
@@ -282,18 +281,6 @@ public class ContractExtension extends AbstractSpecImplementation {
         assertThat(result.getError()).isNull();
 
         Thread.sleep(1000);
-    }
-
-    private Optional<TransactionReceipt> getTransactionReceipt(final QuorumNetworkProperty.Node node, final String transactionHash) {
-        return transactionService
-            .getTransactionReceipt(node, transactionHash)
-            .repeatWhen(completed -> completed.delay(2, TimeUnit.SECONDS))
-            .takeUntil(ethGetTransactionReceipt -> {
-                return ethGetTransactionReceipt.getTransactionReceipt().isPresent();
-            })
-            .timeout(30, TimeUnit.SECONDS)
-            .blockingLast()
-            .getTransactionReceipt();
     }
 
 
