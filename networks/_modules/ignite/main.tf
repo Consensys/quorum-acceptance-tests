@@ -12,7 +12,7 @@ locals {
   // by default we allocate one named key per TM: K0, K1 ... Kn
   // this can be overrriden by the variable
   tm_named_keys_alloc = merge(
-    { for id in local.node_indices : id => [format("K%d", id)] },
+    { for id in local.node_indices : id => [format("UnnamedKey%d", id)] },
     var.override_tm_named_key_allocation
   )
   // by default we allocate one named account per node

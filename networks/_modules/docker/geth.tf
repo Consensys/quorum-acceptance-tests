@@ -149,7 +149,7 @@ exec geth \
 %{endif~}
   --port ${var.geth_networking[count.index].port.p2p} \
   --ethstats "Node${count.index + 1}:${var.ethstats_secret}@${var.ethstats_ip}:${var.ethstats.container.port}" \
-  --unlock 0 \
+  --unlock ${join(",", range(var.accounts_count[count.index]))} \
   --password ${local.container_geth_datadir}/${var.password_file_name} \
   ${var.consensus == "istanbul" ? "--istanbul.blockperiod 1 --syncmode full --mine --minerthreads 1" : format("--raft --raftport %d", var.geth_networking[count.index].port.raft)} ${var.additional_geth_args} $ADDITIONAL_GETH_ARGS
 EOF

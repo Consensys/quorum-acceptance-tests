@@ -69,8 +69,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.quorum.gauge.sol.SimpleStorage.FUNC_GET;
-import static java.util.Collections.singletonList;
-
 import static java.util.Collections.emptyList;
 
 @Service
@@ -91,21 +89,21 @@ public class ContractService extends AbstractService {
         return createSimpleContract(initialValue, QuorumNode.valueOf(source.getName()), targetNode, DEFAULT_GAS_LIMIT);
     }
 
-    public Observable<? extends Contract> createPublicSimpleContract(int initialValue, Node source) {
-        return createSimpleContract(initialValue, QuorumNode.valueOf(source.getName()), null, DEFAULT_GAS_LIMIT, emptyList());
+    public Observable<? extends Contract> createPublicSimpleContract(int initialValue, Node source, String ethAccount) {
+        return createSimpleContract(initialValue, QuorumNode.valueOf(source.getName()), ethAccount, null, DEFAULT_GAS_LIMIT, emptyList());
     }
 
-    public Observable<? extends Contract> createSimpleContract(int initialValue, Node source, String privateFromAlias, List<String> privateForAliases, List<PrivacyFlag> flags) {
-        return createSimpleContract(initialValue, source, privateFromAlias, privateForAliases, flags, DEFAULT_GAS_LIMIT);
+    public Observable<? extends Contract> createSimpleContract(int initialValue, Node source, String ethAccount, String privateFromAlias, List<String> privateForAliases, List<PrivacyFlag> flags) {
+        return createSimpleContract(initialValue, source, ethAccount, privateFromAlias, privateForAliases, flags, DEFAULT_GAS_LIMIT);
     }
 
-    public Observable<? extends Contract> createSimpleContract(int initialValue, Node source, String privateFromAliases, List<String> privateForAliases, List<PrivacyFlag> flags,  BigInteger gas) {
+    public Observable<? extends Contract> createSimpleContract(int initialValue, Node source, String ethAccount, String privateFromAliases, List<String> privateForAliases, List<PrivacyFlag> flags,  BigInteger gas) {
         if (CollectionUtils.isEmpty(flags)) {
             flags = emptyList();
         }
         Quorum client = connectionFactory().getConnection(source);
         List<PrivacyFlag> finalFlags = flags;
-        return accountService.getDefaultAccountAddress(source).flatMap(address -> {
+        return accountService.getAccountAddress(source, ethAccount).flatMap(address -> {
             EnhancedClientTransactionManager clientTransactionManager = new EnhancedClientTransactionManager(
                 client,
                 address,
@@ -127,10 +125,10 @@ public class ContractService extends AbstractService {
     }
 
     public Observable<? extends Contract> createSimpleContract(int initialValue, QuorumNode source, QuorumNode target, BigInteger gas) {
-        return createSimpleContract(initialValue, source, Arrays.asList(target), gas, Arrays.asList(PrivacyFlag.StandardPrivate));
+        return createSimpleContract(initialValue, source, null, Arrays.asList(target), gas, Arrays.asList(PrivacyFlag.StandardPrivate));
     }
 
-    public Observable<? extends Contract> createSimpleContract(int initialValue, QuorumNode source, List<QuorumNode> targets, BigInteger gas, List<PrivacyFlag> flags) {
+    public Observable<? extends Contract> createSimpleContract(int initialValue, QuorumNode source, String ethAccount, List<QuorumNode> targets, BigInteger gas, List<PrivacyFlag> flags) {
         Quorum client = connectionFactory().getConnection(source);
         final List<String> privateFor;
         if (null != targets) {
@@ -139,7 +137,7 @@ public class ContractService extends AbstractService {
             privateFor = null;
         }
 
-        return accountService.getDefaultAccountAddress(source).flatMap(address -> {
+        return accountService.getAccountAddress(networkProperty().getNode(source.name()), ethAccount).flatMap(address -> {
             EnhancedClientTransactionManager clientTransactionManager = new EnhancedClientTransactionManager(
                 client,
                 address,
@@ -247,12 +245,12 @@ public class ContractService extends AbstractService {
     }
 
     public Observable<TransactionReceipt> updateSimpleStorageContract(final int newValue, final String contractAddress, final Node source,
-                                                                      final String privateFromAlias,
+                                                                      String ethAccount, final String privateFromAlias,
                                                                       final List<String> privateForAliases) {
         final Quorum client = connectionFactory().getConnection(source);
         final BigInteger value = BigInteger.valueOf(newValue);
 
-        return accountService.getDefaultAccountAddress(source)
+        return accountService.getAccountAddress(source, ethAccount)
             .map(address -> new EnhancedClientTransactionManager(
                 client,
                 address,
@@ -267,11 +265,11 @@ public class ContractService extends AbstractService {
 
     public Observable<TransactionReceipt> updatePublicSimpleStorageContract(final int newValue,
                                                                             final String contractAddress,
-                                                                            final Node source) {
+                                                                            final Node source, String ethAccount) {
         final Quorum client = connectionFactory().getConnection(source);
         final BigInteger value = BigInteger.valueOf(newValue);
 
-        return accountService.getDefaultAccountAddress(source)
+        return accountService.getAccountAddress(source, ethAccount)
             .map(address -> new EnhancedClientTransactionManager(
                 client,
                 address,
@@ -284,11 +282,11 @@ public class ContractService extends AbstractService {
             );
     }
 
-    public Observable<TransactionReceipt> updateSimpleStorageDelegateContract(int newValue, String contractAddress, Node source, String privateFromAlias, List<String> privateForAliases) {
+    public Observable<TransactionReceipt> updateSimpleStorageDelegateContract(int newValue, String contractAddress, Node source, String ethAccount, String privateFromAlias, List<String> privateForAliases) {
         Quorum client = connectionFactory().getConnection(source);
         final BigInteger value = BigInteger.valueOf(newValue);
 
-        return accountService.getDefaultAccountAddress(source)
+        return accountService.getAccountAddress(source, ethAccount)
             .map(address -> new EnhancedClientTransactionManager(
                 client,
                 address,
@@ -510,9 +508,9 @@ public class ContractService extends AbstractService {
         }
     }
 
-    public Observable<? extends Contract> createClientReceiptPrivateSmartContract(Node source, String privateFromAlias, List<String> privateForAliases) {
+    public Observable<? extends Contract> createClientReceiptPrivateSmartContract(Node source, String ethAccount, String privateFromAlias, List<String> privateForAliases) {
         Quorum client = connectionFactory().getConnection(source);
-        return accountService.getDefaultAccountAddress(source).flatMap(address -> {
+        return accountService.getAccountAddress(source, ethAccount).flatMap(address -> {
             ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
                 client,
                 address,
@@ -624,9 +622,9 @@ public class ContractService extends AbstractService {
         return client.ethGetFilterLogs(filterId).flowable().toObservable();
     }
 
-    public Observable<? extends Contract> createSimpleDelegatePrivateContract(String delegateContractAddress, Node source, String privateFromAlias, List<String> privateForAliases) {
+    public Observable<? extends Contract> createSimpleDelegatePrivateContract(String delegateContractAddress, Node source, String ethAccount, String privateFromAlias, List<String> privateForAliases) {
         Quorum client = connectionFactory().getConnection(source);
-        return accountService.getDefaultAccountAddress(source)
+        return accountService.getAccountAddress(source, ethAccount)
             .flatMap(address -> {
                 ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
                     client,

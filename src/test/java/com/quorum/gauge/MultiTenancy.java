@@ -18,9 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.util.UriComponents;
-import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.util.UriUtils;
+import org.web3j.crypto.Credentials;
+import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.core.Response;
 import org.web3j.protocol.core.methods.response.EthFilter;
 import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
@@ -46,57 +46,71 @@ public class MultiTenancy extends AbstractSpecImplementation {
     ExtensionService extensionService;
 
     private static final Logger logger = LoggerFactory.getLogger(MultiTenancy.class);
-    // tenant -> namedKeys
-    private Map<String, List<String>> assignedNamedKeys = new HashMap<>();
-    // tenant -> nodes
-    private Map<String, List<String>> assignedNodes = new HashMap<>();
-    // tenant -> scopes
-    private Map<String, List<String>> assignedScopes = new HashMap<>();
+    // clientName -> nodes
+    private final Map<String, List<String>> assignedNodes = new HashMap<>();
+    // clientName -> scopes
+    private final Map<String, List<String>> assignedScopes = new HashMap<>();
 
-    @Step("Setup `<tenantName>` access controls restricted to `<nodes>`, assigned TM keys `<namedKeys>` and with the following scopes <table>")
-    public void configureAuthorizationServer(String tenantName, String nodes, String namedKeys, Table scopes) {
-        assignedNamedKeys.put(tenantName, Arrays.stream(namedKeys.split(","))
-            .map(String::trim)
-            .collect(Collectors.toList()));
-        List<String> nodeList = Arrays.stream(nodes.split(",")).map(String::trim).map(QuorumNode::valueOf).map(QuorumNode::name).collect(Collectors.toList());
-        assignedNodes.put(tenantName, nodeList);
+    @Step("Configure `<clientName>` in authorization server with: <table>")
+    public void setupClients(String clientName, Table scopes) {
+        Set<String> nodeList = new HashSet<>();
         List<String> scopeList = scopes.getTableRows().stream()
             .map(r -> r.getCell("scope"))
+            .map(s -> s.replace('`', ' '))
             .map(StringUtils::trim)
-            .map(s -> StringUtils.removeStart(s, "`"))
-            .map(s -> StringUtils.removeEnd(s, "`"))
-            .map(StringUtils::trim)
-            .map(s -> {
-                String newString = s;
-                for (QuorumNode node : networkProperty.getNodes().keySet()) {
-                    for (String namedKey : networkProperty.getNodes().get(node).getPrivacyAddressAliases().keySet()) {
-                        newString = StringUtils.replace(newString, "=" + namedKey, "=" + UriUtils.encode(privacyService.id(node, namedKey), StandardCharsets.UTF_8));
+            .map(rawScope -> {
+                String expandedScope = rawScope;
+                for (QuorumNode qn : networkProperty.getNodes().keySet()) {
+                    Node n = networkProperty.getNode(qn.name());
+                    for (String alias : n.getPrivacyAddressAliases().keySet()) {
+                        if (rawScope.contains("="+alias)) {
+                            nodeList.add(n.getName());
+                            expandedScope = StringUtils.replace(expandedScope, alias, UriUtils.encode(n.getPrivacyAddressAliases().get(alias), StandardCharsets.UTF_8));
+                        }
+                    }
+                    for (String alias : n.getAccountAliases().keySet()) {
+                        if (rawScope.contains("/" + alias) || rawScope.contains("=" + alias)) {
+                            nodeList.add(n.getName());
+                            expandedScope = StringUtils.replace(expandedScope, alias, n.getAccountAliases().get(alias).toLowerCase(Locale.ROOT));
+                        }
                     }
                 }
-                logger.debug("{} -> {}", s, newString);
-                return newString;
+                for (String alias : networkProperty.getWallets().keySet()) {
+                    if (rawScope.contains(alias)) {
+                        WalletData walletData = networkProperty.getWallets().get(alias);
+                        try {
+                            Credentials cred = WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath());
+                            expandedScope = StringUtils.replace(expandedScope, alias, cred.getAddress().toLowerCase(Locale.ROOT));
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+                logger.debug("{} -> {}", rawScope, expandedScope);
+                return expandedScope;
             }).collect(Collectors.toList());
-        assignedScopes.put(tenantName, scopeList);
-        assertThat(oAuth2Service.updateOrInsert(tenantName, scopeList, nodeList).blockingFirst()).isEqualTo(true);
+        assignedScopes.put(clientName, scopeList);
+        assignedNodes.put(clientName, List.copyOf(nodeList));
+        assertThat(oAuth2Service.updateOrInsert(clientName, scopeList, List.copyOf(nodeList)).blockingFirst()).isEqualTo(true);
     }
 
-    @Step("`<tenantName>` can deploy a <contractId> private contract to `<node>`, private from `<privateFrom>` and private for `<privateFor>`")
-    public void deployPrivateContractsUsingSelfManagedAccount(String tenantName, String contractId, QuorumNode node, String privateFrom, String privateFor) {
-        Observable<Boolean> deployPrivateContract = deployPrivateContract(tenantName, node, privateFrom, privateFor, contractId, networkProperty.getWallets().get("Wallet1"))
+    @Step("`<clientName>` can deploy a <contractId> private contract to `<node>`, private from `<privateFrom>`, signed by `<wallet>` and private for `<privateFor>`")
+    public void deployPrivateContractsUsingSelfManagedAccount(String clientName, String contractId, QuorumNode node, String privateFrom, String wallet, String privateFor) {
+        Observable<Boolean> deployPrivateContract = deployPrivateContract(clientName, node, privateFrom, privateFor, contractId, networkProperty.getWallets().get(wallet), null)
             .map(c -> c.isPresent() && c.get().getTransactionReceipt().isPresent());
         assertThat(deployPrivateContract.blockingFirst()).isTrue();
     }
 
-    @Step("`<tenantName>` can __NOT__ deploy a <contractId> private contract to `<node>`, private from `<privateFrom>` and private for `<privateFor>`")
-    public void denyDeployPrivateContractsUsingSelfManagedAccount(String tenantName, String contractId, QuorumNode node, String privateFrom, String privateFor) {
-        Observable<Boolean> deployPrivateContract = deployPrivateContract(tenantName, node, privateFrom, privateFor, contractId, networkProperty.getWallets().get("Wallet1"))
+    @Step("`<clientName>` can __NOT__ deploy a <contractId> private contract to `<node>`, private from `<privateFrom>`, signed by `<wallet>` and private for `<privateFor>`")
+    public void denyDeployPrivateContractsUsingSelfManagedAccount(String clientName, String contractId, QuorumNode node, String privateFrom, String wallet, String privateFor) {
+        Observable<Boolean> deployPrivateContract = deployPrivateContract(clientName, node, privateFrom, privateFor, contractId, networkProperty.getWallets().get(wallet), null)
             .map(c -> c.isPresent() && c.get().getTransactionReceipt().isPresent());
         assertThat(deployPrivateContract.blockingFirst()).isFalse();
     }
 
-    @Step("`<tenantName>` can request for RPC modules available in `<node>`")
-    public void canCallRPCModule(String tenantName, QuorumNode node) {
-        assertThat(oAuth2Service.requestAccessToken(tenantName,
+    @Step("`<clientName>` can request for RPC modules available in `<node>`")
+    public void canCallRPCModule(String clientName, QuorumNode node) {
+        assertThat(oAuth2Service.requestAccessToken(clientName,
             Collections.singletonList(node.name()),
             Stream.of("rpc://rpc_modules").collect(Collectors.toList()))
             .flatMap((r) -> utilService.getRpcModules(node).onExceptionResumeNext(Observable.just(Boolean.FALSE)))
@@ -104,9 +118,9 @@ public class MultiTenancy extends AbstractSpecImplementation {
         ).isEqualTo(true);
     }
 
-    @Step("`<tenantName>` can __NOT__ request for RPC modules available in `<node>`")
-    public void canNotCallRPCModule(String tenantName, QuorumNode node) {
-        assertThat(oAuth2Service.requestAccessToken(tenantName,
+    @Step("`<clientName>` can __NOT__ request for RPC modules available in `<node>`")
+    public void canNotCallRPCModule(String clientName, QuorumNode node) {
+        assertThat(oAuth2Service.requestAccessToken(clientName,
             Collections.singletonList(node.name()),
             Stream.of("rpc://rpc_modules").collect(Collectors.toList()))
             .flatMap((r) -> utilService.getRpcModules(node).onExceptionResumeNext(Observable.just(Boolean.FALSE)))
@@ -114,14 +128,14 @@ public class MultiTenancy extends AbstractSpecImplementation {
         ).isEqualTo(false);
     }
 
-    @Step("`<tenantName>` deploys a <privacyFlag> `SimpleStorage` private contract, named <contractName>, by sending a transaction to `<node>` with its TM key `<privateFrom>` and private for `<privateFor>`")
-    public void deploySimpleStorageContractWithFlag(String tenantName, PrivacyFlag privacyFlag, String contractName, Node node, String privateFrom, String privateFor) {
+    @Step("`<clientName>` deploys a <privacyFlag> `SimpleStorage` private contract, named <contractName>, by sending a transaction to `<node>` with its TM key `<privateFrom>` and private for `<privateFor>`")
+    public void deploySimpleStorageContractWithFlag(String clientName, PrivacyFlag privacyFlag, String contractName, Node node, String privateFrom, String privateFor) {
         List<String> privateForList = Arrays.stream(privateFor.split(",")).map(String::trim).collect(Collectors.toList());
-        requestAccessToken(tenantName);
+        requestAccessToken(clientName);
         Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
         accessToken.ifPresent(Context::storeAccessToken);
 
-        Contract contract = contractService.createSimpleContract(42, node, privateFrom, privateForList, List.of(privacyFlag))
+        Contract contract = contractService.createSimpleContract(42, node, null, privateFrom, privateForList, List.of(privacyFlag))
             .doOnTerminate(Context::removeAccessToken)
             .blockingFirst();
 
@@ -129,9 +143,9 @@ public class MultiTenancy extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(contractName + "_privateFrom", privacyService.id(privateFrom));
     }
 
-    @Step("`<tenantName>` deploys a <contractId> private contract, named <contractName>, by sending a transaction to `<node>` with its TM key `<privateFrom>` and private for `<privateFor>`")
-    public void deployPrivateContractsPrivateFor(String tenantName, String contractId, String contractName, QuorumNode node, String privateFrom, String privateFor) {
-        Contract contract = deployPrivateContract(tenantName, node, privateFrom, privateFor, contractId, networkProperty.getWallets().get("Wallet1"))
+    @Step("`<clientName>` deploys a <contractId> private contract, named <contractName>, by sending a transaction to `<node>` with its TM key `<privateFrom>`, signed by `<wallet>` and private for `<privateFor>`")
+    public void deployPrivateContractsPrivateFor(String clientName, String contractId, String contractName, QuorumNode node, String privateFrom, String wallet, String privateFor) {
+        Contract contract = deployPrivateContract(clientName, node, privateFrom, privateFor, contractId, networkProperty.getWallets().get(wallet), null)
             .doOnNext(c -> {
                 if (c.isEmpty() || c.get().getTransactionReceipt().isEmpty()) {
                     throw new RuntimeException("contract not deployed");
@@ -140,22 +154,18 @@ public class MultiTenancy extends AbstractSpecImplementation {
         logger.debug("Saving contract address {} with name {}", contract.getContractAddress(), contractName);
         DataStoreFactory.getScenarioDataStore().put(contractName + "_id", contractId);
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
-        DataStoreFactory.getScenarioDataStore().put(tenantName + contractId + contractName, new Object[]{node, privateFrom, privateFor});
+        DataStoreFactory.getScenarioDataStore().put(clientName + contractId + contractName, new Object[]{node, privateFrom, privateFor});
         DataStoreFactory.getScenarioDataStore().put(contractName + "_privateFrom", privacyService.id(privateFrom));
     }
 
-    @Step("`<tenantName>` can read <contractName> from <node>")
-    public void tenantCanReadContract(String tenantName, String contractName, Node node) {
+    @Step("`<clientName>` can read <contractName> from <node>")
+    public void clientCanReadContract(String clientName, String contractName, Node node) {
         String contractId = mustHaveValue(contractName + "_id", String.class);
         Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
-        List<String> requestScopes = Stream.concat(
-            Stream.of("rpc://eth_*"),
-            assignedNamedKeys.get(tenantName).stream().map(k -> UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
-                .queryParam("owned.eoa", "0x0")
-                .queryParam("from.tm", UriUtils.encode(privacyService.id(k), StandardCharsets.UTF_8))
-                .build()).map(UriComponents::toUriString)
-        ).collect(Collectors.toList());
-        oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.getName()), requestScopes)
+        if (!assignedScopes.containsKey(clientName)) {
+            throw new IllegalArgumentException(clientName + " is not assigned any scopes");
+        }
+        oAuth2Service.requestAccessToken(clientName, Collections.singletonList(node.getName()), assignedScopes.get(clientName))
             .doOnNext(s -> {
                 switch (contractId) {
                     case "SimpleStorage":
@@ -169,25 +179,16 @@ public class MultiTenancy extends AbstractSpecImplementation {
             .blockingSubscribe();
     }
 
-    @Step("`<tenantName>` fails to read <contractName> from <node>")
-    public void tenantCanNotReadContract(String tenantName, String contractName, Node node) {
+    @Step("`<clientName>` fails to read <contractName> from <node>")
+    public void clientCanNotReadContract(String clientName, String contractName, Node node) {
         String contractId = mustHaveValue(contractName + "_id", String.class);
         Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
-        List<String> requestScopes = Stream.concat(
-            Stream.of("rpc://eth_*"),
-            assignedNamedKeys.get(tenantName).stream().map(k -> UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
-                .queryParam("owned.eoa", "0x0")
-                .queryParam("from.tm", UriUtils.encode(privacyService.id(k), StandardCharsets.UTF_8))
-                .build()).map(UriComponents::toUriString)
-        ).collect(Collectors.toList());
-        assertThatThrownBy(() -> oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.getName()), requestScopes)
+        assertThatThrownBy(() -> requestAccessToken(clientName)
             .doOnNext(s -> {
-                switch (contractId) {
-                    case "SimpleStorage":
-                        contractService.readSimpleContractValue(node, c.getContractAddress()).blockingSubscribe();
-                        break;
-                    default:
-                        throw new RuntimeException("unknown contract " + contractId + " with name " + contractName);
+                if ("SimpleStorage".equals(contractId)) {
+                    contractService.readSimpleContractValue(node, c.getContractAddress()).blockingSubscribe();
+                } else {
+                    throw new RuntimeException("unknown contract " + contractId + " with name " + contractName);
                 }
             })
             .doOnTerminate(Context::removeAccessToken)
@@ -195,17 +196,12 @@ public class MultiTenancy extends AbstractSpecImplementation {
         ).hasMessageContaining("not authorized");
     }
 
-    @Step("`<tenantName>` writes a new arbitrary value to <contractName> successfully by sending a transaction to `<node>` with its TM key `<privateFrom>` private for `<privateFor>`")
-    public void setSimpleContractValue(String tenantName, String contractName, QuorumNode node, String privateFrom, String privateFor) {
+    @Step("`<clientName>` writes a new arbitrary value to <contractName> successfully by sending a transaction to `<node>` with its TM key `<privateFrom>`, signed by `<wallet>` and private for `<privateFor>`")
+    public void setRawSimpleContractValue(String clientName, String contractName, QuorumNode node, String privateFrom, String wallet, String privateFor) {
         Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
         List<String> privateForList = Arrays.stream(privateFor.split(",")).map(String::trim).collect(Collectors.toList());
-        UriComponents contractScope = UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
-            .queryParam("owned.eoa", "0x0")
-            .queryParam("from.tm", UriUtils.encode(privacyService.id(node, privateFrom), StandardCharsets.UTF_8))
-            .build();
-        List<String> requestScopes = Stream.of("rpc://eth_*", contractScope.toUriString()).collect(Collectors.toList());
-        assertThat(oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
-            .flatMap(t -> rawContractService.updateRawSimplePrivateContract(100, c.getContractAddress(), networkProperty.getWallets().get("Wallet1"), node, privateFrom, privateForList))
+        assertThat(requestAccessToken(clientName)
+            .flatMap(t -> rawContractService.updateRawSimplePrivateContract(100, c.getContractAddress(), networkProperty.getWallets().get(wallet), node, privateFrom, privateForList))
             .map(Optional::of)
             .onErrorResumeNext(o -> {
                 return Observable.just(Optional.empty());
@@ -215,23 +211,34 @@ public class MultiTenancy extends AbstractSpecImplementation {
         ).isTrue();
     }
 
-    @Step("`<tenantName>` fails to write a new arbitrary value to <contractName> by sending a transaction to `<node>` with its TM key `<privateFrom>` and private for `<privateForList>`")
-    public void failToSetSimpleContractValue(String tenantName, String contractName, QuorumNode node, String privateFrom, String privateFor) {
+    @Step("`<clientName>` writes a new arbitrary value to <contractName> successfully by sending a transaction to `<node>` with its TM key `<privateFrom>` using `<ethAccount>` and private for `<privateFor>`")
+    public void setSimpleContractValue(String clientName, String contractName, Node node, String privateFrom, String ethAccount, String privateFor) {
+        Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
+        List<String> privateForList = Arrays.stream(privateFor.split(",")).map(String::trim).collect(Collectors.toList());
+        assertThat(requestAccessToken(clientName)
+            .flatMap(t -> contractService.updateSimpleStorageContract(100, c.getContractAddress(), node, ethAccount, privateFrom, privateForList))
+            .map(Optional::of)
+            .onErrorResumeNext(o -> {
+                return Observable.just(Optional.empty());
+            })
+            .doOnTerminate(Context::removeAccessToken)
+            .map(r -> r.isPresent() && r.get().isStatusOK()).blockingFirst()
+        ).isTrue();
+    }
+
+
+    @Step("`<clientName>` fails to write a new arbitrary value to <contractName> by sending a transaction to `<node>` with its TM key `<privateFrom>`, signed by `<wallet>` and private for `<privateForList>`")
+    public void failToSetSimpleContractValue(String clientName, String contractName, QuorumNode node, String privateFrom, String wallet, String privateFor) {
         Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
         String contractId = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "_id", String.class);
         List<String> privateForList = Arrays.stream(privateFor.split(",")).map(String::trim).collect(Collectors.toList());
-        UriComponents contractScope = UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
-            .queryParam("owned.eoa", "0x0")
-            .queryParam("from.tm", UriUtils.encode(privacyService.id(node, privateFrom), StandardCharsets.UTF_8))
-            .build();
-        List<String> requestScopes = Stream.of("rpc://eth_*", contractScope.toUriString()).collect(Collectors.toList());
         AtomicReference<Throwable> caughtException = new AtomicReference<>();
-        assertThat(oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
+        assertThat(requestAccessToken(clientName)
             .flatMap(t -> {
                 if (contractId.startsWith("SimpleStorageDelegate")) {
-                    return rawContractService.updateRawSimpleDelegatePrivateContract(100, c.getContractAddress(), networkProperty.getWallets().get("Wallet1"), node, privateFrom, privateForList);
+                    return rawContractService.updateRawSimpleDelegatePrivateContract(100, c.getContractAddress(), networkProperty.getWallets().get(wallet), node, privateFrom, privateForList);
                 } else {
-                    return rawContractService.updateRawSimplePrivateContract(100, c.getContractAddress(), networkProperty.getWallets().get("Wallet1"), node, privateFrom, privateForList);
+                    return rawContractService.updateRawSimplePrivateContract(100, c.getContractAddress(), networkProperty.getWallets().get(wallet), node, privateFrom, privateForList);
                 }
             })
             .map(Optional::of)
@@ -248,20 +255,15 @@ public class MultiTenancy extends AbstractSpecImplementation {
         assertThat(caughtException.get()).hasMessageContaining("not authorized");
     }
 
-    @Step("`<tenantName>` invokes getFromDelgate with nonce shift <nonceShift> in <contractName> by sending a transaction to `<node>` with its TM key `<privateFrom>` and private for `<privateForList>` name this transaction <transactionName>")
-    public void invokeGetFromDelegate(String tenantName, int nonceShift, String contractName, QuorumNode node, String privateFrom, String privateFor, String transactionName) {
+    @Step("`<clientName>` invokes getFromDelgate with nonce shift <nonceShift> in <contractName> by sending a transaction to `<node>` with its TM key `<privateFrom>`, signed by `<wallet>` and private for `<privateForList>` name this transaction <transactionName>")
+    public void invokeGetFromDelegate(String clientName, int nonceShift, String contractName, QuorumNode node, String privateFrom, String wallet, String privateFor, String transactionName) {
         Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
         String contractId = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "_id", String.class);
         List<String> privateForList = Arrays.stream(privateFor.split(",")).map(String::trim).collect(Collectors.toList());
-        UriComponents contractScope = UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
-            .queryParam("owned.eoa", "0x0")
-            .queryParam("from.tm", UriUtils.encode(privacyService.id(node, privateFrom), StandardCharsets.UTF_8))
-            .build();
-        List<String> requestScopes = Stream.of("rpc://eth_*", contractScope.toUriString()).collect(Collectors.toList());
         AtomicReference<Throwable> caughtException = new AtomicReference<>();
-        assertThat(oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
+        assertThat(requestAccessToken(clientName)
             .flatMap(t -> {
-                return rawContractService.invokeGetFromDelegateInSneakyWrapper(nonceShift, c.getContractAddress(), networkProperty.getWallets().get("Wallet1"), node, privateFrom, privateForList);
+                return rawContractService.invokeGetFromDelegateInSneakyWrapper(nonceShift, c.getContractAddress(), networkProperty.getWallets().get(wallet), node, privateFrom, privateForList);
             })
             .map(Optional::of)
             .doOnError(e -> {
@@ -281,17 +283,12 @@ public class MultiTenancy extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(transactionName, txe.getTransactionHash().get());
     }
 
-    @Step("`<tenantName>` invokes setDelegate to <value> in <contractName> by sending a transaction to `<node>` with its TM key `<privateFrom>` private for `<privateFor>`")
-    public void invokeSetDelegate(String tenantName, boolean value, String contractName, QuorumNode node, String privateFrom, String privateFor) {
+    @Step("`<clientName>` invokes setDelegate to <value> in <contractName> by sending a transaction to `<node>` with its TM key `<privateFrom>`, signed by `<wallet>` and private for `<privateFor>`")
+    public void invokeSetDelegate(String clientName, boolean value, String contractName, QuorumNode node, String privateFrom, String wallet, String privateFor) {
         Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
         List<String> privateForList = Arrays.stream(privateFor.split(",")).map(String::trim).collect(Collectors.toList());
-        UriComponents contractScope = UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
-            .queryParam("owned.eoa", "0x0")
-            .queryParam("from.tm", UriUtils.encode(privacyService.id(node, privateFrom), StandardCharsets.UTF_8))
-            .build();
-        List<String> requestScopes = Stream.of("rpc://eth_*", contractScope.toUriString()).collect(Collectors.toList());
-        assertThat(oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
-            .flatMap(t -> rawContractService.updateDelegateInSneakyWrapperContract(value, c.getContractAddress(), networkProperty.getWallets().get("Wallet1"), node, privateFrom, privateForList))
+        assertThat(requestAccessToken(clientName)
+            .flatMap(t -> rawContractService.updateDelegateInSneakyWrapperContract(value, c.getContractAddress(), networkProperty.getWallets().get(wallet), node, privateFrom, privateForList))
             .map(Optional::of)
             .onErrorResumeNext(o -> {
                 return Observable.just(Optional.empty());
@@ -300,18 +297,18 @@ public class MultiTenancy extends AbstractSpecImplementation {
             .map(r -> r.isPresent() && r.get().isStatusOK()).blockingFirst()
         ).isTrue();
     }
+    
+    private Observable<String> requestAccessToken(String clientName) {
+        if (!assignedNodes.containsKey(clientName) || !assignedScopes.containsKey(clientName)) {
+            throw new IllegalArgumentException(clientName + " is not setup yet");
+        }
+        return oAuth2Service.requestAccessToken(clientName, assignedNodes.get(clientName), assignedScopes.get(clientName));
+    }
 
-    @Step("`<tenantName>` invokes get in <contractName> on `<node>` and gets value <value>")
-    public void invokeGetOnSkeakyWrapper(String tenantName, String contractName, QuorumNode node, int value) {
+    @Step("`<clientName>` invokes get in <contractName> on `<node>` and gets value <value>")
+    public void invokeGetOnSkeakyWrapper(String clientName, String contractName, QuorumNode node, int value) {
         Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
-        List<String> requestScopes = Stream.concat(
-            Stream.of("rpc://eth_*", "rpc://rpc_modules"),
-            assignedNamedKeys.get(tenantName).stream().map(k -> UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
-                .queryParam("owned.eoa", "0x0")
-                .queryParam("from.tm", UriUtils.encode(privacyService.id(k), StandardCharsets.UTF_8))
-                .build()).map(UriComponents::toUriString)
-        ).collect(Collectors.toList());
-        oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
+        requestAccessToken(clientName)
             .doOnNext(s -> {
                logger.debug("token {}",s);
                assertThat(rawContractService.invokeGetInSneakyWrapper(node, c.getContractAddress())).isEqualTo( value);
@@ -320,17 +317,10 @@ public class MultiTenancy extends AbstractSpecImplementation {
             .blockingSubscribe();
     }
 
-    @Step("`<tenantName>` checks the transaction <transactionName> on `<node>` has failed")
-    public void checkTransactionStatus(String tenantName, String transactionName, QuorumNode node) {
+    @Step("`<clientName>` checks the transaction <transactionName> on `<node>` has failed")
+    public void checkTransactionStatus(String clientName, String transactionName, QuorumNode node) {
         String transactionHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), transactionName, String.class);
-        List<String> requestScopes = Stream.concat(
-            Stream.of("rpc://eth_*", "rpc://rpc_modules"),
-            assignedNamedKeys.get(tenantName).stream().map(k -> UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
-                .queryParam("owned.eoa", "0x0")
-                .queryParam("from.tm", UriUtils.encode(privacyService.id(k), StandardCharsets.UTF_8))
-                .build()).map(UriComponents::toUriString)
-        ).collect(Collectors.toList());
-        oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
+        requestAccessToken(clientName)
             .doOnNext(s -> {
                 logger.debug("token {}",s);
                 Optional<TransactionReceipt> transactionReceipt = transactionService.getTransactionReceipt(node, transactionHash).blockingFirst().getTransactionReceipt();
@@ -341,11 +331,9 @@ public class MultiTenancy extends AbstractSpecImplementation {
             .blockingSubscribe();
     }
 
-    @Step("`<tenantName>` deploys a <contractId> public contract, named <contractName>, by sending a transaction to `<node>`")
-    public void deployPublicContract(String tenantName, String contractId, String contractName, QuorumNode node) {
-        // only need to request access to eth_* apis
-        List<String> requestScopes = Stream.of("rpc://eth_*").collect(Collectors.toList());
-        Contract contract = oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
+    @Step("`<clientName>` deploys a <contractId> public contract, named <contractName>, by sending a transaction to `<node>`")
+    public void deployPublicContract(String clientName, String contractId, String contractName, QuorumNode node) {
+        Contract contract = requestAccessToken(clientName)
             .flatMap(t -> rawContractService.createRawSimplePublicContract(42, networkProperty.getWallets().get("Wallet1"), node))
             .doOnTerminate(Context::removeAccessToken)
             .doOnNext(c -> {
@@ -358,12 +346,10 @@ public class MultiTenancy extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
     }
 
-    @Step("`<tenantName>` deploys a <contractId> public contract, named <contractName>, by sending a transaction to `<node>` using node's default account")
-    public void deployNodeManagedPublicContract(String tenantName, String contractId, String contractName, Node node) {
-        // only need to request access to eth_* apis
-        List<String> requestScopes = Stream.of("rpc://eth_*").collect(Collectors.toList());
-        Contract contract = oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.getName()), requestScopes)
-            .flatMap(t -> contractService.createPublicSimpleContract(42, node))
+    @Step("`<clientName>` deploys a <contractId> public contract, named <contractName>, by sending a transaction to `<node>` using `<ethAccount>`")
+    public void deployNodeManagedPublicContract(String clientName, String contractId, String contractName, Node node, String ethAccount) {
+        Contract contract = requestAccessToken(clientName)
+            .flatMap(t -> contractService.createPublicSimpleContract(42, node, ethAccount))
             .doOnTerminate(Context::removeAccessToken)
             .doOnNext(c -> {
                 if (c == null || !c.getTransactionReceipt().isPresent()) {
@@ -375,12 +361,10 @@ public class MultiTenancy extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
     }
 
-    @Step("`<tenantName>` writes a new value <newValue> to <contractName> successfully by sending a transaction to `<node>`")
-    public void setSimpleContractValue(String tenantName, int newValue, String contractName, QuorumNode node) {
+    @Step("`<clientName>` writes a new value <newValue> to <contractName> successfully by sending a transaction to `<node>`")
+    public void setSimpleContractValue(String clientName, int newValue, String contractName, QuorumNode node) {
         Contract contract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
-        // only need to request access to eth_* apis
-        List<String> requestScopes = Stream.of("rpc://eth_*").collect(Collectors.toList());
-        assertThat(oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
+        assertThat(requestAccessToken(clientName)
             .flatMap(t -> rawContractService.updateRawSimplePublicContract(node, networkProperty.getWallets().get("Wallet1"), contract.getContractAddress(), newValue))
             .map(Optional::of)
             .onErrorResumeNext(o -> {
@@ -391,13 +375,11 @@ public class MultiTenancy extends AbstractSpecImplementation {
         ).isTrue();
     }
 
-    @Step("`<tenantName>` writes a new value <newValue> to <contractName> successfully by sending a transaction to `<node>` using node's default account")
-    public void setNodeManagedPublicSimpleContractValue(String tenantName, int newValue, String contractName, Node node) {
+    @Step("`<clientName>` writes a new value <newValue> to <contractName> successfully by sending a transaction to `<node>` using `<ethAccount>`")
+    public void setNodeManagedPublicSimpleContractValue(String clientName, int newValue, String contractName, Node node, String ethAccount) {
         Contract contract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
-        // only need to request access to eth_* apis
-        List<String> requestScopes = Stream.of("rpc://eth_*").collect(Collectors.toList());
-        assertThat(oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.getName()), requestScopes)
-            .flatMap(t -> contractService.updatePublicSimpleStorageContract(newValue, contract.getContractAddress(), node))
+        assertThat(requestAccessToken(clientName)
+            .flatMap(t -> contractService.updatePublicSimpleStorageContract(newValue, contract.getContractAddress(), node, ethAccount))
             .map(Optional::of)
             .onErrorResumeNext(o -> {
                 return Observable.just(Optional.empty());
@@ -407,32 +389,20 @@ public class MultiTenancy extends AbstractSpecImplementation {
         ).isTrue();
     }
 
-    @Step("`<tenantName>` reads the value from <contractName> successfully by sending a request to `<node>` and the value returns <expectedValue>")
-    public void readSimpleContractValue(String tenantName, String contractName, QuorumNode node, int expectedValue) {
+    @Step("`<clientName>` reads the value from <contractName> successfully by sending a request to `<node>` and the value returns <expectedValue>")
+    public void readSimpleContractValue(String clientName, String contractName, QuorumNode node, int expectedValue) {
         Contract contract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
-        // only need to request access to eth_* apis
-        List<String> requestScopes = Stream.of("rpc://eth_*").collect(Collectors.toList());
-        assertThat(oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
+        assertThat(requestAccessToken(clientName)
             .flatMap(t -> Observable.fromCallable(() -> contractService.readSimpleContractValue(node, contract.getContractAddress())))
             .doOnTerminate(Context::removeAccessToken)
             .blockingFirst()
         ).isEqualTo(expectedValue);
     }
 
-    @Step("`<tenantName>`, initially allocated with key(s) `<namedKey>`, subscribes to log events from <contractName> in `<node>`, named this subscription as <subscriptionName>")
-    public void subscribeLogs(String tenantName, String namedKey, String contractName, QuorumNode node, String subscriptionName) {
+    @Step("`<clientName>`, initially allocated with key(s) `<namedKey>`, subscribes to log events from <contractName> in `<node>`, named this subscription as <subscriptionName>")
+    public void subscribeLogs(String clientName, String namedKey, String contractName, QuorumNode node, String subscriptionName) {
         Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
-
-        List<String> requestScopes = Stream.concat(Stream.of("rpc://eth_*"),
-            Arrays.stream(namedKey.split(",")).map(String::trim).distinct()
-                .map(k -> UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
-                    .queryParam("owned.eoa", "0x0")
-                    .queryParam("from.tm", UriUtils.encode(privacyService.id(node, k), StandardCharsets.UTF_8))
-                    .build())
-                .map(UriComponents::toUriString))
-            .collect(Collectors.toList());
-        EthFilter filter = oAuth2Service
-            .requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
+        EthFilter filter = requestAccessToken(clientName)
             .flatMap(t -> contractService.newLogFilter(node, c.getContractAddress()))
             .doOnTerminate(() -> Context.removeAccessToken())
             .blockingFirst();
@@ -441,23 +411,18 @@ public class MultiTenancy extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(subscriptionName + "filter", filter.getFilterId());
         DataStoreFactory.getScenarioDataStore().put(subscriptionName + "node", node);
         DataStoreFactory.getScenarioDataStore().put(subscriptionName + "namedKey", namedKey);
-        DataStoreFactory.getScenarioDataStore().put(subscriptionName + "tenantName", tenantName);
+        DataStoreFactory.getScenarioDataStore().put(subscriptionName + "clientName", clientName);
     }
 
-    @Step("`<tenantName>` executes <contractName>'s `deposit()` function <times> times with arbitrary id and value between original parties")
-    public void depositClientReceipt(String tenantName, String contractName, int times) {
+    @Step("`<clientName>` executes <contractName>'s `deposit()` function <times> times with arbitrary id and value between original parties")
+    public void depositClientReceipt(String clientName, String contractName, int times) {
         Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
-        Object[] data = mustHaveValue(DataStoreFactory.getScenarioDataStore(), tenantName + "ClientReceipt" + contractName, Object[].class);
+        Object[] data = mustHaveValue(DataStoreFactory.getScenarioDataStore(), clientName + "ClientReceipt" + contractName, Object[].class);
         QuorumNode node = (QuorumNode) data[0];
         String privateFrom = (String) data[1];
         String privateFor = (String) data[2];
         List<String> privateForList = Arrays.stream(privateFor.split(",")).map(String::trim).collect(Collectors.toList());
-        UriComponents writeContractScope = UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
-            .queryParam("owned.eoa", "0x0")
-            .queryParam("from.tm", UriUtils.encode(privacyService.id(node, privateFrom), StandardCharsets.UTF_8))
-            .build();
-        List<String> requestScopes = Stream.of("rpc://eth_*", writeContractScope.toUriString()).collect(Collectors.toList());
-        oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes).blockingFirst();
+        requestAccessToken(clientName).blockingSubscribe();
         try {
             List<String> txHashes = new ArrayList<>();
             for (int i = 0; i < times; i++) {
@@ -485,18 +450,9 @@ public class MultiTenancy extends AbstractSpecImplementation {
         BigInteger filterId = mustHaveValue(DataStoreFactory.getScenarioDataStore(), subscriptionName + "filter", BigInteger.class);
         QuorumNode node = mustHaveValue(DataStoreFactory.getScenarioDataStore(), subscriptionName + "node", QuorumNode.class);
         String namedKey = mustHaveValue(DataStoreFactory.getScenarioDataStore(), subscriptionName + "namedKey", String.class);
-        String tenantName = mustHaveValue(DataStoreFactory.getScenarioDataStore(), subscriptionName + "tenantName", String.class);
+        String clientName = mustHaveValue(DataStoreFactory.getScenarioDataStore(), subscriptionName + "clientName", String.class);
 
-        List<String> requestScopes = Stream.concat(Stream.of("rpc://eth_*"),
-            Arrays.stream(namedKey.split(",")).map(String::trim).distinct()
-                .map(k -> UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
-                    .queryParam("owned.eoa", "0x0")
-                    .queryParam("from.tm", UriUtils.encode(privacyService.id(node, k), StandardCharsets.UTF_8))
-                    .build())
-                .map(UriComponents::toUriString))
-            .collect(Collectors.toList());
-        EthLog ethLog = oAuth2Service
-            .requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
+        EthLog ethLog = requestAccessToken(clientName)
             .flatMap(t -> contractService.getFilterLogs(node, filterId))
             .doOnTerminate(Context::removeAccessToken)
             .blockingFirst();
@@ -511,16 +467,10 @@ public class MultiTenancy extends AbstractSpecImplementation {
         }
     }
 
-    @Step("`<tenantName>`, initially allocated with key(s) `<namedKey>`, sees <expectedCount> events in total from transaction receipts in `<node>`")
-    public void eventsFromTransactionReceipts(String tenantName, String namedKey, int expectedCount, QuorumNode node) {
+    @Step("`<clientName>`, initially allocated with key(s) `<namedKey>`, sees <expectedCount> events in total from transaction receipts in `<node>`")
+    public void eventsFromTransactionReceipts(String clientName, String namedKey, int expectedCount, QuorumNode node) {
         String[] txHashes = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "hashes", String[].class);
-        UriComponents contractScope = UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
-            .queryParam("owned.eoa", "0x0")
-            .queryParam("from.tm", UriUtils.encode(privacyService.id(node, namedKey), StandardCharsets.UTF_8))
-            .build();
-        List<String> requestScopes = Stream.of("rpc://eth_*", contractScope.toUriString()).collect(Collectors.toList());
-        oAuth2Service
-            .requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
+        requestAccessToken(clientName)
             .doOnNext(t -> {
                 int logCount = 0;
                 for (String h : txHashes) {
@@ -531,38 +481,26 @@ public class MultiTenancy extends AbstractSpecImplementation {
                 assertThat(logCount).isEqualTo(expectedCount);
             })
             .doOnTerminate(Context::removeAccessToken)
-            .blockingFirst();
+            .blockingSubscribe();
     }
 
-    @Step("`<tenantName>`, initially allocated with key(s) `<namedKey>`, sees <expectedCount> events when filtering by <contractName> address in `<node>`")
-    public void eventsFromGetLogs(String tenantName, String namedKey, int expectedCount, String contractName, QuorumNode node) {
+    @Step("`<clientName>`, initially allocated with key(s) `<namedKey>`, sees <expectedCount> events when filtering by <contractName> address in `<node>`")
+    public void eventsFromGetLogs(String clientName, String namedKey, int expectedCount, String contractName, QuorumNode node) {
         Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
-        UriComponents contractScope = UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
-            .queryParam("owned.eoa", "0x0")
-            .queryParam("from.tm", UriUtils.encode(privacyService.id(node, namedKey), StandardCharsets.UTF_8))
-            .build();
-        List<String> requestScopes = Stream.of("rpc://eth_*", contractScope.toUriString()).collect(Collectors.toList());
-        oAuth2Service
-            .requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
+        requestAccessToken(clientName)
             .doOnNext(t -> {
                 EthLog ethLog = transactionService.getLogsUsingFilter(node, c.getContractAddress()).blockingFirst();
 
                 assertThat(ethLog.getLogs().size()).isEqualTo(expectedCount);
             })
             .doOnTerminate(Context::removeAccessToken)
-            .blockingFirst();
+            .blockingSubscribe();
     }
 
-    @Step("`<tenantName>`, initially allocated with key(s) `<namedKey>`, sees <expectedErrorMsg> when retrieving logs from transaction receipts in `<node>`")
-    public void exceptionMessageFromTransactionReceipts(String tenantName, String namedKey, String expectedErrorMsg, QuorumNode node) {
+    @Step("`<clientName>`, initially allocated with key(s) `<namedKey>`, sees <expectedErrorMsg> when retrieving logs from transaction receipts in `<node>`")
+    public void exceptionMessageFromTransactionReceipts(String clientName, String namedKey, String expectedErrorMsg, QuorumNode node) {
         String[] txHashes = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "hashes", String[].class);
-        UriComponents contractScope = UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
-            .queryParam("owned.eoa", "0x0")
-            .queryParam("from.tm", UriUtils.encode(privacyService.id(node, namedKey), StandardCharsets.UTF_8))
-            .build();
-        List<String> requestScopes = Stream.of("rpc://eth_*", contractScope.toUriString()).collect(Collectors.toList());
-        EthGetTransactionReceipt ethTxReceipt = oAuth2Service
-            .requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
+        EthGetTransactionReceipt ethTxReceipt = requestAccessToken(clientName)
             .flatMap(t -> transactionService.getTransactionReceipt(node, txHashes[0]))
             .doOnTerminate(Context::removeAccessToken)
             .blockingFirst();
@@ -571,16 +509,10 @@ public class MultiTenancy extends AbstractSpecImplementation {
         assertThat(ethTxReceipt.getError().getMessage()).contains(expectedErrorMsg);
     }
 
-    @Step("`<tenantName>`, initially allocated with key(s) `<namedKey>`, sees <expectedErrorMsg> when filtering logs by <contractName> address in `<node>`")
-    public void exceptionMessageFromGetLogs(String tenantName, String namedKey, String expectedErrorMsg, String contractName, QuorumNode node) {
+    @Step("`<clientName>`, initially allocated with key(s) `<namedKey>`, sees <expectedErrorMsg> when filtering logs by <contractName> address in `<node>`")
+    public void exceptionMessageFromGetLogs(String clientName, String namedKey, String expectedErrorMsg, String contractName, QuorumNode node) {
         Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
-        UriComponents contractScope = UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
-            .queryParam("owned.eoa", "0x0")
-            .queryParam("from.tm", UriUtils.encode(privacyService.id(node, namedKey), StandardCharsets.UTF_8))
-            .build();
-        List<String> requestScopes = Stream.of("rpc://eth_*", contractScope.toUriString()).collect(Collectors.toList());
-        EthLog ethLog = oAuth2Service
-            .requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
+        EthLog ethLog = requestAccessToken(clientName)
             .flatMap(t -> transactionService.getLogsUsingFilter(node, c.getContractAddress()))
             .doOnTerminate(Context::removeAccessToken)
             .blockingFirst();
@@ -589,19 +521,9 @@ public class MultiTenancy extends AbstractSpecImplementation {
         assertThat(ethLog.getError().getMessage()).contains(expectedErrorMsg);
     }
 
-    private Observable<Optional<Contract>> deployPrivateContract(String tenantName, QuorumNode node, String privateFrom, String privateFor, String contractId, WalletData wallet) {
+    private Observable<Optional<Contract>> deployPrivateContract(String clientName, QuorumNode node, String privateFrom, String privateFor, String contractId, WalletData wallet, String ethAccount) {
         List<String> privateForList = Arrays.stream(privateFor.split(",")).map(String::trim).collect(Collectors.toList());
-        if (!assignedNamedKeys.containsKey(tenantName)) {
-            throw new IllegalArgumentException(tenantName + " has no assigned TM keys");
-        }
-        List<String> requestScopes = Stream.concat(
-            assignedScopes.get(tenantName).stream().filter(s -> s.startsWith("rpc://")),
-            assignedNamedKeys.get(tenantName).stream().map(k -> UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
-                .queryParam("owned.eoa", "0x0")
-                .queryParam("from.tm", UriUtils.encode(privacyService.id(k), StandardCharsets.UTF_8))
-                .build()).map(UriComponents::toUriString)
-        ).collect(Collectors.toList());
-        return oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
+        return requestAccessToken(clientName)
             .flatMap(t -> {
                 String realContractId = contractId;
                 String delegateContractAddress = "";
@@ -623,19 +545,19 @@ public class MultiTenancy extends AbstractSpecImplementation {
                 switch (realContractId) {
                     case "SimpleStorage":
                         if (wallet == null) {
-                            return contractService.createSimpleContract(42, source, privateFrom, privateForList, null);
+                            return contractService.createSimpleContract(42, source, ethAccount, privateFrom, privateForList, null);
                         } else {
                             return rawContractService.createRawSimplePrivateContract(42, wallet, node, privateFrom, privateForList);
                         }
                     case "ClientReceipt":
                         if (wallet == null) {
-                            return contractService.createClientReceiptPrivateSmartContract(source, privateFrom, privateForList);
+                            return contractService.createClientReceiptPrivateSmartContract(source, ethAccount, privateFrom, privateForList);
                         } else {
                             return rawContractService.createRawClientReceiptPrivateContract(wallet, node, privateFrom, privateForList);
                         }
                     case "SimpleStorageDelegate":
                         if (wallet == null) {
-                            return contractService.createSimpleDelegatePrivateContract(delegateContractAddress, source, privateFrom, privateForList);
+                            return contractService.createSimpleDelegatePrivateContract(delegateContractAddress, source, ethAccount, privateFrom, privateForList);
                         } else {
                             return rawContractService.createRawSimpleDelegatePrivateContract(delegateContractAddress, wallet, node, privateFrom, privateForList);
                         }
@@ -655,23 +577,23 @@ public class MultiTenancy extends AbstractSpecImplementation {
             .doOnTerminate(Context::removeAccessToken);
     }
 
-    @Step("`<tenantName>` can deploy a <contractId> private contract to `<node>` using node's default account, private from `<privateFrom>` and private for `<privateFor>`")
-    public void deployPrivateContractsUsingNodeManagedAccount(String tenantName, String contractId, QuorumNode node, String privateFrom, String privateFor) {
-        Observable<Boolean> deployPrivateContract = deployPrivateContract(tenantName, node, privateFrom, privateFor, contractId, null)
+    @Step("`<clientName>` can deploy a <contractId> private contract to `<node>` using `<ethAccount>`, private from `<privateFrom>` and private for `<privateFor>`")
+    public void deployPrivateContractsUsingNodeManagedAccount(String clientName, String contractId, QuorumNode node, String ethAccount, String privateFrom, String privateFor) {
+        Observable<Boolean> deployPrivateContract = deployPrivateContract(clientName, node, privateFrom, privateFor, contractId, null, ethAccount)
             .map( c -> c.isPresent() && c.get().getTransactionReceipt().isPresent());
         assertThat(deployPrivateContract.blockingFirst()).isTrue();
     }
 
-    @Step("`<tenantName>` can __NOT__ deploy a <contractId> private contract to `<node>` using node's default account, private from `<privateFrom>` and private for `<privateFor>`")
-    public void denyDeployPrivateContractsUsingNodeManagedAccount(String tenantName, String contractId, QuorumNode node, String privateFrom, String privateFor) {
-        Observable<Boolean> deployPrivateContract = deployPrivateContract(tenantName, node, privateFrom, privateFor, contractId, null)
+    @Step("`<clientName>` can __NOT__ deploy a <contractId> private contract to `<node>` using `<ethAccount>`, private from `<privateFrom>` and private for `<privateFor>`")
+    public void denyDeployPrivateContractsUsingNodeManagedAccount(String clientName, String contractId, QuorumNode node, String ethAccount, String privateFrom, String privateFor) {
+        Observable<Boolean> deployPrivateContract = deployPrivateContract(clientName, node, privateFrom, privateFor, contractId, null, ethAccount)
             .map(c -> c.isPresent() && c.get().getTransactionReceipt().isPresent());
         assertThat(deployPrivateContract.blockingFirst()).isFalse();
     }
 
-    @Step("`<tenantName>` deploys a <contractId> private contract, named <contractName>, by sending a transaction to `<node>` with its TM key `<privateFrom>` using node's default account and private for `<privateFor>`")
-    public void deployPrivateContractsPrivateForUsingNodeManagedAccount(String tenantName, String contractId, String contractName, QuorumNode node, String privateFrom, String privateFor) {
-        Contract contract = deployPrivateContract(tenantName, node, privateFrom, privateFor, contractId, null)
+    @Step("`<clientName>` deploys a <contractId> private contract, named <contractName>, by sending a transaction to `<node>` with its TM key `<privateFrom>` using `<ethAccount>` and private for `<privateFor>`")
+    public void deployPrivateContractsPrivateForUsingNodeManagedAccount(String clientName, String contractId, String contractName, QuorumNode node, String privateFrom, String ethAccount, String privateFor) {
+        Contract contract = deployPrivateContract(clientName, node, privateFrom, privateFor, contractId, null, ethAccount)
             .doOnNext(c -> {
                 if (c.isEmpty() || c.get().getTransactionReceipt().isEmpty()) {
                     throw new RuntimeException("contract not deployed");
@@ -680,27 +602,22 @@ public class MultiTenancy extends AbstractSpecImplementation {
         logger.debug("Saving contract address {} with name {}", contract.getContractAddress(), contractName);
         DataStoreFactory.getScenarioDataStore().put(contractName + "_id", contractId);
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
-        DataStoreFactory.getScenarioDataStore().put(tenantName + contractId + contractName, new Object[]{node, privateFrom, privateFor});
+        DataStoreFactory.getScenarioDataStore().put(clientName + contractId + contractName, new Object[]{node, privateFrom, privateFor});
     }
 
-    @Step("`<tenantName>` fails to write a new arbitrary value to <contractName> by sending a transaction to `<node>` with its TM key `<privateFrom>` using node's default account and private for `<privateForList>`")
-    public void failToSetSimpleContractValueUsingNodeDefaultAccount(String tenantName, String contractName, QuorumNode node, String privateFrom, String privateFor) {
+    @Step("`<clientName>` fails to write a new arbitrary value to <contractName> by sending a transaction to `<node>` with its TM key `<privateFrom>` using `<ethAccount>` and private for `<privateForList>`")
+    public void failToSetSimpleContractValueUsingNodeDefaultAccount(String clientName, String contractName, QuorumNode node, String privateFrom, String ethAccount, String privateFor) {
         Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
         String contractId = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "_id", String.class);
         List<String> privateForList = Arrays.stream(privateFor.split(",")).map(String::trim).collect(Collectors.toList());
-        UriComponents contractScope = UriComponentsBuilder.fromUriString("private://0x0/_/contracts")
-            .queryParam("owned.eoa", "0x0")
-            .queryParam("from.tm", UriUtils.encode(privacyService.id(node, privateFrom), StandardCharsets.UTF_8))
-            .build();
-        List<String> requestScopes = Stream.of("rpc://eth_*", contractScope.toUriString()).collect(Collectors.toList());
         AtomicReference<Throwable> caughtException = new AtomicReference<>();
-        assertThat(oAuth2Service.requestAccessToken(tenantName, Collections.singletonList(node.name()), requestScopes)
+        assertThat(requestAccessToken(clientName)
             .flatMap(t -> {
                 Node source = networkProperty.getNode(node.name());
                 if (contractId.startsWith("SimpleStorageDelegate")) {
-                    return contractService.updateSimpleStorageDelegateContract(100, c.getContractAddress(), source, privateFrom, privateForList);
+                    return contractService.updateSimpleStorageDelegateContract(100, c.getContractAddress(), source, ethAccount, privateFrom, privateForList);
                 } else {
-                    return contractService.updateSimpleStorageContract(100, c.getContractAddress(), source, privateFrom, privateForList);
+                    return contractService.updateSimpleStorageContract(100, c.getContractAddress(), source, ethAccount, privateFrom, privateForList);
                 }
             })
             .map(Optional::of)
@@ -717,11 +634,9 @@ public class MultiTenancy extends AbstractSpecImplementation {
         assertThat(caughtException.get()).hasMessageContaining("not authorized");
     }
 
-    @Step("<tenantName> requests access token from authorization server")
-    public void requestAccessToken(String tenantName) {
-        List<String> nodeList = assignedNodes.get(tenantName);
-        List<String> requestScopes = assignedScopes.get(tenantName);
-        oAuth2Service.requestAccessToken(tenantName, nodeList, requestScopes)
+    @Step("<clientName> requests access token from authorization server")
+    public void obtainAccessToken(String clientName) {
+        requestAccessToken(clientName)
             .doOnNext(token -> DataStoreFactory.getScenarioDataStore().put("access_token", token))
             .doOnTerminate(Context::removeAccessToken)
             .blockingSubscribe();
@@ -780,11 +695,11 @@ public class MultiTenancy extends AbstractSpecImplementation {
         assertThat(transactionReceipt.get().getStatus()).isEqualTo("0x1");
     }
 
-    @Step("`<tenant>` can read contract <contractName> from `<node>`")
-    public void canReadContract(String tenantName, String contractName, Node node) {
+    @Step("`<clientName>` can read contract <contractName> from `<node>`")
+    public void canReadContract(String clientName, String contractName, Node node) {
         Contract existingContract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
 
-        requestAccessToken(tenantName);
+        obtainAccessToken(clientName);
         Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
         accessToken.ifPresent(Context::storeAccessToken);
 
@@ -795,11 +710,11 @@ public class MultiTenancy extends AbstractSpecImplementation {
         assertThat(actualValue).isNotZero();
     }
 
-    @Step("`<tenant>` can __NOT__ read contract <contractName> from `<node>`")
-    public void canNotReadContract(String tenantName, String contractName, Node node) {
+    @Step("`<clientName>` can __NOT__ read contract <contractName> from `<node>`")
+    public void canNotReadContract(String clientName, String contractName, Node node) {
         Contract existingContract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
 
-        requestAccessToken(tenantName);
+        obtainAccessToken(clientName);
         Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
         accessToken.ifPresent(Context::storeAccessToken);
 

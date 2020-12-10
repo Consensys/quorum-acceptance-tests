@@ -94,6 +94,7 @@ module "docker" {
   additional_geth_container_vol    = var.additional_quorum_container_vol
   additional_tessera_container_vol = var.additional_tessera_container_vol
   tessera_app_container_path       = var.tessera_app_container_path
+  accounts_count                   = module.network.accounts_count
 }
 
 resource "local_file" "plugin-settings" {

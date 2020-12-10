@@ -129,3 +129,6 @@ variable "tessera_app_container_path" {
   default     = {}
   description = "Path to Tessera app jar file in the container. Each map key is the node index (0-based)"
 }
+
+variable "accounts_count" {
+}

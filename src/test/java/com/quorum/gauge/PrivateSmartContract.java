@@ -72,7 +72,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         Contract contract = contractService.createSimpleContract(
             initialValue,
             source,
-            Arrays.asList(target),
+            null, Arrays.asList(target),
             AbstractService.DEFAULT_GAS_LIMIT,
             Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())
         ).blockingFirst();
@@ -89,7 +89,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
             contractService.createSimpleContract(
                 initialValue,
                 source,
-                Arrays.asList(target),
+                null, Arrays.asList(target),
                 AbstractService.DEFAULT_GAS_LIMIT,
                 Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())
             ).blockingFirst();

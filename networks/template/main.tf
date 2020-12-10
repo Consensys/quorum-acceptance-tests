@@ -72,6 +72,7 @@ module "docker" {
   start_quorum          = false
   start_tessera         = false
   additional_geth_args  = var.addtional_geth_args
+  accounts_count        = module.network.accounts_count
 }
 
 data "docker_registry_image" "pull" {
