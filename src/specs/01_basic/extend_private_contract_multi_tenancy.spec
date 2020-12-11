@@ -37,37 +37,49 @@ Tenants:
     | scope                                                         |
     |---------------------------------------------------------------|
     | `rpc://eth_*`                                                 |
+    | `rpc://quorumExtension_*`                                     |
     | `private://JPM_ACC1/_/contracts?owned.eoa=0x0&from.tm=JPM_K1` |
+    | `private://0x0/read/contracts?owned.eoa=0x0&from.tm=JPM_K1`   |
 * Configure `"JPM Settlement"` in authorization server with:
     | scope                                                         |
     |---------------------------------------------------------------|
-    | `rpc://eth_*` |
+    | `rpc://eth_*`                                                 |
+    | `rpc://quorumExtension_*`                                     |
     | `private://JPM_ACC2/_/contracts?owned.eoa=0x0&from.tm=JPM_K2` |
+    | `private://0x0/read/contracts?owned.eoa=0x0&from.tm=JPM_K2`   |
 * Configure `"JPM Audit"` in authorization server with:
     | scope                                                            |
     |------------------------------------------------------------------|
     | `rpc://eth_*`                                                    |
+    | `rpc://quorumExtension_*`                                        |
     | `private://0x0/read/contracts?owned.eoa=JPM_ACC1&from.tm=JPM_K1` |
     | `private://0x0/read/contracts?owned.eoa=JPM_ACC2&from.tm=JPM_K2` |
 * Configure `"GS Investment"` in authorization server with:
     | scope                                                       |
     |-------------------------------------------------------------|
     | `rpc://eth_*`                                               |
+    | `rpc://quorumExtension_*`                                   |
     | `private://GS_ACC1/_/contracts?owned.eoa=0x0&from.tm=GS_K1` |
+    | `private://0x0/read/contracts?owned.eoa=0x0&from.tm=GS_K1`  |
 * Configure `"GS Settlement"` in authorization server with:
     | scope                                                       |
     |-------------------------------------------------------------|
     | `rpc://eth_*`                                               |
+    | `rpc://quorumExtension_*`                                   |
     | `private://GS_ACC2/_/contracts?owned.eoa=0x0&from.tm=GS_K2` |
+    | `private://0x0/read/contracts?owned.eoa=0x0&from.tm=GS_K2`  |
 * Configure `"GS Research"` in authorization server with:
     | scope                                                       |
     |-------------------------------------------------------------|
     | `rpc://eth_*`                                               |
+    | `rpc://quorumExtension_*`                                   |
     | `private://GS_ACC3/_/contracts?owned.eoa=0x0&from.tm=GS_K3` |
+    | `private://0x0/read/contracts?owned.eoa=0x0&from.tm=GS_K3`  |
 * Configure `"GS Audit"` in authorization server with:
     | scope                                                          |
     |----------------------------------------------------------------|
     | `rpc://eth_*`                                                  |
+    | `rpc://quorumExtension_*`                                      |
     | `private://0x0/read/contracts?owned.eoa=GS_ACC1&from.tm=GS_K1` |
     | `private://0x0/read/contracts?owned.eoa=GS_ACC2&from.tm=GS_K2` |
     | `private://0x0/read/contracts?owned.eoa=GS_ACC3&from.tm=GS_K3` |
@@ -75,7 +87,9 @@ Tenants:
     | scope                                                       |
     |-------------------------------------------------------------|
     | `rpc://eth_*`                                               |
+    | `rpc://quorumExtension_*`                                   |
     | `private://DB_ACC1/_/contracts?owned.eoa=0x0&from.tm=DB_K1` |
+    | `private://0x0/read/contracts?owned.eoa=0x0&from.tm=DB_K1`  |
 
 ## GS extends a contract to a new party in GS on different node, JPM and DB can not access the contract
 
@@ -85,8 +99,9 @@ Tenants:
 * `"GS Settlement,DB Investment"` can __NOT__ read "investmentContract" on `"Node2"`
 * `"JPM Audit"` can __NOT__ read "investmentContract" on `"Node1"`
   Extending contract and verifying
-* `"GS Investment"` extends "investmentContract" on `"Node1"` private from `"GS_K1"` using `"GS_ACC1"` to `"GS Research"`'s `"GS_K2"` on `"Node2"` with acceptance by `"GS_ACC2"`
-* `"GS Investment,GS Research,GS Settlement"` can read "investmentContract" on `"Node1"`
+* `"GS Investment"` extends "investmentContract" on `"Node1"` private from `"GS_K1"` using `"GS_ACC1"` to `"GS Settlement"`'s `"GS_K2"` on `"Node2"` with acceptance by `"GS_ACC2"`
+* `"GS Investment,GS Research"` can read "investmentContract" on `"Node1"`
+* `"GS Settlement"` can read "investmentContract" on `"Node2"`
 * `"JPM Audit,DB Investment"` can __NOT__ read "investmentContract" on `"Node1"`
 
 ## GS extends a contract to a new party in GS on same node, JPM and DB can not access the contract

@@ -36,9 +36,10 @@ public class ExtensionService extends AbstractService {
     public Observable<QuorumExtendContract> initiateContractExtension(QuorumNetworkProperty.Node sourceNode, String sourceEthAccount, String sourceParty, String addressToExtend, QuorumNetworkProperty.Node targetNode, String targetEthAccount, String targetParty, PrivacyFlag privacyFlag) {
         return Observable.zip(accountService.getAccountAddress(targetNode, targetEthAccount), accountService.getAccountAddress(sourceNode, sourceEthAccount), (recipientAccount, senderAccount) -> {
             String newPartyPrivacyAddress = privacyService.id(targetParty);
+            String sourcePartyPrivacyAddress = privacyService.id(sourceParty);
             EnhancedPrivateTransaction transactionArgs = new EnhancedPrivateTransaction(
                 senderAccount, null, null, null, BigInteger.ZERO, null,
-                sourceParty, List.of(newPartyPrivacyAddress), singletonList(privacyFlag)
+                sourcePartyPrivacyAddress, List.of(newPartyPrivacyAddress), singletonList(privacyFlag)
             );
             return Stream.of(addressToExtend, newPartyPrivacyAddress, recipientAccount, transactionArgs).collect(Collectors.toList());
         }).flatMap(arg -> {
