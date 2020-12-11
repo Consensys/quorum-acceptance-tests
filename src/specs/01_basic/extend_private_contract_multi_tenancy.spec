@@ -104,10 +104,9 @@ Tenants:
 * `"GS Settlement,DB Investment"` can __NOT__ read "investmentContract" on `"Node2"`
 * `"GS Research,JPM Audit"` can __NOT__ read "investmentContract" on `"Node1"`
   Extending contract and verifying
-* `"GS Investment"` extends "investmentContract" on `"Node1"` private from `"GS_K1"` using `"GS_ACC1"` to `"GS Settlement"`'s `"GS_K3"` on `"Node1"` with acceptance by `"GS_ACC3"`
-* `"GS Investment"` can read "investmentContract" on `"Node1"`
-* `"GS Settlement"` can read "investmentContract" on `"Node2"`
-* `"GS Research,DB Investment"` can __NOT__ read "investmentContract" on `"Node2"`
+* `"GS Investment"` extends "investmentContract" on `"Node1"` private from `"GS_K1"` using `"GS_ACC1"` to `"GS Research"`'s `"GS_K3"` on `"Node1"` with acceptance by `"GS_ACC3"`
+* `"GS Investment,GS Research,"` can read "investmentContract" on `"Node1"`
+* `"GS Settlement,DB Investment"` can __NOT__ read "investmentContract" on `"Node2"`
 * `"JPM Audit"` can __NOT__ read "investmentContract" on `"Node1"`
 
 ## GS extends a contract to a new party in JPM on the different node, DB can not access the contract
