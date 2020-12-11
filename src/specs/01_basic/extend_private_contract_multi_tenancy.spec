@@ -136,7 +136,7 @@ Tenants:
   Unauthorized party
 * `"GS Investment"` "not authorized" to extend "investmentContract" on `"Node1"` private from `"GS_K2"` using `"GS_ACC1"` to `"JPM Investment"`'s `"JPM_K1"` on `"Node1"` with acceptance by `"JPM_ACC1"`
   Unauthorized eth account
-* `"GS Investment"` "not authorized" to extend "investmentContract" on `"Node1"` private from `"GS_K1"` using `"GS_ACC2"` to `"JPM Investment"`'s `"JPM_K1"` on `"Node1"` with acceptance by `"JPM_ACC1"`
+* `"GS Investment"` "not authorized" to extend "investmentContract" on `"Node1"` private from `"GS_K1"` using `"GS_ACC3"` to `"JPM Investment"`'s `"JPM_K1"` on `"Node1"` with acceptance by `"JPM_ACC1"`
 
 ## JPM can not accept the contract extension using unauthorized key and account
 
