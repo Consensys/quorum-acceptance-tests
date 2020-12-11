@@ -33,21 +33,19 @@ public class ExtensionService extends AbstractService {
         this.accountService = Objects.requireNonNull(accountService);
     }
 
-    public Observable<QuorumExtendContract> initiateContractExtension(QuorumNetworkProperty.Node fromNode, String privateFrom, String addressToExtend, String newPartyNamedKey, PrivacyFlag privacyFlag) {
-        QuorumNetworkProperty.Node newPartyNode = privacyService.nodeById(newPartyNamedKey);
-
-        return Observable.zip(accountService.getDefaultAccountAddress(newPartyNode), accountService.getDefaultAccountAddress(fromNode), (recipientAccount, senderAccount) -> {
-            String newPartyPrivacyAddress = privacyService.id(newPartyNamedKey);
+    public Observable<QuorumExtendContract> initiateContractExtension(QuorumNetworkProperty.Node sourceNode, String sourceEthAccount, String sourceParty, String addressToExtend, QuorumNetworkProperty.Node targetNode, String targetEthAccount, String targetParty, PrivacyFlag privacyFlag) {
+        return Observable.zip(accountService.getAccountAddress(targetNode, targetEthAccount), accountService.getAccountAddress(sourceNode, sourceEthAccount), (recipientAccount, senderAccount) -> {
+            String newPartyPrivacyAddress = privacyService.id(targetParty);
             EnhancedPrivateTransaction transactionArgs = new EnhancedPrivateTransaction(
                 senderAccount, null, null, null, BigInteger.ZERO, null,
-                privateFrom, List.of(newPartyPrivacyAddress), singletonList(privacyFlag)
+                sourceParty, List.of(newPartyPrivacyAddress), singletonList(privacyFlag)
             );
             return Stream.of(addressToExtend, newPartyPrivacyAddress, recipientAccount, transactionArgs).collect(Collectors.toList());
         }).flatMap(arg -> {
             Request<?, QuorumExtendContract> request = new Request<>(
                 "quorumExtension_extendContract",
                 arg,
-                connectionFactory().getWeb3jService(fromNode),
+                connectionFactory().getWeb3jService(sourceNode),
                 QuorumExtendContract.class
             );
             return request.flowable().toObservable();

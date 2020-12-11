@@ -63,7 +63,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
                 for (QuorumNode qn : networkProperty.getNodes().keySet()) {
                     Node n = networkProperty.getNode(qn.name());
                     for (String alias : n.getPrivacyAddressAliases().keySet()) {
-                        if (rawScope.contains("="+alias)) {
+                        if (rawScope.contains("=" + alias)) {
                             nodeList.add(n.getName());
                             expandedScope = StringUtils.replace(expandedScope, alias, UriUtils.encode(n.getPrivacyAddressAliases().get(alias), StandardCharsets.UTF_8));
                         }
@@ -128,19 +128,20 @@ public class MultiTenancy extends AbstractSpecImplementation {
         ).isEqualTo(false);
     }
 
-    @Step("`<clientName>` deploys a <privacyFlag> `SimpleStorage` private contract, named <contractName>, by sending a transaction to `<node>` with its TM key `<privateFrom>` and private for `<privateFor>`")
-    public void deploySimpleStorageContractWithFlag(String clientName, PrivacyFlag privacyFlag, String contractName, Node node, String privateFrom, String privateFor) {
+    @Step("`<clientName>` deploys a <privacyFlag> `SimpleStorage` contract on `<node>` private from `<privateFrom>` using `<ethAccount>`, named <contractName>, private for <anotherClient>'s `<privateFor>`")
+    public void deploySimpleStorageContractWithFlag(String clientName, PrivacyFlag privacyFlag, Node node, String privateFrom, String ethAccount, String contractName, String anotherClient, String privateFor) {
         List<String> privateForList = Arrays.stream(privateFor.split(",")).map(String::trim).collect(Collectors.toList());
-        requestAccessToken(clientName);
+        obtainAccessToken(clientName);
         Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
         accessToken.ifPresent(Context::storeAccessToken);
 
-        Contract contract = contractService.createSimpleContract(42, node, null, privateFrom, privateForList, List.of(privacyFlag))
+        Contract contract = contractService.createSimpleContract(42, node, ethAccount, privateFrom, privateForList, List.of(privacyFlag))
             .doOnTerminate(Context::removeAccessToken)
             .blockingFirst();
 
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
         DataStoreFactory.getScenarioDataStore().put(contractName + "_privateFrom", privacyService.id(privateFrom));
+        DataStoreFactory.getScenarioDataStore().put(contractName + "_privacyFlag", privacyFlag);
     }
 
     @Step("`<clientName>` deploys a <contractId> private contract, named <contractName>, by sending a transaction to `<node>` with its TM key `<privateFrom>`, signed by `<wallet>` and private for `<privateFor>`")
@@ -297,7 +298,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
             .map(r -> r.isPresent() && r.get().isStatusOK()).blockingFirst()
         ).isTrue();
     }
-    
+
     private Observable<String> requestAccessToken(String clientName) {
         if (!assignedNodes.containsKey(clientName) || !assignedScopes.containsKey(clientName)) {
             throw new IllegalArgumentException(clientName + " is not setup yet");
@@ -310,8 +311,8 @@ public class MultiTenancy extends AbstractSpecImplementation {
         Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
         requestAccessToken(clientName)
             .doOnNext(s -> {
-               logger.debug("token {}",s);
-               assertThat(rawContractService.invokeGetInSneakyWrapper(node, c.getContractAddress())).isEqualTo( value);
+                logger.debug("token {}", s);
+                assertThat(rawContractService.invokeGetInSneakyWrapper(node, c.getContractAddress())).isEqualTo(value);
             })
             .doOnTerminate(Context::removeAccessToken)
             .blockingSubscribe();
@@ -322,7 +323,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
         String transactionHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), transactionName, String.class);
         requestAccessToken(clientName)
             .doOnNext(s -> {
-                logger.debug("token {}",s);
+                logger.debug("token {}", s);
                 Optional<TransactionReceipt> transactionReceipt = transactionService.getTransactionReceipt(node, transactionHash).blockingFirst().getTransactionReceipt();
                 assertThat(transactionReceipt).isNotEmpty();
                 assertThat(transactionReceipt.get().isStatusOK()).isFalse();
@@ -580,7 +581,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
     @Step("`<clientName>` can deploy a <contractId> private contract to `<node>` using `<ethAccount>`, private from `<privateFrom>` and private for `<privateFor>`")
     public void deployPrivateContractsUsingNodeManagedAccount(String clientName, String contractId, QuorumNode node, String ethAccount, String privateFrom, String privateFor) {
         Observable<Boolean> deployPrivateContract = deployPrivateContract(clientName, node, privateFrom, privateFor, contractId, null, ethAccount)
-            .map( c -> c.isPresent() && c.get().getTransactionReceipt().isPresent());
+            .map(c -> c.isPresent() && c.get().getTransactionReceipt().isPresent());
         assertThat(deployPrivateContract.blockingFirst()).isTrue();
     }
 
@@ -634,7 +635,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
         assertThat(caughtException.get()).hasMessageContaining("not authorized");
     }
 
-    @Step("<clientName> requests access token from authorization server")
+    @Step("`<clientName>` requests access token from authorization server")
     public void obtainAccessToken(String clientName) {
         requestAccessToken(clientName)
             .doOnNext(token -> DataStoreFactory.getScenarioDataStore().put("access_token", token))
@@ -642,22 +643,21 @@ public class MultiTenancy extends AbstractSpecImplementation {
             .blockingSubscribe();
     }
 
-    @Step("Initiate contract extension to <newPartyNamedKey> with <fromNode>'s default account as recipient for contract <contractName>")
-    public void inititateContractExtension(String newPartyNamedKey, Node fromNode, String contractName) {
+    @Step("Initiate `<contractName>` extension to `<targetParty>` received by `<targetEthAccount>` in `<targetNode>` from `<sourceNode>`, private from `<sourceParty>` using `<sourceEthAccount>`")
+    public void inititateContractExtension(String contractName, String targetParty, String targetEthAccount, Node targetNode, Node sourceNode, String sourceParty, String sourceEthAccount) {
         Contract existingContract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
-        String privateFrom = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "_privateFrom", String.class);
-        PrivacyFlag privacyFlag = PrivacyFlag.StandardPrivate;
+        PrivacyFlag privacyFlag = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "_privacyFlag", PrivacyFlag.class);
         Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
         accessToken.ifPresent(Context::storeAccessToken);
         String extensionAddress = extensionService
-            .initiateContractExtension(fromNode, privateFrom, existingContract.getContractAddress(), newPartyNamedKey, privacyFlag)
+            .initiateContractExtension(sourceNode, sourceEthAccount, sourceParty, existingContract.getContractAddress(), targetNode, targetEthAccount, targetParty, privacyFlag)
             .map(res -> {
                 assertThat(res.getError()).as("failed to initiate contract extension").isNull();
                 return res.getResult();
             })
             .map(txHash -> {
                 Optional<TransactionReceipt> transactionReceipt = transactionService
-                    .pollTransactionReceipt(fromNode, txHash);
+                    .pollTransactionReceipt(sourceNode, txHash);
                 assertThat(transactionReceipt.isPresent()).isTrue();
                 assertThat(transactionReceipt.get().getStatus()).isEqualTo("0x1");
                 return transactionReceipt.get().getContractAddress();
@@ -667,27 +667,25 @@ public class MultiTenancy extends AbstractSpecImplementation {
 
         DataStoreFactory.getScenarioDataStore().put(contractName + "extensionAddress", extensionAddress);
         DataStoreFactory.getScenarioDataStore().put(contractName + "extendedFrom", extensionAddress);
-        DataStoreFactory.getScenarioDataStore().put("privacyFlag", privacyFlag);
     }
 
-    @Step("New party <newParty> accepts the offer to extend the contract <contractName>")
-    public void acceptContractExtension(String newPartyNamedKey, String contractName) {
+    @Step("`<targetClientName>` accepts `<contractName>` extension from `<targetNode>`, private from `<targetParty>` using `<targetEthAccount>` and private for `<soureParty>`")
+    public void acceptContractExtension(String targetClientNamme, String contractName, Node targetNode, String targetParty, String targetEthAccount, String sourceParty) {
         DataStore store = DataStoreFactory.getScenarioDataStore();
-        PrivacyFlag privacyFlag = mustHaveValue(store, "privacyFlag", PrivacyFlag.class);
+        PrivacyFlag privacyFlag = mustHaveValue(store, contractName + "_privacyFlag", PrivacyFlag.class);
         String contractAddress = mustHaveValue(store, contractName + "extensionAddress", String.class);
-        String originalSender = mustHaveValue(store, contractName + "_privateFrom", String.class);
-        Node toNode = privacyService.nodeById(newPartyNamedKey);
 
+        obtainAccessToken(targetClientNamme);
         Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
         accessToken.ifPresent(Context::storeAccessToken);
 
         Optional<TransactionReceipt> transactionReceipt = extensionService
-            .acceptExtension(toNode, true, privacyService.id(newPartyNamedKey), contractAddress, List.of(originalSender), privacyFlag)
+            .acceptExtension(targetNode, true, privacyService.id(targetParty), contractAddress, List.of(sourceParty), privacyFlag)
             .map(res -> {
                 assertThat(res.getError()).isNull();
                 return res.getResult();
             })
-            .map(txHash -> transactionService.pollTransactionReceipt(toNode, txHash))
+            .map(txHash -> transactionService.pollTransactionReceipt(targetNode, txHash))
             .doOnTerminate(Context::removeAccessToken)
             .blockingLast();
 
@@ -695,32 +693,37 @@ public class MultiTenancy extends AbstractSpecImplementation {
         assertThat(transactionReceipt.get().getStatus()).isEqualTo("0x1");
     }
 
-    @Step("`<clientName>` can read contract <contractName> from `<node>`")
-    public void canReadContract(String clientName, String contractName, Node node) {
+    @Step("`<clientNames>` can read <contractName> on `<node>`")
+    public void canReadContract(String clientNames, String contractName, Node node) {
         Contract existingContract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
 
-        obtainAccessToken(clientName);
-        Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
-        accessToken.ifPresent(Context::storeAccessToken);
+        Observable.fromIterable(Arrays.stream(clientNames.split(",")).map(String::trim).collect(Collectors.toList()))
+            .forEach(clientName -> {
+                obtainAccessToken(clientName);
+                Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
+                accessToken.ifPresent(Context::storeAccessToken);
+                BigInteger actualValue = contractService.readSimpleContractValue(node, existingContract.getContractAddress())
+                    .doOnTerminate(Context::removeAccessToken)
+                    .blockingFirst();
 
-        BigInteger actualValue = contractService.readSimpleContractValue(node, existingContract.getContractAddress())
-            .doOnTerminate(Context::removeAccessToken)
-            .blockingFirst();
-
-        assertThat(actualValue).isNotZero();
+                assertThat(actualValue).as(clientName).isNotZero();
+            });
     }
 
-    @Step("`<clientName>` can __NOT__ read contract <contractName> from `<node>`")
-    public void canNotReadContract(String clientName, String contractName, Node node) {
+    @Step("`<clientNames>` can __NOT__ read <contractName> on `<node>`")
+    public void canNotReadContract(String clientNames, String contractName, Node node) {
         Contract existingContract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
 
-        obtainAccessToken(clientName);
-        Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
-        accessToken.ifPresent(Context::storeAccessToken);
+        Observable.fromIterable(Arrays.stream(clientNames.split(",")).map(String::trim).collect(Collectors.toList()))
+            .forEach(clientName -> {
+                obtainAccessToken(clientName);
+                Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
+                accessToken.ifPresent(Context::storeAccessToken);
 
-        assertThatThrownBy(() -> contractService.readSimpleContractValue(node, existingContract.getContractAddress())
-            .doOnTerminate(Context::removeAccessToken)
-            .blockingSubscribe()
-        ).hasMessageContaining("not authorized");
+                assertThatThrownBy(() -> contractService.readSimpleContractValue(node, existingContract.getContractAddress())
+                    .doOnTerminate(Context::removeAccessToken)
+                    .blockingSubscribe()
+                ).as(clientName).hasMessageContaining("not authorized");
+            });
     }
 }
