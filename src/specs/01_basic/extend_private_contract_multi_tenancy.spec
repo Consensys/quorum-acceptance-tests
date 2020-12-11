@@ -130,21 +130,19 @@ Tenants:
 * `"GS Investment"` extends "investmentContract" on `"Node1"` private from `"GS_K1"` using `"GS_ACC1"` to `"JPM Investment"`'s `"JPM_K1"` on `"Node1"` with acceptance by `"JPM_ACC1"`
 * `"GS Investment,JPM Investment"` can read "investmentContract" on `"Node1"`
 
-//## GS can not extend a contract using an unauthorized key and account
-//    fail in subitting contract extension request
-//
-//    Target JPM Investment JPM_K1, JPM_ACC1
-//
-// | Client  | Private From | Sign Account | Desc |
-// |----------|--------------|--------------|------|
-// | "GS Investmmentt" | "GS_K2" | "GS_ACC1" | Unauthorized Private From |
-// | "GS Investmmentt" | "GS_K1" | "GS_ACC2" | Unauthorized Sign Account |
-//
-//## JPM can not accept the contract extension using unauthorized key and account
-//  successful submitting contract extension rerquest but fail in accepting the request
-//  "GS Investmmentt" | "GS_K1" | "GS_ACC1" -> JPM Investment, JPM_K1, JPM_ACC1
-//
-//  | Client   | Private From | Sign Account | Desc |
-//  |----------|--------------|--------------|------|
-//  | "JPM Investmmentt" | "JPM_K2" | "JPM_ACC1" | Unauthorized Private From |
-//  | "JPM Investmmentt" | "JPM_K1" | "JPM_ACC2" | Unauthorized Sign Account |
+## GS can not extend a contract using an unauthorized key and account
+
+* `"GS Investment"` deploys a <privacyFlag> `SimpleStorage` contract on `"Node1"` private from `"GS_K1"` using `"GS_ACC1"`, named "investmentContract", private for "GS Research"'s `"GS_K3"`
+  Unauthorized party
+* `"GS Investment"` "not authorized" to extend "investmentContract" on `"Node1"` private from `"GS_K2"` using `"GS_ACC1"` to `"JPM Investment"`'s `"JPM_K1"` on `"Node1"` with acceptance by `"JPM_ACC1"`
+  Unauthorized eth account
+* `"GS Investment"` "not authorized" to extend "investmentContract" on `"Node1"` private from `"GS_K1"` using `"GS_ACC2"` to `"JPM Investment"`'s `"JPM_K1"` on `"Node1"` with acceptance by `"JPM_ACC1"`
+
+## JPM can not accept the contract extension using unauthorized key and account
+
+* `"GS Investment"` deploys a <privacyFlag> `SimpleStorage` contract on `"Node1"` private from `"GS_K1"` using `"GS_ACC1"`, named "investmentContract", private for "GS Research"'s `"GS_K3"`
+* Initiate `"investmentContract"` extension to `"JPM_K1"` received by `"JPM_ACC1"` in `"Node1"` from `"Node1"`, private from `"GS_K1"` using `"GS_ACC1"`
+  Unauthorized party
+* From `"Node1"` `"JPM Investment"` "not authorized" to accept `"investmentContract"` extension, private from `"JPM_K2"` using `"JPM_ACC1"` and private for `"GS_K1"`
+  Unauthorized eth account
+* From `"Node1"` `"JPM Investment"` "not authorized" to accept `"investmentContract"` extension, private from `"JPM_K1"` using `"JPM_ACC2"` and private for `"GS_K1"`

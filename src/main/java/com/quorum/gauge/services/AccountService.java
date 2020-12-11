@@ -117,7 +117,14 @@ public class AccountService extends AbstractService {
         if (ethAccount == null) {
             return getDefaultAccountAddress(source);
         }
-        return Observable.just(networkProperty().getNode(source.getName()).getAccountAliases().get(ethAccount));
+        // we don't look up for the address in source Node as we want
+        // to serve -ve cases
+        for (QuorumNetworkProperty.Node node : networkProperty().getNodes().values()) {
+            if (node.getAccountAliases().containsKey(ethAccount)) {
+                return Observable.just(node.getAccountAliases().get(ethAccount));
+            }
+        }
+        throw new IllegalArgumentException("no such account alias: " + ethAccount);
     }
 
     public static class ListWalletsResponse extends Response<List<Wallet>> {

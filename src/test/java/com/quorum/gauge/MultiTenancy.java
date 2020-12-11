@@ -726,4 +726,40 @@ public class MultiTenancy extends AbstractSpecImplementation {
                 ).as(clientName).hasMessageContaining("not authorized");
             });
     }
+
+    @Step("`<sourceClientName>` <expectedErr> to extend <contractName> on `<sourceNode>` private from `<sourceParty>` using `<sourceEthAccount>` to `<targetClientName>`'s `<targetParty>` on `<targetNode>` with acceptance by `<targetEthAccount>`")
+    public void notAuthorizedToExtendContract(String sourceClientName, String expectedErr, String contractName, Node sourceNode, String sourceParty, String sourceEthAccount, String targetClientName, String targetParty, Node targetNode, String targetEthAccount) {
+        Contract existingContract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
+        PrivacyFlag privacyFlag = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "_privacyFlag", PrivacyFlag.class);
+        Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
+        accessToken.ifPresent(Context::storeAccessToken);
+        extensionService
+            .initiateContractExtension(sourceNode, sourceEthAccount, sourceParty, existingContract.getContractAddress(), targetNode, targetEthAccount, targetParty, privacyFlag)
+            .doOnNext(res -> {
+                assertThat(res.getError()).as("expected error to return").isNotNull();
+                assertThat(res.getError().getMessage()).contains(expectedErr);
+            })
+            .doOnTerminate(Context::removeAccessToken)
+            .blockingSubscribe();
+    }
+
+    @Step("From `<targetNode>` `<targetClientName>` <expectedErr> to accept `<contractName>` extension, private from `<targetParty>` using `<targetEthAccount>` and private for `<sourceParty>`")
+    public void notAuthorizedToAcceptContractExtension(Node targetNode, String targetClientName, String expectedErr, String contractName, String targetParty, String targetEthAccount, String sourceParty) {
+        DataStore store = DataStoreFactory.getScenarioDataStore();
+        PrivacyFlag privacyFlag = mustHaveValue(store, contractName + "_privacyFlag", PrivacyFlag.class);
+        String contractAddress = mustHaveValue(store, contractName + "extensionAddress", String.class);
+
+        obtainAccessToken(targetClientName);
+        Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
+        accessToken.ifPresent(Context::storeAccessToken);
+
+        extensionService
+            .acceptExtension(targetNode, true, targetEthAccount, privacyService.id(targetParty), contractAddress, List.of(privacyService.id(sourceParty)), privacyFlag)
+            .doOnNext(res -> {
+                assertThat(res.getError()).as("expected error to return").isNotNull();
+                assertThat(res.getError().getMessage()).contains(expectedErr);
+            })
+            .doOnTerminate(Context::removeAccessToken)
+            .blockingSubscribe();
+    }
 }
