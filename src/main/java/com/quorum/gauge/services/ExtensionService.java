@@ -85,10 +85,10 @@ public class ExtensionService extends AbstractService {
         return request.flowable().toObservable();
     }
 
-    public Observable<QuorumVoteOnContract> acceptExtension(QuorumNetworkProperty.Node node, boolean vote, String privateFrom, String address, List<String> privateFor, PrivacyFlag privacyFlag) {
+    public Observable<QuorumVoteOnContract> acceptExtension(QuorumNetworkProperty.Node node, boolean vote, String ethAccount, String privateFromKey, String address, List<String> privateForKeys, PrivacyFlag privacyFlag) {
         final PrivateTransaction transactionArgs = new EnhancedPrivateTransaction(
-            accountService.getDefaultAccountAddress(node).blockingFirst(),
-            null, BigInteger.valueOf(4700000), null, BigInteger.ZERO, null, privateFrom, privateFor, singletonList(privacyFlag)
+            accountService.getAccountAddress(node, ethAccount).blockingFirst(),
+            null, BigInteger.valueOf(4700000), null, BigInteger.ZERO, null, privateFromKey, privateForKeys, singletonList(privacyFlag)
         );
 
         return new Request<>(
@@ -110,7 +110,7 @@ public class ExtensionService extends AbstractService {
             .filter(n -> !n.equals(node))
             .map(n -> privacyService.id(n))
             .collect(Collectors.toList());
-        return acceptExtension(node, vote, null, address, privateFor, privacyFlag);
+        return acceptExtension(node, vote, null, null, address, privateFor, privacyFlag);
     }
 
     public Observable<QuorumUpdateParties> updateParties(final QuorumNetworkProperty.Node initiator,

@@ -680,7 +680,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
         accessToken.ifPresent(Context::storeAccessToken);
 
         Optional<TransactionReceipt> transactionReceipt = extensionService
-            .acceptExtension(targetNode, true, privacyService.id(targetParty), contractAddress, List.of(privacyService.id(sourceParty)), privacyFlag)
+            .acceptExtension(targetNode, true, targetEthAccount, privacyService.id(targetParty), contractAddress, List.of(privacyService.id(sourceParty)), privacyFlag)
             .map(res -> {
                 assertThat(res.getError()).isNull();
                 return res.getResult();
