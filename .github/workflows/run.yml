@@ -113,6 +113,7 @@ jobs:
           - 'permissions-v2 && networks/template::raft-3plus1'
           - 'privacy-enhancements-upgrade || networks/template::raft-4nodes-pe'
           - 'privacy-enhancements-upgrade || networks/template::istanbul-4nodes-pe'
+          - 'multitenancy && networks/plugins::raft-multitenancy'
         privacy-enhancements:
           - 'false'
         include:
