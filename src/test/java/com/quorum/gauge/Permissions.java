@@ -585,12 +585,6 @@ public class Permissions extends AbstractSpecImplementation {
         waitForOrgStatus(node, org, status);
     }
 
-    @Step("From <node> check org <org>, confirm that org status is <status>")
-    public void confirmOrgStatus(QuorumNetworkProperty.Node node, String org, String status) {
-        org = getNetworkAdminOrg(org);
-        waitForOrgStatus(node, org, status);
-    }
-
     @Step("From <node> revoke suspension of org <org>, confirm that org status is <status>")
     public void revokeSuspension(QuorumNetworkProperty.Node node, String org, String status) {
         org = getNetworkAdminOrg(org);
