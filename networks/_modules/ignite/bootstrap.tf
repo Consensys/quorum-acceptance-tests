@@ -88,7 +88,9 @@ resource "local_file" "genesis-file" {
       "eip155Block": 0,
       "eip150Hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
       "eip158Block": 0,
-      "qip714Block": 20,
+%{if var.permission_qip714Block.enabled ~}
+      "qip714Block": ${var.permission_qip714Block.block},
+%{endif~}
       "isQuorum": true,
 %{if var.privacy_enhancements.enabled ~}
       "privacyEnhancementsBlock": ${var.privacy_enhancements.block},
