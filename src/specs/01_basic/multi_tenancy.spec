@@ -120,9 +120,9 @@ tags: private, events, raw
 * "subscriptionJPM" receives "5" events
 * `"JPM Settlement"`, initially allocated with key(s) `"JPM_K2"`, sees "5" events in total from transaction receipts in `"Node1"`
 * `"GS Settlement"`, initially allocated with key(s) `"GS_K2"`, sees "5" events when filtering by "contract1" address in `"Node2"`
-* "subscriptionDB" receives "not authorized" error
+* "subscriptionDB" receives "0" events
 * `"DB Investment"`, initially allocated with key(s) `"DB_K1"`, sees "not authorized" when retrieving logs from transaction receipts in `"Node2"`
-* `"DB Investment"`, initially allocated with key(s) `"DB_K1"`, sees "not authorized" when filtering logs by "contract1" address in `"Node2"`
+* `"DB Investment"`, initially allocated with key(s) `"DB_K1"`, sees "0" events when filtering by "contract1" address in `"Node2"`
 
 ## JPM using node-managed account keys can only deploy private contracts from the allocated TM keys
 
@@ -197,7 +197,7 @@ tags: private, access, raw
 * `"GS Investment"` invokes get in "sneakyDelegateContract" on `"Node1"` and gets value "0"
 
  Using a proxy contract and privateFor the target party in order to manipulate the state
- 
+
 * `"GS Investment"` deploys a "SneakyWrapper(contract1)" private contract, named "sneakyDelegateContract", by sending a transaction to `"Node1"` with its TM key `"GS_K1"`, signed by `"Wallet2"` and private for `"JPM_K1"`
 * `"GS Investment"` invokes getFromDelgate with nonce shift "1" in "sneakyDelegateContract" by sending a transaction to `"Node1"` with its TM key `"GS_K1"`, signed by `"Wallet2"` and private for `"JPM_K1"` name this transaction "sneakyDelegateContract_TX1"
 * `"GS Investment"` invokes setDelegate to "true" in "sneakyDelegateContract" by sending a transaction to `"Node1"` with its TM key `"GS_K1"`, signed by `"Wallet2"` and private for `"JPM_K1"`
