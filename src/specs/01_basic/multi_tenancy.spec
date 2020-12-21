@@ -175,6 +175,7 @@ tags: private, access, raw
 * `"JPM Investment"` can read "contract1" from "Node1"
 * `"GS Investment"` fails to read "contract1" from "Node1"
 * `"GS Investment"` fails to write a new arbitrary value to "contract1" by sending a transaction to `"Node1"` with its TM key `"GS_K1"`, signed by `"Wallet2"` and private for `"GS_K1"`
+* `"GS Investment"` fails to write a new arbitrary value to "contract1" by sending a transaction to `"Node1"` with its TM key `"GS_K1"`, signed by `"Wallet2"` and private for `"JPM_K1"`
 * `"GS Investment"` deploys a "SimpleStorageDelegate(contract1)" private contract, named "delegateContract", by sending a transaction to `"Node1"` with its TM key `"GS_K1"`, signed by `"Wallet2"` and private for `"GS_K1"`
 * `"GS Investment"` fails to write a new arbitrary value to "delegateContract" by sending a transaction to `"Node1"` with its TM key `"GS_K1"`, signed by `"Wallet2"` and private for `"GS_K1"`
  GS Investment sends two transactions (the first one has a nonce higer than the second):
@@ -191,6 +192,15 @@ tags: private, access, raw
 * `"GS Investment"` deploys a "SneakyWrapper(contract1)" private contract, named "sneakyDelegateContract", by sending a transaction to `"Node1"` with its TM key `"GS_K1"`, signed by `"Wallet2"` and private for `"GS_K1"`
 * `"GS Investment"` invokes getFromDelgate with nonce shift "1" in "sneakyDelegateContract" by sending a transaction to `"Node1"` with its TM key `"GS_K1"`, signed by `"Wallet2"` and private for `"GS_K1"` name this transaction "sneakyDelegateContract_TX1"
 * `"GS Investment"` invokes setDelegate to "true" in "sneakyDelegateContract" by sending a transaction to `"Node1"` with its TM key `"GS_K1"`, signed by `"Wallet2"` and private for `"GS_K1"`
+* `"GS Investment"` checks the transaction "sneakyDelegateContract_TX1" on `"Node1"` has failed
+ After adding post execution checks the SneakyWrapper is unable to copy the data from contract1
+* `"GS Investment"` invokes get in "sneakyDelegateContract" on `"Node1"` and gets value "0"
+
+ Using a proxy contract and privateFor the target party in order to manipulate the state
+ 
+* `"GS Investment"` deploys a "SneakyWrapper(contract1)" private contract, named "sneakyDelegateContract", by sending a transaction to `"Node1"` with its TM key `"GS_K1"`, signed by `"Wallet2"` and private for `"JPM_K1"`
+* `"GS Investment"` invokes getFromDelgate with nonce shift "1" in "sneakyDelegateContract" by sending a transaction to `"Node1"` with its TM key `"GS_K1"`, signed by `"Wallet2"` and private for `"JPM_K1"` name this transaction "sneakyDelegateContract_TX1"
+* `"GS Investment"` invokes setDelegate to "true" in "sneakyDelegateContract" by sending a transaction to `"Node1"` with its TM key `"GS_K1"`, signed by `"Wallet2"` and private for `"JPM_K1"`
 * `"GS Investment"` checks the transaction "sneakyDelegateContract_TX1" on `"Node1"` has failed
  After adding post execution checks the SneakyWrapper is unable to copy the data from contract1
 * `"GS Investment"` invokes get in "sneakyDelegateContract" on `"Node1"` and gets value "0"
