@@ -78,10 +78,15 @@ public class Permissions extends AbstractSpecImplementation {
         nodeStatusMap.put("Approved", 2);
         nodeStatusMap.put("Deactivated", 3);
         nodeStatusMap.put("Blacklisted", 4);
+        nodeStatusMap.put("BlacklistedRecovery", 5);
 
         acctStatusMap.put("Pending", 1);
         acctStatusMap.put("Active", 2);
         acctStatusMap.put("InActive", 3);
+        acctStatusMap.put("Suspended", 4);
+        acctStatusMap.put("Blacklisted", 5);
+        acctStatusMap.put("Revoked", 6);
+        acctStatusMap.put("BlacklistedRecovery", 7);
 
         orgStatusMap.put("Proposed", 1);
         orgStatusMap.put("Approved", 2);
@@ -173,7 +178,7 @@ public class Permissions extends AbstractSpecImplementation {
         PermissionsConfig permConfig = mustHaveValue(DataStoreFactory.getScenarioDataStore(), objectName, PermissionsConfig.class);
         logger.debug("perm config object is {}", permConfig.toString());
 
-        switch (permissionVersion.toLowerCase().trim()){
+        switch (permissionVersion.toLowerCase().trim()) {
             case "v2":
                 permConfig.setPermissionModel("v2");
                 break;
@@ -488,12 +493,12 @@ public class Permissions extends AbstractSpecImplementation {
         ).as("wait for the node id " + enodeId + " status to be " + status).isTrue();
     }
 
-    private void waitForRoleStatus(QuorumNetworkProperty.Node proposingNode, String orgId, String roleId) {
+    private void waitForRoleStatus(QuorumNetworkProperty.Node proposingNode, String orgId, String roleId, boolean roleStatus) {
         assertThat(permissionService.getPermissionRoleList(proposingNode)
             .map(roleList -> {
                 boolean found = false;
                 for (PermissionRoleInfo roleInfo : roleList.getPermissionRoleList()) {
-                    if (orgId.equalsIgnoreCase(roleInfo.getOrgId()) && roleId.equalsIgnoreCase(roleInfo.getRoleId()) && roleInfo.getActive()) {
+                    if (orgId.equalsIgnoreCase(roleInfo.getOrgId()) && roleId.equalsIgnoreCase(roleInfo.getRoleId()) && roleInfo.getActive() == roleStatus) {
                         found = true;
                         break;
                     }
@@ -534,6 +539,29 @@ public class Permissions extends AbstractSpecImplementation {
         ).as("wait for the account id " + account + " status to be {}" + status).isTrue();
     }
 
+    private void waitForAccountStatusWithRole(QuorumNetworkProperty.Node proposingNode, String account, String status, String roleId) {
+        assertThat(permissionService.getPermissionAccountList(proposingNode)
+            .map(accountList -> {
+                boolean found = false;
+                for (PermissionAccountInfo accountInfo : accountList.getPermissionAccountList()) {
+                    if (account.equalsIgnoreCase(accountInfo.getAcctId()) && roleId.equals(accountInfo.getRoleId()) && accountInfo.getStatus() == acctStatusMap.get(status)) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    throw new Exception("not found yet"); // to trigger retry
+                }
+                return true;
+            })
+            .doOnNext(found -> logger.debug("AccountId = {}, status = {}", account, status))
+            .retryWhen(errors -> errors
+                .zipWith(Observable.range(1, 5), (n, i) -> i) // how many retries
+                .flatMap(retryCount -> Observable.timer(1, TimeUnit.SECONDS))) // sleep x seconds between retry
+            .blockingFirst()
+        ).as("wait for the account id " + account + " status to be {}" + status).isTrue();
+    }
+
     @Step("From <proposingNode> propose new org <orgId> into the network with <node>'s enode id and <accountKey> account")
     public void proposeOrg(QuorumNetworkProperty.Node proposingNode, String orgId, QuorumNetworkProperty.Node node, String accountKey) {
         String acctId = node.getAccountAliases().get(accountKey);
@@ -548,6 +576,33 @@ public class Permissions extends AbstractSpecImplementation {
         ExecStatusInfo execStatus = permissionService.approveOrg(proposingNode, orgId, node.getEnodeUrl(), acctId).blockingFirst();
         assertThat(!execStatus.hasError());
         waitForOrgStatus(proposingNode, orgId, "Approved");
+    }
+
+    @Step("From <proposingNode> add new node <url> to network org <orgId>")
+    public void addNode(QuorumNetworkProperty.Node proposingNode, String url, String orgId) {
+        ExecStatusInfo execStatus = permissionService.addNode(proposingNode, orgId, url).blockingFirst();
+        assertThat(!execStatus.hasError());
+        waitForNodeStatus(proposingNode, url, "Approved");
+    }
+
+    public void updateNodeAction(String action, QuorumNetworkProperty.Node fromNode, String url, String orgId) {
+        switch (action) {
+            case "deactivate":
+                ExecStatusInfo e1 = permissionService.updateNode(fromNode, orgId, url, 3).blockingFirst();
+                assertThat(!e1.hasError());
+                waitForNodeStatus(fromNode, url, "Blacklisted");
+                break;
+            case "recoverBlacklist":
+                ExecStatusInfo e2 = permissionService.recoverBlacklistedNode(fromNode, orgId, url).blockingFirst();
+                assertThat(!e2.hasError());
+                waitForNodeStatus(fromNode, url, "BlacklistedRecovery");
+                break;
+            case "approveRecoverBlacklist":
+                ExecStatusInfo e3 = permissionService.approveBlackListedNodeRecovery(fromNode, orgId, url).blockingFirst();
+                assertThat(!e3.hasError());
+                waitForNodeStatus(fromNode, url, "Approved");
+                break;
+        }
     }
 
     @Step("Start stand alone <node>")
@@ -670,12 +725,78 @@ public class Permissions extends AbstractSpecImplementation {
         assertThat(newBlkNumber.getBlockNumber().intValue()).isEqualTo(oldBlkNumber.getBlockNumber().intValue());
     }
 
-    @Step("From <fromNode> add a new org admin role named <roleId> to <org>")
-    public void addOrgAdminRole(QuorumNetworkProperty.Node fromNode, String roleId, String org) {
+    @Step("From <fromNode> add a new role <roleId> to org <org> with <right>")
+    public void addNewRole(QuorumNetworkProperty.Node fromNode, String roleId, String org, String right) {
+        int rightId = 0;
+        switch (right) {
+            case "full access":
+                rightId = 3;
+                break;
+            case "contract deploy":
+                rightId = 2;
+                break;
+            default:
+                throw new IllegalArgumentException("unsupported right");
+        }
+
         org = getNetworkAdminOrg(org);
-        ExecStatusInfo execStatus = permissionService.addNewRole(fromNode, org, roleId, 3, true, true).blockingFirst();
+        ExecStatusInfo execStatus = permissionService.addNewRole(fromNode, org, roleId, rightId, false, false).blockingFirst();
         assertThat(!execStatus.hasError());
-        waitForRoleStatus(fromNode, org, roleId);
+        waitForRoleStatus(fromNode, org, roleId, true);
+    }
+
+    @Step("From <fromNode> add account <accountKey> to org <orgId> role <roleId>")
+    public void addAccountToRole(QuorumNetworkProperty.Node fromNode, String accountKey, String orgId, String roleId) {
+        orgId = getNetworkAdminOrg(orgId);
+        String account = (String) DataStoreFactory.getScenarioDataStore().get(accountKey);
+        ExecStatusInfo execStatus = permissionService.addAccountToOrg(fromNode, account, orgId, roleId).blockingFirst();
+        assertThat(!execStatus.hasError());
+        waitForAccountStatusWithRole(fromNode, account, "Active", roleId);
+    }
+
+
+    @Step("From <fromNode> blacklist account <accountKey> of org <orgId>")
+    public void blacklistAccount(QuorumNetworkProperty.Node fromNode, String accountKey, String orgId) {
+        orgId = getNetworkAdminOrg(orgId);
+        String account = (String) DataStoreFactory.getScenarioDataStore().get(accountKey);
+        ExecStatusInfo execStatus = permissionService.updateAccountStatus(fromNode, orgId, account, 3).blockingFirst();
+        assertThat(!execStatus.hasError());
+        waitForAccountStatus(fromNode, account, "Blacklisted");
+    }
+
+    @Step("From <fromNode> recover blacklisted account <accountKey> of org <orgId>")
+    public void recoverBlacklistAccount(QuorumNetworkProperty.Node fromNode, String accountKey, String orgId) {
+        orgId = getNetworkAdminOrg(orgId);
+        String account = (String) DataStoreFactory.getScenarioDataStore().get(accountKey);
+        ExecStatusInfo execStatus = permissionService.recoverBlacklistedAccount(fromNode, orgId, account).blockingFirst();
+        assertThat(!execStatus.hasError());
+        waitForAccountStatus(fromNode, account, "BlacklistedRecovery");
+    }
+
+    @Step("From <fromNode> approve recovery of blacklisted account <accountKey> of org <orgId>")
+    public void approveRecoveryOfBlacklistedAccount(QuorumNetworkProperty.Node fromNode, String accountKey, String orgId) {
+        orgId = getNetworkAdminOrg(orgId);
+        String account = (String) DataStoreFactory.getScenarioDataStore().get(accountKey);
+        ExecStatusInfo execStatus = permissionService.approveBlacklistedAccountRecovery(fromNode, orgId, account).blockingFirst();
+        assertThat(!execStatus.hasError());
+        waitForAccountStatus(fromNode, account, "Active");
+    }
+
+    @Step("From <fromNode> update account <accountKey>'s role to org <orgId> role <roleId>")
+    public void changeAccountRole(QuorumNetworkProperty.Node fromNode, String accountKey, String orgId, String roleId) {
+        orgId = getNetworkAdminOrg(orgId);
+        String account = (String) DataStoreFactory.getScenarioDataStore().get(accountKey);
+        ExecStatusInfo execStatus = permissionService.changeAccountRole(fromNode, account, orgId, roleId).blockingFirst();
+        assertThat(!execStatus.hasError());
+        waitForAccountStatusWithRole(fromNode, account, "Active", roleId);
+    }
+
+    @Step("From <fromNode> remove role <roleId> from org <org>")
+    public void removeRole(QuorumNetworkProperty.Node fromNode, String roleId, String org) {
+        org = getNetworkAdminOrg(org);
+        ExecStatusInfo execStatus = permissionService.removeRole(fromNode, org, roleId).blockingFirst();
+        assertThat(!execStatus.hasError());
+        waitForRoleStatus(fromNode, org, roleId, false);
     }
 
     @Step("From <fromNode> assign <targetNode>'s default account to <org> org and <roleId> role")
@@ -695,4 +816,46 @@ public class Permissions extends AbstractSpecImplementation {
         assertThat(!execStatus.hasError());
         waitForAccountStatus(fromNode, account, "Active");
     }
+
+    @Step("From <fromNode> create new account as <accountKey>")
+    public void newAccount(QuorumNetworkProperty.Node fromNode, String accountKey) {
+        String account = permissionService.newAccount(fromNode).blockingFirst().getResult();
+        assertThat(account != null && !account.trim().equals(""));
+        DataStoreFactory.getScenarioDataStore().put(accountKey, account);
+        boolean unlockStatus = permissionService.unlockAccount(fromNode, account).blockingFirst().getResult();
+        assertThat(unlockStatus).isTrue();
+    }
+
+    @Step("From <fromNode> assign admin role to account <accountKey> of org <orgId> role <roleId>")
+    public void assignAdminRole(QuorumNetworkProperty.Node fromNode, String accountKey, String orgId, String roleId) {
+        String targetAcct = (String) DataStoreFactory.getScenarioDataStore().get(accountKey);
+        ExecStatusInfo execStatus = permissionService.assignAdminRole(fromNode, targetAcct, orgId, roleId).blockingFirst();
+        assertThat(!execStatus.hasError());
+        waitForAccountStatus(fromNode, targetAcct, "Pending");
+    }
+
+    @Step("From <fromNode> approve admin role to account <accountKey> of org <orgId>")
+    public void approveAdminRole(QuorumNetworkProperty.Node fromNode, String accountKey, String orgId) {
+        String targetAcct = (String) DataStoreFactory.getScenarioDataStore().get(accountKey);
+        ExecStatusInfo execStatus = permissionService.approveAdminRoleAssignment(fromNode, targetAcct, orgId).blockingFirst();
+        assertThat(!execStatus.hasError());
+        waitForAccountStatus(fromNode, targetAcct, "Active");
+    }
+
+
+    @Step("From <fromNode> deactivate node <url> of org <orgId>")
+    public void deactivateNode(QuorumNetworkProperty.Node fromNode, String url, String orgId) {
+        updateNodeAction("deactivate", fromNode, url, orgId);
+    }
+
+    @Step("From <fromNode> recover blacklisted node <url> of org <orgId>")
+    public void recoverBlacklistNode(QuorumNetworkProperty.Node fromNode, String url, String orgId) {
+        updateNodeAction("recoverBlacklist", fromNode, url, orgId);
+    }
+
+    @Step("From <fromNode> approve recovery of blacklisted node <url> of org <orgId>")
+    public void approveRecoverBlacklist(QuorumNetworkProperty.Node fromNode, String url, String orgId) {
+        updateNodeAction("approveRecoverBlacklist", fromNode, url, orgId);
+    }
+
 }

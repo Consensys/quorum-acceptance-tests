@@ -5,11 +5,28 @@
 * Restart network <id>
 * Deploy "storec" smart contract with initial value "5" from a default account in "Node1" until block height reaches <qip714block>
 
-# Validate network admin role
+# Validate network admin role and basic testing
 * Validate that org "NWADMIN" is approved, has "Node1" linked and has role "NWADMIN"
 * Validate that org "NWADMIN" is approved, has "Node2" linked and has role "NWADMIN"
 * Validate that org "NWADMIN" is approved, has "Node3" linked and has role "NWADMIN"
 * Check "Node1"'s default account is from org "NWADMIN" and has role "NWADMIN" and is org admin and is active
+* From "Node2" create new account as "a1"
+* From "Node1" add a new role "ROLEA" to org "NWADMIN" with "full access"
+* From "Node1" add a new role "ROLEB" to org "NWADMIN" with "contract deploy"
+* From "Node1" add account "a1" to org "NWADMIN" role "ROLEA"
+* From "Node1" update account "a1"'s role to org "NWADMIN" role "ROLEB"
+* From "Node1" blacklist account "a1" of org "NWADMIN"
+* From "Node1" recover blacklisted account "a1" of org "NWADMIN"
+* From "Node1" approve recovery of blacklisted account "a1" of org "NWADMIN"
+* From "Node1" add new node "enode://eacaa74c4b0e7a9e12d2fe5fee6595eda841d6d992c35dbbcc50fcee4aa86dfbbdeff7dc7e72c2305d5a62257f82737a8cffc80474c15c611c037f52db1a3a7b@127.0.0.1:21005?discport=0&raftport=50406" to network org "NWADMIN"
+* From "Node1" deactivate node "enode://eacaa74c4b0e7a9e12d2fe5fee6595eda841d6d992c35dbbcc50fcee4aa86dfbbdeff7dc7e72c2305d5a62257f82737a8cffc80474c15c611c037f52db1a3a7b@127.0.0.1:21005?discport=0&raftport=50406" of org "NWADMIN"
+* From "Node1" recover blacklisted node "enode://eacaa74c4b0e7a9e12d2fe5fee6595eda841d6d992c35dbbcc50fcee4aa86dfbbdeff7dc7e72c2305d5a62257f82737a8cffc80474c15c611c037f52db1a3a7b@127.0.0.1:21005?discport=0&raftport=50406" of org "NWADMIN"
+* From "Node1" approve recovery of blacklisted node "enode://eacaa74c4b0e7a9e12d2fe5fee6595eda841d6d992c35dbbcc50fcee4aa86dfbbdeff7dc7e72c2305d5a62257f82737a8cffc80474c15c611c037f52db1a3a7b@127.0.0.1:21005?discport=0&raftport=50406" of org "NWADMIN"
+* From "Node2" create new account as "x1"
+* From "Node1" assign admin role to account "x1" of org "NWADMIN" role "NWADMIN"
+* From "Node1" approve admin role to account "x1" of org "NWADMIN"
+* From "Node1" add a new role "TEST_ROLE" to org "NWADMIN" with "full access"
+* From "Node1" remove role "TEST_ROLE" from org "NWADMIN"
 
 # Propose new organization to the network <permissionVersion> <id>
 * Validate that org "NWADMIN" is approved, has "Node1" linked and has role "NWADMIN"

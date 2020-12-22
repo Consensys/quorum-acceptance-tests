@@ -24,7 +24,7 @@ which will be the network admin account.
 
 Network Admin Role will have full access and will be network admin.
 This role will be assigned to the network admin accounts
-* Validate network admin role
+* Validate network admin role and basic testing
 
 ## Proposing a new organization into the network
 
