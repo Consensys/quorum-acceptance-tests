@@ -135,6 +135,11 @@
             <artifactId>spring-vault-core</artifactId>
             <version>2.2.2.RELEASE</version>
         </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.6</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -213,24 +218,22 @@
                 </dependencies>
             </plugin>
 
-
             <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>exec-maven-plugin</artifactId>
+                <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>split up binary string from SOLC java source files to make compilation pass</id>
+                        <id>replace-binary-string-in-gen-sol-java</id>
                         <phase>process-sources</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
                         <configuration>
-                            <executable>${project.basedir}/scripts/modify-source.sh</executable>
-                            <arguments>
-                                <argument>${generated.sol.dir}/com/quorum/gauge/sol</argument>
-                                <argument>${permission_type_name}</argument>
-                            </arguments>
+                            <target>
+                                <replace token= "private static final String BINARY =" value="private static String BINARY=&quot;&quot;; static {        String fullClassName = java.lang.invoke.MethodHandles.lookup().lookupClass().getName(); String[] classNameArr = fullClassName.split(&quot;\\.&quot;); String className = classNameArr[classNameArr.length-1]; String resourcePath = &quot;/com.quorum.gauge.sol/&quot;+className+&quot;.bin&quot;; try { BINARY = org.apache.commons.io.IOUtils.toString(java.lang.invoke.MethodHandles.lookup().lookupClass().getResourceAsStream(resourcePath)); } catch (java.io.IOException e) { e.printStackTrace(); } }//" dir="${generated.sol.dir}/com/quorum/gauge/sol">
+                                    <include name="**/*.java"/>
+                                </replace>
+                            </target>
                         </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
