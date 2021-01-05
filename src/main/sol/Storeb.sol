@@ -1,18 +1,18 @@
 pragma solidity ^0.5.0;
 
-interface storec {
+interface Storec {
     function setc(uint x) external;
 
     function getc() external view returns (uint);
 }
 
-contract storeb {
+contract Storeb {
     uint private storedValue;
-    storec anotherStorage;
+    Storec anotherStorage;
 
     constructor (uint initVal, address _addrc) public {
         storedValue = initVal;
-        anotherStorage = storec(_addrc);
+        anotherStorage = Storec(_addrc);
     }
 
     function getc() public view returns (uint) {

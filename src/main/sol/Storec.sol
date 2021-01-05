@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-contract storec {
+contract Storec {
     uint private storedValue;
 
     constructor (uint pval) public {
