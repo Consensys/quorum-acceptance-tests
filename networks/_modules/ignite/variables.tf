@@ -42,6 +42,12 @@ variable "privacy_enhancements" {
     description = "privacy enhancements state (enabled/disabled) and the block height at which they are enabled"
 }
 
+variable "permission_qip714Block" {
+  type        = object({ block = number, enabled = bool })
+  default     = { block = 20, enabled = true }
+  description = "required for testing permission model"
+}
+
 variable "output_dir" {
   default     = "build"
   description = "Target directory that contains generated resources for the network"

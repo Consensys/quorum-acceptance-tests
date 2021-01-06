@@ -88,6 +88,9 @@ resource "local_file" "genesis-file" {
       "eip155Block": 0,
       "eip150Hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
       "eip158Block": 0,
+%{if var.permission_qip714Block.enabled ~}
+      "qip714Block": ${var.permission_qip714Block.block},
+%{endif~}
       "isQuorum": true,
 %{if var.privacy_enhancements.enabled ~}
       "privacyEnhancementsBlock": ${var.privacy_enhancements.block},
@@ -102,7 +105,7 @@ resource "local_file" "genesis-file" {
       "maxCodeSizeConfig" : [
         {
           "block" : 0,
-          "size" : 32
+          "size" : 80
         }
       ]
     },
@@ -113,6 +116,15 @@ resource "local_file" "genesis-file" {
     "nonce": "0x0",
     "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
     "timestamp": "0x00"
+}
+EOF
+}
+
+resource "local_file" "nodekey-file" {
+    filename = format("%s/nodekeys-tmp.json", quorum_bootstrap_network.this.network_dir_abs)
+    content  = <<-EOF
+    {
+    ${join(",", quorum_bootstrap_node_key.nodekeys-generator[*].hex_node_id)}
 }
 EOF
 }

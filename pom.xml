@@ -135,6 +135,11 @@
             <artifactId>spring-vault-core</artifactId>
             <version>2.2.2.RELEASE</version>
         </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.6</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -188,7 +193,8 @@
                     <soliditySourceFiles>
                         <directory>${basedir}/src/main/sol</directory>
                         <includes>
-                            <include>**/*.sol</include>
+                            <include>*.sol</include>
+                            <include>permissions/${permission_type_name}/*.sol</include>
                         </includes>
                     </soliditySourceFiles>
                     <sourceDestination>${generated.sol.dir}</sourceDestination>
@@ -211,6 +217,27 @@
                     </dependency>
                 </dependencies>
             </plugin>
+
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>replace-binary-string-in-gen-sol-java</id>
+                        <phase>process-sources</phase>
+                        <configuration>
+                            <target>
+                                <replace token= "private static final String BINARY =" value="private static String BINARY=&quot;&quot;; static {        String fullClassName = java.lang.invoke.MethodHandles.lookup().lookupClass().getName(); String[] classNameArr = fullClassName.split(&quot;\\.&quot;); String className = classNameArr[classNameArr.length-1]; String resourcePath = &quot;/com.quorum.gauge.sol/&quot;+className+&quot;.bin&quot;; try { BINARY = org.apache.commons.io.IOUtils.toString(java.lang.invoke.MethodHandles.lookup().lookupClass().getResourceAsStream(resourcePath)); } catch (java.io.IOException e) { e.printStackTrace(); } }//" dir="${generated.sol.dir}/com/quorum/gauge/sol">
+                                    <include name="**/*.java"/>
+                                </replace>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
@@ -305,7 +332,7 @@
                             <execution>
                                 <id>extract</id>
                                 <goals><goal>run</goal></goals>
-                                <phase>process-test-resources</phase>
+                                <phase>initialize</phase>
                                 <configuration>
                                     <exportAntProperties>true</exportAntProperties>
                                     <target name="Extract network location and profile">
@@ -335,8 +362,16 @@
                                                                select="\2"
                                                                casesensitive="false"
                                                                defaultValue="@{defaultProfile}"/>
+                                                <propertyregex property="permission_type_name"
+                                                               input="@{raw}"
+                                                               regexp="permissions-([^\.]*) &amp;&amp; ([0-9a-zA-Z-_\.]+)"
+                                                               select="\1"
+                                                               casesensitive="false"
+                                                               defaultValue="v1"/>
+
                                                 <property name="@{folderPropertyName}" value="${folder_extract}" />
                                                 <property name="@{profilePropertyName}" value="${profile_extract}" />
+                                                <property name="permissionTypeName" value="${permission_type_name}" />
                                                 <if>
                                                     <not><equals arg1="${profile_extract}" arg2="undefined" /></not>
                                                     <then>
@@ -345,6 +380,7 @@
                                                 </if>
                                                 <echo level="info" message="@{folderPropertyName}=${folder_extract}" />
                                                 <echo level="info" message="@{profilePropertyName}=${profile_extract}" />
+                                                <echo level="info" message="permissionTypeName=${permission_type_name}" />
                                                 <exec executable="terraform" dir="${folder_extract}"
                                                       failonerror="false" failifexecutionfails="false">
                                                     <arg line="workspace new ${profile_extract}"/>

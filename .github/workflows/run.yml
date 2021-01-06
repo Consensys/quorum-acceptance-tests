@@ -109,7 +109,8 @@ jobs:
           - 'basic-rpc-security || networks/plugins::istanbul-rpc-security'
           - 'migration && networks/template::raft-4nodes'
           - 'migration && networks/template::istanbul-4nodes'
-          - 'permissions && networks/template::raft-3plus1'
+          - 'permissions-v1 && networks/template::raft-3plus1'
+          - 'permissions-v2 && networks/template::raft-3plus1'
           - 'privacy-enhancements-upgrade || networks/template::raft-4nodes-pe'
           - 'privacy-enhancements-upgrade || networks/template::istanbul-4nodes-pe'
         privacy-enhancements:

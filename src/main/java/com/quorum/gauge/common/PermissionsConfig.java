@@ -37,6 +37,16 @@ public class PermissionsConfig {
     private int subOrgBreadth;
     private int subOrgDepth;
 
+    public String getPermissionModel() {
+        return permissionModel;
+    }
+
+    public void setPermissionModel(String permissionModel) {
+        this.permissionModel = permissionModel;
+    }
+
+    private String permissionModel;
+
     public String getUpgradableAddress() {
         return upgradableAddress;
     }
@@ -148,6 +158,7 @@ public class PermissionsConfig {
     @Override
     public String toString() {
         return "PermissionsConfig{" +
+            "permissionModel='" + permissionModel + '\'' +
             "upgradableAddress='" + upgradableAddress + '\'' +
             ", interfaceAddress='" + interfaceAddress + '\'' +
             ", implAddress='" + implAddress + '\'' +

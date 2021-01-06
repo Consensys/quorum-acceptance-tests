@@ -35,6 +35,7 @@ public abstract class AbstractService {
     int DEFAULT_MAX_RETRY = 30;
 
     private ContractGasProvider permContractGasProvider = new PermissionContractGasProvider();
+    private ContractGasProvider permContractDepGasProvider = new PermissionContractDeployGasProvider();
 
     @Autowired
     private QuorumNodeConnectionFactory connectionFactory;
@@ -67,5 +68,13 @@ public abstract class AbstractService {
 
     public void setPermContractGasProvider(PermissionContractGasProvider permContractGasProvider) {
         this.permContractGasProvider = permContractGasProvider;
+    }
+
+    public ContractGasProvider getPermContractDepGasProvider() {
+        return permContractDepGasProvider;
+    }
+
+    public void setPermContractDepGasProvider(ContractGasProvider permContractDepGasProvider) {
+        this.permContractDepGasProvider = permContractDepGasProvider;
     }
 }

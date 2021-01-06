@@ -20,22 +20,31 @@
 package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNetworkProperty;
+import com.quorum.gauge.ext.BoolResponse;
 import com.quorum.gauge.ext.NodeInfo;
+import com.quorum.gauge.ext.StringResponse;
 import io.reactivex.Observable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.Request;
 import org.web3j.quorum.Quorum;
 import org.web3j.quorum.methods.request.PrivateTransaction;
 import org.web3j.quorum.methods.response.permissioning.*;
 
 import java.math.BigInteger;
+import java.util.Collections;
+import java.util.List;
 
 @Service
 public class PermissionService extends AbstractService {
 
     @Autowired
     AccountService accountService;
+
+    private static final Logger logger = LoggerFactory.getLogger(PermissionService.class);
 
     public String NodeInfo(QuorumNetworkProperty.Node node) {
 
@@ -75,6 +84,12 @@ public class PermissionService extends AbstractService {
         String fromAccount = accountService.getDefaultAccountAddress(node).blockingFirst();
         return client.quorumPermissionAddOrg(org, enode, address, new PrivateTransaction(fromAccount, null, DEFAULT_GAS_LIMIT, null, BigInteger.ZERO, null, null, null)).flowable().toObservable();
 
+    }
+
+    public Observable<ExecStatusInfo> addNode(QuorumNetworkProperty.Node node, String org, String enode) {
+        Quorum client = connectionFactory().getConnection(node);
+        String fromAccount = accountService.getDefaultAccountAddress(node).blockingFirst();
+        return client.quorumPermissionAddNode(org, enode, new PrivateTransaction(fromAccount, null, DEFAULT_GAS_LIMIT, null, BigInteger.ZERO, null, null, null)).flowable().toObservable();
     }
 
     public Observable<ExecStatusInfo> assignAccountRole(QuorumNetworkProperty.Node node, String address, String org, String role) {
@@ -117,11 +132,64 @@ public class PermissionService extends AbstractService {
 
     }
 
+    public Observable<ExecStatusInfo> addAccountToOrg(QuorumNetworkProperty.Node node, String account, String org, String roleId) {
+        Quorum client = connectionFactory().getConnection(node);
+        String fromAccount = accountService.getDefaultAccountAddress(node).blockingFirst();
+        return client.quorumPermissionAddAccountToOrg(account, org, roleId, new PrivateTransaction(fromAccount, null, DEFAULT_GAS_LIMIT, null, BigInteger.ZERO, null, null, null)).flowable().toObservable();
+    }
+
+    public Observable<ExecStatusInfo> changeAccountRole(QuorumNetworkProperty.Node node, String account, String org, String roleId) {
+        Quorum client = connectionFactory().getConnection(node);
+        String fromAccount = accountService.getDefaultAccountAddress(node).blockingFirst();
+        return client.quorumPermissionChangeAccountRole(account, org, roleId, new PrivateTransaction(fromAccount, null, DEFAULT_GAS_LIMIT, null, BigInteger.ZERO, null, null, null)).flowable().toObservable();
+    }
+
+    public Observable<ExecStatusInfo> updateAccountStatus(QuorumNetworkProperty.Node node, String org, String account, int status) {
+        Quorum client = connectionFactory().getConnection(node);
+        String fromAccount = accountService.getDefaultAccountAddress(node).blockingFirst();
+        return client.quorumPermissionUpdateAccountStatus(org, account, status, new PrivateTransaction(fromAccount, null, DEFAULT_GAS_LIMIT, null, BigInteger.ZERO, null, null, null)).flowable().toObservable();
+    }
+
+    public Observable<ExecStatusInfo> recoverBlacklistedAccount(QuorumNetworkProperty.Node node, String org, String account) {
+        String fromAccount = accountService.getDefaultAccountAddress(node).blockingFirst();
+        Request<?, ExecStatusInfo> nodeInfoRequest = new Request<>(
+            "quorumPermission_recoverBlackListedAccount",
+            List.of(org, account, new PrivateTransaction(fromAccount, null, DEFAULT_GAS_LIMIT, null, BigInteger.ZERO, null, null, null)),
+            connectionFactory().getWeb3jService(node),
+            ExecStatusInfo.class
+        );
+        return nodeInfoRequest.flowable().toObservable();
+    }
+
+    public Observable<ExecStatusInfo> approveBlacklistedAccountRecovery(QuorumNetworkProperty.Node node, String org, String account) {
+        String fromAccount = accountService.getDefaultAccountAddress(node).blockingFirst();
+
+        Request<?, ExecStatusInfo> nodeInfoRequest = new Request<>(
+            "quorumPermission_approveBlackListedAccountRecovery",
+            List.of(org, account, new PrivateTransaction(fromAccount, null, DEFAULT_GAS_LIMIT, null, BigInteger.ZERO, null, null, null)),
+            connectionFactory().getWeb3jService(node),
+            ExecStatusInfo.class
+        );
+        return nodeInfoRequest.flowable().toObservable();
+    }
+
+
     public Observable<ExecStatusInfo> updateNode(QuorumNetworkProperty.Node node, String org, String enode, int status) {
         Quorum client = connectionFactory().getConnection(node);
         String fromAccount = accountService.getDefaultAccountAddress(node).blockingFirst();
         return client.quorumPermissionUpdateNodeStatus(org, enode, status, new PrivateTransaction(fromAccount, null, DEFAULT_GAS_LIMIT, null, BigInteger.ZERO, null, null, null)).flowable().toObservable();
+    }
 
+    public Observable<ExecStatusInfo> recoverBlacklistedNode(QuorumNetworkProperty.Node node, String org, String enode) {
+        Quorum client = connectionFactory().getConnection(node);
+        String fromAccount = accountService.getDefaultAccountAddress(node).blockingFirst();
+        return client.quorumPermissionRecoverBlackListedNode(org, enode, new PrivateTransaction(fromAccount, null, DEFAULT_GAS_LIMIT, null, BigInteger.ZERO, null, null, null)).flowable().toObservable();
+    }
+
+    public Observable<ExecStatusInfo> approveBlackListedNodeRecovery(QuorumNetworkProperty.Node node, String org, String enode) {
+        Quorum client = connectionFactory().getConnection(node);
+        String fromAccount = accountService.getDefaultAccountAddress(node).blockingFirst();
+        return client.quorumPermissionApproveBlackListedNodeRecovery(org, enode, new PrivateTransaction(fromAccount, null, DEFAULT_GAS_LIMIT, null, BigInteger.ZERO, null, null, null)).flowable().toObservable();
     }
 
     public Observable<ExecStatusInfo> addNewRole(QuorumNetworkProperty.Node node, String org, String role, int access, boolean isVoter, boolean isAdmin) {
@@ -150,5 +218,27 @@ public class PermissionService extends AbstractService {
         String fromAccount = accountService.getDefaultAccountAddress(node).blockingFirst();
         return client.quorumPermissionApproveOrg(org, enode, address, new PrivateTransaction(fromAccount, null, DEFAULT_GAS_LIMIT, null, BigInteger.ZERO, null, null, null)).flowable().toObservable();
 
+    }
+
+    public Observable<StringResponse> newAccount(QuorumNetworkProperty.Node from) {
+        Request<?, StringResponse> request = new Request<>(
+            "personal_newAccount",
+            Collections.singletonList(""),
+            connectionFactory().getWeb3jService(from),
+            StringResponse.class
+        );
+
+        return request.flowable().toObservable();
+    }
+
+    public Observable<BoolResponse> unlockAccount(QuorumNetworkProperty.Node fromNode, String acct) {
+        Request<?, BoolResponse> request = new Request<>(
+            "personal_unlockAccount",
+            List.of(acct, "", 0),
+            connectionFactory().getWeb3jService(fromNode),
+            BoolResponse.class
+        );
+
+        return request.flowable().toObservable();
     }
 }
