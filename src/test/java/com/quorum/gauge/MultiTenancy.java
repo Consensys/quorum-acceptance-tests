@@ -215,15 +215,28 @@ public class MultiTenancy extends AbstractSpecImplementation {
     @Step("`<clientName>` writes a new arbitrary value to <contractName> successfully by sending a transaction to `<node>` with its TM key `<privateFrom>` using `<ethAccount>` and private for `<privateFor>`")
     public void setSimpleContractValue(String clientName, String contractName, Node node, String privateFrom, String ethAccount, String privateFor) {
         Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
+        final String contractId = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "_id", String.class);
         List<String> privateForList = Arrays.stream(privateFor.split(",")).map(String::trim).collect(Collectors.toList());
         assertThat(requestAccessToken(clientName)
-            .flatMap(t -> contractService.updateSimpleStorageContract(100, c.getContractAddress(), node, ethAccount, privateFrom, privateForList))
+            .flatMap(t -> {
+                if (contractId.startsWith("SimpleStorageDelegate")) {
+                    return  contractService.updateSimpleStorageDelegateContract(100, c.getContractAddress(), node, ethAccount, privateFrom, privateForList);
+                } else {
+                    return contractService.updateSimpleStorageContract(100, c.getContractAddress(), node, ethAccount, privateFrom, privateForList);
+                }
+            })
             .map(Optional::of)
             .onErrorResumeNext(o -> {
                 return Observable.just(Optional.empty());
             })
             .doOnTerminate(Context::removeAccessToken)
-            .map(r -> r.isPresent() && r.get().isStatusOK()).blockingFirst()
+            .map(r -> {
+                if (!r.isPresent()){
+                    return false;
+                }
+                DataStoreFactory.getScenarioDataStore().put("LastSetArbitraryValueTXHash", r.get().getTransactionHash());
+                return r.get().isStatusOK();
+            }).blockingFirst()
         ).isTrue();
     }
 
@@ -327,6 +340,21 @@ public class MultiTenancy extends AbstractSpecImplementation {
                 Optional<TransactionReceipt> transactionReceipt = transactionService.getTransactionReceipt(node, transactionHash).blockingFirst().getTransactionReceipt();
                 assertThat(transactionReceipt).isNotEmpty();
                 assertThat(transactionReceipt.get().isStatusOK()).isFalse();
+            })
+            .doOnTerminate(Context::removeAccessToken)
+            .blockingSubscribe();
+    }
+
+    @Step("`<clientName>` checks the last arbitrary write transaction on `<node>` has `<count>` events")
+    public void checkTransactionStatus(String clientName, QuorumNode node, int count) {
+        String transactionHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "LastSetArbitraryValueTXHash", String.class);
+        requestAccessToken(clientName)
+            .doOnNext(s -> {
+                logger.debug("token {}", s);
+                Optional<TransactionReceipt> transactionReceipt = transactionService.getTransactionReceipt(node, transactionHash).blockingFirst().getTransactionReceipt();
+                assertThat(transactionReceipt).isNotEmpty();
+                assertThat(transactionReceipt.get().isStatusOK()).isTrue();
+                assertThat(transactionReceipt.get().getLogs()).hasSize(count);
             })
             .doOnTerminate(Context::removeAccessToken)
             .blockingSubscribe();
@@ -496,30 +524,6 @@ public class MultiTenancy extends AbstractSpecImplementation {
             })
             .doOnTerminate(Context::removeAccessToken)
             .blockingSubscribe();
-    }
-
-    @Step("`<clientName>`, initially allocated with key(s) `<namedKey>`, sees <expectedErrorMsg> when retrieving logs from transaction receipts in `<node>`")
-    public void exceptionMessageFromTransactionReceipts(String clientName, String namedKey, String expectedErrorMsg, QuorumNode node) {
-        String[] txHashes = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "hashes", String[].class);
-        EthGetTransactionReceipt ethTxReceipt = requestAccessToken(clientName)
-            .flatMap(t -> transactionService.getTransactionReceipt(node, txHashes[0]))
-            .doOnTerminate(Context::removeAccessToken)
-            .blockingFirst();
-
-        assertThat(ethTxReceipt.hasError()).isTrue();
-        assertThat(ethTxReceipt.getError().getMessage()).contains(expectedErrorMsg);
-    }
-
-    @Step("`<clientName>`, initially allocated with key(s) `<namedKey>`, sees <expectedErrorMsg> when filtering logs by <contractName> address in `<node>`")
-    public void exceptionMessageFromGetLogs(String clientName, String namedKey, String expectedErrorMsg, String contractName, QuorumNode node) {
-        Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
-        EthLog ethLog = requestAccessToken(clientName)
-            .flatMap(t -> transactionService.getLogsUsingFilter(node, c.getContractAddress()))
-            .doOnTerminate(Context::removeAccessToken)
-            .blockingFirst();
-
-        assertThat(ethLog.hasError()).isTrue();
-        assertThat(ethLog.getError().getMessage()).contains(expectedErrorMsg);
     }
 
     private Observable<Optional<Contract>> deployPrivateContract(String clientName, QuorumNode node, String privateFrom, String privateFor, String contractId, WalletData wallet, String ethAccount) {
