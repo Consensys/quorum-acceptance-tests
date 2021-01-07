@@ -149,7 +149,7 @@ tags: private, access, node-managed-account
 
 ## GS using node-managed account keys can only access events for contracts which are privy to it
 
-tags: private, access, node-managed-account
+tags: private, access, node-managed-account, events
 
  GS can not read transaction receipts for contracts in which it does not participate
  GS will only see events for the contracts it has access to (even though the transaction affects multiple contracts)
@@ -160,10 +160,10 @@ tags: private, access, node-managed-account
 * `"JPM Investment"` writes a new arbitrary value to "contract1" successfully by sending a transaction to `"Node1"` with its TM key `"JPM_K1"` using `"JPM_ACC1"` and private for `"JPM_K1"`
 * `"JPM Investment"` can read "contract1" from "Node1"
 * `"GS Investment"` fails to read "contract1" from "Node1"
-* "subscriptionJPM1" receives "1" events
-* "subscriptionGS1" receives "0" events
 * `"JPM Investment"` checks the last arbitrary write transaction on `"Node1"` has `"1"` events
 * `"GS Investment"` checks the last arbitrary write transaction on `"Node1"` has `"0"` events
+* "subscriptionJPM1" receives "1" events
+* "subscriptionGS1" receives "0" events
 * `"GS Investment"` deploys a "SimpleStorageDelegate(contract1)" private contract, named "delegateContract1", by sending a transaction to `"Node1"` with its TM key `"GS_K1"` using `"GS_ACC1"` and private for `"GS_K1,JPM_K1"`
 * `"GS Investment"`, initially allocated with key(s) `"GS_K1"`, subscribes to log events from "delegateContract1" in `"Node1"`, named this subscription as "subscriptionGS2"
 * `"JPM Investment"`, initially allocated with key(s) `"JPM_K1"`, subscribes to log events from "delegateContract1" in `"Node1"`, named this subscription as "subscriptionJPM2"
@@ -177,6 +177,38 @@ tags: private, access, node-managed-account
   JPM Settlement does not have access to either delegateContract1 or contract1 so it will not retrieve any events
 * `"JPM Settlement"` checks the last arbitrary write transaction on `"Node1"` has `"0"` events
 
+## JPM using node-managed account keys can only access events for contracts which are privy to it
+
+tags: private, access, node-managed-account, events
+
+ JPM Investment uses a delegate contract to create an event in both parent and child contracts.
+ GS Investment should see only
+
+Private contract with events between 2 parties: JPM Investment and GS Investment
+* `"JPM Investment"` deploys a "SimpleStorage" private contract, named "contract1", by sending a transaction to `"Node1"` with its TM key `"JPM_K1"` using `"JPM_ACC1"` and private for `"JPM_K1,GS_K1"`
+* `"GS Investment"`, initially allocated with key(s) `"GS_K1"`, subscribes to log events from "contract1" in `"Node1"`, named this subscription as "subscriptionGS1"
+* `"JPM Investment"`, initially allocated with key(s) `"JPM_K1"`, subscribes to log events from "contract1" in `"Node1"`, named this subscription as "subscriptionJPM1"
+* `"JPM Investment"` writes a new arbitrary value to "contract1" successfully by sending a transaction to `"Node1"` with its TM key `"JPM_K1"` using `"JPM_ACC1"` and private for `"JPM_K1,GS_K1"`
+* `"JPM Investment"` can read "contract1" from "Node1"
+* `"GS Investment"` can read "contract1" from "Node1"
+* "subscriptionJPM1" receives "1" events
+* "subscriptionGS1" receives "1" events
+* `"JPM Investment"` checks the last arbitrary write transaction on `"Node1"` has `"1"` events
+* `"GS Investment"` checks the last arbitrary write transaction on `"Node1"` has `"1"` events
+JPM Investment now uses a delegate contract (not for GS Investmment) to create 2 events: one from delegate contract, one from the above private contract (with GS Investment)
+* `"JPM Investment"` deploys a "SimpleStorageDelegate(contract1)" private contract, named "delegateContract1", by sending a transaction to `"Node1"` with its TM key `"JPM_K1"` using `"JPM_ACC1"` and private for `"JPM_K1"`
+* `"GS Investment"`, initially allocated with key(s) `"GS_K1"`, subscribes to log events from "delegateContract1" in `"Node1"`, named this subscription as "subscriptionGS2"
+* `"JPM Investment"`, initially allocated with key(s) `"JPM_K1"`, subscribes to log events from "delegateContract1" in `"Node1"`, named this subscription as "subscriptionJPM2"
+* `"JPM Investment"` writes a new arbitrary value to "delegateContract1" successfully by sending a transaction to `"Node1"` with its TM key `"JPM_K1"` using `"JPM_ACC1"` and private for `"JPM_K1"`
+Parties to original private contracts would receive 2 events
+* "subscriptionJPM1" receives "2" events
+* "subscriptionGS1" receives "2" events
+Non-party would not receive any
+* "subscriptionJPM2" receives "1" events
+* "subscriptionGS2" receives "0" events
+Both would see transaction receipts but with different events count
+* `"JPM Investment"` checks the last arbitrary write transaction on `"Node1"` has `"2"` events
+* `"GS Investment"` checks the last arbitrary write transaction on `"Node1"` has `"1"` events
 
 ## JPM, GS and DB using self-managed account keys can access public states
 
