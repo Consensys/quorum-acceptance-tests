@@ -1,6 +1,5 @@
 # This is for network from 7nodes quorum-examples
 quorum:
-  access-token: xyz
   nodes:
     Node1:
       privacy-address: BULeR8JyUWhiuuCMU/HLA0Q5pzkYT+cHII3ZKBey3Bo=

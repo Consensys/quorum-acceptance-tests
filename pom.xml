@@ -60,6 +60,7 @@
         <maven-site-plugin.version>3.7.1</maven-site-plugin.version>
         <maven-project-info-reports-plugin.version>3.0.0</maven-project-info-reports-plugin.version>
         <github.site-maven-plugin.version>0.12</github.site-maven-plugin.version>
+        <maven-replacer-plugin.version>1.5.3</maven-replacer-plugin.version>
     </properties>
 
     <dependencies>
@@ -151,6 +152,11 @@
                     <groupId>com.thoughtworks.gauge.maven</groupId>
                     <artifactId>gauge-maven-plugin</artifactId>
                     <version>${gauge-maven-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>com.google.code.maven-replacer-plugin</groupId>
+                    <artifactId>replacer</artifactId>
+                    <version>${maven-replacer-plugin.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -306,16 +312,9 @@
                                                                select="\2"
                                                                casesensitive="false"
                                                                defaultValue="@{defaultProfile}"/>
-                                                <propertyregex property="permission_type_name"
-                                                               input="@{raw}"
-                                                               regexp="permissions-([^\.]*) &amp;&amp; ([0-9a-zA-Z-_\.]+)"
-                                                               select="\1"
-                                                               casesensitive="false"
-                                                               defaultValue="v1"/>
 
                                                 <property name="@{folderPropertyName}" value="${folder_extract}" />
                                                 <property name="@{profilePropertyName}" value="${profile_extract}" />
-                                                <property name="permissionTypeName" value="${permission_type_name}" />
                                                 <if>
                                                     <not><equals arg1="${profile_extract}" arg2="undefined" /></not>
                                                     <then>
@@ -324,7 +323,6 @@
                                                 </if>
                                                 <echo level="info" message="@{folderPropertyName}=${folder_extract}" />
                                                 <echo level="info" message="@{profilePropertyName}=${profile_extract}" />
-                                                <echo level="info" message="permissionTypeName=${permission_type_name}" />
                                                 <exec executable="terraform" dir="${folder_extract}"
                                                       failonerror="false" failifexecutionfails="false">
                                                     <arg line="workspace new ${profile_extract}"/>
@@ -564,8 +562,49 @@
                     <value>!true</value>
                 </property>
             </activation>
+            <properties>
+                <defaultPermissionType>v1</defaultPermissionType>
+            </properties>
             <build>
                 <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>determine-permission-type</id>
+                                <phase>initialize</phase>
+                                <goals><goal>run</goal></goals>
+                                <configuration>
+                                    <exportAntProperties>true</exportAntProperties>
+                                    <target name="Determine permission type">
+                                        <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+                                        <!-- extract permission type from tags -->
+                                        <propertyregex property="permission.type"
+                                                       input="${tags}"
+                                                       regexp="permissions-([^\.]*) &amp;&amp; ([0-9a-zA-Z-_\.]+)"
+                                                       select="\1"
+                                                       casesensitive="false"
+                                                       defaultValue="${defaultPermissionType}"/>
+                                        <echo level="info" message="permissionType=${permission.type}" />
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                        <dependencies>
+                            <dependency>
+                                <groupId>ant-contrib</groupId>
+                                <artifactId>ant-contrib</artifactId>
+                                <version>1.0b3</version>
+                                <exclusions>
+                                    <exclusion>
+                                        <groupId>ant</groupId>
+                                        <artifactId>ant</artifactId>
+                                    </exclusion>
+                                </exclusions>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
                     <plugin>
                         <groupId>org.web3j</groupId>
                         <artifactId>web3j-maven-plugin</artifactId>
@@ -576,7 +615,7 @@
                                 <directory>${basedir}/src/main/sol</directory>
                                 <includes>
                                     <include>*.sol</include>
-                                    <include>permissions/${permission_type_name}/*.sol</include>
+                                    <include>permissions/${permission.type}/*.sol</include>
                                 </includes>
                             </soliditySourceFiles>
                             <sourceDestination>${generated.sol.dir}</sourceDestination>
@@ -601,21 +640,27 @@
                     </plugin>
 
                     <plugin>
-                        <artifactId>maven-antrun-plugin</artifactId>
+                        <groupId>com.google.code.maven-replacer-plugin</groupId>
+                        <artifactId>replacer</artifactId>
                         <executions>
                             <execution>
                                 <id>replace-binary-string-in-gen-sol-java</id>
                                 <phase>process-sources</phase>
-                                <configuration>
-                                    <target>
-                                        <replace token= "private static final String BINARY =" value="private static String BINARY=&quot;&quot;; static {        String fullClassName = java.lang.invoke.MethodHandles.lookup().lookupClass().getName(); String[] classNameArr = fullClassName.split(&quot;\\.&quot;); String className = classNameArr[classNameArr.length-1]; String resourcePath = &quot;/com.quorum.gauge.sol/&quot;+className+&quot;.bin&quot;; try { BINARY = org.apache.commons.io.IOUtils.toString(java.lang.invoke.MethodHandles.lookup().lookupClass().getResourceAsStream(resourcePath)); } catch (java.io.IOException e) { e.printStackTrace(); } }//" dir="${generated.sol.dir}/com/quorum/gauge/sol">
-                                            <include name="**/*.java"/>
-                                        </replace>
-                                    </target>
-                                </configuration>
                                 <goals>
-                                    <goal>run</goal>
+                                    <goal>replace</goal>
                                 </goals>
+                                <configuration>
+                                    <basedir>${generated.sol.dir}</basedir>
+                                    <includes>
+                                        <include>**/*.java</include>
+                                    </includes>
+                                    <replacements>
+                                        <replacement>
+                                            <token>(private static final String BINARY)\s*=\s*"[^"]+"\s*;</token>
+                                            <value>$1 = com.quorum.gauge.common.SolBinUtils.readSolBin("com.quorum.gauge.sol", java.lang.invoke.MethodHandles.lookup().lookupClass());</value>
+                                        </replacement>
+                                    </replacements>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
