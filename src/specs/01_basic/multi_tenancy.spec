@@ -268,3 +268,30 @@ tags: private, access, raw
 * `"GS Investment"` checks the transaction "sneakyDelegateContract_TX1" on `"Node1"` has failed
  After adding post execution checks the SneakyWrapper is unable to copy the data from contract1
 * `"GS Investment"` invokes get in "sneakyDelegateContract" on `"Node1"` and gets value "0"
+
+## JPM can access its contract code
+
+tags: private, opcodes
+
+This is a low level scenario in which a client tries too read contract code.
+
+* `"JPM Investment"` deploys a "ContractCodeReader" private contract, named "reader", by sending a transaction to `"Node1"` with its TM key `"JPM_K1"` using `"JPM_ACC1"` and private for `"JPM_K1"`
+* `"JPM Investment"` invokes ContractCodeReader("reader")'s getCodeSize("reader") on `"Node1"` and gets non-empty value
+* `"JPM Investment"` invokes ContractCodeReader("reader")'s getCode("reader") on `"Node1"` and gets non-empty value
+* `"JPM Investment"` invokes ContractCodeReader("reader")'s getCodeHash("reader") on `"Node1"` and gets non-empty value
+* `"JPM Investment"` invokes ContractCodeReader("reader")'s setLastCodeSize("reader") by sending a transaction to `"Node1"` with its TM key `"JPM_K1"` using `"JPM_ACC1"` and private for `"JPM_K1"`
+* `"JPM Investment"` invokes ContractCodeReader("reader")'s getLastCodeSize() on `"Node1"` and gets non-empty value
+
+## GS can NOT access non-authorized contract code
+
+tags: private, opcodes
+
+This is a low level scenario in which a client tries too read un-authorized contract code
+
+* `"JPM Investment"` deploys a "SimpleStorage" private contract, named "target", by sending a transaction to `"Node1"` with its TM key `"JPM_K1"` using `"JPM_ACC1"` and private for `"JPM_K1"`
+* `"GS Investment"` deploys a "ContractCodeReader" private contract, named "reader", by sending a transaction to `"Node1"` with its TM key `"GS_K1"` using `"GS_ACC1"` and private for `"JPM_K1"`
+* `"GS Investment"` fails to invoke ContractCodeReader("reader")'s setLastCodeSize("target") by sending a transaction to `"Node1"` with its TM key `"GS_K1"` using `"GS_ACC1"` and private for `"JPM_K1"`
+* `"GS Investment"` invokes ContractCodeReader("reader")'s getLastCodeSize() on `"Node1"` and gets empty value
+* `"GS Investment"` invokes ContractCodeReader("reader")'s getCodeSize("target") on `"Node1"` and gets "not authorized"
+* `"GS Investment"` invokes ContractCodeReader("reader")'s getCode("target") on `"Node1"` and gets "not authorized"
+* `"GS Investment"` invokes ContractCodeReader("reader")'s getCodeHash("target") on `"Node1"` and gets "not authorized"

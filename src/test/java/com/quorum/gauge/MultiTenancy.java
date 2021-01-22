@@ -33,6 +33,7 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -220,7 +221,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
         assertThat(requestAccessToken(clientName)
             .flatMap(t -> {
                 if (contractId.startsWith("SimpleStorageDelegate")) {
-                    return  contractService.updateSimpleStorageDelegateContract(100, c.getContractAddress(), node, ethAccount, privateFrom, privateForList);
+                    return contractService.updateSimpleStorageDelegateContract(100, c.getContractAddress(), node, ethAccount, privateFrom, privateForList);
                 } else {
                     return contractService.updateSimpleStorageContract(100, c.getContractAddress(), node, ethAccount, privateFrom, privateForList);
                 }
@@ -231,7 +232,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
             })
             .doOnTerminate(Context::removeAccessToken)
             .map(r -> {
-                if (!r.isPresent()){
+                if (!r.isPresent()) {
                     return false;
                 }
                 DataStoreFactory.getScenarioDataStore().put("LastSetArbitraryValueTXHash", r.get().getTransactionHash());
@@ -570,6 +571,10 @@ public class MultiTenancy extends AbstractSpecImplementation {
                         if (wallet != null) {
                             return rawContractService.createRawSneakyWrapperPrivateContract(delegateContractAddress, wallet, node, privateFrom, privateForList);
                         }
+                    case "ContractCodeReader":
+                        if (wallet == null) {
+                            return contractCodeReaderService.createPrivateContract(source, ethAccount, privateFrom, privateForList);
+                        }
                     default:
                         return Observable.error(new UnsupportedOperationException(contractId + " is not supported"));
                 }
@@ -765,5 +770,153 @@ public class MultiTenancy extends AbstractSpecImplementation {
             })
             .doOnTerminate(Context::removeAccessToken)
             .blockingSubscribe();
+    }
+
+    @Step("`<clientName>` invokes ContractCodeReader(<contractName>)'s getCodeSize(<targetContractName>) on `<source>` and gets non-empty value")
+    public void getCodeSize(String clientName, String contractName, String targetContractName, Node source) {
+        getCodeSizeWithAssertion(clientName, contractName, targetContractName, source, actual -> assertThat(actual).isNotZero());
+    }
+
+    @Step("`<clientName>` invokes ContractCodeReader(<contractName>)'s getCodeSize(<targetContractName>) on `<source>` and gets empty value")
+    public void getCodeSizeEmpty(String clientName, String contractName, String targetContractName, Node source) {
+        getCodeSizeWithAssertion(clientName, contractName, targetContractName, source, actual -> assertThat(actual).isZero());
+    }
+
+    @Step("`<clientName>` invokes ContractCodeReader(<contractName>)'s getCodeSize(<targetContractName>) on `<source>` and gets <expectedMsg>")
+    public void getCodeSizeError(String clientName, String contractName, String targetContractName, Node source, String expectedMsg) {
+        assertThatThrownBy(() ->
+            getCodeSizeWithAssertion(clientName, contractName, targetContractName, source, actual -> {})
+        ).hasMessageContaining(expectedMsg);
+    }
+
+    private void getCodeSizeWithAssertion(String clientName, String contractName, String targetContractName, Node source, Consumer<BigInteger> assertFunc) {
+        Contract reader = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
+        Contract target = mustHaveValue(DataStoreFactory.getScenarioDataStore(), targetContractName, Contract.class);
+
+        obtainAccessToken(clientName);
+        Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
+        accessToken.ifPresent(Context::storeAccessToken);
+
+        BigInteger actual = contractCodeReaderService.getCodeSize(source, reader.getContractAddress(), target.getContractAddress())
+            .doOnTerminate(Context::removeAccessToken)
+            .blockingFirst();
+
+        assertFunc.accept(actual);
+    }
+
+    @Step("`<clientName>` invokes ContractCodeReader(<contractName>)'s getCode(<targetContractName>) on `<source>` and gets non-empty value")
+    public void getCode(String clientName, String contractName, String targetContractName, Node source) {
+        getCodeWithAssertion(clientName, contractName, targetContractName, source, actual -> assertThat(actual).isNotEmpty());
+    }
+
+    @Step("`<clientName>` invokes ContractCodeReader(<contractName>)'s getCode(<targetContractName>) on `<source>` and gets empty value")
+    public void getCodeEmpty(String clientName, String contractName, String targetContractName, Node source) {
+        getCodeWithAssertion(clientName, contractName, targetContractName, source, actual -> assertThat(actual).isEmpty());
+    }
+
+    @Step("`<clientName>` invokes ContractCodeReader(<contractName>)'s getCode(<targetContractName>) on `<source>` and gets <expectedMsg>")
+    public void getCodeError(String clientName, String contractName, String targetContractName, Node source, String expectedMsg) {
+        assertThatThrownBy(() -> getCodeWithAssertion(clientName, contractName, targetContractName, source, actual -> {}))
+        .hasMessageContaining(expectedMsg);
+    }
+
+    private void getCodeWithAssertion(String clientName, String contractName, String targetContractName, Node source, Consumer<byte[]> assertFunc) {
+        Contract reader = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
+        Contract target = mustHaveValue(DataStoreFactory.getScenarioDataStore(), targetContractName, Contract.class);
+
+        obtainAccessToken(clientName);
+        Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
+        accessToken.ifPresent(Context::storeAccessToken);
+
+        byte[] actual = contractCodeReaderService.getCode(source, reader.getContractAddress(), target.getContractAddress())
+            .doOnTerminate(Context::removeAccessToken)
+            .blockingFirst();
+
+        assertFunc.accept(actual);
+    }
+
+    @Step("`<clientName>` invokes ContractCodeReader(<contractName>)'s getCodeHash(<targetContractName>) on `<source>` and gets non-empty value")
+    public void getCodeHash(String clientName, String contractName, String targetContractName, Node source) {
+        getCodeHashWithAssertion(clientName, contractName, targetContractName, source, actual -> assertThat(actual).isNotEmpty());
+    }
+
+    @Step("`<clientName>` invokes ContractCodeReader(<contractName>)'s getCodeHash(<targetContractName>) on `<source>` and gets empty value")
+    public void getCodeHashEmpty(String clientName, String contractName, String targetContractName, Node source) {
+        getCodeHashWithAssertion(clientName, contractName, targetContractName, source, actual -> assertThat(actual).isEmpty());
+    }
+
+    @Step("`<clientName>` invokes ContractCodeReader(<contractName>)'s getCodeHash(<targetContractName>) on `<source>` and gets <expectedMsg>")
+    public void getCodeHashError(String clientName, String contractName, String targetContractName, Node source, String expectedMsg) {
+        assertThatThrownBy(() ->
+            getCodeHashWithAssertion(clientName, contractName, targetContractName, source, actual -> {})
+        ).hasMessageContaining(expectedMsg);
+    }
+
+    private void getCodeHashWithAssertion(String clientName, String contractName, String targetContractName, Node source, Consumer<byte[]> assertFunc) {
+        Contract reader = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
+        Contract target = mustHaveValue(DataStoreFactory.getScenarioDataStore(), targetContractName, Contract.class);
+
+        obtainAccessToken(clientName);
+        Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
+        accessToken.ifPresent(Context::storeAccessToken);
+
+        byte[] actual = contractCodeReaderService.getCodeHash(source, reader.getContractAddress(), target.getContractAddress())
+            .doOnTerminate(Context::removeAccessToken)
+            .blockingFirst();
+
+        assertFunc.accept(actual);
+    }
+
+    @Step("`<GS Investment>` invokes ContractCodeReader(<reader>)'s getLastCodeSize() on `<Node1>` and gets non-empty value")
+    public void getLastCodeSize(String clientName, String contractName, Node source) {
+        getLastCodeSizeWithAssertion(clientName, contractName, source, actual -> assertThat(actual).isNotZero());
+    }
+
+    @Step("`<GS Investment>` invokes ContractCodeReader(<reader>)'s getLastCodeSize() on `<Node1>` and gets empty value")
+    public void getLastCodeSizeEmpty(String clientName, String contractName, Node source) {
+        getLastCodeSizeWithAssertion(clientName, contractName, source, actual -> assertThat(actual).isZero());
+    }
+
+    private void getLastCodeSizeWithAssertion(String clientName, String contractName, Node source, Consumer<BigInteger> assertFunc) {
+        Contract reader = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
+
+        obtainAccessToken(clientName);
+        Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
+        accessToken.ifPresent(Context::storeAccessToken);
+
+        BigInteger actual = contractCodeReaderService.getLastCodeSize(source, reader.getContractAddress())
+            .doOnTerminate(Context::removeAccessToken)
+            .blockingFirst();
+
+        assertFunc.accept(actual);
+    }
+
+    @Step("`<clientName>` invokes ContractCodeReader(<reader>)'s setLastCodeSize(<target>) by sending a transaction to `<Node1>` with its TM key `<GS_K1>` using `<GS_ACC1>` and private for `<JPM_K1>`")
+    public void setLastCodeSize(String clientName, String contractName, String targetContractName, Node source, String privateFromAlias, String ethAccountAlias, String privateForAlias) {
+        Contract reader = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
+        Contract target = mustHaveValue(DataStoreFactory.getScenarioDataStore(), targetContractName, Contract.class);
+
+        obtainAccessToken(clientName);
+        Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
+        accessToken.ifPresent(Context::storeAccessToken);
+
+        contractCodeReaderService.setLastCodeSize(source, reader.getContractAddress(), target.getContractAddress(), ethAccountAlias, privateFromAlias, List.of(privateForAlias))
+            .doOnTerminate(Context::removeAccessToken)
+            .blockingSubscribe();
+    }
+
+    @Step("`<clientName>` fails to invoke ContractCodeReader(<reader>)'s setLastCodeSize(<target>) by sending a transaction to `<Node1>` with its TM key `<GS_K1>` using `<GS_ACC1>` and private for `<JPM_K1>`")
+    public void setLastCodeSizeFails(String clientName, String contractName, String targetContractName, Node source, String privateFromAlias, String ethAccountAlias, String privateForAlias) {
+        Contract reader = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
+        Contract target = mustHaveValue(DataStoreFactory.getScenarioDataStore(), targetContractName, Contract.class);
+
+        obtainAccessToken(clientName);
+        Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
+        accessToken.ifPresent(Context::storeAccessToken);
+
+        assertThatThrownBy(() -> contractCodeReaderService.setLastCodeSize(source, reader.getContractAddress(), target.getContractAddress(), ethAccountAlias, privateFromAlias, List.of(privateForAlias))
+            .doOnTerminate(Context::removeAccessToken)
+            .blockingSubscribe()
+        ).hasMessageContaining("not authorized");
     }
 }

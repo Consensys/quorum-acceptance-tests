@@ -98,6 +98,9 @@ public abstract class AbstractSpecImplementation {
     @Autowired
     protected HashicorpVaultSigningService hashicorpVaultSigningService;
 
+    @Autowired
+    protected ContractCodeReaderService contractCodeReaderService;
+
     protected BigInteger currentBlockNumber() {
         return mustHaveValue(DataStoreFactory.getScenarioDataStore(), "blocknumber", BigInteger.class);
     }
