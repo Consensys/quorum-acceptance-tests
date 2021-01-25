@@ -96,6 +96,37 @@ Tenants:
 * `"JPM Audit"` can __NOT__ read "investmentContract" on `"Node1"`
 * `"DB Investment"` can __NOT__ read "investmentContract" on `"Node2"`
 
+## GS extends a contract to a new party in GS on different node, JPM and DB can not access the contract nor see the extension
+
+//This is a copy of the above, but also checks other tenants on the node can't see the extension
+
+* `"GS Investment"` deploys a <privacyFlag> `SimpleStorage` contract on `"Node1"` private from `"GS_K1"` using `"GS_ACC1"`, named "investmentContract", private for "GS Research"'s `"GS_K3"`
+  Verifying access based on access token
+* `"GS Investment,GS Research"` can read "investmentContract" on `"Node1"`
+* `"GS Settlement,DB Investment"` can __NOT__ read "investmentContract" on `"Node2"`
+* `"JPM Audit"` can __NOT__ read "investmentContract" on `"Node1"`
+
+//Extending contract and verifying
+* `"GS Investment"` requests access token from authorization server
+* Initiate `"investmentContract"` extension to `"GS_K2"` received by `"GS_ACC2"` in `"Node2"` from `"Node1"`, private from `"GS_K1"` using `"GS_ACC1"`
+
+// Check in the middle of the extension that only authorized tenants can see the extension happening
+* `"GS Settlement"` requests access token from authorization server
+* "Node2" has "investmentContract" listed in all active extensions
+* `"DB Investment"` requests access token from authorization server
+* "Node2" does not see "investmentContract" listed in all active extensions
+
+* `"GS Investment"` requests access token from authorization server
+* `"GS Settlement"` accepts `"investmentContract"` extension from `"Node2"`, private from `"GS_K2"` using `"GS_ACC2"` and private for `"GS_K1"`
+* Wait for "investmentContract" to disappear from active extension in "Node2"
+
+// End of the extension process
+
+* `"GS Investment,GS Research"` can read "investmentContract" on `"Node1"`
+* `"GS Settlement"` can read "investmentContract" on `"Node2"`
+* `"JPM Audit"` can __NOT__ read "investmentContract" on `"Node1"`
+* `"DB Investment"` can __NOT__ read "investmentContract" on `"Node2"`
+
 ## GS extends a contract to a new party in GS on same node, JPM and DB can not access the contract
 
 * `"GS Investment"` deploys a <privacyFlag> `SimpleStorage` contract on `"Node1"` private from `"GS_K1"` using `"GS_ACC1"`, named "investmentContract", private for "GS Investment"'s `"GS_K1"`
