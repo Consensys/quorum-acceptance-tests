@@ -26,11 +26,13 @@ import io.reactivex.Observable;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.Request;
+import org.web3j.protocol.core.Response;
 import org.web3j.protocol.core.methods.response.EthBlockNumber;
 import org.web3j.protocol.core.methods.response.NetPeerCount;
 import org.web3j.protocol.core.methods.response.Transaction;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class UtilService extends AbstractService {
@@ -59,6 +61,17 @@ public class UtilService extends AbstractService {
         return request.flowable().toObservable().blockingFirst().getTransactions();
     }
 
+    public Observable<Boolean> getRpcModules(QuorumNode node) {
+        Request<?, GenericResponse> request = new Request<>(
+            "rpc_modules",
+            null,
+            connectionFactory().getWeb3jService(node),
+            GenericResponse.class
+        );
+
+        return request.flowable().toObservable().map(r -> !r.hasError());
+    }
+
     /**
      * @param node
      * @return number of peers from the view of {@code node}
@@ -68,5 +81,9 @@ public class UtilService extends AbstractService {
         NetPeerCount peerCount = client.netPeerCount().flowable().toObservable().blockingFirst();
 
         return peerCount.getQuantity().intValue();
+    }
+
+    public static class GenericResponse extends Response<Map<String, Object>> {
+
     }
 }

@@ -1,0 +1,5 @@
+# `<clientName>` extends <contractName> on `<sourceNode>` private from `<sourceParty>` using `<sourceEthAccount>` to `<targetClientName>`'s `<targetParty>` on `<targetNode>` with acceptance by `<targetEthAccount>`
+* `<clientName>` requests access token from authorization server
+* Initiate `<contractName>` extension to `<targetParty>` received by `<targetEthAccount>` in `<targetNode>` from `<sourceNode>`, private from `<sourceParty>` using `<sourceEthAccount>`
+* `<targetClientName>` accepts `<contractName>` extension from `<targetNode>`, private from `<targetParty>` using `<targetEthAccount>` and private for `<sourceParty>`
+* Wait for <contractName> to disappear from active extension in <targetNode>

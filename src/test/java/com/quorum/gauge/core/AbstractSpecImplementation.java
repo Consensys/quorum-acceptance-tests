@@ -33,6 +33,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigInteger;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -96,6 +98,9 @@ public abstract class AbstractSpecImplementation {
     @Autowired
     protected HashicorpVaultSigningService hashicorpVaultSigningService;
 
+    @Autowired
+    protected ContractCodeReaderService contractCodeReaderService;
+
     protected BigInteger currentBlockNumber() {
         return mustHaveValue(DataStoreFactory.getScenarioDataStore(), "blocknumber", BigInteger.class);
     }
@@ -110,6 +115,15 @@ public abstract class AbstractSpecImplementation {
         assertThat(v).as("Value class for key [" + key + "] in Gauge DataStore").isInstanceOf(clazz);
         assertThat(v).as("Value for key [" + key + "] in Gauge DataStore").isNotNull();
         return (T) v;
+    }
+
+    protected <T> Optional<T> haveValue(DataStore ds, String key, Class<T> clazz) {
+        Object v = ds.get(key);
+        if (Objects.isNull(v)) {
+            return Optional.empty();
+        } else {
+            return Optional.of((T) v);
+        }
     }
 
     /**

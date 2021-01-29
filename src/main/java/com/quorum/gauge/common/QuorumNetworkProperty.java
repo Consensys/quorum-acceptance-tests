@@ -53,6 +53,9 @@ public class QuorumNetworkProperty {
     }
 
     public void setNodes(Map<QuorumNode, Node> nodes) {
+        for (Map.Entry<QuorumNode, Node> entry : nodes.entrySet()) {
+            entry.getValue().setName(entry.getKey().name());
+        }
         this.nodes = nodes;
     }
 

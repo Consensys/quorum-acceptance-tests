@@ -83,6 +83,50 @@ public class AccountService extends AbstractService {
         return request.flowable().toObservable();
     }
 
+    /**
+     *
+     * @param alias
+     * @return account address in the network property
+     */
+    public String address(String alias) {
+        for (QuorumNetworkProperty.Node node : networkProperty().getNodes().values()) {
+            if (node.getAccountAliases().containsKey(alias)) {
+                return node.getAccountAliases().get(alias);
+            }
+        }
+        throw new IllegalArgumentException("no such alias in the network property: " + alias);
+    }
+
+    /**
+     *
+     * @param alias
+     * @return account address in the network property
+     */
+    public QuorumNetworkProperty.Node nodeByAlias(String alias) {
+        for (QuorumNode n : networkProperty().getNodes().keySet()) {
+            QuorumNetworkProperty.Node node = networkProperty().getNodes().get(n);
+            node.setName(n.name());
+            if (node.getAccountAliases().containsKey(alias)) {
+                return node;
+            }
+        }
+        throw new IllegalArgumentException("no such alias in the network property: " + alias);
+    }
+
+    public Observable<String> getAccountAddress(QuorumNetworkProperty.Node source, String ethAccount) {
+        if (ethAccount == null) {
+            return getDefaultAccountAddress(source);
+        }
+        // we don't look up for the address in source Node as we want
+        // to serve -ve cases
+        for (QuorumNetworkProperty.Node node : networkProperty().getNodes().values()) {
+            if (node.getAccountAliases().containsKey(ethAccount)) {
+                return Observable.just(node.getAccountAliases().get(ethAccount));
+            }
+        }
+        throw new IllegalArgumentException("no such account alias: " + ethAccount);
+    }
+
     public static class ListWalletsResponse extends Response<List<Wallet>> {
         public List<Wallet> getWallets() {
             return getResult();

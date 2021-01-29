@@ -10,6 +10,9 @@ quorum:
     Wallet1:
       wallet-path: src/main/resources/wallets/key1
       wallet-pass:
+    Wallet2:
+      wallet-path: src/main/resources/wallets/key2
+      wallet-pass:
     Wallet8:
       wallet-path: src/main/resources/wallets/key8
       wallet-pass:

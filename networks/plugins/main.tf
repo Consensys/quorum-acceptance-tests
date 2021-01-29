@@ -3,7 +3,8 @@ locals {
   plugin_apis   = [for k, v in var.plugins : "plugin@${k}" if v.expose_api]
   apis          = "${local.standard_apis},${join(",", local.plugin_apis)}"
   more_args = join(" ", [
-    "--allow-insecure-unlock" # since 1.9.7 upgrade
+    "--allow-insecure-unlock", # since 1.9.7 upgrade
+    var.enable_multitenancy ? "--multitenancy" : ""
   ])
 
   node_indices = range(var.number_of_nodes)
@@ -60,6 +61,9 @@ module "network" {
   geth_networking      = module.helper.geth_networking
   tm_networking        = module.helper.tm_networking
   output_dir           = var.output_dir
+
+  override_tm_named_key_allocation  = var.override_tm_named_key_allocation
+  override_named_account_allocation = var.override_named_account_allocation
 }
 
 module "docker" {
@@ -86,6 +90,11 @@ module "docker" {
   }
 
   host_plugin_account_dirs = local.host_plugin_acct_dirs
+
+  additional_geth_container_vol    = var.additional_quorum_container_vol
+  additional_tessera_container_vol = var.additional_tessera_container_vol
+  tessera_app_container_path       = var.tessera_app_container_path
+  accounts_count                   = module.network.accounts_count
 }
 
 resource "local_file" "plugin-settings" {

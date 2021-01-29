@@ -88,26 +88,47 @@ variable "network_id" {}
 
 variable "ethstats_secret" {}
 
-variable  "ethstats_ip" {}
+variable "ethstats_ip" {}
 
 variable "password_file_name" {}
 
 variable "network_cidr" {}
 
 variable "additional_geth_env" {
-  type = map(string)
-  default = {}
+  type        = map(string)
+  default     = {}
   description = "Additional environment variables for each `geth` node in the network, provided as a key/value map.  The correct PRIVATE_CONFIG is already set by this module, so any PRIVATE_CONFIG value provided in this map will be ignored."
 }
 
 variable "tm_env" {
-  type = map(string)
-  default = {}
+  type        = map(string)
+  default     = {}
   description = "Environment variables for each `tessera` node in the network, provided as a key/value map."
 }
 
 variable "host_plugin_account_dirs" {
   type        = list(string)
   description = "Path to dirs on host used for sharing data for account plugin between host and containers"
-  default = []
+  default     = []
+}
+
+variable "additional_geth_container_vol" {
+  type        = map(list(object({ container_path = string, host_path = string })))
+  default     = {}
+  description = "Additional volume mounts for geth container. Each map key is the node index (0-based)"
+}
+
+variable "additional_tessera_container_vol" {
+  type        = map(list(object({ container_path = string, host_path = string })))
+  default     = {}
+  description = "Additional volume mounts for tessera container. Each map key is the node index (0-based)"
+}
+
+variable "tessera_app_container_path" {
+  type        = map(string)
+  default     = {}
+  description = "Path to Tessera app jar file in the container. Each map key is the node index (0-based)"
+}
+
+variable "accounts_count" {
 }

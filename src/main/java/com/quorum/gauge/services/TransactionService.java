@@ -26,6 +26,7 @@ import com.quorum.gauge.ext.EthGetQuorumPayload;
 import com.quorum.gauge.ext.EthSignTransaction;
 import com.quorum.gauge.ext.ExtendedPrivateTransaction;
 import com.quorum.gauge.ext.StringResponse;
+import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +44,6 @@ import org.web3j.protocol.core.methods.response.*;
 import org.web3j.quorum.Quorum;
 import org.web3j.quorum.methods.request.PrivateTransaction;
 import org.web3j.tx.Contract;
-import io.reactivex.Observable;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -87,6 +87,18 @@ public class TransactionService extends AbstractService {
     public Observable<EthGetTransactionReceipt> getTransactionReceipt(QuorumNetworkProperty.Node node, String transactionHash) {
         Quorum client = connectionFactory().getConnection(node);
         return client.ethGetTransactionReceipt(transactionHash).flowable().toObservable();
+    }
+
+    public Optional<TransactionReceipt> pollTransactionReceipt(QuorumNetworkProperty.Node node, String transactionHash) {
+        for (int i = 0; i < 30; i++) {
+            EthGetTransactionReceipt r = getTransactionReceipt(node, transactionHash)
+                .delay(3, TimeUnit.SECONDS)
+                .blockingFirst();
+            if (r.getTransactionReceipt().isPresent()) {
+                return r.getTransactionReceipt();
+            }
+        }
+        return Optional.empty();
     }
 
     public Observable<EthSendTransaction> sendPublicTransaction(int value, QuorumNode from, QuorumNode to) {

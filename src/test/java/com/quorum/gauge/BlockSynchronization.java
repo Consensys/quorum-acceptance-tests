@@ -21,7 +21,6 @@ package com.quorum.gauge;
 
 import com.quorum.gauge.common.GethArgBuilder;
 import com.quorum.gauge.common.NodeType;
-import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNetworkProperty.Node;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;

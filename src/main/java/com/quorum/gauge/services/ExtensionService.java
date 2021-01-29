@@ -2,7 +2,7 @@ package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.PrivacyFlag;
 import com.quorum.gauge.common.QuorumNetworkProperty;
-import com.quorum.gauge.ext.EnhancedClientTransactionManager;
+import com.quorum.gauge.ext.EnhancedClientTransactionManager.EnhancedPrivateTransaction;
 import com.quorum.gauge.ext.contractextension.*;
 import io.reactivex.Observable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +33,26 @@ public class ExtensionService extends AbstractService {
         this.accountService = Objects.requireNonNull(accountService);
     }
 
+    public Observable<QuorumExtendContract> initiateContractExtension(QuorumNetworkProperty.Node sourceNode, String sourceEthAccount, String sourceParty, String addressToExtend, QuorumNetworkProperty.Node targetNode, String targetEthAccount, String targetParty, PrivacyFlag privacyFlag) {
+        return Observable.zip(accountService.getAccountAddress(targetNode, targetEthAccount), accountService.getAccountAddress(sourceNode, sourceEthAccount), (recipientAccount, senderAccount) -> {
+            String newPartyPrivacyAddress = privacyService.id(targetParty);
+            String sourcePartyPrivacyAddress = privacyService.id(sourceParty);
+            EnhancedPrivateTransaction transactionArgs = new EnhancedPrivateTransaction(
+                senderAccount, null, null, null, BigInteger.ZERO, null,
+                sourcePartyPrivacyAddress, List.of(newPartyPrivacyAddress), singletonList(privacyFlag)
+            );
+            return Stream.of(addressToExtend, newPartyPrivacyAddress, recipientAccount, transactionArgs).collect(Collectors.toList());
+        }).flatMap(arg -> {
+            Request<?, QuorumExtendContract> request = new Request<>(
+                "quorumExtension_extendContract",
+                arg,
+                connectionFactory().getWeb3jService(sourceNode),
+                QuorumExtendContract.class
+            );
+            return request.flowable().toObservable();
+        });
+    }
+
     public Observable<QuorumExtendContract> initiateContractExtension(final QuorumNetworkProperty.Node node,
                                                                       final String addressToExtend,
                                                                       final QuorumNetworkProperty.Node newParty,
@@ -43,7 +63,7 @@ public class ExtensionService extends AbstractService {
 
         final List<String> privateFor = Stream.of(newParty).map(n -> privacyService.id(n)).collect(Collectors.toList());
 
-        final EnhancedClientTransactionManager.EnhancedPrivateTransaction transactionArgs = new EnhancedClientTransactionManager.EnhancedPrivateTransaction(
+        final EnhancedPrivateTransaction transactionArgs = new EnhancedPrivateTransaction(
             accountService.getDefaultAccountAddress(node).blockingFirst(),
             null, null, null, BigInteger.ZERO, null, null, privateFor, singletonList(privacyFlag)
         );
@@ -65,6 +85,20 @@ public class ExtensionService extends AbstractService {
         return request.flowable().toObservable();
     }
 
+    public Observable<QuorumVoteOnContract> acceptExtension(QuorumNetworkProperty.Node node, boolean vote, String ethAccount, String privateFromKey, String address, List<String> privateForKeys, PrivacyFlag privacyFlag) {
+        final PrivateTransaction transactionArgs = new EnhancedPrivateTransaction(
+            accountService.getAccountAddress(node, ethAccount).blockingFirst(),
+            null, BigInteger.valueOf(4700000), null, BigInteger.ZERO, null, privateFromKey, privateForKeys, singletonList(privacyFlag)
+        );
+
+        return new Request<>(
+            "quorumExtension_approveExtension",
+            Stream.of(address, vote, transactionArgs).collect(Collectors.toList()),
+            connectionFactory().getWeb3jService(node),
+            QuorumVoteOnContract.class
+        ).flowable().toObservable();
+    }
+
     public Observable<QuorumVoteOnContract> acceptExtension(final QuorumNetworkProperty.Node node,
                                                             final boolean vote,
                                                             final String address,
@@ -76,18 +110,7 @@ public class ExtensionService extends AbstractService {
             .filter(n -> !n.equals(node))
             .map(n -> privacyService.id(n))
             .collect(Collectors.toList());
-
-        final PrivateTransaction transactionArgs = new EnhancedClientTransactionManager.EnhancedPrivateTransaction(
-            accountService.getDefaultAccountAddress(node).blockingFirst(),
-            null, BigInteger.valueOf(4700000), null, BigInteger.ZERO, null, null, privateFor, singletonList(privacyFlag)
-        );
-
-        return new Request<>(
-            "quorumExtension_approveExtension",
-            Stream.of(address, vote, transactionArgs).collect(Collectors.toList()),
-            connectionFactory().getWeb3jService(node),
-            QuorumVoteOnContract.class
-        ).flowable().toObservable();
+        return acceptExtension(node, vote, null, null, address, privateFor, privacyFlag);
     }
 
     public Observable<QuorumUpdateParties> updateParties(final QuorumNetworkProperty.Node initiator,
@@ -102,7 +125,7 @@ public class ExtensionService extends AbstractService {
             .collect(Collectors.toList());
 
 
-        final PrivateTransaction transactionArgs = new EnhancedClientTransactionManager.EnhancedPrivateTransaction(
+        final PrivateTransaction transactionArgs = new EnhancedPrivateTransaction(
             accountService.getDefaultAccountAddress(initiator).blockingFirst(),
             null, null, null, BigInteger.ZERO, null, null, privateFor, singletonList(privacyFlag)
         );
@@ -137,7 +160,7 @@ public class ExtensionService extends AbstractService {
             .map(n -> privacyService.id(n))
             .collect(Collectors.toList());
 
-        final PrivateTransaction transactionArgs = new EnhancedClientTransactionManager.EnhancedPrivateTransaction(
+        final PrivateTransaction transactionArgs = new EnhancedPrivateTransaction(
             accountService.getDefaultAccountAddress(node).blockingFirst(),
             null, null, null, BigInteger.ZERO, null, null, privateFor, singletonList(privacyFlag)
         );

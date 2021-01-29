@@ -65,11 +65,16 @@ module "docker" {
   ethstats_ip     = module.helper.ethstat_ip
   ethstats_secret = module.helper.ethstats_secret
 
-  network_name         = module.network.network_name
-  network_id           = module.network.network_id
-  node_keys_hex        = module.network.node_keys_hex
-  password_file_name   = module.network.password_file_name
-  geth_datadirs        = var.remote_docker_config == null ? module.network.data_dirs : split(",", join("", null_resource.scp[*].triggers.data_dirs))
-  tessera_datadirs     = var.remote_docker_config == null ? module.network.tm_dirs : split(",", join("", null_resource.scp[*].triggers.tm_dirs))
-  additional_geth_args = local.more_args
+  network_name       = module.network.network_name
+  network_id         = module.network.network_id
+  node_keys_hex      = module.network.node_keys_hex
+  password_file_name = module.network.password_file_name
+  geth_datadirs      = var.remote_docker_config == null ? module.network.data_dirs : split(",", join("", null_resource.scp[*].triggers.data_dirs))
+  tessera_datadirs   = var.remote_docker_config == null ? module.network.tm_dirs : split(",", join("", null_resource.scp[*].triggers.tm_dirs))
+
+  additional_geth_args             = local.more_args
+  additional_geth_container_vol    = var.additional_quorum_container_vol
+  additional_tessera_container_vol = var.additional_tessera_container_vol
+  tessera_app_container_path       = var.tessera_app_container_path
+  accounts_count                   = module.network.accounts_count
 }

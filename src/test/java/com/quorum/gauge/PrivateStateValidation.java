@@ -48,7 +48,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
         Contract contract = contractService.createSimpleContract(
             initialValue,
             source,
-            Arrays.stream(privateFor.split(","))
+            null, Arrays.stream(privateFor.split(","))
                 .map(s -> QuorumNode.valueOf(s))
                 .collect(Collectors.toList()),
             AbstractService.DEFAULT_GAS_LIMIT,
