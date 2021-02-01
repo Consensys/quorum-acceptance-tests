@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-contract accumulator {
+contract Accumulator {
   uint public storedData;
 
   event IncEvent(uint value);
