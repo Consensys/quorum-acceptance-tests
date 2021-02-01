@@ -22,20 +22,20 @@ quorum:
       third-party-url: http://localhost:9084
       graphql-url: http://localhost:22003/graphql
     Node1_PS1:
-      privacy-address: BULeR8JyUWhiuuCMU/HLA0Q5pzkYT+cHII3ZKBey3Bo=
-      url: http://localhost:22000
+      privacy-address: R56gy4dn24YOjwyesTczYa8m5xhP6hF2uTMCju/1xkY=
+      url: http://localhost:22000/?PSI=PS1
       third-party-url: http://localhost:9081
       graphql-url: http://localhost:22000/graphql
       psi: PS1
     Node1_PS2:
-      privacy-address: R56gy4dn24YOjwyesTczYa8m5xhP6hF2uTMCju/1xkY=
-      url: http://localhost:22000
+      privacy-address: UfNSeSGySeKg11DVNEnqrUtxYRVor4+CvluI8tVv62Y=
+      url: http://localhost:22000/?PSI=PS2
       third-party-url: http://localhost:9081
       graphql-url: http://localhost:22000/graphql
       psi: PS2
     Node1_PS3:
-      privacy-address: UfNSeSGySeKg11DVNEnqrUtxYRVor4+CvluI8tVv62Y=
-      url: http://localhost:22000
-      third-party-url: http://localhost:9081
-      graphql-url: http://localhost:22000/graphql
-      psi: PS3
+       privacy-address: ROAZBWtSacxXQrOe3FGAqJDyJjFePR5ce4TSIzmJ0Bc=
+       url: http://localhost:22000/?PSI=PS3
+       third-party-url: http://localhost:9081
+       graphql-url: http://localhost:22000/graphql
+       psi: PS3

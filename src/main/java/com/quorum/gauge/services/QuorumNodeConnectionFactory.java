@@ -72,27 +72,7 @@ public class QuorumNodeConnectionFactory {
         return getWeb3jService(nodeConfig);
     }
 
-    Map<String,Web3jService> servicesMap = new ConcurrentHashMap<>();
-
-    public synchronized Web3jService getWeb3jService(QuorumNetworkProperty.Node node) {
-        if (node.getPsi() != null){
-            if (servicesMap.containsKey(node.getName())) {
-                return servicesMap.get(node.getName());
-            }
-            OkHttpClient.Builder builder = Configuration.cloneBuilderFromClient(okHttpClient);
-            builder.addInterceptor(chain -> {
-                // TODO - replace the privacy address with the PSI (when quorum is updated)
-                String token = node.getPrivacyAddress();
-                Request request = chain.request().newBuilder()
-                    .addHeader("PSI", token)
-                    .build();
-                return chain.proceed(request);
-            });
-            OkHttpClient client = builder.build();
-            Web3jService service = new HttpService(node.getUrl(), client, false);
-            servicesMap.put(node.getName(), service);
-            return service;
-        }
+    public Web3jService getWeb3jService(QuorumNetworkProperty.Node node) {
         return new HttpService(node.getUrl(), okHttpClient, false);
     }
 
