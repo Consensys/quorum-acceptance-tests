@@ -8,10 +8,10 @@ Value-transfer public transactions are supported by default in Ethereum and Quor
 
  Tags: public
 
-* Send "10" Wei from a default account in "Node1" to a default account in "Node2" in a public transaction
+* Send "10" Wei from a default account in "Node1" to a default account in "Node4" in a public transaction
 * Transaction is accepted in the blockchain
 * In "Node1", the default account's balance is now less than its previous balance
-* In "Node2", the default account's balance is now greater than its previous balance
+* In "Node4", the default account's balance is now greater than its previous balance
 
 ## Successful signed public transaction submission
 
