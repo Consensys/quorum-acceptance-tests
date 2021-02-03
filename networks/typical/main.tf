@@ -54,6 +54,9 @@ module "network" {
   geth_networking      = module.helper.geth_networking
   tm_networking        = module.helper.tm_networking
   output_dir           = var.output_dir
+
+  override_tm_named_key_allocation  = var.override_tm_named_key_allocation
+  override_named_account_allocation = var.override_named_account_allocation
 }
 
 module "docker" {

@@ -71,3 +71,25 @@ variable "tessera_app_container_path" {
   default     = {}
   description = "Path to Tessera app jar file in the container. Each map key is the node index (0-based)"
 }
+
+variable "override_tm_named_key_allocation" {
+  default     = {}
+  description = <<-EOT
+Override default allocation of transaction management named public key
+E.g.: use 2 named keys: A1, A2 for node 1
+{
+  0 = ["A1", "A2"]
+}
+EOT
+}
+
+variable "override_named_account_allocation" {
+  default     = {}
+  description = <<-EOT
+Override default allocation of accounts
+E.g.: use 2 named account: ACC1, ACC2 for node 1
+{
+  0 = ["ACC1", "ACC2"]
+}
+EOT
+}

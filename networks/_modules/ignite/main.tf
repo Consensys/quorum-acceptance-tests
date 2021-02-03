@@ -56,22 +56,24 @@ resource "local_file" "configuration" {
 quorum:
   nodes:
 %{for i in data.null_data_source.meta[*].inputs.idx~}
-    ${format("Node%d:", i + 1)}
+%{for idex, k in local.tm_named_keys_alloc[i]~}
+    ${format("%s:", k)}
+      account-aliases:
+%{for idx, j in local.named_accounts_alloc[i]~}
+%{if idex == idx~}
+        ${j}: "${element(quorum_bootstrap_keystore.accountkeys-generator[i].account.*.address, idx)}"
+%{endif~}
+%{endfor~}
+      privacy-address-aliases:
+        ${k}: ${element(quorum_transaction_manager_keypair.tm.*.public_key_b64, index(local.tm_named_keys_all, k))}
 %{ if var.concensus == "istanbul" ~}
       istanbul-validator-id: "${quorum_bootstrap_node_key.nodekeys-generator[i].istanbul_address}"
 %{ endif ~}
       enode-url: ${local.enode_urls[i]}
-      account-aliases:
-%{for idx, k in local.named_accounts_alloc[i]~}
-        ${k}: "${element(quorum_bootstrap_keystore.accountkeys-generator[i].account.*.address, idx)}"
-%{endfor~}
-      privacy-address-aliases:
-%{for k in local.tm_named_keys_alloc[i]~}
-        ${k}: "${element(quorum_transaction_manager_keypair.tm.*.public_key_b64, index(local.tm_named_keys_all, k))}"
-%{endfor~}
-      url: ${data.null_data_source.meta[i].inputs.nodeUrl}
+      url: ${format("%s?PSI=%s", data.null_data_source.meta[i].inputs.nodeUrl, k)}
       third-party-url: ${data.null_data_source.meta[i].inputs.tmThirdpartyUrl}
       graphql-url: ${data.null_data_source.meta[i].inputs.graphqlUrl}
+%{endfor~}
 %{endfor~}
 EOF
 }

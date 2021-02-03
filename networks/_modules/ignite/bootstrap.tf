@@ -218,7 +218,21 @@ resource "local_file" "tmconfigs-generator" {
       "enablePrivacyEnhancements" : "true",
 %{endif~}
       "enableRemoteKeyValidation" : "true"
-    }
+    },
+    "residentGroups":[
+        %{for k in local.tm_named_keys_alloc[count.index]~}
+          {
+              "name": "${k}",
+              "description":"${k}",
+              "members":["${element(quorum_transaction_manager_keypair.tm.*.public_key_b64, index(local.tm_named_keys_all, k))}"]
+          },
+        %{endfor~}
+          {
+              "name": "test",
+              "description":"test",
+              "members":[]
+          }
+    ]
 }
 JSON
 }
