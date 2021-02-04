@@ -70,7 +70,7 @@ quorum:
       istanbul-validator-id: "${quorum_bootstrap_node_key.nodekeys-generator[i].istanbul_address}"
 %{ endif ~}
       enode-url: ${local.enode_urls[i]}
-      url: ${format("%s?PSI=%s", data.null_data_source.meta[i].inputs.nodeUrl, k)}
+      url: ${format("%s/?PSI=%s", data.null_data_source.meta[i].inputs.nodeUrl, k)}
       third-party-url: ${data.null_data_source.meta[i].inputs.tmThirdpartyUrl}
       graphql-url: ${data.null_data_source.meta[i].inputs.graphqlUrl}
 %{endfor~}
