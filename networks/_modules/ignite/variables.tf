@@ -85,3 +85,9 @@ variable "non_validator_nodes" {
   default     = []
   description = "Exclude nodes (0-based index) as validators. Default all nodes are validators"
 }
+
+variable "override_vnodes" {
+  type        = map(object({ mpsEnabled = bool, vnodes = map(object({name = string, tmKeys = list(string), ethKeys = list(string)})) }))
+  default     = {}
+  description = ""
+}

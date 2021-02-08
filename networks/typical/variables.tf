@@ -93,3 +93,39 @@ E.g.: use 2 named account: ACC1, ACC2 for node 1
 }
 EOT
 }
+
+variable "override_vnodes" {
+  type        = map(object({ mpsEnabled = bool, vnodes = map(object({name = string, tmKeys = list(string), ethKeys = list(string)})) }))
+  default     = {}
+  description = <<-EOT
+Sets the allocations for TM & Eth keys to a Node name, sat under a particular Quorum instance
+E.g.:
+{
+    0 = {
+        mpsEnabled = "true",
+        vnodes = {
+            VNode1 = {
+                name = "Node1"
+                tmKeys = ["Key1", "Key2"],
+                ethKeys = ["EthKey1", "EthKey2"]
+            },
+            VNode2 = {
+                name = "Node2"
+                tmKeys = ["Key3"],
+                ethKeys = ["EthKey3"]
+            }
+        }
+    },
+    1 = {
+        mpsEnabled = "false",
+        vnodes = {
+            VNode3 = {
+                name = "Node5"
+                tmKeys = ["Key3", "Key4"],
+                ethKeys = ["EthKey4"]
+            }
+        }
+    }
+}
+EOT
+}

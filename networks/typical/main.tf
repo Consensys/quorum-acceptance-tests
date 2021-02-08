@@ -57,6 +57,7 @@ module "network" {
 
   override_tm_named_key_allocation  = var.override_tm_named_key_allocation
   override_named_account_allocation = var.override_named_account_allocation
+  override_vnodes = var.override_vnodes
 }
 
 module "docker" {

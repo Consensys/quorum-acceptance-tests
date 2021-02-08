@@ -212,19 +212,21 @@ resource "local_file" "tmconfigs-generator" {
       "passwords": [],
       "keyData": [${data.null_data_source.meta[count.index].inputs.tmKeys}]
     },
-    "alwaysSendTo": [],
     "features" : {
 %{if var.privacy_enhancements.enabled ~}
       "enablePrivacyEnhancements" : "true",
 %{endif~}
       "enableRemoteKeyValidation" : "true"
     },
+%{if local.vnodes[count.index].mpsEnabled}
     "residentGroups":[
-        %{for k in local.tm_named_keys_alloc[count.index]~}
+        %{for name, node in local.vnodes[count.index].vnodes~}
           {
-              "name": "${k}",
-              "description":"${k}",
-              "members":["${element(quorum_transaction_manager_keypair.tm.*.public_key_b64, index(local.tm_named_keys_all, k))}"]
+              "name": "${node.name}",
+              "description":"${node.name}",
+              "members":[
+                ${join(",", formatlist("\"%s\"", [for idx, keyName in node.tmKeys : element(quorum_transaction_manager_keypair.tm.*.public_key_b64, index(local.tm_named_keys_all, keyName))]))}
+              ]
           },
         %{endfor~}
           {
@@ -232,7 +234,20 @@ resource "local_file" "tmconfigs-generator" {
               "description":"test",
               "members":[]
           }
-    ]
+    ],
+%{endif~}
+%{if !local.vnodes[count.index].mpsEnabled}
+    "residentGroups":[
+          {
+              "name": "private",
+              "description":"private",
+              "members":[
+                ${join(",", formatlist("\"%s\"", [for idx, keyName in local.tm_named_keys_alloc[count.index] : element(quorum_transaction_manager_keypair.tm.*.public_key_b64, index(local.tm_named_keys_all, keyName))]))}
+              ]
+          }
+    ],
+%{endif~}
+    "alwaysSendTo": []
 }
 JSON
 }

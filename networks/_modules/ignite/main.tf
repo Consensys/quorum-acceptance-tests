@@ -40,6 +40,20 @@ locals {
     { for id in var.exclude_initial_nodes : id => "false" },
     { for id in var.non_validator_nodes : id => "false" }
   )
+
+  vnodes = merge(
+    { for id in local.node_indices : id => {
+      mpsEnabled = "false",
+      vnodes = {
+        id = {
+          name = format("Node%s", id+1)
+          tmKeys = local.tm_named_keys_alloc[id],
+          ethKeys = local.named_accounts_alloc[id]
+        }
+      }
+    } },
+    var.override_vnodes
+  )
 }
 
 resource "random_string" "network-name" {
@@ -56,23 +70,28 @@ resource "local_file" "configuration" {
 quorum:
   nodes:
 %{for i in data.null_data_source.meta[*].inputs.idx~}
-%{for idex, k in local.tm_named_keys_alloc[i]~}
-    ${format("%s:", k)}
-      account-aliases:
-%{for idx, j in local.named_accounts_alloc[i]~}
-%{if idex == idx~}
-        ${j}: "${element(quorum_bootstrap_keystore.accountkeys-generator[i].account.*.address, idx)}"
-%{endif~}
-%{endfor~}
-      privacy-address-aliases:
-        ${k}: ${element(quorum_transaction_manager_keypair.tm.*.public_key_b64, index(local.tm_named_keys_all, k))}
+
+%{for a, b in local.vnodes[i].vnodes~}
+    ${format("%s:", b.name)}
 %{ if var.concensus == "istanbul" ~}
       istanbul-validator-id: "${quorum_bootstrap_node_key.nodekeys-generator[i].istanbul_address}"
 %{ endif ~}
-      enode-url: ${local.enode_urls[i]}
-      url: ${format("%s/?PSI=%s", data.null_data_source.meta[i].inputs.nodeUrl, k)}
+%{if local.vnodes[i].mpsEnabled ~}
+      url: ${data.null_data_source.meta[i].inputs.nodeUrl}/?PSI=${b.name}
+%{endif~}
+%{if !local.vnodes[i].mpsEnabled ~}
+      url: ${data.null_data_source.meta[i].inputs.nodeUrl}
+%{endif~}
       third-party-url: ${data.null_data_source.meta[i].inputs.tmThirdpartyUrl}
       graphql-url: ${data.null_data_source.meta[i].inputs.graphqlUrl}
+      privacy-address-aliases:
+%{for k in b.tmKeys~}
+        ${k}: ${element(quorum_transaction_manager_keypair.tm.*.public_key_b64, index(local.tm_named_keys_all, k))}
+%{endfor~}
+      account-aliases:
+%{for k, name in b.ethKeys~}
+        ${name}: "${element(quorum_bootstrap_keystore.accountkeys-generator[i].account.*.address, index(local.named_accounts_alloc[i], name))}"
+%{endfor~}
 %{endfor~}
 %{endfor~}
 EOF
