@@ -159,11 +159,15 @@ jobs:
             if [ $has_quorum_docker_image -eq 0 ]; then
               echo "::warning ::Using $quorum_docker_image"
               echo "TF_VAR_quorum_docker_image={name=\"$quorum_docker_image\", local=true}" >> $dockerEnvFile
+              docker pull $quorum_docker_image
+            else
               docker pull quorumengineering/quorum:latest
             fi
             if [ $has_tessera_docker_image -eq 0 ]; then
               echo "::warning ::Using $tessera_docker_image"
               echo "TF_VAR_tessera_docker_image={name=\"$tessera_docker_image\", local=true}" >> $dockerEnvFile
+              docker pull $tessera_docker_image
+            else
               docker pull quorumengineering/tessera:latest
             fi
           fi
