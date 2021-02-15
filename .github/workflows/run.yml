@@ -152,8 +152,8 @@ jobs:
             tessera_docker_image="docker.pkg.github.com/${{ github.repository }}/tessera-$gitref_path:latest"
             has_quorum_docker_image=$(docker pull $quorum_docker_image >/dev/null 2>&1; echo $?)
             has_tessera_docker_image=$(docker pull $tessera_docker_image >/dev/null 2>&1; echo $?)
-            echo "$quorum_docker_image: $has_quorum_docker_image"
-            echo "$tessera_docker_image: $has_tessera_docker_image"
+            echo "::warning $quorum_docker_image: $has_quorum_docker_image"
+            echo "::warning $tessera_docker_image: $has_tessera_docker_image"
             if [ $has_quorum_docker_image -eq 0 ]; then
               echo "::warning ::Using $quorum_docker_image"
               echo "TF_VAR_quorum_docker_image={name=\"$quorum_docker_image\", local=true}" >> $dockerEnvFile
