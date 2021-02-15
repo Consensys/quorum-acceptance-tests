@@ -147,7 +147,7 @@ jobs:
           gitref_path="${{ github.ref }}"
           gitref_path=${gitref_path/refs\/heads\//} # for refs/heads/my-branch
           echo "::warning ::$gitref_path"
-          # if [[ $gitref_path == dev-* ]]; then
+          if [[ $gitref_path == dev-* ]]; then
             echo "${{ github.token }}" | docker login https://docker.pkg.github.com -u ${{ github.repository_owner }} --password-stdin
             quorum_docker_image="docker.pkg.github.com/banzap/quorum-dev-magic:latest"
             tessera_docker_image="docker.pkg.github.com/${{ github.repository }}/tessera-$gitref_path:latest"
@@ -165,7 +165,7 @@ jobs:
               echo "TF_VAR_tessera_docker_image={name=\"$tessera_docker_image\", local=true}" >> $dockerEnvFile
               docker pull quorumengineering/tessera:latest
             fi
-          # fi
+          fi
           echo "TF_VAR_privacy_enhancements={block=0, enabled=${{ matrix.privacy-enhancements}}}" >> $dockerEnvFile
           echo "::set-output name=tag::$tagKey"
           echo "::set-output name=mvnArg::$mvnArg"
