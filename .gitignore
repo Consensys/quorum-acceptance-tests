@@ -3,6 +3,7 @@
 
 # IntelliJ project settings
 .idea
+*.iml
 
 # Gauge - log files dir
 logs
