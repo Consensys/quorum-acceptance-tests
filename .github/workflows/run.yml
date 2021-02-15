@@ -146,15 +146,15 @@ jobs:
           # now we check if we should use the custom docker images in this repo
           gitref_path="${{ github.ref }}"
           gitref_path=${gitref_path/refs\/heads\//} # for refs/heads/my-branch
-          echo "::warning:: $gitref_path"
+          echo "::warning ::$gitref_path"
           if [[ $gitref_path == dev-* ]]; then
             echo "${{ github.token }}" | docker login https://docker.pkg.github.com -u ${{ github.repository_owner }} --password-stdin
             quorum_docker_image="docker.pkg.github.com/banzap/quorum-$gitref_path:latest"
             tessera_docker_image="docker.pkg.github.com/${{ github.repository }}/tessera-$gitref_path:latest"
             has_quorum_docker_image=$(docker pull $quorum_docker_image >/dev/null 2>&1; echo $?)
             has_tessera_docker_image=$(docker pull $tessera_docker_image >/dev/null 2>&1; echo $?)
-            echo "::warning:: $quorum_docker_image: $has_quorum_docker_image"
-            echo "::warning::$tessera_docker_image: $has_tessera_docker_image"
+            echo "::warning ::$quorum_docker_image: $has_quorum_docker_image"
+            echo "::warning ::$tessera_docker_image: $has_tessera_docker_image"
             if [ $has_quorum_docker_image -eq 0 ]; then
               echo "::warning ::Using $quorum_docker_image"
               echo "TF_VAR_quorum_docker_image={name=\"$quorum_docker_image\", local=true}" >> $dockerEnvFile
