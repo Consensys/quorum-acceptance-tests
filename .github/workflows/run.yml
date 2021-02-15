@@ -1,7 +1,5 @@
 name: Run Acceptance Tests
 on:
-  schedule:
-    - cron: '0 12 * * *'
   pull_request:
     paths-ignore:
       - '**.md'
