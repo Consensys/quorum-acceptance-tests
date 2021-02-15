@@ -161,7 +161,7 @@ jobs:
               echo "TF_VAR_quorum_docker_image={name=\"$quorum_docker_image\", local=true}" >> $dockerEnvFile
               docker pull $quorum_docker_image
             else
-              docker pull quorumengineering/quorum:latest
+              docker pull banzap/quorum-dev-ricardo-magic:latest
             fi
             if [ $has_tessera_docker_image -eq 0 ]; then
               echo "::warning ::Using $tessera_docker_image"

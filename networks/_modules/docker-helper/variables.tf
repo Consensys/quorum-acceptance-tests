@@ -18,7 +18,7 @@ variable "geth" {
   })
   default = {
     container = {
-      image = { name = "quorumengineering/quorum:latest", local = false }
+      image = { name = "banzap/quorum-dev-ricardo-magic:latest", local = false }
       port  = { raft = 50400, p2p = 21000, http = 8545, ws = -1, graphql = -1 }
     }
     host = {

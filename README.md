@@ -113,7 +113,7 @@ In order to run acceptance tests during GoQuorum/Tessera development:
 
 ### With custom GoQuorum/Tessera Docker images
 
-By default, official Docker images `quorumengineering/quorum:latest` and `quorumengineering/tessera:latest` in [Docker Hub](https://hub.docker.com/u/quorumengineering) will be used.
+By default, official Docker images `banzap/quorum-dev-ricardo-magic:latest` and `quorumengineering/tessera:latest` in [Docker Hub](https://hub.docker.com/u/quorumengineering) will be used.
 If you need to use your custom images, please follow the below guides:
 
 - Name the branch with prefix `dev-`. E.g.: `dev-mybranch`
