@@ -1,3 +1,16 @@
+provider "docker" {
+  host = var.remote_docker_config == null ? null : var.remote_docker_config.docker_host
+
+  dynamic "registry_auth" {
+    for_each = var.docker_registry
+    content {
+      address  = registry_auth.value["name"]
+      username = registry_auth.value["username"]
+      password = registry_auth.value["password"]
+    }
+  }
+}
+
 locals {
   standard_apis = "admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,quorumExtension,${var.consensus}"
   plugin_apis   = [for k, v in var.plugins : "plugin@${k}" if v.expose_api]
@@ -12,19 +25,6 @@ locals {
   providers = { for k, v in var.plugins : k => { name = v.name, version = v.version, config = format("file://%s/plugins/%s-config.json", module.docker.container_geth_datadir, k) } }
 
   with_hashicorp_plugin = contains(values(var.plugins)[*].name, "quorum-account-plugin-hashicorp-vault")
-}
-
-provider "docker" {
-  host = var.remote_docker_config == null ? null : var.remote_docker_config.docker_host
-
-  dynamic "registry_auth" {
-    for_each = var.docker_registry
-    content {
-      address  = registry_auth.value["name"]
-      username = registry_auth.value["username"]
-      password = registry_auth.value["password"]
-    }
-  }
 }
 
 module "helper" {
