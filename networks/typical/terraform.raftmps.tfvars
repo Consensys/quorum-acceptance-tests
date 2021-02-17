@@ -34,7 +34,7 @@ override_vnodes = {
         vnodes = {
             VNode3 = {
                 name = "Node5"
-                tmKeys = ["Key3", "Key4"],
+                tmKeys = ["Key4"],
                 ethKeys = ["EthKey4"]
             }
         }

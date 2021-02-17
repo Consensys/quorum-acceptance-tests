@@ -65,7 +65,7 @@ public class ExtensionService extends AbstractService {
 
         final EnhancedPrivateTransaction transactionArgs = new EnhancedPrivateTransaction(
             accountService.getDefaultAccountAddress(node).blockingFirst(),
-            null, null, null, BigInteger.ZERO, null, null, privateFor, singletonList(privacyFlag)
+            null, null, null, BigInteger.ZERO, null, privacyService.id(node), privateFor, singletonList(privacyFlag)
         );
 
         final List<Object> arguments = Stream.of(
@@ -110,7 +110,7 @@ public class ExtensionService extends AbstractService {
             .filter(n -> !n.equals(node))
             .map(n -> privacyService.id(n))
             .collect(Collectors.toList());
-        return acceptExtension(node, vote, null, null, address, privateFor, privacyFlag);
+        return acceptExtension(node, vote, null, privacyService.id(node), address, privateFor, privacyFlag);
     }
 
     public Observable<QuorumUpdateParties> updateParties(final QuorumNetworkProperty.Node initiator,
