@@ -1,4 +1,5 @@
 consensus    = "raft"
+isMPS        = true
 
 # this is to setup the TM keys allocation per acceptance tests requirement
 override_tm_named_key_allocation = {

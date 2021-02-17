@@ -89,6 +89,7 @@ resource "local_file" "genesis-file" {
       "qip714Block": ${var.permission_qip714Block.block},
 %{endif~}
       "isQuorum": true,
+      "isMPS": ${var.isMPS},
 %{if var.privacy_enhancements.enabled ~}
       "privacyEnhancementsBlock": ${var.privacy_enhancements.block},
 %{endif~}

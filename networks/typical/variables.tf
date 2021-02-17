@@ -2,6 +2,10 @@ variable "consensus" {
   default = "istanbul"
 }
 
+variable "isMPS" {
+  default = false
+}
+
 variable "privacy_enhancements" {
     type        = object({ block = number, enabled = bool })
     default     = { block = 0, enabled = false }
