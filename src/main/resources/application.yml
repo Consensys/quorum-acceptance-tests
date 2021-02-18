@@ -2,7 +2,7 @@ server:
   port: 0
 logging:
   level:
-    com.quorum.gauge: INFO ## TODO ricardolyn: testing v1.9.16
+    com.quorum.gauge: INFO ## TODO ricardolyn: testing fix/genesis-privacy-check
     org.apache.sshd.common.forward.DefaultForwardingFilter: DEBUG # to display port forwarding info
 
 quorum:
