@@ -83,9 +83,11 @@
 * Stop "quorum" in "Node1"
 * Run gethInit in "Node1" with genesis file having privacyEnhancementsBlock set to "peBlockNumber" + "-1"
  Geth init fails
+* Wait for "quorum" state in "Node1" to be "down"
 * Grep "quorum" in "Node1" for "mismatching Privacy Enhancements fork block in database"
 * Check that "quorum" in "Node1" is "down"
 * Run gethInit in "Node1" with genesis file having privacyEnhancementsBlock set to "peBlockNumber" + "1"
+* Wait for "quorum" state in "Node1" to be "down"
  Geth init succeeds but displays the warning message that quorum won't start unless the privacy manager supports privacy enhancements
 * Grep "quorum" in "Node1" for "Please ensure your privacy manager is upgraded and supports privacy enhancements"
  Tessera hasn't been updated so quorum should fail to start
