@@ -79,7 +79,6 @@
  PartyProtection transactions are rejected in quorum Node1 as privacy enhancemetns are not enabled yet
 * Deploying a "PartyProtection" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4" fails with message "PrivacyEnhancements are disabled"
  Run geth init with privacyEnhancementsBlock=currentBlockHeight-1
-//* Record the current block number, named it as "peBlockNumber" // TODO ricardolyn: check where peBlockNumber is used
 * Record the current block number in "Node1", named it as "peBlockNumberBeforeStop"
 * Stop "quorum" in "Node1"
 * Wait for "quorum" state in "Node1" to be "down"
