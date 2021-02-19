@@ -79,9 +79,11 @@
  PartyProtection transactions are rejected in quorum Node1 as privacy enhancemetns are not enabled yet
 * Deploying a "PartyProtection" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4" fails with message "PrivacyEnhancements are disabled"
  Run geth init with privacyEnhancementsBlock=currentBlockHeight-1
-* Record the current block number, named it as "peBlockNumber"
+* Record the current block number in "Node1", named it as "peBlockNumberBeforeStop"
 * Stop "quorum" in "Node1"
-* Run gethInit in "Node1" with genesis file having privacyEnhancementsBlock set to "peBlockNumber" + "-1"
+* Wait for "quorum" state in "Node1" to be "down"
+* Record the current block number in "Node2", named it as "peBlockNumber"
+* Run gethInit in "Node1" with genesis file having privacyEnhancementsBlock set to "peBlockNumberBeforeStop" + "-1"
  Geth init fails
 * Grep "quorum" in "Node1" for "mismatching Privacy Enhancements fork block in database"
 * Check that "quorum" in "Node1" is "down"
@@ -208,6 +210,7 @@
 * Record the current block number, named it as "catchUpBlockNumber"
 
 * Stop and start "Node2" using quorum version <q_to_version> and tessera version <t_to_version>
+* Wait for "quorum" state in "Node2" to be "up"
  Node2 is now privacy enhancements capable but privacy enhancements are not enabled (geth init hasnt been run with a genesis file containing privacyEnhancementsBlock)
  Node1 is not able to connect to Node2 (as they have different values for PrivacyEnhancementsBlock)
 * Enable privacy enhancements in tessera "Node2"

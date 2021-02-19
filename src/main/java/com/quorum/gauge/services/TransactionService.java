@@ -90,7 +90,7 @@ public class TransactionService extends AbstractService {
     }
 
     public Optional<TransactionReceipt> pollTransactionReceipt(QuorumNetworkProperty.Node node, String transactionHash) {
-        for (int i = 0; i < 30; i++) {
+        for (int i = 0; i < 60; i++) {
             EthGetTransactionReceipt r = getTransactionReceipt(node, transactionHash)
                 .delay(3, TimeUnit.SECONDS)
                 .blockingFirst();
