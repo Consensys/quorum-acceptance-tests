@@ -147,7 +147,6 @@ jobs:
             quorum_docker_image="banzap/quorum-$gitref_path:latest"
             tessera_docker_image="docker.pkg.github.com/${{ github.repository }}/tessera-$gitref_path:latest"
             has_quorum_docker_image=$(docker pull $quorum_docker_image >/dev/null 2>&1; echo $?)
-            echo "::warning ::RICARDO 1.9.14 has_quorum_docker_image=$has_quorum_docker_image"
             has_quorum_docker_image=0
             has_tessera_docker_image=$(docker pull $tessera_docker_image >/dev/null 2>&1; echo $?)
             echo "$quorum_docker_image: $has_quorum_docker_image"
