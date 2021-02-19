@@ -32,12 +32,12 @@ jobs:
           if [ "$val" == "false" ]; then
             echo "::warning ::Runs are conditionally skipped"
           fi
-          useAws="true"
-          infraName="AWS"
-          if [ "${{ secrets.AWS_ACCESS_KEY_ID }}" == "" ] || [ "${{ github.event_name }}" == "pull_request" ] || [ "${{ secrets.DISABLE_AWS }}" == "true" ]; then
+#          useAws="true"
+#          infraName="AWS"
+#          if [ "${{ secrets.AWS_ACCESS_KEY_ID }}" == "" ] || [ "${{ github.event_name }}" == "pull_request" ] || [ "${{ secrets.DISABLE_AWS }}" == "true" ]; then
             useAws="false"
             infraName="GithubActionsVM"
-          fi
+#          fi
           echo "::warning ::Networks are provisioned using $infraName infrastructure"
           echo "::set-output name=val::$val"
           echo "::set-output name=useAws::$useAws"
