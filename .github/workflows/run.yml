@@ -35,8 +35,8 @@ jobs:
 #          useAws="true"
 #          infraName="AWS"
 #          if [ "${{ secrets.AWS_ACCESS_KEY_ID }}" == "" ] || [ "${{ github.event_name }}" == "pull_request" ] || [ "${{ secrets.DISABLE_AWS }}" == "true" ]; then
-            useAws="false"
-            infraName="GithubActionsVM"
+          useAws="false"
+          infraName="GithubActionsVM"
 #          fi
           echo "::warning ::Networks are provisioned using $infraName infrastructure"
           echo "::set-output name=val::$val"
