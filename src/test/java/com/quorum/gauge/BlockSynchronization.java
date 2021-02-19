@@ -265,7 +265,12 @@ public class BlockSynchronization extends AbstractSpecImplementation {
 
     @Step("Record the current block number, named it as <name>")
     public void recordCurrentBlockNumber(String name) {
-        BigInteger currentBlockNumber = utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber();
+        recordCurrentBlockNumber(QuorumNode.Node1, name);
+    }
+
+    @Step("Record the current block number in <node>, named it as <name>")
+    public void recordCurrentBlockNumber(QuorumNode node, String name) {
+        BigInteger currentBlockNumber = utilService.getCurrentBlockNumberFrom(node).blockingFirst().getBlockNumber();
         logger.debug("Current block number = {}", currentBlockNumber);
         DataStoreFactory.getScenarioDataStore().put(name, currentBlockNumber);
     }
