@@ -27,6 +27,7 @@ import com.quorum.gauge.services.AbstractService;
 import com.quorum.gauge.sol.Accumulator;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import io.reactivex.disposables.Disposable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -83,21 +84,36 @@ public class AccumulatorSmartContract extends AbstractSpecImplementation {
     private String eventListKey(String node, String contractName) {
         return node + "_" + contractName + "_eventList";
     }
+    private String subscriptionKey(String node, String contractName) {
+        return node + "_" + contractName + "_subscription";
+    }
 
     private void subscribeToAccumulatorContractEventsOnNode(String node, String contractName) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Accumulator.class);
         List<Accumulator.IncEventEventResponse> eventList = new LinkedList<>();
-        accumulatorService.subscribeTo(networkProperty.getNode(node), c.getContractAddress(), eventList);
+        Disposable subscription = accumulatorService.subscribeTo(networkProperty.getNode(node), c.getContractAddress(), eventList);
 
-        String key = eventListKey(node, contractName);
-        DataStoreFactory.getSpecDataStore().put(key, eventList);
-        DataStoreFactory.getScenarioDataStore().put(key, eventList);
+        String eventListKey = eventListKey(node, contractName);
+        String subscriptionKey = subscriptionKey(node, contractName);
+        DataStoreFactory.getSpecDataStore().put(eventListKey, eventList);
+        DataStoreFactory.getSpecDataStore().put(subscriptionKey, subscription);
+        DataStoreFactory.getScenarioDataStore().put(eventListKey, eventList);
+        DataStoreFactory.getScenarioDataStore().put(subscriptionKey, subscription);
     }
 
     @Step("Subscribe to accumulator contract <contractName> IncEvent on <nodes>")
     public void subscribeToAccumulatorContractEvents(String contractName, String nodes) {
         for (String node : nodes.split(",")) {
             subscribeToAccumulatorContractEventsOnNode(node, contractName);
+        }
+    }
+
+    @Step("Unsubscribe to accumulator contract <contractName> IncEvent on <nodes>")
+    public void unsubscribeToAccumulatorContractEvents(String contractName, String nodes) {
+        for (String node : nodes.split(",")) {
+            String subscriptionKey = subscriptionKey(node, contractName);
+            Disposable subscription = mustHaveValue(subscriptionKey, Disposable.class);
+            subscription.dispose();
         }
     }
 
