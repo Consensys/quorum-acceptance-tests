@@ -83,7 +83,7 @@ public class PrivateRawSmartContractEthApi extends AbstractSpecImplementation {
                 } else {
                     throw new RuntimeException("retry");
                 }
-            }).retryWhen(new RetryWithDelay(6, 3000))
+            }).retryWhen(new RetryWithDelay(10, 3000))
             .blockingFirst().getTransactionReceipt();
 
         assertThat(receipt.isPresent()).isTrue();
