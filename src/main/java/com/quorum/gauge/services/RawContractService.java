@@ -283,7 +283,7 @@ public class RawContractService extends AbstractService {
                 } else {
                     throw new RuntimeException("retry");
                 }
-            }).retryWhen(new RetryWithDelay(20, 3000));
+            }).retryWhen(new RetryWithDelay(6, 3000));
     }
 
     public Observable<FillTransactionResponse> fillTransaction(QuorumNode from, QuorumNode to, int initValue) {

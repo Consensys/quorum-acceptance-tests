@@ -72,7 +72,7 @@ public class TransactionService extends AbstractService {
                 } else {
                     throw new RuntimeException("retry");
                 }
-            }).retryWhen(new RetryWithDelay(20, 3000))
+            }).retryWhen(new RetryWithDelay(10, 3000))
             .blockingFirst().getTransactionReceipt();
 
         assertThat(receipt.isPresent()).isTrue();
@@ -90,7 +90,7 @@ public class TransactionService extends AbstractService {
     }
 
     public Optional<TransactionReceipt> pollTransactionReceipt(QuorumNetworkProperty.Node node, String transactionHash) {
-        for (int i = 0; i < 60; i++) {
+        for (int i = 0; i < 30; i++) {
             EthGetTransactionReceipt r = getTransactionReceipt(node, transactionHash)
                 .delay(3, TimeUnit.SECONDS)
                 .blockingFirst();
