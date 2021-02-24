@@ -32,7 +32,7 @@ import java.util.Optional;
 @Component
 @ConfigurationProperties(prefix = "quorum")
 public class QuorumNetworkProperty {
-    private Map<QuorumNode, Node> nodes = new HashMap<>();
+    private Map<String, Node> nodes = new HashMap<>();
     private Map<String, WalletData> wallets = new HashMap<>();
     private String consensus;
     private SocksProxy socksProxy;
@@ -48,15 +48,19 @@ public class QuorumNetworkProperty {
         this.socksProxy = socksProxy;
     }
 
-    public Map<QuorumNode, Node> getNodes() {
+    public Map<String, Node> getNodes() {
         return nodes;
     }
 
-    public void setNodes(Map<QuorumNode, Node> nodes) {
-        for (Map.Entry<QuorumNode, Node> entry : nodes.entrySet()) {
-            entry.getValue().setName(entry.getKey().name());
+    public void setNodes(Map<String, Node> nodes) {
+        for (Map.Entry<String, Node> entry : nodes.entrySet()) {
+            entry.getValue().setName(entry.getKey());
         }
         this.nodes = nodes;
+    }
+
+    public QuorumNode getQuorumNode(QuorumNetworkProperty.Node node) {
+        return QuorumNode.valueOf(node.getName());
     }
 
     public Map<String, WalletData> getWallets() {
@@ -67,16 +71,8 @@ public class QuorumNetworkProperty {
         this.wallets = wallets;
     }
 
-    public Map<String, Node> getNodesAsString() {
-        Map<String, Node> converted = new HashMap<>();
-        for (Map.Entry<QuorumNode, Node> quorumNodeNodeEntry : nodes.entrySet()) {
-            converted.put(quorumNodeNodeEntry.getKey().name(), quorumNodeNodeEntry.getValue());
-        }
-        return converted;
-    }
-
     public Node getNode(String nodeName) {
-        Node node = Optional.ofNullable(nodes.get(QuorumNode.valueOf(nodeName))).orElseThrow(() -> new RuntimeException("no such node with name: " + nodeName));
+        Node node = Optional.ofNullable(nodes.get(nodeName)).orElseThrow(() -> new RuntimeException("no such node with name: " + nodeName));
         node.setName(nodeName);
         return node;
     }

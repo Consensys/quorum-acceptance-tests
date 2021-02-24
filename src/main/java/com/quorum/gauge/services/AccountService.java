@@ -97,22 +97,6 @@ public class AccountService extends AbstractService {
         throw new IllegalArgumentException("no such alias in the network property: " + alias);
     }
 
-    /**
-     *
-     * @param alias
-     * @return account address in the network property
-     */
-    public QuorumNetworkProperty.Node nodeByAlias(String alias) {
-        for (QuorumNode n : networkProperty().getNodes().keySet()) {
-            QuorumNetworkProperty.Node node = networkProperty().getNodes().get(n);
-            node.setName(n.name());
-            if (node.getAccountAliases().containsKey(alias)) {
-                return node;
-            }
-        }
-        throw new IllegalArgumentException("no such alias in the network property: " + alias);
-    }
-
     public Observable<String> getAccountAddress(QuorumNetworkProperty.Node source, String ethAccount) {
         if (ethAccount == null) {
             return getDefaultAccountAddress(source);

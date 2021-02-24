@@ -44,7 +44,7 @@ public class QuorumNodeListParameterParser extends CustomParameterParser<List<No
         return Arrays.stream(nodes.split(","))
                 .map(String::trim)
                 .map(nodeName -> {
-                    final Node node = props.getNodesAsString().get(nodeName);
+                    final Node node = props.getNodes().get(nodeName);
                     if(node == null) {
                         throw new IllegalArgumentException("Node " + nodeName + " not found in network properties");
                     }
