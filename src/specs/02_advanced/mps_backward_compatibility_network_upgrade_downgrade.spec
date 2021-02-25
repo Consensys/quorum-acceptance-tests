@@ -3,7 +3,7 @@
  Tags: mps-upgrade, pre-condition/no-record-blocknumber
 
         | q_from_version | q_to_version | t_from_version | t_to_version |
-        | 21.1.0         | latest       | 21.1.0         | latest       |
+        | 2.7.0          | latest       | 21.1.0         | latest       |
 
 * Start the network with:
     | node  | quorum           | tessera          |

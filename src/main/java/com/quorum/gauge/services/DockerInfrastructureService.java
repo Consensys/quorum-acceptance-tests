@@ -86,6 +86,7 @@ public class DockerInfrastructureService
         quorumDockerImageCatalog = ImmutableMap.of(
         "v2.5.0", new QuorumImageConfig("quorumengineering/quorum:2.5.0", GethArgBuilder.newBuilder()),
         "21.1.0", new QuorumImageConfig("quorumengineering/quorum:21.1.0", GethArgBuilder.newBuilder().allowInsecureUnlock(true)),
+        "2.7.0", new QuorumImageConfig("quorumengineering/quorum:2.7.0", GethArgBuilder.newBuilder().allowInsecureUnlock(true)),
         "latest", new QuorumImageConfig("quorumengineering/quorum:latest", GethArgBuilder.newBuilder().allowInsecureUnlock(true))
         "develop", new QuorumImageConfig("quorumengineering/quorum:develop", GethArgBuilder.newBuilder().allowInsecureUnlock(true))
         );
