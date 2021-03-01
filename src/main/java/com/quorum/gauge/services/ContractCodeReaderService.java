@@ -72,9 +72,8 @@ public class ContractCodeReaderService extends AbstractService {
                 eoa,
                 privacyService.id(privateFromAlias),
                 privateForAliases.stream().map(privacyService::id).collect(Collectors.toList()),
-                List.of(PrivacyFlag.StandardPrivate),
-                DEFAULT_MAX_RETRY,
-                DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                List.of(PrivacyFlag.StandardPrivate)
+            );
             return ContractCodeReader.deploy(client, clientTransactionManager, getPermContractDepGasProvider()).flowable().toObservable();
         });
     }
@@ -88,8 +87,7 @@ public class ContractCodeReaderService extends AbstractService {
                 eoa,
                 privacyService.id(privateFromAlias),
                 privateForAliases.stream().map(privacyService::id).collect(Collectors.toList()),
-                List.of(PrivacyFlag.StandardPrivate),
-                DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
+                List.of(PrivacyFlag.StandardPrivate)
             ))
             .flatMap(txManager -> ContractCodeReader.load(
                 contractAddress, client, txManager, BigInteger.ZERO, DEFAULT_GAS_LIMIT).setLastCodeSize(targetContractAddress)

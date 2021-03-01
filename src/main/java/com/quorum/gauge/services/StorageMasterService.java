@@ -60,14 +60,8 @@ public class StorageMasterService extends AbstractService {
         }
 
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
-            EnhancedClientTransactionManager clientTransactionManager = new EnhancedClientTransactionManager(
-                client,
-                address,
-                null,
-                privateFor,
-                flags,
-                DEFAULT_MAX_RETRY,
-                DEFAULT_SLEEP_DURATION_IN_MILLIS);
+            EnhancedClientTransactionManager clientTransactionManager
+                = new EnhancedClientTransactionManager(client, address, null, privateFor, flags);
             return StorageMaster.deploy(client,
                 clientTransactionManager,
                 BigInteger.valueOf(0),
@@ -85,9 +79,8 @@ public class StorageMasterService extends AbstractService {
         final List<String> privateFor = target.stream().map(q -> privacyService.id(q)).collect(Collectors.toList());
 
         return accountService.getDefaultAccountAddress(source).flatMap(acctAddress -> {
-            EnhancedClientTransactionManager txManager = new EnhancedClientTransactionManager(
-                client, acctAddress, null, privateFor, flags, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
-            );
+            EnhancedClientTransactionManager txManager
+                = new EnhancedClientTransactionManager(client, acctAddress, null, privateFor, flags);
             return createSSFromSM(txManager, client, contractAddress, gasLimit, newValue);
         });
     }
@@ -129,9 +122,8 @@ public class StorageMasterService extends AbstractService {
         final List<String> privateFor = target.stream().map(q -> privacyService.id(q)).collect(Collectors.toList());
 
         return accountService.getDefaultAccountAddress(source).flatMap(acctAdress -> {
-            EnhancedClientTransactionManager txManager = new EnhancedClientTransactionManager(
-                client, acctAdress, null, privateFor, flags, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
-            );
+            EnhancedClientTransactionManager txManager
+                = new EnhancedClientTransactionManager(client, acctAdress, null, privateFor, flags);
             StorageMaster storageMaster = StorageMaster.load(contractAddress, client, txManager, BigInteger.ZERO, gasLimit);
             return storageMaster.createSimpleStorageC2C3(value).flowable().toObservable();
         });
@@ -148,9 +140,8 @@ public class StorageMasterService extends AbstractService {
         final List<String> privateFor = target.stream().map(q -> privacyService.id(q)).collect(Collectors.toList());
 
         return accountService.getDefaultAccountAddress(source).flatMap(acctAddress -> {
-            EnhancedClientTransactionManager txManager = new EnhancedClientTransactionManager(
-                client, acctAddress, null, privateFor, flags, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
-            );
+            EnhancedClientTransactionManager txManager
+                = new EnhancedClientTransactionManager(client, acctAddress, null, privateFor, flags);
             StorageMaster storageMaster = StorageMaster.load(
                 contractAddress, client, txManager, BigInteger.ZERO, gasLimit);
             return storageMaster.setC2C3Value(value).flowable().toObservable();
@@ -161,13 +152,9 @@ public class StorageMasterService extends AbstractService {
         Quorum client = connectionFactory().getConnection(source);
 
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
-            org.web3j.tx.ClientTransactionManager clientTransactionManager = new org.web3j.tx.ClientTransactionManager(
-                client,
-                address,
-                DEFAULT_MAX_RETRY,
-                DEFAULT_SLEEP_DURATION_IN_MILLIS);
+            org.web3j.tx.ClientTransactionManager txManager = vanillaClientTransactionManager(client, address);
             return StorageMaster.deploy(client,
-                clientTransactionManager,
+                txManager,
                 BigInteger.valueOf(0),
                 gas).flowable().toObservable();
         });
@@ -179,9 +166,7 @@ public class StorageMasterService extends AbstractService {
                                                                                      final int newValue) {
         final Quorum client = connectionFactory().getConnection(source);
         return accountService.getDefaultAccountAddress(source).flatMap(acctAddress -> {
-            org.web3j.tx.ClientTransactionManager txManager = new org.web3j.tx.ClientTransactionManager(
-                client, acctAddress, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
-            );
+            org.web3j.tx.ClientTransactionManager txManager = vanillaClientTransactionManager(client, acctAddress);
             return createSSFromSM(txManager, client, contractAddress, gasLimit, newValue);
         });
     }

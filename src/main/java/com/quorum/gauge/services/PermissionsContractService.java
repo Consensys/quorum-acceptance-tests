@@ -31,8 +31,6 @@ import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 import org.web3j.tx.TransactionManager;
 
-import java.math.BigInteger;
-
 @Service
 public class PermissionsContractService extends AbstractService {
     private static final Logger logger = LoggerFactory.getLogger(PermissionsContractService.class);
@@ -42,11 +40,7 @@ public class PermissionsContractService extends AbstractService {
 
     private org.web3j.tx.ClientTransactionManager getTxManager(QuorumNetworkProperty.Node node, Web3j client){
         String fromAddress = accountService.getDefaultAccountAddress(node).blockingFirst();
-        return new org.web3j.tx.ClientTransactionManager(
-            client,
-            fromAddress,
-            DEFAULT_MAX_RETRY,
-            DEFAULT_SLEEP_DURATION_IN_MILLIS);
+        return vanillaClientTransactionManager(client, fromAddress);
     }
 
     public Observable<? extends Contract> createPermissionsGenericContracts(QuorumNetworkProperty.Node node, String contractName, String upgrContractAddress, String version) {
