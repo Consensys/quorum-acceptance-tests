@@ -32,6 +32,10 @@
 * Check IncEvent "0" for accumulator contract "accPublic1" on "Node3" has value "2"
 * Check IncEvent "0" for accumulator contract "accPublic1" on "Node4" has value "2"
 * Unsubscribe to accumulator contract "accPublic1" IncEvent on "Node1,Node2,Node3,Node4"
+* Trace transaction "accPublic1.inc(1)" on "Node1" name it "Node1.accPublic1.inc(1).Trace"
+* Trace transaction "accPublic1.inc(1)" on "Node2" name it "Node2.accPublic1.inc(1).Trace"
+* Check that "Node1.accPublic1.inc(1).Trace" is equal to "Node2.accPublic1.inc(1).Trace"
+
 
 ## Deploy a private accumulator contract, invoke the inc() method on a subset of original parties and verify the emited events
 
@@ -61,6 +65,14 @@
 * Accumulator "accPrivate1"'s `get()` function execution in "Node3" returns "1"
 * Accumulator "accPrivate1"'s `get()` function execution in "Node4" returns "2"
 
+* Trace transaction "accPrivate1.inc(1)" on "Node1" name it "Node1.accPrivate1.inc(1).Trace"
+* Trace transaction "accPrivate1.inc(1)" on "Node2" name it "Node2.accPrivate1.inc(1).Trace"
+* Trace transaction "accPrivate1.inc(1)" on "Node3" name it "Node3.accPrivate1.inc(1).Trace"
+* Trace transaction "accPrivate1.inc(1)" on "Node4" name it "Node4.accPrivate1.inc(1).Trace"
+* Check that "Node1.accPrivate1.inc(1).Trace" is equal to "Node2.accPrivate1.inc(1).Trace"
+* Check that "Node1.accPrivate1.inc(1).Trace" is equal to "Node4.accPrivate1.inc(1).Trace"
+* Check that "Node3.accPrivate1.inc(1).Trace" is empty
+
 * Wait for events poll
 * Check IncEvent list size for accumulator contract "accPrivate1" on "Node1" is "1"
 * Check IncEvent "0" for accumulator contract "accPrivate1" on "Node1" has value "2"
@@ -84,6 +96,14 @@
 * Accumulator "accPrivate1"'s `get()` function execution in "Node3" returns "1"
 * Accumulator "accPrivate1"'s `get()` function execution in "Node4" returns "4"
 
+* Trace transaction "accPrivate1.inc(2)" on "Node1" name it "Node1.accPrivate1.inc(2).Trace"
+* Trace transaction "accPrivate1.inc(2)" on "Node2" name it "Node2.accPrivate1.inc(2).Trace"
+* Trace transaction "accPrivate1.inc(2)" on "Node3" name it "Node3.accPrivate1.inc(2).Trace"
+* Trace transaction "accPrivate1.inc(2)" on "Node4" name it "Node4.accPrivate1.inc(2).Trace"
+* Check that "Node1.accPrivate1.inc(2).Trace" is equal to "Node4.accPrivate1.inc(2).Trace"
+* Check that "Node2.accPrivate1.inc(2).Trace" is empty
+* Check that "Node3.accPrivate1.inc(2).Trace" is empty
+
 * Wait for events poll
 * Check IncEvent list size for accumulator contract "accPrivate1" on "Node1" is "2"
 * Check IncEvent "1" for accumulator contract "accPrivate1" on "Node1" has value "4"
@@ -106,6 +126,17 @@
 * Accumulator "accPrivate1"'s `get()` function execution in "Node3" returns "1"
 * Accumulator "accPrivate1"'s `get()` function execution in "Node4" returns "7"
 
+* Trace transaction "accPrivate1.inc(3)" on "Node1" name it "Node1.accPrivate1.inc(3).Trace"
+* Trace transaction "accPrivate1.inc(3)" on "Node2" name it "Node2.accPrivate1.inc(3).Trace"
+* Trace transaction "accPrivate1.inc(3)" on "Node3" name it "Node3.accPrivate1.inc(3).Trace"
+* Trace transaction "accPrivate1.inc(3)" on "Node4" name it "Node4.accPrivate1.inc(3).Trace"
+// one has value 5 the other has value 7 - so it is normal for the traces to be different
+* Check that "Node2.accPrivate1.inc(3).Trace" is different from "Node4.accPrivate1.inc(3).Trace"
+* Check that "Node1.accPrivate1.inc(3).Trace" is empty
+* Check that "Node2.accPrivate1.inc(3).Trace" is not empty
+* Check that "Node3.accPrivate1.inc(3).Trace" is empty
+* Check that "Node4.accPrivate1.inc(3).Trace" is not empty
+
 * Wait for events poll
 * Check IncEvent list size for accumulator contract "accPrivate1" on "Node1" is "2"
 * Check IncEvent list size for accumulator contract "accPrivate1" on "Node2" is "2"
@@ -115,5 +146,3 @@
 * Check IncEvent "2" for accumulator contract "accPrivate1" on "Node4" has value "7"
 
 * Unsubscribe to accumulator contract "accPrivate1" IncEvent on "Node1,Node2,Node3,Node4"
-
-// TODO - figure out how to add trace transaction
