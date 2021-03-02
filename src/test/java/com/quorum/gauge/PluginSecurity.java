@@ -62,7 +62,7 @@ public class PluginSecurity extends AbstractSpecImplementation {
         boolean expectAuthorized = "success".equalsIgnoreCase(policy);
         String token = mustHaveValue(DataStoreFactory.getScenarioDataStore(), clientId, String.class);
         Context.storeAccessToken(token);
-        Map<String, QuorumNetworkProperty.Node> nodeMap = networkProperty.getNodesAsString();
+        Map<String, QuorumNetworkProperty.Node> nodeMap = networkProperty.getNodes();
         table.getTableRows().stream()
                 .map(r -> new ApiCall(r.getCell("callApi"), r.getCell("targetNode")))
                 .onClose(Context::removeAccessToken)

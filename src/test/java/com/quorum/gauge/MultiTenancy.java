@@ -3,6 +3,7 @@ package com.quorum.gauge;
 import com.google.common.primitives.Ints;
 import com.quorum.gauge.common.Context;
 import com.quorum.gauge.common.PrivacyFlag;
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNetworkProperty.Node;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.common.config.WalletData;
@@ -61,8 +62,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
             .map(StringUtils::trim)
             .map(rawScope -> {
                 String expandedScope = rawScope;
-                for (QuorumNode qn : networkProperty.getNodes().keySet()) {
-                    Node n = networkProperty.getNode(qn.name());
+                for (QuorumNetworkProperty.Node n : networkProperty.getNodes().values()) {
                     for (String alias : n.getPrivacyAddressAliases().keySet()) {
                         if (rawScope.contains("=" + alias)) {
                             nodeList.add(n.getName());

@@ -54,7 +54,7 @@ public class QuorumNodeConnectionFactory {
     }
 
     public Web3jService getWeb3jService(QuorumNode node) {
-        QuorumNetworkProperty.Node nodeConfig = networkProperty.getNodes().get(node);
+        QuorumNetworkProperty.Node nodeConfig = networkProperty.getNodes().get(node.name());
         if (nodeConfig == null) {
             throw new IllegalArgumentException("Can't find node " + node + " in the configuration");
         }

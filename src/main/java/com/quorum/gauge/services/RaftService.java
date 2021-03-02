@@ -98,12 +98,12 @@ public class RaftService extends AbstractService {
         String leaderEnode = response.getResult();
         logger.debug("Retrieved leader enode: {}", leaderEnode);
 
-        Map<QuorumNode, Node> nodes = connectionFactory().getNetworkProperty().getNodes();
-        for (QuorumNode nodeId : nodes.keySet()) {
+        Map<String, Node> nodes = connectionFactory().getNetworkProperty().getNodes();
+        for (Node n : nodes.values()) {
             Request<?, NodeInfo> nodeInfoRequest = new Request<>(
                     "admin_nodeInfo",
                     null,
-                    connectionFactory().getWeb3jService(nodeId),
+                    connectionFactory().getWeb3jService(n),
                     NodeInfo.class
             );
 
@@ -111,7 +111,7 @@ public class RaftService extends AbstractService {
             String thisEnode = nodeInfo.getEnode();
             logger.debug("Retrieved enode info: {}", thisEnode);
             if (thisEnode.contains(leaderEnode)) {
-                return nodeId;
+                return connectionFactory().getNetworkProperty().getQuorumNode(n);
             }
         }
 
@@ -132,12 +132,12 @@ public class RaftService extends AbstractService {
         String leaderEnode = response.getResult();
         logger.debug("Retrieved leader enode: {}", leaderEnode);
 
-        Map<QuorumNode, Node> nodes = connectionFactory().getNetworkProperty().getNodes();
-        for (Map.Entry<QuorumNode,Node> nodeEntry : nodes.entrySet()) {
+        Map<String, Node> nodes = connectionFactory().getNetworkProperty().getNodes();
+        for (Map.Entry<String, Node> nodeEntry : nodes.entrySet()) {
             String thisEnode = nodeEntry.getValue().getEnodeUrl();
             logger.debug("Retrieved enode info: {}", thisEnode);
             if (thisEnode.contains(leaderEnode)) {
-                return nodeEntry.getKey();
+                return connectionFactory().getNetworkProperty().getQuorumNode(nodeEntry.getValue());
             }
         }
 

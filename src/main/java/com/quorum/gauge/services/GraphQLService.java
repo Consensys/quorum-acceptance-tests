@@ -58,7 +58,7 @@ public class GraphQLService extends AbstractService {
     }
 
     private String graphqlUrl(QuorumNode node) {
-        QuorumNetworkProperty.Node nodeConfig = networkProperty().getNodes().get(node);
+        QuorumNetworkProperty.Node nodeConfig = networkProperty().getNodes().get(node.name());
         if (nodeConfig == null) {
             throw new IllegalArgumentException("Node " + node + " not found in config");
         }

@@ -34,7 +34,7 @@ public class QuorumNodeParameterParser extends CustomParameterParser<Node> {
         final QuorumNetworkProperty props
             = (QuorumNetworkProperty) DataStoreFactory.getSuiteDataStore().get("networkProperties");
 
-        final Node node = props.getNodesAsString().get(nodeName);
+        final Node node = props.getNodes().get(nodeName);
         if (node == null) {
             throw new IllegalArgumentException("Node " + nodeName + " not found in network properties");
         }
