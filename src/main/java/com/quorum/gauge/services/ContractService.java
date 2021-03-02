@@ -250,7 +250,7 @@ public class ContractService extends AbstractService {
                 address,
                 privacyService.id(privateFromAlias),
                 privateForAliases.stream().map(privacyService::id).collect(Collectors.toList()),
-                Collections.emptyList()
+                Collections.EMPTY_LIST
             ))
             .flatMap(txManager -> SimpleStorage.load(
                 contractAddress, client, txManager, BigInteger.ZERO, DEFAULT_GAS_LIMIT).set(value).flowable().toObservable()
@@ -286,7 +286,7 @@ public class ContractService extends AbstractService {
                 address,
                 privacyService.id(privateFromAlias),
                 privateForAliases.stream().map(privacyService::id).collect(Collectors.toList()),
-                Collections.emptyList()
+                Collections.EMPTY_LIST
             ))
             .flatMap(txManager -> SimpleStorageDelegate.load(
                 contractAddress, client, txManager, BigInteger.ZERO, DEFAULT_GAS_LIMIT).set(value).flowable().toObservable()
