@@ -82,6 +82,7 @@ quorum:
 %{if !local.vnodes[i].mpsEnabled ~}
       url: ${data.null_data_source.meta[i].inputs.nodeUrl}
 %{endif~}
+      enode-url: ${local.enode_urls[i]}
       third-party-url: ${data.null_data_source.meta[i].inputs.tmThirdpartyUrl}
       graphql-url: ${data.null_data_source.meta[i].inputs.graphqlUrl}
       privacy-address-aliases:
