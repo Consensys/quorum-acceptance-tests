@@ -237,17 +237,6 @@ resource "local_file" "tmconfigs-generator" {
           }
     ],
 %{endif~}
-%{if !local.vnodes[count.index].mpsEnabled}
-    "residentGroups":[
-          {
-              "name": "private",
-              "description":"private",
-              "members":[
-                ${join(",", formatlist("\"%s\"", [for idx, keyName in local.tm_named_keys_alloc[count.index] : element(quorum_transaction_manager_keypair.tm.*.public_key_b64, index(local.tm_named_keys_all, keyName))]))}
-              ]
-          }
-    ],
-%{endif~}
     "alwaysSendTo": []
 }
 JSON
