@@ -109,9 +109,7 @@ public class ContractService extends AbstractService {
                 address,
                 privacyService.id(privateFromAliases),
                 privateForAliases.stream().map(privacyService::id).collect(Collectors.toList()),
-                finalFlags,
-                DEFAULT_MAX_RETRY,
-                DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                finalFlags);
             return SimpleStorage.deploy(client,
                 clientTransactionManager,
                 BigInteger.valueOf(0),
@@ -143,9 +141,7 @@ public class ContractService extends AbstractService {
                 address,
                 null,
                 privateFor,
-                flags,
-                DEFAULT_MAX_RETRY,
-                DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                flags);
             return SimpleStorage.deploy(client,
                 clientTransactionManager,
                 BigInteger.valueOf(0),
@@ -236,9 +232,7 @@ public class ContractService extends AbstractService {
         final List<String> privateFor = target.stream().map(q -> privacyService.id(q)).collect(Collectors.toList());
 
         return accountService.getDefaultAccountAddress(source)
-            .map(address -> new EnhancedClientTransactionManager(
-                client, address, null, privateFor, flags, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
-            ))
+            .map(address -> new EnhancedClientTransactionManager(client, address, null, privateFor, flags))
             .flatMap(txManager -> SimpleStorage.load(
                 contractAddress, client, txManager, BigInteger.ZERO, gasLimit).set(value).flowable().toObservable()
             );
@@ -256,7 +250,7 @@ public class ContractService extends AbstractService {
                 address,
                 privacyService.id(privateFromAlias),
                 privateForAliases.stream().map(privacyService::id).collect(Collectors.toList()),
-                Collections.EMPTY_LIST, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
+                Collections.EMPTY_LIST
             ))
             .flatMap(txManager -> SimpleStorage.load(
                 contractAddress, client, txManager, BigInteger.ZERO, DEFAULT_GAS_LIMIT).set(value).flowable().toObservable()
@@ -275,7 +269,7 @@ public class ContractService extends AbstractService {
                 address,
                 null,
                 null,
-                Collections.emptyList(), DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
+                Collections.emptyList()
             ))
             .flatMap(txManager -> SimpleStorage.load(
                 contractAddress, client, txManager, BigInteger.ZERO, DEFAULT_GAS_LIMIT).set(value).flowable().toObservable()
@@ -292,7 +286,7 @@ public class ContractService extends AbstractService {
                 address,
                 privacyService.id(privateFromAlias),
                 privateForAliases.stream().map(privacyService::id).collect(Collectors.toList()),
-                Collections.EMPTY_LIST, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
+                Collections.EMPTY_LIST
             ))
             .flatMap(txManager -> SimpleStorageDelegate.load(
                 contractAddress, client, txManager, BigInteger.ZERO, DEFAULT_GAS_LIMIT).set(value).flowable().toObservable()
@@ -312,11 +306,7 @@ public class ContractService extends AbstractService {
         Web3j client = connectionFactory().getWeb3jConnection(node);
         return accountService.getDefaultAccountAddress(node)
             .flatMap(address -> {
-                org.web3j.tx.ClientTransactionManager txManager = new org.web3j.tx.ClientTransactionManager(
-                    client,
-                    address,
-                    DEFAULT_MAX_RETRY,
-                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                org.web3j.tx.ClientTransactionManager txManager = vanillaClientTransactionManager(client, address);
                 return ClientReceipt.deploy(
                     client,
                     txManager,
@@ -393,18 +383,14 @@ public class ContractService extends AbstractService {
                 fromAddress,
                 null,
                 Arrays.asList(privacyService.id(target)),
-                Arrays.asList(privacyType),
-                DEFAULT_MAX_RETRY,
-                DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                Arrays.asList(privacyType));
         } else {
             txManager = new EnhancedClientTransactionManager(
                 client,
                 fromAddress,
                 null,
                 null,
-                List.of(PrivacyFlag.StandardPrivate),
-                DEFAULT_MAX_RETRY,
-                DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                List.of(PrivacyFlag.StandardPrivate));
         }
         try {
             switch (contractName.toLowerCase().trim()) {
@@ -470,18 +456,14 @@ public class ContractService extends AbstractService {
                 fromAddress,
                 null,
                 Arrays.asList(privacyService.id(target)),
-                List.of(privacyType),
-                DEFAULT_MAX_RETRY,
-                DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                List.of(privacyType));
         } else {
             transactionManager = new EnhancedClientTransactionManager(
                 client,
                 fromAddress,
                 null,
                 null,
-                List.of(PrivacyFlag.StandardPrivate),
-                DEFAULT_MAX_RETRY,
-                DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                List.of(PrivacyFlag.StandardPrivate));
         }
         switch (contractName.toLowerCase().trim()) {
             case "storea":
@@ -511,13 +493,11 @@ public class ContractService extends AbstractService {
     public Observable<? extends Contract> createClientReceiptPrivateSmartContract(Node source, String ethAccount, String privateFromAlias, List<String> privateForAliases) {
         Quorum client = connectionFactory().getConnection(source);
         return accountService.getAccountAddress(source, ethAccount).flatMap(address -> {
-            ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
+            ClientTransactionManager clientTransactionManager = clientTransactionManager(
                 client,
                 address,
                 privacyService.id(privateFromAlias),
-                privateForAliases.stream().map(privacyService::id).collect(Collectors.toList()),
-                DEFAULT_MAX_RETRY,
-                DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                privacyService.ids(privateForAliases));
             return ClientReceipt.deploy(client,
                 clientTransactionManager,
                 BigInteger.valueOf(0),
@@ -528,13 +508,11 @@ public class ContractService extends AbstractService {
     public Observable<? extends Contract> createClientReceiptPrivateSmartContract(QuorumNode source, QuorumNode target) {
         Quorum client = connectionFactory().getConnection(source);
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
-            ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
+            ClientTransactionManager clientTransactionManager = clientTransactionManager(
                 client,
                 address,
                 null,
-                Arrays.asList(privacyService.id(target)),
-                DEFAULT_MAX_RETRY,
-                DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                List.of(privacyService.id(target)));
             return ClientReceipt.deploy(client,
                 clientTransactionManager,
                 BigInteger.valueOf(0),
@@ -546,11 +524,7 @@ public class ContractService extends AbstractService {
         Web3j client = connectionFactory().getWeb3jConnection(node);
         return accountService.getDefaultAccountAddress(node)
             .flatMap(address -> {
-                org.web3j.tx.ClientTransactionManager txManager = new org.web3j.tx.ClientTransactionManager(
-                    client,
-                    address,
-                    DEFAULT_MAX_RETRY,
-                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                org.web3j.tx.ClientTransactionManager txManager = vanillaClientTransactionManager(client, address);
                 return ClientReceipt.load(contractAddress, client, txManager, BigInteger.valueOf(0), DEFAULT_GAS_LIMIT)
                     .deposit(new byte[32], value).flowable().toObservable();
             });
@@ -559,13 +533,11 @@ public class ContractService extends AbstractService {
     public Observable<TransactionReceipt> updateClientReceiptPrivate(QuorumNode source, QuorumNode target, String contractAddress, BigInteger value) {
         Quorum client = connectionFactory().getConnection(source);
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
-            ClientTransactionManager txManager = new ClientTransactionManager(
+            ClientTransactionManager txManager = clientTransactionManager(
                 client,
                 address,
                 null,
-                Arrays.asList(privacyService.id(target)),
-                DEFAULT_MAX_RETRY,
-                DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                List.of(privacyService.id(target)));
             return ClientReceipt.load(contractAddress, client, txManager,
                 BigInteger.valueOf(0),
                 DEFAULT_GAS_LIMIT).deposit(new byte[32], value).flowable().toObservable();
@@ -626,13 +598,11 @@ public class ContractService extends AbstractService {
         Quorum client = connectionFactory().getConnection(source);
         return accountService.getAccountAddress(source, ethAccount)
             .flatMap(address -> {
-                ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
+                ClientTransactionManager clientTransactionManager = clientTransactionManager(
                     client,
                     address,
                     privacyService.id(privateFromAlias),
-                    privateForAliases.stream().map(privacyService::id).collect(Collectors.toList()),
-                    DEFAULT_MAX_RETRY,
-                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                    privacyService.ids(privateForAliases));
                 return SimpleStorageDelegate.deploy(client,
                     clientTransactionManager,
                     BigInteger.valueOf(0),

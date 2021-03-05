@@ -26,6 +26,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class PrivacyService extends AbstractService {
@@ -72,6 +73,10 @@ public class PrivacyService extends AbstractService {
             throw new RuntimeException("there are " + matches.size() + " nodes having this privacy address alias: " + alias);
         }
         return matches.get(0);
+    }
+
+    public List<String> ids(final List<String> nodeAliases) {
+        return nodeAliases.stream().map(this::id).collect(Collectors.toList());
     }
 
     public String id(QuorumNode node, String name) {

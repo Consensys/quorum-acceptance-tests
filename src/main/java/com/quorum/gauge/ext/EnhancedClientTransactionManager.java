@@ -29,6 +29,9 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.List;
 
+import static com.quorum.gauge.services.AbstractService.DEFAULT_MAX_RETRY;
+import static com.quorum.gauge.services.AbstractService.DEFAULT_SLEEP_DURATION_IN_MILLIS;
+
 /**
  * Support additional privacy constructs
  *
@@ -38,12 +41,17 @@ import java.util.List;
 public class EnhancedClientTransactionManager extends ClientTransactionManager {
 
     private List<PrivacyFlag> contractFlag;
+
     private Quorum quorum;
 
     public EnhancedClientTransactionManager(Quorum quorum, String fromAddress, String privateFrom, List<String> privateFor, List<PrivacyFlag> contractFlag, int attempts, int sleepDuration) {
         super(quorum, fromAddress, privateFrom, privateFor, attempts, sleepDuration);
         this.quorum = quorum;
         this.contractFlag = contractFlag;
+    }
+
+    public EnhancedClientTransactionManager(Quorum quorum, String fromAddress, String privateFrom, List<String> privateFor, List<PrivacyFlag> contractFlag) {
+        this(quorum, fromAddress, privateFrom, privateFor, contractFlag, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS);
     }
 
     @Override
