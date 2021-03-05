@@ -69,14 +69,22 @@ resource "docker_container" "geth" {
     <<RUN
 #Quorum${count.index + 1}
 
+echo "Original files in datadir (ls ${local.container_geth_datadir})"
+ls ${local.container_geth_datadir}
+
 if [ "$ALWAYS_REFRESH" == "true" ]; then
   echo "Deleting ${local.container_geth_datadir} to refresh with original datadir"
   rm -rf ${local.container_geth_datadir}
 fi
-if [ ! -d "${local.container_geth_datadir}" ]; then
-  echo "Copying mounted datadir to ${local.container_geth_datadir}"
+
+if [ ! -f "${local.container_geth_datadir}/genesis.json" ]; then
+  echo "Genesis file missing. Copying mounted datadir to ${local.container_geth_datadir}"
+  rm -r ${local.container_geth_datadir}
   cp -r ${local.container_geth_datadir_mounted} ${local.container_geth_datadir}
 fi
+echo "Current files in datadir (ls ${local.container_geth_datadir})"
+ls ${local.container_geth_datadir}
+
 echo "ls ${local.container_plugin_acctdir}"
 ls ${local.container_plugin_acctdir}
 echo "Deleting any files in ${local.container_plugin_acctdir}"
