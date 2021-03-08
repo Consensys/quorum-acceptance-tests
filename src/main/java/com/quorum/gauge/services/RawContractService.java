@@ -95,11 +95,7 @@ public class RawContractService extends AbstractService {
         try {
             Credentials credentials = WalletUtils.loadCredentials(wallet.getWalletPass(), wallet.getWalletPath());
 
-            RawTransactionManager qrtxm = new RawTransactionManager(
-                    web3j,
-                    credentials,
-                    DEFAULT_MAX_RETRY,
-                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+            RawTransactionManager qrtxm = rawTransactionManager(web3j, credentials);
 
             return SimpleStorage.deploy(web3j,
                     qrtxm,
@@ -122,11 +118,7 @@ public class RawContractService extends AbstractService {
         try {
             Credentials credentials = WalletUtils.loadCredentials(wallet.getWalletPass(), wallet.getWalletPath());
 
-            RawTransactionManager qrtxm = new RawTransactionManager(
-                    web3j,
-                    credentials,
-                    DEFAULT_MAX_RETRY,
-                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+            RawTransactionManager qrtxm = rawTransactionManager(web3j, credentials);
 
             return SimpleStorage.load(contractAddress, web3j,
                     qrtxm,
@@ -148,13 +140,11 @@ public class RawContractService extends AbstractService {
 
         return Observable.fromCallable(() -> wallet)
             .flatMap(walletData -> Observable.fromCallable(() -> WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath())))
-            .flatMap(cred -> Observable.just(new QuorumTransactionManager(client,
+            .flatMap(cred -> Observable.just(quorumTransactionManager(client,
                 cred,
                 privacyService.id(source, sourceNamedKey),
-                targetNamedKeys.stream().map(privacyService::id).collect(Collectors.toList()),
-                enclave,
-                DEFAULT_MAX_RETRY,
-                DEFAULT_SLEEP_DURATION_IN_MILLIS)))
+                privacyService.ids(targetNamedKeys),
+                enclave)))
             .flatMap(qrtxm -> SimpleStorage.deploy(client,
                 qrtxm,
                 BigInteger.valueOf(0),
@@ -169,13 +159,11 @@ public class RawContractService extends AbstractService {
 
         return Observable.fromCallable(() -> wallet)
             .flatMap(walletData -> Observable.fromCallable(() -> WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath())))
-            .flatMap(cred -> Observable.just(new QuorumTransactionManager(client,
+            .flatMap(cred -> Observable.just(quorumTransactionManager(client,
                 cred,
                 privacyService.id(source, sourceNamedKey),
-                targetNamedKeys.stream().map(privacyService::id).collect(Collectors.toList()),
-                enclave,
-                DEFAULT_MAX_RETRY,
-                DEFAULT_SLEEP_DURATION_IN_MILLIS)))
+                privacyService.ids(targetNamedKeys),
+                enclave)))
             .flatMap(qrtxm -> SimpleStorage.load(contractAddress, client,
                 qrtxm,
                 BigInteger.valueOf(0),
@@ -190,13 +178,11 @@ public class RawContractService extends AbstractService {
         try {
             Credentials credentials = WalletUtils.loadCredentials(wallet.getWalletPass(), wallet.getWalletPath());
 
-            QuorumTransactionManager qrtxm = new QuorumTransactionManager(client,
+            QuorumTransactionManager qrtxm = quorumTransactionManager(client,
                     credentials,
                     privacyService.id(source),
-                    Arrays.asList(privacyService.id(target)),
-                    enclave,
-                    DEFAULT_MAX_RETRY,
-                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                    List.of(privacyService.id(target)),
+                    enclave);
 
             return SimpleStorage.deploy(client,
                     qrtxm,
@@ -220,13 +206,11 @@ public class RawContractService extends AbstractService {
         try {
             Credentials credentials = WalletUtils.loadCredentials(wallet.getWalletPass(), wallet.getWalletPath());
 
-            QuorumTransactionManager qrtxm = new QuorumTransactionManager(client,
+            QuorumTransactionManager qrtxm = quorumTransactionManager(client,
                     credentials,
                     privacyService.id(source),
-                    Arrays.asList(privacyService.id(target)),
-                    enclave,
-                    DEFAULT_MAX_RETRY,
-                    DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                    List.of(privacyService.id(target)),
+                    enclave);
 
             return SimpleStorage.load(contractAddress, client,
                     qrtxm,
@@ -406,13 +390,11 @@ public class RawContractService extends AbstractService {
 
         return Observable.fromCallable(() -> wallet)
             .flatMap(walletData -> Observable.fromCallable(() -> WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath())))
-            .flatMap(cred -> Observable.just(new QuorumTransactionManager(client,
+            .flatMap(cred -> Observable.just(quorumTransactionManager(client,
                 cred,
                 privacyService.id(source, sourceNamedKey),
-                targetNamedKeys.stream().map(privacyService::id).collect(Collectors.toList()),
-                enclave,
-                DEFAULT_MAX_RETRY,
-                DEFAULT_SLEEP_DURATION_IN_MILLIS)))
+                privacyService.ids(targetNamedKeys),
+                enclave)))
             .flatMap(qrtxm -> ClientReceipt.deploy(client,
                 qrtxm,
                 BigInteger.valueOf(0),
@@ -426,13 +408,11 @@ public class RawContractService extends AbstractService {
 
         return Observable.fromCallable(() -> wallet)
             .flatMap(walletData -> Observable.fromCallable(() -> WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath())))
-            .flatMap(cred -> Observable.just(new QuorumTransactionManager(client,
+            .flatMap(cred -> Observable.just(quorumTransactionManager(client,
                 cred,
                 privacyService.id(source, sourceNamedKey),
-                targetNamedKeys.stream().map(privacyService::id).collect(Collectors.toList()),
-                enclave,
-                DEFAULT_MAX_RETRY,
-                DEFAULT_SLEEP_DURATION_IN_MILLIS)))
+                privacyService.ids(targetNamedKeys),
+                enclave)))
             .flatMap(qrtxm -> ClientReceipt.load(contractAddress, client,
                 qrtxm,
                 BigInteger.valueOf(0),
@@ -447,13 +427,11 @@ public class RawContractService extends AbstractService {
 
         return Observable.fromCallable(() -> wallet)
             .flatMap(walletData -> Observable.fromCallable(() -> WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath())))
-            .flatMap(cred -> Observable.just(new QuorumTransactionManager(client,
+            .flatMap(cred -> Observable.just(quorumTransactionManager(client,
                 cred,
                 privacyService.id(source, sourceNamedKey),
-                targetNamedKeys.stream().map(privacyService::id).collect(Collectors.toList()),
-                enclave,
-                DEFAULT_MAX_RETRY,
-                DEFAULT_SLEEP_DURATION_IN_MILLIS)))
+                privacyService.ids(targetNamedKeys),
+                enclave)))
             .flatMap(qrtxm -> SimpleStorageDelegate.deploy(client,
                 qrtxm,
                 BigInteger.valueOf(0),
@@ -469,13 +447,11 @@ public class RawContractService extends AbstractService {
 
         return Observable.fromCallable(() -> wallet)
             .flatMap(walletData -> Observable.fromCallable(() -> WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath())))
-            .flatMap(cred -> Observable.just(new QuorumTransactionManager(client,
+            .flatMap(cred -> Observable.just(quorumTransactionManager(client,
                 cred,
                 privacyService.id(source, sourceNamedKey),
-                targetNamedKeys.stream().map(privacyService::id).collect(Collectors.toList()),
-                enclave,
-                DEFAULT_MAX_RETRY,
-                DEFAULT_SLEEP_DURATION_IN_MILLIS)))
+                privacyService.ids(targetNamedKeys),
+                enclave)))
             .flatMap(qrtxm -> SimpleStorageDelegate.load(contractAddress, client,
                 qrtxm,
                 BigInteger.valueOf(0),
@@ -491,13 +467,11 @@ public class RawContractService extends AbstractService {
 
         return Observable.fromCallable(() -> wallet)
             .flatMap(walletData -> Observable.fromCallable(() -> WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath())))
-            .flatMap(cred -> Observable.just(new QuorumTransactionManager(client,
+            .flatMap(cred -> Observable.just(quorumTransactionManager(client,
                 cred,
                 privacyService.id(source, sourceNamedKey),
-                targetNamedKeys.stream().map(privacyService::id).collect(Collectors.toList()),
-                enclave,
-                DEFAULT_MAX_RETRY,
-                DEFAULT_SLEEP_DURATION_IN_MILLIS)))
+                privacyService.ids(targetNamedKeys),
+                enclave)))
             .flatMap(qrtxm -> SneakyWrapper.deploy(client,
                 qrtxm,
                 BigInteger.valueOf(0),
@@ -512,13 +486,11 @@ public class RawContractService extends AbstractService {
 
         return Observable.fromCallable(() -> wallet)
             .flatMap(walletData -> Observable.fromCallable(() -> WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath())))
-            .flatMap(cred -> Observable.just(new QuorumTransactionManager(client,
+            .flatMap(cred -> Observable.just(quorumTransactionManager(client,
                 cred,
                 privacyService.id(source, sourceNamedKey),
-                targetNamedKeys.stream().map(privacyService::id).collect(Collectors.toList()),
-                enclave,
-                DEFAULT_MAX_RETRY,
-                DEFAULT_SLEEP_DURATION_IN_MILLIS)))
+                privacyService.ids(targetNamedKeys),
+                enclave)))
             .flatMap(qrtxm -> SneakyWrapper.load(contractAddress, client,
                 qrtxm,
                 BigInteger.valueOf(0),

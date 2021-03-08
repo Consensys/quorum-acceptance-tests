@@ -22,17 +22,25 @@ package com.quorum.gauge.services;
 import com.quorum.gauge.common.Context;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.web3j.crypto.Credentials;
+import org.web3j.protocol.Web3j;
+import org.web3j.quorum.Quorum;
+import org.web3j.quorum.enclave.Enclave;
+import org.web3j.quorum.tx.ClientTransactionManager;
+import org.web3j.quorum.tx.QuorumTransactionManager;
+import org.web3j.tx.RawTransactionManager;
 import org.web3j.tx.gas.ContractGasProvider;
 
 import java.math.BigInteger;
+import java.util.List;
 import java.util.Optional;
 
 public abstract class AbstractService {
 
     public static final BigInteger DEFAULT_GAS_LIMIT = new BigInteger("47b760", 16);
     BigInteger DEFAULT_PERMISSIONS_GAS_LIMIT = new BigInteger("8C6180", 16);
-    int DEFAULT_SLEEP_DURATION_IN_MILLIS = 2000;
-    int DEFAULT_MAX_RETRY = 60;
+    public static int DEFAULT_SLEEP_DURATION_IN_MILLIS = 2000;
+    public static int DEFAULT_MAX_RETRY = 30;
 
     private ContractGasProvider permContractGasProvider = new PermissionContractGasProvider();
     private ContractGasProvider permContractDepGasProvider = new PermissionContractDeployGasProvider();
@@ -76,5 +84,25 @@ public abstract class AbstractService {
 
     public void setPermContractDepGasProvider(ContractGasProvider permContractDepGasProvider) {
         this.permContractDepGasProvider = permContractDepGasProvider;
+    }
+
+    public ClientTransactionManager clientTransactionManager(Web3j web3j, String fromAddress, String privateFrom, List<String> privateFor) {
+        return new ClientTransactionManager(web3j, fromAddress, privateFrom, privateFor, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS);
+    }
+
+    public org.web3j.tx.ClientTransactionManager vanillaClientTransactionManager(Web3j web3j, String fromAddress) {
+        return new org.web3j.tx.ClientTransactionManager(web3j, fromAddress, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS);
+    }
+
+    public RawTransactionManager rawTransactionManager(Web3j web3j, Credentials credentials) {
+        return new RawTransactionManager(web3j, credentials, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS);
+    }
+
+    public QuorumTransactionManager quorumTransactionManager(Quorum web3j,
+                                                              Credentials credentials,
+                                                              String privateFrom,
+                                                              List<String> privateFor,
+                                                              Enclave enclave) {
+        return new QuorumTransactionManager(web3j, credentials, privateFrom, privateFor, enclave, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS);
     }
 }
