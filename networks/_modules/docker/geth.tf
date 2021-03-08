@@ -1,7 +1,8 @@
 locals {
-  publish_http_ports    = [for idx in local.node_indices : [var.geth_networking[idx].port.http]]
-  publish_ws_ports      = var.geth_networking[0].port.ws == null ? [for idx in local.node_indices : []] : [for idx in local.node_indices : [var.geth_networking[idx].port.ws]]
-  publish_graphql_ports = var.geth_networking[0].port.graphql == null ? [for idx in local.node_indices : []] : [for idx in local.node_indices : [var.geth_networking[idx].port.graphql]]
+  publish_http_ports = [for idx in local.node_indices : [
+    var.geth_networking[idx].port.http]]
+  publish_ws_ports = var.geth_networking[0].port.ws == null ? [for idx in local.node_indices : []] : [for idx in local.node_indices : [
+    var.geth_networking[idx].port.ws]]
 }
 
 resource "docker_container" "geth" {
@@ -24,7 +25,7 @@ resource "docker_container" "geth" {
     internal = var.geth_networking[count.index].port.raft
   }
   dynamic "ports" {
-    for_each = concat(local.publish_http_ports[count.index], local.publish_ws_ports[count.index], local.publish_graphql_ports[count.index])
+    for_each = concat(local.publish_http_ports[count.index], local.publish_ws_ports[count.index])
     content {
       internal = ports.value["internal"]
       external = ports.value["external"]
@@ -142,10 +143,8 @@ exec geth \
   --wsport ${var.geth_networking[count.index].port.ws.internal} \
   --wsapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,${var.consensus} \
 %{endif~}
-%{if var.geth_networking[count.index].port.graphql != null~}
+%{if var.geth_networking[count.index].graphql~}
   --graphql \
-  --graphql.addr 0.0.0.0 \
-  --graphql.port ${var.geth_networking[count.index].port.graphql.internal} \
 %{endif~}
   --port ${var.geth_networking[count.index].port.p2p} \
   --ethstats "Node${count.index + 1}:${var.ethstats_secret}@${var.ethstats_ip}:${var.ethstats.container.port}" \
