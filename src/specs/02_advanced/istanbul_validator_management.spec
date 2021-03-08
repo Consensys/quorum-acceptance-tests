@@ -19,6 +19,7 @@ New node after being added to the network as non-validator node must not be able
 * Deploy a simple smart contract from "Node4", verify it gets mined
 * Deploy a simple smart contract from "Node1", verify it gets mined
 * Record the current block number, named it as "blockHeightAfterContractsAreMinted"
+* Wait for node "Node4" to catch up to "blockHeightAfterContractsAreMinted"
 * Verify node "Node4" has the block height greater or equal to "blockHeightAfterContractsAreMinted"
 * "Node4" is not able to seal new blocks
 
@@ -33,6 +34,7 @@ Hence it is authorized to seal new blocks
 * Deploy a simple smart contract from "Node4", verify it gets mined
 * Deploy a simple smart contract from "Node1", verify it gets mined
 * Record the current block number, named it as "blockHeightAfterContractsAreMinted"
+* Wait for node "Node4" to catch up to "blockHeightAfterContractsAreMinted"
 * Verify node "Node4" has the block height greater or equal to "blockHeightAfterContractsAreMinted"
 * "Node4" is able to seal new blocks
 
@@ -48,5 +50,6 @@ Nodes in a network can send proposal to remove a node from validator set
 * Deploy a simple smart contract from "Node4", verify it gets mined
 * Deploy a simple smart contract from "Node1", verify it gets mined
 * Record the current block number, named it as "blockHeightAfterContractsAreMinted"
+* Wait for node "Node1" to catch up to "blockHeightAfterContractsAreMinted"
 * Verify node "Node1" has the block height greater or equal to "blockHeightAfterContractsAreMinted"
 * "Node1" is not able to seal new blocks
