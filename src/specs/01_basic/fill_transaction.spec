@@ -1,6 +1,6 @@
 # fill transaction with private for
-x
- Tags: basic, geth-1.9.7
+
+ Tags: basic
 
 ##  test fill transaction
 
