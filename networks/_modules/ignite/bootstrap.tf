@@ -16,7 +16,7 @@ data "null_data_source" "meta" {
     tmKeys          = join(",", [for k in local.tm_named_keys_alloc[count.index] : element(quorum_transaction_manager_keypair.tm.*.key_data, index(local.tm_named_keys_all, k))])
     nodeUrl         = format("http://%s:%d", var.geth_networking[count.index].ip.public, var.geth_networking[count.index].port.http.external)
     tmThirdpartyUrl = format("http://%s:%d", var.tm_networking[count.index].ip.public, var.tm_networking[count.index].port.thirdparty.external)
-    graphqlUrl      = var.geth_networking[count.index].port.graphql != null ? format("http://%s:%d/graphql", var.geth_networking[count.index].ip.public, var.geth_networking[count.index].port.graphql.external) : ""
+    graphqlUrl      = var.geth_networking[count.index].graphql ? format("http://%s:%d/graphql", var.geth_networking[count.index].ip.public, var.geth_networking[count.index].port.http.external) : ""
   }
 }
 

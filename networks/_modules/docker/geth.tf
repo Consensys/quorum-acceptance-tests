@@ -1,7 +1,8 @@
 locals {
-  publish_http_ports    = [for idx in local.node_indices : [var.geth_networking[idx].port.http]]
-  publish_ws_ports      = var.geth_networking[0].port.ws == null ? [for idx in local.node_indices : []] : [for idx in local.node_indices : [var.geth_networking[idx].port.ws]]
-  publish_graphql_ports = var.geth_networking[0].port.graphql == null ? [for idx in local.node_indices : []] : [for idx in local.node_indices : [var.geth_networking[idx].port.graphql]]
+  publish_http_ports = [for idx in local.node_indices : [
+    var.geth_networking[idx].port.http]]
+  publish_ws_ports = var.geth_networking[0].port.ws == null ? [for idx in local.node_indices : []] : [for idx in local.node_indices : [
+    var.geth_networking[idx].port.ws]]
 }
 
 resource "docker_container" "geth" {
@@ -24,7 +25,7 @@ resource "docker_container" "geth" {
     internal = var.geth_networking[count.index].port.raft
   }
   dynamic "ports" {
-    for_each = concat(local.publish_http_ports[count.index], local.publish_ws_ports[count.index], local.publish_graphql_ports[count.index])
+    for_each = concat(local.publish_http_ports[count.index], local.publish_ws_ports[count.index])
     content {
       internal = ports.value["internal"]
       external = ports.value["external"]
@@ -68,14 +69,22 @@ resource "docker_container" "geth" {
     <<RUN
 #Quorum${count.index + 1}
 
+echo "Original files in datadir (ls ${local.container_geth_datadir})"
+ls ${local.container_geth_datadir}
+
 if [ "$ALWAYS_REFRESH" == "true" ]; then
   echo "Deleting ${local.container_geth_datadir} to refresh with original datadir"
   rm -rf ${local.container_geth_datadir}
 fi
-if [ ! -d "${local.container_geth_datadir}" ]; then
-  echo "Copying mounted datadir to ${local.container_geth_datadir}"
+
+if [ ! -f "${local.container_geth_datadir}/genesis.json" ]; then
+  echo "Genesis file missing. Copying mounted datadir to ${local.container_geth_datadir}"
+  rm -r ${local.container_geth_datadir}
   cp -r ${local.container_geth_datadir_mounted} ${local.container_geth_datadir}
 fi
+echo "Current files in datadir (ls ${local.container_geth_datadir})"
+ls ${local.container_geth_datadir}
+
 echo "ls ${local.container_plugin_acctdir}"
 ls ${local.container_plugin_acctdir}
 echo "Deleting any files in ${local.container_plugin_acctdir}"
@@ -142,10 +151,8 @@ exec geth \
   --wsport ${var.geth_networking[count.index].port.ws.internal} \
   --wsapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,${var.consensus} \
 %{endif~}
-%{if var.geth_networking[count.index].port.graphql != null~}
+%{if var.geth_networking[count.index].graphql~}
   --graphql \
-  --graphql.addr 0.0.0.0 \
-  --graphql.port ${var.geth_networking[count.index].port.graphql.internal} \
 %{endif~}
   --port ${var.geth_networking[count.index].port.p2p} \
   --ethstats "Node${count.index + 1}:${var.ethstats_secret}@${var.ethstats_ip}:${var.ethstats.container.port}" \

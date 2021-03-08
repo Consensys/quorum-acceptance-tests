@@ -10,19 +10,21 @@ variable "geth" {
   type = object({
     container = object({
       image = object({ name = string, local = bool })
-      port  = object({ raft = number, p2p = number, http = number, ws = number, graphql = number })
+      port  = object({ raft = number, p2p = number, http = number, ws = number })
+      graphql = bool
     })
     host = object({
-      port = object({ http_start = number, ws_start = number, graphql_start = number })
+      port = object({ http_start = number, ws_start = number})
     })
   })
   default = {
     container = {
       image = { name = "banzap/quorum-dev-ricardo-magic:latest", local = false }
-      port  = { raft = 50400, p2p = 21000, http = 8545, ws = -1, graphql = -1 }
+      port  = { raft = 50400, p2p = 21000, http = 8545, ws = -1 }
+      graphql = false
     }
     host = {
-      port = { http_start = 22000, ws_start = -1, graphql_start = -1 }
+      port = { http_start = 22000, ws_start = -1 }
     }
   }
   description = "geth Docker container configuration "
