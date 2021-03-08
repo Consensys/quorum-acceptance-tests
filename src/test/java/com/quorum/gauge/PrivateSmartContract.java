@@ -119,7 +119,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
                     } else {
                         throw new RuntimeException("retry");
                     }
-                }).retryWhen(new RetryWithDelay(10, 3000))
+                }).retryWhen(new RetryWithDelay(20, 3000))
                 .blockingFirst().getTransactionReceipt();
 
         assertThat(receipt.isPresent()).isTrue();
@@ -226,7 +226,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
                         throw new RuntimeException("retry");
                     }
                 })
-                .retryWhen(new RetryWithDelay(10, 3000))
+                .retryWhen(new RetryWithDelay(20, 3000))
                 .subscribeOn(scheduler));
         }
         Integer actualCount = Observable.zip(allObservableReceipts, args -> {
