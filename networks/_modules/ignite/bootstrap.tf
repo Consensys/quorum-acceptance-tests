@@ -7,6 +7,32 @@ locals {
     geth_networking = [for idx in local.node_indices : var.geth_networking[idx] if lookup(local.quorum_initial_paticipants, idx, "false") == "true"]
     enode_urls      = [for idx in local.node_indices : local.enode_urls[idx] if lookup(local.quorum_initial_paticipants, idx, "false") == "true"]
   }
+
+  # chain config
+  qip714Block_config = var.permission_qip714Block.enabled ? { qip714Block = var.permission_qip714Block.block} : {}
+  privacyEnhancementsBlock_config = var.privacy_enhancements.enabled ? { privacyEnhancementsBlock = var.privacy_enhancements.block } : {}
+  istanbul_config = var.concensus == "istanbul" ? { istanbul = { epoch = 30000, policy = 0, ceil2Nby3Block =  0 }} : {}
+  chain_configs = [for idx in local.node_indices : merge(
+    {
+      homesteadBlock = 0
+      byzantiumBlock = 0
+      constantinopleBlock = 0
+      istanbulBlock = 0
+      petersburgBlock = 0
+      chainId = random_integer.network_id.result
+      eip150Block = 0
+      eip155Block = 0
+      eip150Hash = "0x0000000000000000000000000000000000000000000000000000000000000000"
+      eip158Block = 0
+      isQuorum = true
+      isMPS = var.isMPS
+      maxCodeSizeConfig = [
+        {
+          block = 0
+          size = 80
+        }
+      ]
+    }, local.qip714Block_config, local.privacyEnhancementsBlock_config, local.istanbul_config, lookup(var.additional_genesis_config, idx, {}))]
 }
 
 data "null_data_source" "meta" {
@@ -62,7 +88,6 @@ resource "local_file" "tm" {
 }
 
 data "quorum_bootstrap_genesis_mixhash" "this" {
-
 }
 
 resource "quorum_bootstrap_istanbul_extradata" "this" {
@@ -70,43 +95,12 @@ resource "quorum_bootstrap_istanbul_extradata" "this" {
 }
 
 resource "local_file" "genesis-file" {
-  filename = format("%s/genesis.json", quorum_bootstrap_network.this.network_dir_abs)
+  count    = local.number_of_nodes
+  filename = format("%s/%s%s/genesis.json", quorum_bootstrap_network.this.network_dir_abs, local.node_dir_prefix, count.index)
   content  = <<-EOF
 {
     "coinbase": "0x0000000000000000000000000000000000000000",
-    "config": {
-      "chainId": ${random_integer.network_id.result},
-      "homesteadBlock": 0,
-      "byzantiumBlock": 0,
-      "constantinopleBlock":0,
-      "istanbulBlock":0,
-      "petersburgBlock":0,
-      "eip150Block": 0,
-      "eip155Block": 0,
-      "eip150Hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-      "eip158Block": 0,
-%{if var.permission_qip714Block.enabled ~}
-      "qip714Block": ${var.permission_qip714Block.block},
-%{endif~}
-      "isQuorum": true,
-      "isMPS": ${var.isMPS},
-%{if var.privacy_enhancements.enabled ~}
-      "privacyEnhancementsBlock": ${var.privacy_enhancements.block},
-%{endif~}
-%{if var.concensus == "istanbul"~}
-      "istanbul": {
-        "epoch": 30000,
-        "policy": 0,
-        "ceil2Nby3Block": 0
-      },
-%{endif~}
-      "maxCodeSizeConfig" : [
-        {
-          "block" : 0,
-          "size" : 80
-        }
-      ]
-    },
+    "config": ${jsonencode(local.chain_configs[count.index])},
     "difficulty": "${var.concensus == "istanbul" ? "0x1" : "0x0"}",
     "extraData": "${var.concensus == "istanbul" ? quorum_bootstrap_istanbul_extradata.this.extradata : "0x0000000000000000000000000000000000000000000000000000000000000000"}",
     "gasLimit": "0xFFFFFF00",
@@ -122,8 +116,8 @@ EOF
 }
 
 resource "local_file" "nodekey-file" {
-    filename = format("%s/nodekeys-tmp.json", quorum_bootstrap_network.this.network_dir_abs)
-    content  = <<-EOF
+  filename = format("%s/nodekeys-tmp.json", quorum_bootstrap_network.this.network_dir_abs)
+  content  = <<-EOF
     {
     ${join(",", quorum_bootstrap_node_key.nodekeys-generator[*].hex_node_id)}
 }
@@ -133,7 +127,7 @@ EOF
 resource "quorum_bootstrap_data_dir" "datadirs-generator" {
   count    = local.number_of_nodes
   data_dir = format("%s/%s%s", quorum_bootstrap_network.this.network_dir_abs, local.node_dir_prefix, count.index)
-  genesis  = local_file.genesis-file.content
+  genesis  = local_file.genesis-file[count.index].content
 }
 
 resource "local_file" "static-nodes" {
@@ -155,15 +149,15 @@ resource "local_file" "passwords" {
 }
 
 resource "local_file" "genesisfile" {
-    count    = local.number_of_nodes
-    filename = format("%s/%s", quorum_bootstrap_data_dir.datadirs-generator[count.index].data_dir_abs, local.genesis_file)
-    content  = quorum_bootstrap_data_dir.datadirs-generator[count.index].genesis
+  count    = local.number_of_nodes
+  filename = format("%s/%s", quorum_bootstrap_data_dir.datadirs-generator[count.index].data_dir_abs, local.genesis_file)
+  content  = quorum_bootstrap_data_dir.datadirs-generator[count.index].genesis
 }
 
-resource "local_file" "tmconfigs-generator" {
+resource "local_file" "tmconfigs-template-generator" {
   count    = local.number_of_nodes
-  filename = format("%s/%s%s/config.json", quorum_bootstrap_network.this.network_dir_abs, local.tm_dir_prefix, count.index)
-  content  = <<-JSON
+  filename = format("%s/%s%s/config.tpl", quorum_bootstrap_network.this.network_dir_abs, local.tm_dir_prefix, count.index)
+  content = jsonencode(merge(jsondecode(<<-JSON
 {
     "useWhiteList": false,
     "jdbc": {
@@ -214,7 +208,7 @@ resource "local_file" "tmconfigs-generator" {
       "keyData": [${data.null_data_source.meta[count.index].inputs.tmKeys}]
     },
     "features" : {
-%{if var.privacy_enhancements.enabled ~}
+%{if var.privacy_enhancements.enabled~}
       "enablePrivacyEnhancements" : "true",
 %{endif~}
       "enableRemoteKeyValidation" : "true"
@@ -240,4 +234,20 @@ resource "local_file" "tmconfigs-generator" {
     "alwaysSendTo": []
 }
 JSON
+  ), lookup(var.additional_tessera_config, count.index, {})))
+}
+
+// resolving any variable in the config
+resource "local_file" "tmconfigs-generator" {
+  count    = local.number_of_nodes
+  filename = format("%s/%s%s/config.json", quorum_bootstrap_network.this.network_dir_abs, local.tm_dir_prefix, count.index)
+  content = templatefile(
+    local_file.tmconfigs-template-generator[count.index].filename,
+    merge(
+      // named key variable to the actual value
+      { for k in local.tm_named_keys_alloc[count.index] : k => element(quorum_transaction_manager_keypair.tm.*.public_key_b64, index(local.tm_named_keys_all, k)) },
+      // additional variable defines here
+      {},
+    )
+  )
 }

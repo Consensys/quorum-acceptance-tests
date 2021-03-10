@@ -106,3 +106,29 @@ variable "enable_multitenancy" {
   type = bool
   default = false
 }
+
+variable "additional_tessera_config" {
+  default = {}
+  description = <<-EOT
+Merge this config with the default config per node. This will override existing keys
+E.g.: add config to node 1
+{
+  0 = {
+    alwaysSendTo = ["xyz"]
+  }
+}
+EOT
+}
+
+variable "additional_genesis_config" {
+  default = {}
+  description = <<-EOT
+Merge this config with the chain config in the genesis per node. This will override existing keys
+E.g.: enable isMPS for node 1
+{
+  0 = {
+    isMPS = true
+  }
+}
+EOT
+}

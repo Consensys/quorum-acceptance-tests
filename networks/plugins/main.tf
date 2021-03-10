@@ -65,6 +65,8 @@ module "network" {
 
   override_tm_named_key_allocation  = var.override_tm_named_key_allocation
   override_named_account_allocation = var.override_named_account_allocation
+  additional_tessera_config         = var.additional_tessera_config
+  additional_genesis_config         = var.additional_genesis_config
 }
 
 module "docker" {

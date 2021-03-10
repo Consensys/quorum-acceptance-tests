@@ -19,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.util.UriUtils;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.core.Response;
@@ -31,7 +30,6 @@ import org.web3j.protocol.exceptions.TransactionException;
 import org.web3j.tx.Contract;
 
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -53,9 +51,9 @@ public class MultiTenancy extends AbstractSpecImplementation {
     // clientName -> scopes
     private final Map<String, List<String>> assignedScopes = new HashMap<>();
 
-    @Step("Configure `<clientName>` in authorization server with: <table>")
-    public void setupClients(String clientName, Table scopes) {
-        Set<String> nodeList = new HashSet<>();
+    @Step("Configure `<clientName>` in authorization server to access `<node>` with: <table>")
+    public void setupClients(String clientName, Node node, Table scopes) {
+        Set<String> nodeList = Stream.of(node).map(Node::getName).collect(Collectors.toSet());
         List<String> scopeList = scopes.getTableRows().stream()
             .map(r -> r.getCell("scope"))
             .map(s -> s.replace('`', ' '))
@@ -63,15 +61,8 @@ public class MultiTenancy extends AbstractSpecImplementation {
             .map(rawScope -> {
                 String expandedScope = rawScope;
                 for (QuorumNetworkProperty.Node n : networkProperty.getNodes().values()) {
-                    for (String alias : n.getPrivacyAddressAliases().keySet()) {
-                        if (rawScope.contains("=" + alias)) {
-                            nodeList.add(n.getName());
-                            expandedScope = StringUtils.replace(expandedScope, alias, UriUtils.encode(n.getPrivacyAddressAliases().get(alias), StandardCharsets.UTF_8));
-                        }
-                    }
                     for (String alias : n.getAccountAliases().keySet()) {
-                        if (rawScope.contains("/" + alias) || rawScope.contains("=" + alias)) {
-                            nodeList.add(n.getName());
+                        if (rawScope.contains("=" + alias)) {
                             expandedScope = StringUtils.replace(expandedScope, alias, n.getAccountAliases().get(alias).toLowerCase(Locale.ROOT));
                         }
                     }
@@ -785,7 +776,8 @@ public class MultiTenancy extends AbstractSpecImplementation {
     @Step("`<clientName>` invokes ContractCodeReader(<contractName>)'s getCodeSize(<targetContractName>) on `<source>` and gets <expectedMsg>")
     public void getCodeSizeError(String clientName, String contractName, String targetContractName, Node source, String expectedMsg) {
         assertThatThrownBy(() ->
-            getCodeSizeWithAssertion(clientName, contractName, targetContractName, source, actual -> {})
+            getCodeSizeWithAssertion(clientName, contractName, targetContractName, source, actual -> {
+            })
         ).hasMessageContaining(expectedMsg);
     }
 
@@ -816,8 +808,9 @@ public class MultiTenancy extends AbstractSpecImplementation {
 
     @Step("`<clientName>` invokes ContractCodeReader(<contractName>)'s getCode(<targetContractName>) on `<source>` and gets <expectedMsg>")
     public void getCodeError(String clientName, String contractName, String targetContractName, Node source, String expectedMsg) {
-        assertThatThrownBy(() -> getCodeWithAssertion(clientName, contractName, targetContractName, source, actual -> {}))
-        .hasMessageContaining(expectedMsg);
+        assertThatThrownBy(() -> getCodeWithAssertion(clientName, contractName, targetContractName, source, actual -> {
+        }))
+            .hasMessageContaining(expectedMsg);
     }
 
     private void getCodeWithAssertion(String clientName, String contractName, String targetContractName, Node source, Consumer<byte[]> assertFunc) {
@@ -848,7 +841,8 @@ public class MultiTenancy extends AbstractSpecImplementation {
     @Step("`<clientName>` invokes ContractCodeReader(<contractName>)'s getCodeHash(<targetContractName>) on `<source>` and gets <expectedMsg>")
     public void getCodeHashError(String clientName, String contractName, String targetContractName, Node source, String expectedMsg) {
         assertThatThrownBy(() ->
-            getCodeHashWithAssertion(clientName, contractName, targetContractName, source, actual -> {})
+            getCodeHashWithAssertion(clientName, contractName, targetContractName, source, actual -> {
+            })
         ).hasMessageContaining(expectedMsg);
     }
 
@@ -918,5 +912,25 @@ public class MultiTenancy extends AbstractSpecImplementation {
             .doOnTerminate(Context::removeAccessToken)
             .blockingSubscribe()
         ).hasMessageContaining("not authorized");
+    }
+
+    @Step("`<JPM Investment>` can __NOT__ deploy a <SimpleStorage> private contract to `<Node1>` targeting `<GS>` tenancy")
+    public void clientTargetUnauthorizedPSI(String clientName, String contractId, Node node, String psi) {
+
+    }
+
+    @Step("`<GS Investment>` gets empty contract code for <contract1> on `<Node1>`")
+    public void emptyContractCode(String clientName, String contractName, Node node) {
+
+    }
+
+    @Step("`<JPM Settlement>` sees <5> events in total from transaction receipts in `<Node1>`")
+    public void eventsFromTxReceipt(String clientName, int expectedCount, Node node) {
+
+    }
+
+    @Step("`<JPM Settlement>` sees <5> events when filtering by <contract1> address in `<Node2>`")
+    public void eventsFromFilterLogs(String clientName, int expectedCount, String contractName, Node node) {
+
     }
 }
