@@ -28,11 +28,11 @@ variable "geth_networking" {
     port = object({
       http    = object({ internal = number, external = number })
       ws      = object({ internal = number, external = number })
-      graphql = object({ internal = number, external = number })
       p2p     = number
       raft    = number
     })
     ip = object({ private = string, public = string })
+    graphql = bool
   }))
   description = "Networking configuration for `geth` nodes in the network. Number of items must match `tm_networking`"
 }

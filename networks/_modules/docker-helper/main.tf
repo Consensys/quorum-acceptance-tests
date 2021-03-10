@@ -11,10 +11,10 @@ locals {
       port = {
         http    = { internal = var.geth.container.port.http, external = var.geth.host.port.http_start + idx }
         ws      = var.geth.container.port.ws == -1 ? null : { internal = var.geth.container.port.ws, external = var.geth.host.port.ws_start + idx }
-        graphql = var.geth.container.port.graphql == -1 ? null : { internal = var.geth.container.port.graphql, external = var.geth.host.port.graphql_start + idx }
         p2p     = var.geth.container.port.p2p
         raft    = var.geth.container.port.raft
       }
+      graphql = var.geth.container.graphql
       ip = {
         private = cidrhost(local.container_network_cidr, idx + 1 + 10)
         public  = "localhost"

@@ -5,19 +5,19 @@ quorum:
       privacy-address: BULeR8JyUWhiuuCMU/HLA0Q5pzkYT+cHII3ZKBey3Bo=
       url: http://localhost:22000
       third-party-url: http://localhost:9081
-      graphql-url: http://localhost:8001/graphql
+      graphql-url: http://localhost:22000/graphql
     Node2:
       privacy-address: QfeDAys9MPDs2XHExtc84jKGHxZg/aj52DTh0vtA3Xc=
       url: http://localhost:22001
       third-party-url: http://localhost:9082
-      graphql-url: http://localhost:8002/graphql
+      graphql-url: http://localhost:22001/graphql
     Node3:
       privacy-address: 1iTZde/ndBHvzhcl7V68x44Vx7pl8nwx9LqnM/AfJUg=
       url: http://localhost:22002
       third-party-url: http://localhost:9083
-      graphql-url: http://localhost:8003/graphql
+      graphql-url: http://localhost:22002/graphql
     Node4:
       privacy-address: oNspPPgszVUFw0qmGFfWwh1uxVUXgvBxleXORHj07g8=
       url: http://localhost:22003
       third-party-url: http://localhost:9084
-      graphql-url: http://localhost:8004/graphql
+      graphql-url: http://localhost:22003/graphql

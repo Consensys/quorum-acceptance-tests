@@ -35,10 +35,11 @@ module "helper" {
   geth = {
     container = {
       image = var.quorum_docker_image
-      port  = { raft = 50400, p2p = 21000, http = 8545, ws = -1, graphql = 8547 }
+      port  = { raft = 50400, p2p = 21000, http = 8545, ws = -1 }
+      graphql = true
     }
     host = {
-      port = { http_start = 22000, ws_start = -1, graphql_start = 8001 }
+      port = { http_start = 22000, ws_start = -1}
     }
   }
   tessera = {

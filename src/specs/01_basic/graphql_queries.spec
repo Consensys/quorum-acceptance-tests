@@ -1,6 +1,6 @@
 # GraphQL query block and private transaction
 
-  Tags: advanced, graphql, geth-1.9.7
+  Tags: basic, graphql
 
 The following smart contract is used:
 ```

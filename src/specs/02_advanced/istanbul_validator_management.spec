@@ -18,8 +18,9 @@ New node after being added to the network as non-validator node must not be able
 
 * Deploy a simple smart contract from "Node4", verify it gets mined
 * Deploy a simple smart contract from "Node1", verify it gets mined
-* Record the current block number, named it as "blockHeightBeforeStart"
-* Verify node "Node4" has the block height greater or equal to "blockHeightBeforeStart"
+* Record the current block number, named it as "blockHeightAfterContractsAreMinted"
+* Wait for node "Node4" to catch up to "blockHeightAfterContractsAreMinted"
+* Verify node "Node4" has the block height greater or equal to "blockHeightAfterContractsAreMinted"
 * "Node4" is not able to seal new blocks
 
 ## A new node is allowed to seal blocks after being proposed as a validator
@@ -32,8 +33,9 @@ Hence it is authorized to seal new blocks
 * Propose "Node4" to become validator by "Node1,Node2,Node3"
 * Deploy a simple smart contract from "Node4", verify it gets mined
 * Deploy a simple smart contract from "Node1", verify it gets mined
-* Record the current block number, named it as "blockHeightBeforeStart"
-* Verify node "Node4" has the block height greater or equal to "blockHeightBeforeStart"
+* Record the current block number, named it as "blockHeightAfterContractsAreMinted"
+* Wait for node "Node4" to catch up to "blockHeightAfterContractsAreMinted"
+* Verify node "Node4" has the block height greater or equal to "blockHeightAfterContractsAreMinted"
 * "Node4" is able to seal new blocks
 
 
@@ -47,6 +49,7 @@ Nodes in a network can send proposal to remove a node from validator set
 * Propose "Node1" to become non validator by "Node2,Node3,Node4"
 * Deploy a simple smart contract from "Node4", verify it gets mined
 * Deploy a simple smart contract from "Node1", verify it gets mined
-* Record the current block number, named it as "blockHeightBeforeStart"
-* Verify node "Node1" has the block height greater or equal to "blockHeightBeforeStart"
+* Record the current block number, named it as "blockHeightAfterContractsAreMinted"
+* Wait for node "Node1" to catch up to "blockHeightAfterContractsAreMinted"
+* Verify node "Node1" has the block height greater or equal to "blockHeightAfterContractsAreMinted"
 * "Node1" is not able to seal new blocks
