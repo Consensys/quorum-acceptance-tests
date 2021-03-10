@@ -2,7 +2,7 @@ server:
   port: 0
 logging:
   level:
-    com.quorum.gauge: INFO # TODO ricardolyn: testing v1.9.19 with imprv 2
+    com.quorum.gauge: INFO # TODO ricardolyn: testing v1.9.19 with comments
     org.apache.sshd.common.forward.DefaultForwardingFilter: DEBUG # to display port forwarding info
 
 quorum:
