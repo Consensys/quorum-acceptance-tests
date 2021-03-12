@@ -123,5 +123,5 @@ tags: public, raw
 tags: public, node-managed-account
 
 * `"JPM Investment"` deploys a "SimpleStorage" public contract, named "contract1", by sending a transaction to `"Node1"` using `"JPM_ACC1"`
-* `"GS Settlement"` writes a new value "123" to "contract1" successfully by sending a transaction to `"Node2"` using `"GS_ACC1"`
+* `"GS Settlement"` writes a new value "123" to "contract1" successfully by sending a transaction to `"Node1"` using `"GS_ACC1"`
 * `"DB Investment"` reads the value from "contract1" successfully by sending a request to `"Node2"` and the value returns "123"

@@ -27,21 +27,25 @@ We run the scenarios with each of the following privacy flag
     | scope                    |
     |--------------------------|
     | `rpc://eth_*`            |
+    | `rpc://quorumExtension_*`            |
     | `psi://JPM?self.eoa=0x0` |
 * Configure `"JPM Settlement"` in authorization server to access `"Node1"` with:
     | scope                                          |
     |------------------------------------------------|
     | `rpc://eth_*`                                  |
+    | `rpc://quorumExtension_*`            |
     | `psi://JPM?node.eoa=JPM_ACC1&self.eoa=Wallet1` |
 * Configure `"GS Investment"` in authorization server to access `"Node1"` with:
     | scope                   |
     |-------------------------|
     | `rpc://eth_*`           |
-    | `psi://GS?self.eoa=0x0` |
+    | `rpc://quorumExtension_*`            |
+    | `psi://GS?self.eoa=0x0&node.eoa=GS_ACC1` |
 * Configure `"GS Settlement"` in authorization server to access `"Node1"` with:
     | scope                                        |
     |----------------------------------------------|
     | `rpc://eth_*`                                |
+    | `rpc://quorumExtension_*`            |
     | `psi://GS?node.eoa=GS_ACC1&self.eoa=Wallet2` |
 
 ## GS extends a contract to a new party in on the same node
@@ -54,38 +58,6 @@ We run the scenarios with each of the following privacy flag
   Extending contract and verifying
 * `"GS Investment"` extends "investmentContract" on `"Node1"` private from `"GS_K1"` using `"GS_ACC1"` to `"JPM Settlement"`'s `"JPM_K2"` on `"Node1"` with acceptance by `"JPM_ACC1"`
 * `"GS Investment,GS Settlement,JPM Settlement,JPM Investment"` can read "investmentContract" on `"Node1"`
-* `"DB Investment"` can __NOT__ read "investmentContract" on `"Node2"`
-
-<<<<<<< Updated upstream
-## GS extends a contract to a new party in GS on different node, JPM and DB can not access the contract nor see the extension
-
-//This is a copy of the above, but also checks other tenants on the node can't see the extension
-
-* `"GS Investment"` deploys a <privacyFlag> `SimpleStorage` contract on `"Node1"` private from `"GS_K1"` using `"GS_ACC1"`, named "investmentContract", private for "GS Research"'s `"GS_K3"`
-  Verifying access based on access token
-* `"GS Investment,GS Research"` can read "investmentContract" on `"Node1"`
-* `"GS Settlement,DB Investment"` can __NOT__ read "investmentContract" on `"Node2"`
-* `"JPM Audit"` can __NOT__ read "investmentContract" on `"Node1"`
-
-//Extending contract and verifying
-* `"GS Investment"` requests access token from authorization server
-* Initiate `"investmentContract"` extension to `"GS_K2"` received by `"GS_ACC2"` in `"Node2"` from `"Node1"`, private from `"GS_K1"` using `"GS_ACC1"`
-
-// Check in the middle of the extension that only authorized tenants can see the extension happening
-* `"GS Settlement"` requests access token from authorization server
-* "Node2" has "investmentContract" listed in all active extensions
-* `"DB Investment"` requests access token from authorization server
-* "Node2" does not see "investmentContract" listed in all active extensions
-
-* `"GS Investment"` requests access token from authorization server
-* `"GS Settlement"` accepts `"investmentContract"` extension from `"Node2"`, private from `"GS_K2"` using `"GS_ACC2"` and private for `"GS_K1"`
-* Wait for "investmentContract" to disappear from active extension in "Node2"
-
-// End of the extension process
-
-* `"GS Investment,GS Research"` can read "investmentContract" on `"Node1"`
-* `"GS Settlement"` can read "investmentContract" on `"Node2"`
-* `"JPM Audit"` can __NOT__ read "investmentContract" on `"Node1"`
 * `"DB Investment"` can __NOT__ read "investmentContract" on `"Node2"`
 
 ## GS extends a contract to a new party in on the different node

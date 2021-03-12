@@ -22,10 +22,7 @@ import org.springframework.stereotype.Service;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.core.Response;
-import org.web3j.protocol.core.methods.response.EthFilter;
-import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
-import org.web3j.protocol.core.methods.response.EthLog;
-import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.core.methods.response.*;
 import org.web3j.protocol.exceptions.TransactionException;
 import org.web3j.tx.Contract;
 
@@ -306,21 +303,29 @@ public class MultiTenancy extends AbstractSpecImplementation {
 
     private Observable<String> requestAccessToken(String clientName) {
         if (!assignedNodes.containsKey(clientName) || !assignedScopes.containsKey(clientName)) {
-            throw new IllegalArgumentException(clientName + " is not setup yet");
+            logger.warn("Client {} is not setup yet. Maybe it's intentional.", clientName);
+            return Observable.just("");
+        } else {
+            return oAuth2Service.requestAccessToken(clientName, assignedNodes.get(clientName), assignedScopes.get(clientName));
         }
-        return oAuth2Service.requestAccessToken(clientName, assignedNodes.get(clientName), assignedScopes.get(clientName));
     }
 
-    @Step("`<clientName>` invokes get in <contractName> on `<node>` and gets value <value>")
-    public void invokeGetOnSkeakyWrapper(String clientName, String contractName, QuorumNode node, int value) {
+    @Step("`<clientName>` invokes get in <contractName> on `<node>` and gets value <expectedValue>")
+    public void invokeGetMethodOnSimpleContract(String clientName, String contractName, Node node, int expectedValue) {
         Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
-        requestAccessToken(clientName)
-            .doOnNext(s -> {
-                logger.debug("token {}", s);
-                assertThat(rawContractService.invokeGetInSneakyWrapper(node, c.getContractAddress())).isEqualTo(value);
-            })
+
+        BigInteger actualValue = requestAccessToken(clientName)
+            .flatMap(t -> contractService.readSimpleContractValue(node, c.getContractAddress()))
             .doOnTerminate(Context::removeAccessToken)
-            .blockingSubscribe();
+            .onErrorReturn(err -> {
+                if (StringUtils.equals("Empty value (0x) returned from contract", err.getMessage())) {
+                    return BigInteger.ZERO;
+                }
+                throw new RuntimeException(err);
+            })
+            .blockingFirst();
+
+        assertThat(actualValue).isEqualTo(expectedValue);
     }
 
     @Step("`<clientName>` checks the transaction <transactionName> on `<node>` has failed")
@@ -723,7 +728,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
                 assertThatThrownBy(() -> contractService.readSimpleContractValue(node, existingContract.getContractAddress())
                     .doOnTerminate(Context::removeAccessToken)
                     .blockingSubscribe()
-                ).as(clientName).hasMessageContaining("not authorized");
+                ).as(clientName).hasMessageContaining("Empty value (0x) returned from contract");
             });
     }
 
@@ -915,22 +920,57 @@ public class MultiTenancy extends AbstractSpecImplementation {
     }
 
     @Step("`<JPM Investment>` can __NOT__ deploy a <SimpleStorage> private contract to `<Node1>` targeting `<GS>` tenancy")
-    public void clientTargetUnauthorizedPSI(String clientName, String contractId, Node node, String psi) {
+    public void clientTargetUnauthorizedPSI(String clientName, String contractId, QuorumNode node, String psi) {
+        try {
+            Observable<Boolean> deployPrivateContract = Observable.just(psi)
+                .doOnNext(Context::storePSI)
+                .flatMap(v -> deployPrivateContract(clientName, node, "JPM_K1", "JPM_K1", contractId, networkProperty.getWallets().get("Wallet1"), null))
+                .map(c -> c.isPresent() && c.get().getTransactionReceipt().isPresent());
 
+            assertThat(deployPrivateContract.blockingFirst()).isFalse();
+        } finally {
+            Context.removePSI();
+        }
     }
 
     @Step("`<GS Investment>` gets empty contract code for <contract1> on `<Node1>`")
     public void emptyContractCode(String clientName, String contractName, Node node) {
+        Contract contract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
 
+        EthGetCode result = requestAccessToken(clientName)
+            .flatMap(t -> contractService.getCode(node, contract.getContractAddress()))
+            .doOnTerminate(Context::removeAccessToken)
+            .blockingFirst();
+
+        assertThat(result.getCode()).isEqualTo("0x");
     }
 
     @Step("`<JPM Settlement>` sees <5> events in total from transaction receipts in `<Node1>`")
     public void eventsFromTxReceipt(String clientName, int expectedCount, Node node) {
-
+        String[] txHashes = mustHaveValue("hashes", String[].class);
+        requestAccessToken(clientName).blockingSubscribe();
+        try {
+            int totalCount = 0;
+            for (String txHash : txHashes) {
+                Optional<TransactionReceipt> receipt = transactionService.getTransactionReceipt(node, txHash).blockingFirst().getTransactionReceipt();
+                assertThat(receipt).isNotEmpty();
+                assertThat(receipt.get().isStatusOK()).isTrue();
+                totalCount += receipt.get().getLogs().size();
+            }
+            assertThat(totalCount).isEqualTo(expectedCount);
+        } finally {
+            Context.removeAccessToken();
+        }
     }
 
     @Step("`<JPM Settlement>` sees <5> events when filtering by <contract1> address in `<Node2>`")
-    public void eventsFromFilterLogs(String clientName, int expectedCount, String contractName, Node node) {
+    public void eventsFromFilterLogs(String clientName, int expectedCount, String contractName, QuorumNode node) {
+        Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
+        EthLog ethLog = requestAccessToken(clientName)
+            .flatMap(t -> transactionService.getLogsUsingFilter(node, c.getContractAddress()))
+            .doOnTerminate(Context::removeAccessToken)
+            .blockingFirst();
 
+        assertThat(ethLog.getLogs().size()).isEqualTo(expectedCount);
     }
 }

@@ -123,6 +123,16 @@ public class Configuration {
                 return chain.proceed(request);
             });
         }
+        builder.addInterceptor(chain -> {
+            String psi = Context.retrievePSI();
+            if (StringUtils.isEmpty(psi)) {
+                return chain.proceed(chain.request());
+            }
+            Request request = chain.request().newBuilder()
+                .addHeader("GoQuorum-PSI", psi)
+                .build();
+            return chain.proceed(request);
+        });
         Logger httpLogger = LoggerFactory.getLogger(Configuration.class.getPackageName() + ".HttpLogger");
         if (httpLogger.isDebugEnabled()) {
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor(httpLogger::debug);

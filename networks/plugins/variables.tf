@@ -104,6 +104,9 @@ EOT
 
 variable "enable_multitenancy" {
   type = bool
+  description = <<-EOT
+Star geth with --mulitenancy flag
+EOT
   default = false
 }
 
@@ -129,6 +132,27 @@ E.g.: enable isMPS for node 1
   0 = {
     isMPS = true
   }
+}
+EOT
+}
+
+variable "override_additional_geth_args" {
+  default = {}
+  description = <<-EOT
+Override the value from var.additional_geth_args per node
+{
+  0 = "--rpcapi admin"
+}
+EOT
+}
+
+# TODO: it's not "override" at the moment. it's more to disable plugins for a node
+variable "override_plugins" {
+  default = {}
+  description = <<-EOT
+Override the value from var.plugins per node
+{
+  0 = {}
 }
 EOT
 }

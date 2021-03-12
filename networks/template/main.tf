@@ -72,7 +72,7 @@ module "docker" {
   exclude_initial_nodes = module.network.exclude_initial_nodes
   start_quorum          = false
   start_tessera         = false
-  additional_geth_args  = var.addtional_geth_args
+  additional_geth_args  = {for idx in local.node_indices : idx => var.addtional_geth_args}
   accounts_count        = module.network.accounts_count
 }
 

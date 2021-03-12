@@ -7,7 +7,16 @@ plugins = {
   }
 }
 
+override_plugins = {
+  1 = {} # no plugins for node2
+}
+
+# globally set --multitenancy for all nodes
+# this can be overriden by override_additional_geth_args
 enable_multitenancy = true
+override_additional_geth_args = {
+  1 = "--allow-insecure-unlock" # make node2 as a standalone node
+}
 privacy_enhancements = { block = 0, enabled = true }
 
 # this is to setup the TM keys allocation per acceptance tests requirement

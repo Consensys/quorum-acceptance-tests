@@ -3,8 +3,8 @@ variable "network_name" {
 }
 
 variable "additional_geth_args" {
-  default     = ""
-  description = "Additional geth args for all nodes"
+  default     = {}
+  description = "Additional geth args per node"
 }
 
 variable "geth_datadirs" {
