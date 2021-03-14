@@ -90,4 +90,4 @@ We run the scenarios with each of the following privacy flag
   Unauthorized eth account
 * From `"Node1"` `"GS Investment"` "not authorized" to accept `"investmentContract"` extension, private from `"GS_K1"` using `"JPM_ACC1"` and private for `"DB_K1"`
   Non tenant
-* From `"Node1"` `"JPM Investment"` "xxx" to accept `"investmentContract"` extension, private from `"JPM_K1"` using `"JPM_ACC1"` and private for `"DB_K1"`
+* From `"Node1"` `"JPM Investment"` "not authorized" to accept `"investmentContract"` extension, private from `"JPM_K1"` using `"JPM_ACC1"` and private for `"DB_K1"`
