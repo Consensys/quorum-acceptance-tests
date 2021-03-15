@@ -1,9 +1,10 @@
 
 resource "docker_container" "ethstats" {
+  count      = var.enable_ethstats ? 1 : 0
   depends_on = [docker_image.local, docker_image.registry]
-  image    = var.ethstats.container.image.name
-  name     = format("%s-ethstats", var.network_name)
-  hostname = "ethstats"
+  image      = var.ethstats.container.image.name
+  name       = format("%s-ethstats", var.network_name)
+  hostname   = "ethstats"
   ports {
     internal = var.ethstats.container.port
   }

@@ -1,8 +1,8 @@
 locals {
   publish_http_ports = [for idx in local.node_indices : [
-    var.geth_networking[idx].port.http]]
+  var.geth_networking[idx].port.http]]
   publish_ws_ports = var.geth_networking[0].port.ws == null ? [for idx in local.node_indices : []] : [for idx in local.node_indices : [
-    var.geth_networking[idx].port.ws]]
+  var.geth_networking[idx].port.ws]]
 }
 
 resource "docker_container" "geth" {
@@ -155,7 +155,9 @@ exec geth \
   --graphql \
 %{endif~}
   --port ${var.geth_networking[count.index].port.p2p} \
+%{if var.enable_ethstats~}
   --ethstats "Node${count.index + 1}:${var.ethstats_secret}@${var.ethstats_ip}:${var.ethstats.container.port}" \
+%{endif~}
   --unlock ${join(",", range(var.accounts_count[count.index]))} \
   --password ${local.container_geth_datadir}/${var.password_file_name} \
   ${var.consensus == "istanbul" ? "--istanbul.blockperiod 1 --syncmode full --mine --minerthreads 1" : format("--raft --raftport %d", var.geth_networking[count.index].port.raft)} ${var.additional_geth_args} $ADDITIONAL_GETH_ARGS

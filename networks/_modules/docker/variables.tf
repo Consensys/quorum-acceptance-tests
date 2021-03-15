@@ -26,12 +26,12 @@ variable "geth_networking" {
   type = list(object({
     image = object({ name = string, local = bool })
     port = object({
-      http    = object({ internal = number, external = number })
-      ws      = object({ internal = number, external = number })
-      p2p     = number
-      raft    = number
+      http = object({ internal = number, external = number })
+      ws   = object({ internal = number, external = number })
+      p2p  = number
+      raft = number
     })
-    ip = object({ private = string, public = string })
+    ip      = object({ private = string, public = string })
     graphql = bool
   }))
   description = "Networking configuration for `geth` nodes in the network. Number of items must match `tm_networking`"
@@ -67,6 +67,10 @@ variable "ethstats" {
     }
     host = { port = 3000 }
   }
+}
+
+variable "enable_ethstats" {
+  default = false
 }
 
 variable "start_quorum" {
