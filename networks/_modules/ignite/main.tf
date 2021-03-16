@@ -84,7 +84,12 @@ quorum:
 %{endif~}
       enode-url: ${local.enode_urls[i]}
       third-party-url: ${data.null_data_source.meta[i].inputs.tmThirdpartyUrl}
+%{if local.vnodes[i].mpsEnabled ~}
+      graphql-url: ${data.null_data_source.meta[i].inputs.graphqlUrl}/?PSI=${b.name}
+%{endif~}
+%{if !local.vnodes[i].mpsEnabled ~}
       graphql-url: ${data.null_data_source.meta[i].inputs.graphqlUrl}
+%{endif~}
       privacy-address-aliases:
 %{for k in b.tmKeys~}
         ${k}: ${element(quorum_transaction_manager_keypair.tm.*.public_key_b64, index(local.tm_named_keys_all, k))}
