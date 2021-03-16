@@ -309,6 +309,10 @@ public class QuorumNetworkProperty {
         private boolean enabled;
         private String host;
         private Map<String, DockerContainerProperty> nodes = new HashMap<>();
+        // Quorum image provided by Terraform var.quorum_docker_image
+        private String targetQuorumImage;
+        // Tessera image provided by Terraform var.tessera_docker_image
+        private String targetTesseraImage;
 
         public DockerInfrastructureProperty() {
             this.enabled = false;
@@ -336,6 +340,22 @@ public class QuorumNetworkProperty {
 
         public void setNodes(Map<String, DockerContainerProperty> nodes) {
             this.nodes = nodes;
+        }
+
+        public String getTargetQuorumImage() {
+            return targetQuorumImage;
+        }
+
+        public void setTargetQuorumImage(String targetQuorumImage) {
+            this.targetQuorumImage = targetQuorumImage;
+        }
+
+        public String getTargetTesseraImage() {
+            return targetTesseraImage;
+        }
+
+        public void setTargetTesseraImage(String targetTesseraImage) {
+            this.targetTesseraImage = targetTesseraImage;
         }
 
         public static class DockerContainerProperty {

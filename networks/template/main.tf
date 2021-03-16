@@ -12,7 +12,8 @@ provider "docker" {
 }
 
 locals {
-  node_indices = range(var.number_of_nodes)
+  node_indices         = range(var.number_of_nodes)
+  pulled_docker_images = concat(var.docker_images, list(var.quorum_docker_image.name, var.tessera_docker_image.name))
 }
 
 module "helper" {
@@ -22,8 +23,8 @@ module "helper" {
   number_of_nodes = var.number_of_nodes
   geth = {
     container = {
-      image = var.quorum_docker_image
-      port  = { raft = 50400, p2p = 21000, http = 8545, ws = -1 }
+      image   = var.quorum_docker_image
+      port    = { raft = 50400, p2p = 21000, http = 8545, ws = -1 }
       graphql = false
     }
     host = {
@@ -72,17 +73,17 @@ module "docker" {
   exclude_initial_nodes = module.network.exclude_initial_nodes
   start_quorum          = false
   start_tessera         = false
-  additional_geth_args  = {for idx in local.node_indices : idx => var.addtional_geth_args}
+  additional_geth_args  = { for idx in local.node_indices : idx => var.addtional_geth_args }
   accounts_count        = module.network.accounts_count
 }
 
 data "docker_registry_image" "pull" {
-  count = length(var.docker_images)
-  name  = var.docker_images[count.index]
+  count = length(local.pulled_docker_images)
+  name  = local.pulled_docker_images[count.index]
 }
 
 resource "docker_image" "pull" {
-  count         = length(var.docker_images)
+  count         = length(local.pulled_docker_images)
   name          = data.docker_registry_image.pull[count.index].name
   pull_triggers = [data.docker_registry_image.pull[count.index].sha256_digest]
 }

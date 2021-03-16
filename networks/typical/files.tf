@@ -5,6 +5,8 @@ quorum:
   consensus: ${var.consensus}
   docker-infrastructure:
     enabled: true
+    target-quorum-image: ${var.quorum_docker_image.name}
+    target-tessera-image: ${var.tessera_docker_image.name}
 %{if var.remote_docker_config != null~}
     host: ${var.remote_docker_config.docker_host}
 %{endif~}
