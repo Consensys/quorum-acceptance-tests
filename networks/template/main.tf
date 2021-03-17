@@ -13,7 +13,7 @@ provider "docker" {
 
 locals {
   node_indices         = range(var.number_of_nodes)
-  pulled_docker_images = concat(var.docker_images, list(var.quorum_docker_image.name, var.tessera_docker_image.name))
+  pulled_docker_images = concat(var.docker_images, var.quorum_docker_image.local ? [] : list(var.quorum_docker_image.name), var.tessera_docker_image.local ? [] : list(var.tessera_docker_image.name))
 }
 
 module "helper" {

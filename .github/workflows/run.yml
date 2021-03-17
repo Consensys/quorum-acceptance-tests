@@ -139,6 +139,7 @@ jobs:
           tagKey=$(echo -n "${{ matrix.tag }}" | shasum --algorithm=256 | awk '{print $1}')
           mvnArg=""
           dockerEnv="--network host -v /var/run/docker.sock:/var/run/docker.sock"
+          local_image="true"
           if [ "${{ needs.condition.outputs.use_aws }}" == "true" ]; then
             infraFolder="networks/_infra/aws-ec2"
             infraProfile="${{ secrets.AWS_REGION }}"
@@ -146,6 +147,7 @@ jobs:
             dockerEnv="-e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} -e TF_VAR_vpc_id=${{ secrets.AWS_VPC_ID }} -e TF_VAR_public_subnet_id=${{ secrets.AWS_PUBLIC_SUBNET_ID }}"
             echo "INFRA_FOLDER=$infraFolder" >> $GITHUB_ENV
             echo "INFRA_PROFILE=$infraProfile" >> $GITHUB_ENV
+            local_image="false"
           fi
           dockerEnvFile=${{ runner.temp }}/env.list
           # now we check if we should use the custom docker images in this repo
@@ -161,13 +163,13 @@ jobs:
             echo "$tessera_docker_image: $has_tessera_docker_image"
             if [ $has_quorum_docker_image -eq 0 ]; then
               echo "::warning ::Using $quorum_docker_image"
-              echo "TF_VAR_quorum_docker_image={name=\"$quorum_docker_image\", local=true}" >> $dockerEnvFile
+              echo "TF_VAR_quorum_docker_image={name=\"$quorum_docker_image\", local=$local_image}" >> $dockerEnvFile
               docker pull quorumengineering/quorum:develop
               docker pull quorumengineering/quorum:latest
             fi
             if [ $has_tessera_docker_image -eq 0 ]; then
               echo "::warning ::Using $tessera_docker_image"
-              echo "TF_VAR_tessera_docker_image={name=\"$tessera_docker_image\", local=true}" >> $dockerEnvFile
+              echo "TF_VAR_tessera_docker_image={name=\"$tessera_docker_image\", local=$local_image}" >> $dockerEnvFile
               docker pull quorumengineering/tessera:develop
               docker pull quorumengineering/tessera:latest
             fi
