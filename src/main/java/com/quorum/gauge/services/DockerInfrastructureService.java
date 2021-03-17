@@ -83,13 +83,14 @@ public class DockerInfrastructureService
                 .sslConfig(config.getSSLConfig())
                 .build();
         dockerClient = DockerClientImpl.getInstance(config, httpClient);
-        quorumDockerImageCatalog = ImmutableMap.of(
-        "develop", new QuorumImageConfig(Optional.ofNullable(infraProperty.getTargetQuorumImage()).orElse("quorumengineering/quorum:develop"), GethArgBuilder.newBuilder().allowInsecureUnlock(true)),
-        "latest", new QuorumImageConfig("quorumengineering/quorum:latest", GethArgBuilder.newBuilder().allowInsecureUnlock(true)),
-        "v2.5.0", new QuorumImageConfig("quorumengineering/quorum:2.5.0", GethArgBuilder.newBuilder()),
-        "21.1.0", new QuorumImageConfig("quorumengineering/quorum:21.1.0", GethArgBuilder.newBuilder().allowInsecureUnlock(true)),
-        "2.7.0", new QuorumImageConfig("quorumengineering/quorum:2.7.0", GethArgBuilder.newBuilder().allowInsecureUnlock(true))
-        );
+        quorumDockerImageCatalog = ImmutableMap.<String, QuorumImageConfig>builder()
+            .put("develop", new QuorumImageConfig(Optional.ofNullable(infraProperty.getTargetQuorumImage()).orElse("quorumengineering/quorum:develop"), GethArgBuilder.newBuilder().allowInsecureUnlock(true)))
+            .put("latest", new QuorumImageConfig("quorumengineering/quorum:latest", GethArgBuilder.newBuilder().allowInsecureUnlock(true)))
+            .put("v2.5.0", new QuorumImageConfig("quorumengineering/quorum:2.5.0", GethArgBuilder.newBuilder()))
+            .put("21.1.0", new QuorumImageConfig("quorumengineering/quorum:21.1.0", GethArgBuilder.newBuilder().allowInsecureUnlock(true)))
+            .put("21.1.1", new QuorumImageConfig("quorumengineering/quorum:21.1.1", GethArgBuilder.newBuilder().allowInsecureUnlock(true)))
+            .put("2.7.0", new QuorumImageConfig("quorumengineering/quorum:2.7.0", GethArgBuilder.newBuilder().allowInsecureUnlock(true)))
+            .build();
         tesseraDockerImageCatalog =  ImmutableMap.of(
         "develop", Optional.ofNullable(infraProperty.getTargetTesseraImage()).orElse("quorumengineering/tessera:develop"),
         "latest", "quorumengineering/tessera:latest",
@@ -273,7 +274,7 @@ public class DockerInfrastructureService
                 .filter(containerId -> this.isGeth(containerId).blockingFirst())
                 .doOnNext(id -> logger.debug("Deleting datadir in container {}", StringUtils.substring(id, 0, 12)))
                 .map(containerId -> dockerClient.execCreateCmd(containerId)
-                        .withCmd("rm", "-rf", "/data/qdata")
+                        .withCmd("sh", "-c", "rm -rf /data/qdata && rm -rf /data/tm")
                         .exec())
                 .map(execCreateCmdResponse -> dockerClient.execStartCmd(execCreateCmdResponse.getId())
                         .withDetach(true)

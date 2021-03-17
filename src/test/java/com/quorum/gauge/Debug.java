@@ -23,12 +23,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.ext.JsonResponse;
+import com.quorum.gauge.ext.StringResponse;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import java.math.BigInteger;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -44,6 +47,22 @@ public class Debug extends AbstractSpecImplementation {
         assertThat(result).isNotNull();
         DataStoreFactory.getSpecDataStore().put(traceName, result);
         DataStoreFactory.getScenarioDataStore().put(traceName, result);
+    }
+
+    @Step("Retrieve private state root on <node> for <blockHeight> and name it <psrName>")
+    public void privateStateRoot(String node, String blockHeight, String psrName) {
+        final String blockNumber = "0x" + mustHaveValue(DataStoreFactory.getScenarioDataStore(), blockHeight, BigInteger.class).toString(16);
+        final Observable<StringResponse> stringResponseObservable = debugService.privateStateRoot(networkProperty.getNode(node), blockNumber);
+        String result = stringResponseObservable.blockingFirst().getResult();
+        DataStoreFactory.getSpecDataStore().put(psrName, result);
+        DataStoreFactory.getScenarioDataStore().put(psrName, result);
+    }
+
+    @Step("Check that private state root <psr1> is equal to <psr2>")
+    public void psrsAreEqual(String psr1, String psr2){
+        String psr1Val = mustHaveValue(psr1, String.class);
+        String psr2Val = mustHaveValue(psr2, String.class);
+        assertThat(psr1Val).isEqualTo(psr2Val);
     }
 
 

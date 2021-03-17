@@ -21,6 +21,7 @@ package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.ext.JsonResponse;
+import com.quorum.gauge.ext.StringResponse;
 import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,4 +44,16 @@ public class DebugService extends AbstractService {
 
         return request.flowable().toObservable();
     }
+
+    public Observable<StringResponse> privateStateRoot(QuorumNetworkProperty.Node source, String blockHeight) {
+
+        Request<?, StringResponse> request = new Request<>(
+            "debug_privateStateRoot",
+            Collections.singletonList(blockHeight),
+            connectionFactory().getWeb3jService(source), StringResponse.class
+        );
+
+        return request.flowable().toObservable();
+    }
+
 }
