@@ -3,6 +3,26 @@
 variable "network_name" {}
 variable "consensus" {}
 
+variable "petersburgBlock" {
+  default     = 0
+  description = "Petersburg block"
+}
+
+variable "istanbulBlock" {
+  default     = 0
+  description = "Istanbul block"
+}
+
+variable "muirGlacierBlock" {
+  default     = -1
+  description = "MuirGlacier block"
+}
+
+variable "yoloV1Block" {
+  default     = -1
+  description = "YoloV1 block"
+}
+
 variable "privacy_enhancements" {
     type        = object({ block = number, enabled = bool })
     default     = { block = 0, enabled = false }

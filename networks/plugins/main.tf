@@ -58,6 +58,10 @@ module "network" {
 
   concensus            = module.helper.consensus
   privacy_enhancements = var.privacy_enhancements
+  petersburgBlock      = var.petersburgBlock
+  istanbulBlock        = var.istanbulBlock
+  muirGlacierBlock     = var.muirGlacierBlock
+  yoloV1Block          = var.yoloV1Block
   network_name         = var.network_name
   geth_networking      = module.helper.geth_networking
   tm_networking        = module.helper.tm_networking

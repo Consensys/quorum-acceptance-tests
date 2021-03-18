@@ -8,3 +8,6 @@ consensus       = "istanbul"
 docker_images   = ["quorumengineering/quorum:2.5.0", "quorumengineering/tessera:0.10.5"]
 
 privacy_enhancements = { block = 0, enabled = false }
+
+petersburgBlock       = 1000000
+istanbulBlock         = 1000000
