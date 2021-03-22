@@ -9,10 +9,10 @@ locals {
     {
       image = var.geth.container.image
       port = {
-        http    = { internal = var.geth.container.port.http, external = var.geth.host.port.http_start + idx }
-        ws      = var.geth.container.port.ws == -1 ? null : { internal = var.geth.container.port.ws, external = var.geth.host.port.ws_start + idx }
-        p2p     = var.geth.container.port.p2p
-        raft    = var.geth.container.port.raft
+        http = { internal = var.geth.container.port.http, external = var.geth.host.port.http_start + idx }
+        ws   = var.geth.container.port.ws == -1 ? null : { internal = var.geth.container.port.ws, external = var.geth.host.port.ws_start + idx }
+        p2p  = var.geth.container.port.p2p
+        raft = var.geth.container.port.raft
       }
       graphql = var.geth.container.graphql
       ip = {
@@ -30,6 +30,30 @@ locals {
       }
       ip = {
         private = cidrhost(local.container_network_cidr, idx + 1 + 100)
+        public  = "localhost"
+      }
+    }
+  ]
+  besu_networking = [for idx in local.node_indices :
+    {
+      image = var.besu.container.image
+      port = {
+        http = { internal = var.besu.container.port.http, external = var.besu.host.port.http_start + idx }
+      }
+      ip = {
+        private = cidrhost(local.container_network_cidr, idx + 1 + 10)
+        public  = "localhost"
+      }
+    }
+  ]
+  ethsigner_networking = [for idx in local.node_indices :
+    {
+      image = var.ethsigner.container.image
+      port = {
+        http = { internal = var.ethsigner.container.port.http, external = var.ethsigner.host.port.http_start + idx }
+      }
+      ip = {
+        private = cidrhost(local.container_network_cidr, idx + 1 + 10)
         public  = "localhost"
       }
     }

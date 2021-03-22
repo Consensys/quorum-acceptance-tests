@@ -51,3 +51,47 @@ variable "tessera" {
   }
   description = "tessera Docker container configuration"
 }
+
+variable "besu" {
+  type = object({
+    container = object({
+      image = object({ name = string, local = bool })
+      port  = object({ http = number})
+    })
+    host = object({
+      port = object({ http_start = number})
+    })
+  })
+  default = {
+    container = {
+      image = { name = "hyperledger/besu:latest", local = false }
+      port  = { http = 8545}
+    }
+    host = {
+      port = { http_start = 22000}
+    }
+  }
+  description = "besu Docker container configuration "
+}
+
+variable "ethsigner" {
+  type = object({
+    container = object({
+      image = object({ name = string, local = bool })
+      port  = object({ http = number})
+    })
+    host = object({
+      port = object({ http_start = number})
+    })
+  })
+  default = {
+    container = {
+      image = { name = "consensys/quorum-ethsigner:latest", local = false }
+      port  = { http = 8545}
+    }
+    host = {
+      port = { http_start = 23000}
+    }
+  }
+  description = "ethsigner Docker container configuration "
+}
