@@ -11,7 +11,7 @@ output "container_tm_datadir" {
 }
 
 output "container_ethsigner_datadir" {
-  value = local.container_ethsigner_datadir
+  value = local.container_besu_datadir_mounted
 }
 
 output "besu_containers" {

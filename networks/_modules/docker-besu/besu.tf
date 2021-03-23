@@ -80,8 +80,8 @@ echo "Current files in datadir (ls ${local.container_besu_datadir})"
 ls ${local.container_besu_datadir}
 
 # TODO ricardolyn: we need to fix the wait for tessera as `wget` is not available in the Besu container
-#${local.container_besu_datadir_mounted}/wait-for-tessera.sh
-exec ${local.container_besu_datadir_mounted}/start-besu.sh
+#${local.container_besu_datadir}/wait-for-tessera.sh
+exec ${local.container_besu_datadir}/start-besu.sh
 RUN
   ]
   upload {
@@ -119,14 +119,15 @@ if [ -f /data/qdata/cleanStorage ]; then
 fi
 
 exec /opt/besu/bin/besu \
+        --data-path=/opt/besu/data \
         --config-file=/config/config.toml \
-        --p2p-host=$$(hostname -i) \
+        --p2p-host=${var.besu_networking[count.index].ip.private} \
         --genesis-file=${local.container_besu_datadir}/genesis.json \
-        --node-private-key-file=/opt/besu/keys/key \
+        --node-private-key-file=${local.container_besu_datadir}/nodekey \
         --min-gas-price=0 \
         --goquorum-compatibility-enabled \
         --privacy-url="${local.container_tm_q2t_urls[count.index]}" \
-        --privacy-public-key-file=/config/orion/orion.pub \
+        --privacy-public-key-file=${local.container_besu_datadir}/tmkey.pub \
         --privacy-onchain-groups-enabled=false \
         --rpc-http-api=EEA,WEB3,ETH,NET,PRIV,PERM,GOQUORUM,IBFT \
         --rpc-ws-api=EEA,WEB3,ETH,NET,PRIV,PERM,GOQUORUM,IBFT ;

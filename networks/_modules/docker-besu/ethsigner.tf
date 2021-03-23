@@ -61,10 +61,10 @@ resource "docker_container" "ethsigner" {
     "--logging=TRACE",
     "file-based-signer",
     "-k",
-    "/opt/ethsigner/keyfile",
+    "/data/ethsigner/keyfile",
     // TODO ricardolyn
     "-p",
-    "/opt/ethsigner/passwordfile",
+    "/data/ethsigner/passwordfile",
     // TODO ricardolyn
   ]
 }

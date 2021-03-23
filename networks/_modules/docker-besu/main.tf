@@ -1,11 +1,10 @@
 locals {
   number_of_nodes                = length(var.node_keys_hex)
-  container_besu_datadir         = "/data/besu"
+  container_besu_datadir         = "/opt/besu/data"
   container_tm_datadir           = "/data/tm"
-  container_ethsigner_datadir           = "/data/ethsigner"
-  container_besu_datadir_mounted = "/data/besu-mount"
+  container_besu_datadir_mounted = "/opt/besu/mount"
   container_tm_datadir_mounted   = "/data/tm-mount"
-  container_ethsigner_datadir_mounted   = "/data/ethsigner-mount"
+  container_ethsigner_datadir_mounted   = "/data/ethsigner"
   container_tm_q2t_urls = [for idx in local.node_indices :
     "http://${var.tm_networking[idx].ip.private}:${var.tm_networking[idx].port.q2t.internal}"]
 
