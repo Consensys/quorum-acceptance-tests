@@ -65,6 +65,12 @@ resource "local_file" "tm" {
   content  = quorum_transaction_manager_keypair.tm[count.index].key_data
 }
 
+resource "local_file" "tm_pub_for_besu" {
+  count    = length(local.tm_named_keys_all)
+  filename = format("%s/tmkey.pub", local.besu_dirs[count.index])
+  content  = quorum_transaction_manager_keypair.tm[count.index].public_key_b64
+}
+
 data "quorum_bootstrap_genesis_mixhash" "this" {
 
 }
@@ -130,6 +136,11 @@ resource "local_file" "nodekey-file" {
 EOF
 }
 
+resource "local_file" "node-key" {
+  count    = local.number_of_nodes
+  filename = format("%s/permissioned-nodes.json", local.besu_dirs[count.index])
+  content  = quorum_bootstrap_node_key.nodekeys-generator[count.index].hex_node_id
+}
 
 resource "local_file" "static-nodes" {
   count    = local.number_of_nodes
