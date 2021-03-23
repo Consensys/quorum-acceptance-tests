@@ -11,8 +11,9 @@ quorum:
     nodes:
 %{for idx in local.node_indices~}
       Node${idx + 1}:
-        quorum-container-id: ${element(module.docker.quorum_containers, idx)}
+        quorum-container-id: ${element(module.docker.besu_containers, idx)}
         tessera-container-id: ${element(module.docker.tessera_containers, idx)}
+        ethsigner-container-id: ${element(module.docker.ethsigner_containers, idx)}
 %{endfor~}
 YML
 }

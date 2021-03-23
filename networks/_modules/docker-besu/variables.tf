@@ -32,6 +32,9 @@ variable "besu_networking" {
     image = object({ name = string, local = bool })
     port = object({
       http = object({ internal = number, external = number })
+      ws = object({ internal = number, external = number })
+      graphql = object({ internal = number, external = number })
+      p2p = number
     })
     ip      = object({ private = string, public = string })
   }))
@@ -41,9 +44,7 @@ variable "besu_networking" {
 variable "ethsigner_networking" {
   type = list(object({
     image = object({ name = string, local = bool })
-    port = object({
-      http = object({ internal = number, external = number })
-    })
+    port  = object({ internal = number, external = number })
     ip      = object({ private = string, public = string })
   }))
   description = "Networking configuration for `ethsigner` nodes in the network. Number of items must match `ethsigner_networking`"

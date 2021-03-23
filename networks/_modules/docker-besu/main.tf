@@ -6,10 +6,11 @@ locals {
   container_besu_datadir_mounted = "/data/besu-mount"
   container_tm_datadir_mounted   = "/data/tm-mount"
   container_ethsigner_datadir_mounted   = "/data/ethsigner-mount"
-  container_tm_q2t_url          = "http://${var.tm_networking[count.index].ip.private}:${var.tm_networking[count.index].port.q2t}"
+  container_tm_q2t_urls = [for idx in local.node_indices :
+    "http://${var.tm_networking[idx].ip.private}:${var.tm_networking[idx].port.q2t.internal}"]
 
   node_indices              = range(local.number_of_nodes) // 0-based node index
-  node_initial_paticipants = { for id in local.node_indices : id => "true" }, // default to true for all
+  node_initial_paticipants = { for id in local.node_indices : id => "true" } // default to true for all
 
   tm_env = [for k, v in var.tm_env : "${k}=${v}"]
 }

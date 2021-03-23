@@ -46,7 +46,7 @@ variable "tessera" {
       port  = { thirdparty = 9080, p2p = 9000, q2t = 9081 }
     }
     host = {
-      port = { thirdparty_start = 9080, q2t_start = 9081 }
+      port = { thirdparty_start = 24000, q2t_start = 24100 }
     }
   }
   description = "tessera Docker container configuration"
@@ -56,19 +56,19 @@ variable "besu" {
   type = object({
     container = object({
       image = object({ name = string, local = bool })
-      port  = object({ http = number })
+      port  = object({ http = number, ws = number,graphql = number, p2p = number })
     })
     host = object({
-      port = object({ http_start = number })
+      port = object({ http_start = number,ws_start = number,graphql_start = number })
     })
   })
   default = {
     container = {
       image = { name = "hyperledger/besu:latest", local = false }
-      port  = { http = 8545 }
+      port  = { http = 8545, ws= 8546, graphql= 8547, p2p= 30303 }
     }
     host = {
-      port = { http_start = 22000 }
+      port = { http_start = 22000 , ws_start= 22100, graphql_start= 22200 }
     }
   }
   description = "besu Docker container configuration "
@@ -78,19 +78,19 @@ variable "ethsigner" {
   type = object({
     container = object({
       image = object({ name = string, local = bool })
-      port  = object({ http = number })
+      port  = number
     })
     host = object({
-      port = object({ http_start = number })
+      port_start = number
     })
   })
   default = {
     container = {
       image = { name = "consensys/quorum-ethsigner:latest", local = false }
-      port  = { http = 8545 }
+      port  = 8545
     }
     host = {
-      port = { http_start = 23000 }
+      port_start = 23000
     }
   }
   description = "ethsigner Docker container configuration "

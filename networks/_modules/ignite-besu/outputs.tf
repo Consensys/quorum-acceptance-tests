@@ -11,7 +11,7 @@ output "generated_dir" {
 }
 
 output "besu_dirs" {
-  value = quorum_bootstrap_data_dir.datadirs-generator[*].data_dir_abs
+  value = local.besu_dirs
 }
 
 output "tm_dirs" {

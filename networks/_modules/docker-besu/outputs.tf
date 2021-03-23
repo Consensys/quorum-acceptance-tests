@@ -15,16 +15,16 @@ output "container_ethsigner_datadir" {
 }
 
 output "besu_containers" {
-  value = docker_container.besu[*].id
+  value       = docker_container.besu[*].id
   description = "List of container ids"
 }
 
 output "tessera_containers" {
-  value = docker_container.tessera[*].id
+  value       = docker_container.tessera[*].id
   description = "List of container ids"
 }
 
 output "ethsigner_containers" {
-  value = docker_container.ethsigner[*].id
+  value       = docker_container.ethsigner[*].id
   description = "List of container ids"
 }

@@ -6,18 +6,19 @@ locals {
   node_dir_prefix           = "node-"
   tm_dir_prefix             = "tm-"
   ethsigner_dir_prefix      = "ethsigner-"
+  password_file             = "password.txt"
   genesis_file              = "genesis.json"
-  number_of_nodes           = max(length(var.besu_networking), length(var.tm_networking),length(var.ethsigner_networking))
+  number_of_nodes           = max(length(var.besu_networking), length(var.tm_networking), length(var.ethsigner_networking))
   node_indices              = range(local.number_of_nodes) // 0-based node index
   // by default we allocate one named key per TM: K0, K1 ... Kn
   // this can be overrriden by the variable
   tm_named_keys_alloc = { for id in local.node_indices : id => [format("UnnamedKey%d", id)] }
   // by default we allocate one named account per node
   // this can be overrriden by the variable
-  named_accounts_alloc = { for id in local.node_indices : id => ["Default"] }
-  tm_named_keys_all = flatten(values(local.tm_named_keys_alloc))
+  named_accounts_alloc     = { for id in local.node_indices : id => ["Default"] }
+  tm_named_keys_all        = flatten(values(local.tm_named_keys_alloc))
   node_initial_paticipants = { for id in local.node_indices : id => "true" }
-  istanbul_validators = { for id in local.node_indices : id => "true" }
+  istanbul_validators      = { for id in local.node_indices : id => "true" }
 }
 
 resource "random_string" "network-name" {

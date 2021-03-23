@@ -7,7 +7,7 @@ variable "network_name" {
 }
 
 variable "output_dir" {
-  default = "/tmp-besu"
+  default = "/tmp/besu"
 }
 
 variable "remote_docker_config" {

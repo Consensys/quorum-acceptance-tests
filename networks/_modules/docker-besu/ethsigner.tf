@@ -5,7 +5,7 @@ locals {
 
 resource "docker_container" "ethsigner" {
   count = local.number_of_nodes
-  name  = format("%s-node%d", var.network_name, count.index)
+  name  = format("%s-ethsigner-node%d", var.network_name, count.index)
   depends_on = [
     docker_container.besu,
     docker_image.registry,

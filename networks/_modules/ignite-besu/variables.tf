@@ -24,6 +24,7 @@ variable "besu_networking" {
       http    = object({ internal = number, external = number })
       ws      = object({ internal = number, external = number })
       graphql = object({ internal = number, external = number })
+      p2p = number
     })
     ip = object({ private = string, public = string })
   }))

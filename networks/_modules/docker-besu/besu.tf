@@ -9,7 +9,7 @@ locals {
 
 resource "docker_container" "besu" {
   count = local.number_of_nodes
-  name  = format("%s-node%d", var.network_name, count.index)
+  name  = format("%s-besu-node%d", var.network_name, count.index)
   depends_on = [
     docker_container.tessera,
     docker_image.registry,
@@ -79,8 +79,8 @@ fi
 echo "Current files in datadir (ls ${local.container_besu_datadir})"
 ls ${local.container_besu_datadir}
 
-
-${local.container_besu_datadir_mounted}/wait-for-tessera.sh
+# TODO ricardolyn: we need to fix the wait for tessera as `wget` is not available in the Besu container
+#${local.container_besu_datadir_mounted}/wait-for-tessera.sh
 exec ${local.container_besu_datadir_mounted}/start-besu.sh
 RUN
   ]
@@ -125,7 +125,7 @@ exec /opt/besu/bin/besu \
         --node-private-key-file=/opt/besu/keys/key \
         --min-gas-price=0 \
         --goquorum-compatibility-enabled \
-        --privacy-url="${local.container_tm_q2t_url}" \
+        --privacy-url="${local.container_tm_q2t_urls[count.index]}" \
         --privacy-public-key-file=/config/orion/orion.pub \
         --privacy-onchain-groups-enabled=false \
         --rpc-http-api=EEA,WEB3,ETH,NET,PRIV,PERM,GOQUORUM,IBFT \

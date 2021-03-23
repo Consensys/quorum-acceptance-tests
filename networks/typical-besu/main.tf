@@ -24,10 +24,10 @@ module "helper" {
   besu = {
     container = {
       image = var.besu_docker_image
-      port  = { http = 8545 }
+      port  = { http = 8545, ws = 8546, graphql = 8547, p2p= 30303 }
     }
     host = {
-      port = { http_start = 22000 }
+      port = { http_start = 22000 , ws_start = 22100, graphql_start = 22200 }
     }
   }
   tessera = {
@@ -36,16 +36,16 @@ module "helper" {
       port  = { thirdparty = 9080, p2p = 9000, q2t = 9081 }
     }
     host = {
-      port = { thirdparty_start = 9080, q2t_start = 9081 }
+      port = { thirdparty_start = 24000, q2t_start = 24100 }
     }
   }
   ethsigner = {
     container = {
       image = var.ethsigner_docker_image
-      port  = { http = 8545 }
+      port  = 8545
     }
     host = {
-      port = { http_start = 23000 }
+      port_start = 23000
     }
   }
 }
@@ -53,7 +53,6 @@ module "helper" {
 module "network" {
   source = "../_modules/ignite-besu"
 
-  concensus            = module.helper.consensus
   network_name         = var.network_name
   besu_networking      = module.helper.besu_networking
   tm_networking        = module.helper.tm_networking
@@ -61,24 +60,22 @@ module "network" {
   output_dir           = var.output_dir
 }
 
-//module "docker" {
-//  source = "../_modules/docker"
-//
-//  consensus       = module.helper.consensus
-//  geth_networking = module.helper.geth_networking
-//  tm_networking   = module.helper.tm_networking
-//  network_cidr    = module.helper.network_cidr
-//  ethstats_ip     = module.helper.ethstat_ip
-//  ethstats_secret = module.helper.ethstats_secret
-//
-//  network_name     = module.network.network_name
-//  network_id       = module.network.network_id
-//  node_keys_hex    = module.network.node_keys_hex
-//  geth_datadirs    = var.remote_docker_config == null ? module.network.data_dirs : split(",", join("", null_resource.scp[*].triggers.data_dirs))
-//  tessera_datadirs = var.remote_docker_config == null ? module.network.tm_dirs : split(",", join("", null_resource.scp[*].triggers.tm_dirs))
-//
-//  additional_geth_container_vol    = var.additional_quorum_container_vol
-//  additional_tessera_container_vol = var.additional_tessera_container_vol
-//  tessera_app_container_path       = var.tessera_app_container_path
-//  accounts_count                   = module.network.accounts_count
-//}
+module "docker" {
+  source = "../_modules/docker-besu"
+
+  chainId      = module.network.chainId
+  besu_networking      = module.helper.besu_networking
+  ethsigner_networking = module.helper.ethsigner_networking
+  tm_networking        = module.helper.tm_networking
+  network_cidr         = module.helper.network_cidr
+
+  network_name       = module.network.network_name
+  network_id         = module.network.network_id
+  node_keys_hex      = module.network.node_keys_hex
+  besu_datadirs      = var.remote_docker_config == null ? module.network.besu_dirs : split(",", join("", null_resource.scp[*].triggers.data_dirs))
+  tessera_datadirs   = var.remote_docker_config == null ? module.network.tm_dirs : split(",", join("", null_resource.scp[*].triggers.tm_dirs))
+  ethsigner_datadirs = var.remote_docker_config == null ? module.network.ethsigner_dirs : split(",", join("", null_resource.scp[*].triggers.ethsigner_dirs))
+
+  tessera_app_container_path = var.tessera_app_container_path
+  accounts_count             = module.network.accounts_count
+}
