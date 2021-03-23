@@ -39,7 +39,7 @@ resource "docker_container" "besu" {
     host_path      = var.besu_datadirs[count.index]
   }
   networks_advanced {
-    name         = docker_network.quorum.name
+    name         = docker_network.besu.name
     ipv4_address = var.besu_networking[count.index].ip.private
     aliases = [
     format("node%d", count.index)]
@@ -121,41 +121,15 @@ fi
 exec /opt/besu/bin/besu \
         --config-file=/config/config.toml \
         --p2p-host=$$(hostname -i) \
-        --genesis-file=${local.container_geth_datadir}/genesis.json \
+        --genesis-file=${local.container_besu_datadir}/genesis.json \
         --node-private-key-file=/opt/besu/keys/key \
         --min-gas-price=0 \
         --goquorum-compatibility-enabled \
-        --privacy-url=http://member2tessera:9081 \
+        --privacy-url="${local.container_tm_q2t_url}" \
         --privacy-public-key-file=/config/orion/orion.pub \
         --privacy-onchain-groups-enabled=false \
         --rpc-http-api=EEA,WEB3,ETH,NET,PRIV,PERM,GOQUORUM,IBFT \
         --rpc-ws-api=EEA,WEB3,ETH,NET,PRIV,PERM,GOQUORUM,IBFT ;
-//TODO ricardolyn:
-
-
-\
-  --identity Node${count.index + 1} \
-  --datadir ${local.container_besu_datadir} \
-  --nodiscover \
-  --verbosity 5 \
-  --networkid ${var.network_id} \
-  --nodekeyhex ${var.node_keys_hex[count.index]} \
-  --rpc \
-  --rpcaddr 0.0.0.0 \
-  --rpcport ${var.besu_networking[count.index].port.http.internal} \
-  --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,quorumPermission,quorumExtension,${var.consensus} \
-%{if var.besu_networking[count.index].port.ws != null~}
-  --ws \
-  --wsaddr 0.0.0.0 \
-  --wsport ${var.besu_networking[count.index].port.ws.internal} \
-  --wsapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,${var.consensus} \
-%{endif~}
-%{if var.enable_ethstats~}
-  --ethstats "Node${count.index + 1}:${var.ethstats_secret}@${var.ethstats_ip}:${var.ethstats.container.port}" \
-%{endif~}
-  --unlock ${join(",", range(var.accounts_count[count.index]))} \
-  --password ${local.container_besu_datadir}/${var.password_file_name} \
-  ${var.consensus == "istanbul" ? "--istanbul.blockperiod 1 --syncmode full --mine --minerthreads 1" : format("--raft --raftport %d", var.besu_networking[count.index].port.raft)} ${var.additional_besu_args} $ADDITIONAL_besu_ARGS
 EOF
   }
 }

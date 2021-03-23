@@ -107,35 +107,29 @@ resource "local_file" "nodekey-file" {
 }
 EOF
 }
-# TODO ricardolyn: we should create the dirs but nothing else
-resource "quorum_bootstrap_data_dir" "datadirs-generator" {
-  count    = local.number_of_nodes
-  data_dir = format("%s/%s%s", quorum_bootstrap_network.this.network_dir_abs, local.node_dir_prefix, count.index)
-  genesis  = local_file.genesis-file.content
-}
 
 resource "local_file" "static-nodes" {
   count    = local.number_of_nodes
-  filename = format("%s/static-nodes.json", quorum_bootstrap_data_dir.datadirs-generator[count.index].data_dir_abs)
+  filename = format("%s/%s%s/static-nodes.json", quorum_bootstrap_network.this.network_dir_abs, local.tm_dir_prefix, count.index)
   content  = "[${join(",", local.network.enode_urls)}]"
 }
 
 resource "local_file" "permissioned-nodes" {
   count    = local.number_of_nodes
-  filename = format("%s/permissioned-nodes.json", quorum_bootstrap_data_dir.datadirs-generator[count.index].data_dir_abs)
+  filename = format("%s/%s%s/permissioned-nodes.json", quorum_bootstrap_network.this.network_dir_abs, local.tm_dir_prefix, count.index)
   content  = local_file.static-nodes[count.index].content
 }
 
 resource "local_file" "passwords" {
   count    = local.number_of_nodes
-  filename = format("%s/%s", quorum_bootstrap_data_dir.datadirs-generator[count.index].data_dir_abs, local.password_file)
+  filename = format("%s/%s%s/%s", quorum_bootstrap_network.this.network_dir_abs, local.tm_dir_prefix, count.index,local.password_file)
   content  = ""
 }
 
 resource "local_file" "genesisfile" {
-    count    = local.number_of_nodes
-    filename = format("%s/%s", quorum_bootstrap_data_dir.datadirs-generator[count.index].data_dir_abs, local.genesis_file)
-    content  = quorum_bootstrap_data_dir.datadirs-generator[count.index].genesis
+  count    = local.number_of_nodes
+  filename = format("%s/%s%s/%s", quorum_bootstrap_network.this.network_dir_abs, local.tm_dir_prefix, count.index,local.genesis_file)
+  content  = local_file.genesis-file.content
 }
 
 resource "local_file" "tmconfigs-generator" {

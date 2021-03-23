@@ -21,6 +21,7 @@ variable "tm_networking" {
   type = list(object({
     port = object({
       thirdparty = object({ internal = number, external = number })
+      q2t = object({ internal = number, external = number })
       p2p        = number
     })
     ip = object({

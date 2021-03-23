@@ -26,6 +26,7 @@ locals {
       image = var.tessera.container.image
       port = {
         thirdparty = { internal = var.tessera.container.port.thirdparty, external = var.tessera.host.port.thirdparty_start + idx }
+        q2t = { internal = var.tessera.container.port.q2t, external = var.tessera.host.port.q2t_start + idx }
         p2p        = var.tessera.container.port.p2p
       }
       ip = {

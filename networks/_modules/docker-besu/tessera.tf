@@ -27,15 +27,8 @@ resource "docker_container" "tessera" {
     container_path = local.container_tm_datadir_mounted
     host_path      = var.tessera_datadirs[count.index]
   }
-  dynamic "volumes" {
-    for_each = lookup(var.additional_tessera_container_vol, count.index, [])
-    content {
-      container_path = volumes.value["container_path"]
-      host_path      = volumes.value["host_path"]
-    }
-  }
   networks_advanced {
-    name         = docker_network.quorum.name
+    name         = docker_network.besu.name
     ipv4_address = var.tm_networking[count.index].ip.private
     aliases      = [format("tm%d", count.index)]
   }
@@ -45,15 +38,7 @@ resource "docker_container" "tessera" {
       "CMD",
       "nc",
       "-vz",
-      "localhost",
-      var.besu_networking[count.index].port.http.internal]
-    interval     = "3s"
-    retries      = 10
-    timeout      = "3s"
-    start_period = "5s"
-  }
-  healthcheck {
-    test         = ["CMD-SHELL", "[ -S ${local.container_tm_q2t_url} ] || exit 1"]
+      var.tm_networking[]]
     interval     = "3s"
     retries      = 20
     timeout      = "3s"
@@ -68,7 +53,7 @@ resource "docker_container" "tessera" {
 START_TESSERA="java -Xms128M -Xmx128M \
   -jar ${lookup(var.tessera_app_container_path, count.index, "/tessera/tessera-app.jar")} \
   --override jdbc.url=jdbc:h2:${local.container_tm_datadir}/db;MODE=Oracle;TRACE_LEVEL_SYSTEM_OUT=0 \
-  --override serverConfigs[1].serverAddress=unix:${local.container_tm_ipc_file} \
+  --override serverConfigs[1].serverAddress="${local.container_tm_q2t_url}" \
   --override serverConfigs[2].sslConfig.serverKeyStore=${local.container_tm_datadir}/serverKeyStore \
   --override serverConfigs[2].sslConfig.serverTrustStore=${local.container_tm_datadir}/serverTrustStore \
   --override serverConfigs[2].sslConfig.knownClientsFile=${local.container_tm_datadir}/knownClientsFile \
@@ -104,11 +89,10 @@ if [ -f /data/tm/cleanStorage ]; then
   fi
 fi
 
-rm -f ${local.container_tm_ipc_file}
 exec java -Xms128M -Xmx128M \
   -jar ${lookup(var.tessera_app_container_path, count.index, "/tessera/tessera-app.jar")} \
   --override jdbc.url="jdbc:h2:${local.container_tm_datadir}/db;MODE=Oracle;TRACE_LEVEL_SYSTEM_OUT=0" \
-  --override serverConfigs[1].serverAddress="unix:${local.container_tm_ipc_file}" \
+  --override serverConfigs[1].serverAddress=${local.container_tm_q2t_url} \
   --override serverConfigs[2].sslConfig.serverKeyStore="${local.container_tm_datadir}/serverKeyStore" \
   --override serverConfigs[2].sslConfig.serverTrustStore="${local.container_tm_datadir}/serverTrustStore" \
   --override serverConfigs[2].sslConfig.knownClientsFile="${local.container_tm_datadir}/knownClientsFile" \

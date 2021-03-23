@@ -6,7 +6,7 @@ locals {
   container_besu_datadir_mounted = "/data/besu-mount"
   container_tm_datadir_mounted   = "/data/tm-mount"
   container_ethsigner_datadir_mounted   = "/data/ethsigner-mount"
-  container_tm_q2t_url          = ""// TODO ricardolyn
+  container_tm_q2t_url          = "http://${var.tm_networking[count.index].ip.private}:${var.tm_networking[count.index].port.q2t}"
 
   node_indices              = range(local.number_of_nodes) // 0-based node index
   node_initial_paticipants = { for id in local.node_indices : id => "true" }, // default to true for all
@@ -14,7 +14,7 @@ locals {
   tm_env = [for k, v in var.tm_env : "${k}=${v}"]
 }
 
-resource "docker_network" "quorum" {
+resource "docker_network" "besu" {
   name = format("%s-net", var.network_name)
   ipam_config {
     subnet = var.network_cidr

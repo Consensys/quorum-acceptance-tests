@@ -1,21 +1,30 @@
 output "docker_network_name" {
-  value = docker_network.quorum.name
+  value = docker_network.besu.name
 }
 
-output "container_geth_datadir" {
-  value = local.container_geth_datadir
+output "container_besu_datadir" {
+  value = local.container_besu_datadir
 }
 
 output "container_tm_datadir" {
   value = local.container_tm_datadir
 }
 
-output "quorum_containers" {
-  value = docker_container.geth[*].id
+output "container_ethsigner_datadir" {
+  value = local.container_ethsigner_datadir
+}
+
+output "besu_containers" {
+  value = docker_container.besu[*].id
   description = "List of container ids"
 }
 
 output "tessera_containers" {
   value = docker_container.tessera[*].id
+  description = "List of container ids"
+}
+
+output "ethsigner_containers" {
+  value = docker_container.ethsigner[*].id
   description = "List of container ids"
 }

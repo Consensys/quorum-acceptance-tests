@@ -37,10 +37,10 @@ module "helper" {
   tessera = {
     container = {
       image = var.tessera_docker_image
-      port  = { thirdparty = 9080, p2p = 9000 }
+      port  = { thirdparty = 9080, p2p = 9000, q2t = 9081,q2t= 9081 }
     }
     host = {
-      port = { thirdparty_start = 9080 }
+      port = { thirdparty_start = 9080,q2t_start= 9081 }
     }
   }
 }

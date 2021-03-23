@@ -6,7 +6,6 @@ locals {
   node_dir_prefix           = "node-"
   tm_dir_prefix             = "tm-"
   ethsigner_dir_prefix      = "ethsigner-"
-  password_file             = "password.txt"
   genesis_file              = "genesis.json"
   number_of_nodes           = max(length(var.besu_networking), length(var.tm_networking),length(var.ethsigner_networking))
   node_indices              = range(local.number_of_nodes) // 0-based node index
