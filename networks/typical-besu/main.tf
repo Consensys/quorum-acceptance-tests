@@ -53,6 +53,7 @@ module "helper" {
 module "network" {
   source = "../_modules/ignite-besu"
 
+  consensus = module.helper.consensus
   network_name         = var.network_name
   besu_networking      = module.helper.besu_networking
   tm_networking        = module.helper.tm_networking

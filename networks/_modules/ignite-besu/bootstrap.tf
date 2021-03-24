@@ -77,6 +77,7 @@ data "quorum_bootstrap_genesis_mixhash" "this" {
 
 resource "quorum_bootstrap_istanbul_extradata" "this" {
   istanbul_addresses = [for idx in local.node_indices : quorum_bootstrap_node_key.nodekeys-generator[idx].istanbul_address if lookup(local.istanbul_validators, idx, "false") == "true"]
+  besu_mode          = true
 }
 
 resource "local_file" "genesis-file" {
@@ -86,11 +87,13 @@ resource "local_file" "genesis-file" {
   "config" : {
     "chainId" : ${local.chainId},
     "constantinoplefixblock" : 0,
+%{if var.consensus == "ibft2"~}
     "ibft2" : {
       "blockperiodseconds" : 1,
       "epochlength" : 30000,
       "requesttimeoutseconds" : 10
     },
+%{endif~}
     "isQuorum": true
   },
   "nonce" : "0x0",
@@ -127,19 +130,10 @@ resource "local_file" "genesis-file" {
 EOF
 }
 
-resource "local_file" "nodekey-file" {
-  filename = format("%s/nodekeys-tmp.json", quorum_bootstrap_network.this.network_dir_abs)
-  content  = <<-EOF
-    {
-    ${join(",", quorum_bootstrap_node_key.nodekeys-generator[*].hex_node_id)}
-}
-EOF
-}
-
 resource "local_file" "node-key" {
   count    = local.number_of_nodes
-  filename = format("%s/permissioned-nodes.json", local.besu_dirs[count.index])
-  content  = quorum_bootstrap_node_key.nodekeys-generator[count.index].hex_node_id
+  filename = format("%s/key", local.besu_dirs[count.index])
+  content  = quorum_bootstrap_node_key.nodekeys-generator[count.index].node_key_hex
 }
 
 resource "local_file" "static-nodes" {
@@ -164,6 +158,48 @@ resource "local_file" "genesisfile" {
   count    = local.number_of_nodes
   filename = format("%s/%s", local.besu_dirs[count.index], local.genesis_file)
   content  = local_file.genesis-file.content
+}
+
+resource "local_file" "besuconfigfile" {
+  count    = local.number_of_nodes
+  filename = format("%s/config.toml", local.besu_dirs[count.index])
+  content  = <<-EOF
+logging="DEBUG"
+data-path="/opt/besu/data"
+host-whitelist=["*"]
+
+# rpc
+rpc-http-enabled=true
+rpc-http-host="0.0.0.0"
+rpc-http-port=${var.besu_networking[count.index].port.http.internal}
+rpc-http-cors-origins=["*"]
+
+# ws
+rpc-ws-enabled=true
+rpc-ws-host="0.0.0.0"
+rpc-ws-port=${var.besu_networking[count.index].port.ws.internal}
+
+# graphql
+graphql-http-enabled=true
+graphql-http-host="0.0.0.0"
+graphql-http-port=${var.besu_networking[count.index].port.graphql.internal}
+graphql-http-cors-origins=["*"]
+
+# metrics
+metrics-enabled=false
+metrics-host="0.0.0.0"
+#metrics-port=9545
+
+# permissions
+permissions-nodes-config-file-enabled=false
+#permissions-nodes-config-file="/config/permissions_config.toml"
+
+# bootnodes
+# bootnodes=["enode://c1979a8a48693db804316b5acebe35e11731e1fb1c9c21ff7268ab25db6f6e03390a429b83cf0ec0865a7205f2669ec1ace652a3def11e2e01571c74939cbe22@172.16.239.11:30303"]
+# ricardolyn
+discovery-enabled=false
+
+EOF
 }
 
 resource "local_file" "tmconfigs-generator" {

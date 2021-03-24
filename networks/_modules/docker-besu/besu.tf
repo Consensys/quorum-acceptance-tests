@@ -9,7 +9,7 @@ locals {
 
 resource "docker_container" "besu" {
   count = local.number_of_nodes
-  name  = format("%s-besu-node%d", var.network_name, count.index)
+  name  = format("%s-node%d", var.network_name, count.index)
   depends_on = [
     docker_container.tessera,
     docker_image.registry,
@@ -119,11 +119,10 @@ if [ -f /data/qdata/cleanStorage ]; then
 fi
 
 exec /opt/besu/bin/besu \
-        --data-path=/opt/besu/data \
-        --config-file=/config/config.toml \
+        --config-file=${local.container_besu_datadir}/config.toml \
         --p2p-host=${var.besu_networking[count.index].ip.private} \
         --genesis-file=${local.container_besu_datadir}/genesis.json \
-        --node-private-key-file=${local.container_besu_datadir}/nodekey \
+        --node-private-key-file=${local.container_besu_datadir}/key \
         --min-gas-price=0 \
         --goquorum-compatibility-enabled \
         --privacy-url="${local.container_tm_q2t_urls[count.index]}" \

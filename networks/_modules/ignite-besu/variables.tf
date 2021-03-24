@@ -3,6 +3,11 @@ variable "network_name" {
   description = "Name of the network being created. If empty, a random name will be used"
 }
 
+variable "consensus" {
+  default     = "ibft2"
+  description = "Consensus algorithm being used in the network. Supported values are: ibft2"
+}
+
 variable "tm_networking" {
   type = list(object({
     port = object({

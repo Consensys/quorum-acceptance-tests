@@ -1,5 +1,5 @@
 variable "consensus" {
-  default = "istanbul"
+  default = "ibft2"
 }
 
 variable "network_name" {

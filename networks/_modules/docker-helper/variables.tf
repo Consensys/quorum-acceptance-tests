@@ -3,7 +3,7 @@ variable "number_of_nodes" {
 }
 
 variable "consensus" {
-  description = "Consensus algorithm being used in the network. Supported values are: istanbul and raft"
+  description = "Consensus algorithm being used in the network. Supported values are: for GoQuorum - istanbul and raft, for Besu - ibft2"
 }
 
 variable "geth" {
