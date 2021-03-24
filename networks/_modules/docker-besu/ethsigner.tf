@@ -4,17 +4,14 @@ locals {
 }
 
 resource "docker_container" "ethsigner" {
-  count = local.number_of_nodes
-  name  = format("%s-ethsigner%d", var.network_name, count.index)
-  depends_on = [
-    docker_container.besu,
-    docker_image.registry,
-  docker_image.local]
-  image    = var.ethsigner_networking[count.index].image.name
-  hostname = format("ethsigner_node%d", count.index)
-  restart  = "no"
-  must_run = true
-  start    = true
+  count      = local.number_of_nodes
+  name       = format("%s-ethsigner%d", var.network_name, count.index)
+  depends_on = [docker_container.besu, docker_image.local, docker_image.registry]
+  image      = var.ethsigner_networking[count.index].image.name
+  hostname   = format("ethsigner_node%d", count.index)
+  restart    = "no"
+  must_run   = true
+  start      = true
   labels {
     label = "ethsignerContainer"
     value = count.index
@@ -38,31 +35,34 @@ resource "docker_container" "ethsigner" {
     name         = docker_network.besu.name
     ipv4_address = var.ethsigner_networking[count.index].ip.private
     aliases = [
-    format("ethsigner_node%d", count.index)]
+    format("ethsigner%d", count.index)]
   }
-  //  env = local.ethsigner_env TODO ricardolyn: do we need env for ethsigner?
   healthcheck {
-    test = [
-      "CMD",
-      "nc",
-      "-vz",
-      "localhost",
-    var.ethsigner_networking[count.index].port.internal]
-    interval     = "3s"
-    retries      = 10
-    timeout      = "3s"
-    start_period = "5s"
+    test         = ["CMD", "nc", "-vz", "localhost", var.ethsigner_networking[count.index].port.internal]
+    interval     = "5s"
+    retries      = 60
+    timeout      = "5s"
+    start_period = "10s"
   }
-  command = [
-    "--chain-id=${var.chainId}",
-    "--http-listen-host=0.0.0.0",
-    "--downstream-http-port=${var.besu_networking[count.index].port.http.internal}",
-    "--downstream-http-host=${format("node%d", count.index)}",
-    "--logging=TRACE",
-    "file-based-signer",
-    "-k",
-    format("%s/%s", local.container_ethsigner_datadir_mounted, var.keystore_files[count.index]),
-    "-p",
-    format("%s/%s", local.container_ethsigner_datadir_mounted, var.keystore_password_file),
+  privileged = true
+  entrypoint = [
+    "/bin/sh",
+    "-c",
+    <<RUN
+echo "EthSigner${count.index + 1}"
+
+apt-get update
+apt-get install -y netcat
+
+/opt/ethsigner/bin/ethsigner \
+  --chain-id=${var.chainId} \
+  --http-listen-host=0.0.0.0 \
+  --downstream-http-port=${var.besu_networking[count.index].port.http.internal} \
+  --downstream-http-host=${format("node%d", count.index)} \
+  --logging=DEBUG \
+  file-based-signer \
+  -k ${format("%s/%s", local.container_ethsigner_datadir_mounted, var.keystore_files[count.index])} \
+  -p ${format("%s/%s", local.container_ethsigner_datadir_mounted, var.keystore_password_file)}
+RUN
   ]
 }

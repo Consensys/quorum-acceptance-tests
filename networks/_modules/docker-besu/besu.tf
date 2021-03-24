@@ -10,10 +10,7 @@ locals {
 resource "docker_container" "besu" {
   count = local.number_of_nodes
   name  = format("%s-node%d", var.network_name, count.index)
-  depends_on = [
-    docker_container.tessera,
-    docker_image.registry,
-  docker_image.local]
+  depends_on = [docker_container.tessera, docker_image.registry, docker_image.local]
   image    = var.besu_networking[count.index].image.name
   hostname = format("node%d", count.index)
   restart  = "no"
@@ -44,24 +41,11 @@ resource "docker_container" "besu" {
     aliases = [
     format("node%d", count.index)]
   }
-  //  env = local.besu_env TODO ricardolyn: do we need env for Besu?
-  healthcheck {
-    test = [
-      "CMD",
-      "nc",
-      "-vz",
-      "localhost",
-    var.besu_networking[count.index].port.http.internal]
-    interval     = "3s"
-    retries      = 10
-    timeout      = "3s"
-    start_period = "5s"
-  }
   entrypoint = [
     "/bin/sh",
     "-c",
     <<RUN
-#Besu{count.index + 1}
+echo "Besu{count.index + 1}"
 
 echo "Original files in datadir (ls ${local.container_besu_datadir})"
 ls ${local.container_besu_datadir}
@@ -79,33 +63,9 @@ fi
 echo "Current files in datadir (ls ${local.container_besu_datadir})"
 ls ${local.container_besu_datadir}
 
-# TODO ricardolyn: we need to fix the wait for tessera as `wget` is not available in the Besu container
-#${local.container_besu_datadir}/wait-for-tessera.sh
 exec ${local.container_besu_datadir}/start-besu.sh
 RUN
   ]
-  upload {
-    file       = "${local.container_besu_datadir_mounted}/wait-for-tessera.sh"
-    executable = true
-    content    = <<EOF
-#!/bin/sh
-
-URL="${var.tm_networking[count.index].ip.private}:${var.tm_networking[count.index].port.p2p}/upcheck"
-
-UDS_WAIT=10
-for i in $(seq 1 100)
-do
-  result=$(wget --timeout $UDS_WAIT -qO- --proxy off $URL)
-  echo "$result"
-  if [ -S $PRIVATE_CONFIG ] && [ "I'm up!" = "$result" ]; then
-    break
-  else
-    echo "Sleep $UDS_WAIT seconds. Waiting for TxManager."
-    sleep $UDS_WAIT
-  fi
-done
-EOF
-  }
 
   upload {
     file       = "${local.container_besu_datadir_mounted}/start-besu.sh"

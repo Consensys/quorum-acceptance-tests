@@ -38,21 +38,17 @@ resource "docker_container" "tessera" {
   }
   env = local.tm_env
   healthcheck {
-    test = [
-      "CMD",
-      "nc",
-      "-vz",
-    var.tm_networking[count.index].port.q2t.internal]
-    interval     = "3s"
-    retries      = 20
-    timeout      = "3s"
-    start_period = "5s"
+    test         = ["CMD", "nc", "-vz", "localhost", var.tm_networking[count.index].port.thirdparty.internal]
+    interval     = "5s"
+    retries      = 60
+    timeout      = "5s"
+    start_period = "10s"
   }
   entrypoint = [
     "/bin/sh",
     "-c",
     <<EOF
-#Tessera${count.index + 1}
+echo "Tessera${count.index + 1}"
 
 START_TESSERA="java -Xms128M -Xmx128M \
   -jar ${lookup(var.tessera_app_container_path, count.index, "/tessera/tessera-app.jar")} \

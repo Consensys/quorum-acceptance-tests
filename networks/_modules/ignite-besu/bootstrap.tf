@@ -84,7 +84,7 @@ data "quorum_bootstrap_genesis_mixhash" "this" {
 
 resource "quorum_bootstrap_istanbul_extradata" "this" {
   istanbul_addresses = [for idx in local.node_indices : quorum_bootstrap_node_key.nodekeys-generator[idx].istanbul_address if lookup(local.istanbul_validators, idx, "false") == "true"]
-  besu_mode          = true
+  ibft2_mode          = true
 }
 
 resource "local_file" "genesis-file" {
