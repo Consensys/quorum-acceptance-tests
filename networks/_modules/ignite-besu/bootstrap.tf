@@ -65,7 +65,7 @@ resource "local_file" "tm" {
   content  = quorum_transaction_manager_keypair.tm[count.index].key_data
 }
 
-resource "local_file" "tm_pub_for_besu" {
+resource "local_file" "tm_publickey" {
   count    = length(local.tm_named_keys_all)
   filename = format("%s/tmkey.pub", local.besu_dirs[count.index])
   content  = quorum_transaction_manager_keypair.tm[count.index].public_key_b64
@@ -187,16 +187,8 @@ graphql-http-cors-origins=["*"]
 
 # metrics
 metrics-enabled=false
-metrics-host="0.0.0.0"
-#metrics-port=9545
-
-# permissions
-permissions-nodes-config-file-enabled=false
-#permissions-nodes-config-file="/config/permissions_config.toml"
 
 # bootnodes
-# bootnodes=["enode://c1979a8a48693db804316b5acebe35e11731e1fb1c9c21ff7268ab25db6f6e03390a429b83cf0ec0865a7205f2669ec1ace652a3def11e2e01571c74939cbe22@172.16.239.11:30303"]
-# ricardolyn
 discovery-enabled=false
 
 EOF
