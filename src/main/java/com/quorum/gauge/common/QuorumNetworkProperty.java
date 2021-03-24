@@ -334,6 +334,7 @@ public class QuorumNetworkProperty {
         public static class DockerContainerProperty {
             private String quorumContainerId;
             private String tesseraContainerId;
+            private Optional<String> ethSignerContainerId;
 
             public String getQuorumContainerId() {
                 return quorumContainerId;
@@ -349,6 +350,14 @@ public class QuorumNetworkProperty {
 
             public void setTesseraContainerId(String tesseraContainerId) {
                 this.tesseraContainerId = tesseraContainerId;
+            }
+
+            public Optional<String> getEthSignerContainerId() {
+                return ethSignerContainerId;
+            }
+
+            public void setEthSignerContainerId(Optional<String> ethSignerContainerId) {
+                this.ethSignerContainerId = ethSignerContainerId;
             }
         }
     }
