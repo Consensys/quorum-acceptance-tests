@@ -42,7 +42,7 @@ resource "docker_container" "tessera" {
       "CMD",
       "nc",
       "-vz",
-      var.tm_networking[count.index].port.q2t.internal]
+    var.tm_networking[count.index].port.q2t.internal]
     interval     = "3s"
     retries      = 20
     timeout      = "3s"

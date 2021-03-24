@@ -21,6 +21,14 @@ variable "ethsigner_datadirs" {
   description = "List of Tessera working directories"
 }
 
+variable "keystore_files" {
+  type        = list(string)
+  description = "List of Keystores"
+}
+
+variable "keystore_password_file" {
+  type        = string
+}
 
 variable "node_keys_hex" {
   type        = list(string)

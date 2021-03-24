@@ -35,5 +35,13 @@ output "application_yml_file" {
 }
 
 output "accounts_count" {
-  value = { for id in local.node_indices : id => length(local.named_accounts_alloc[id]) }
+  value = {for id in local.node_indices : id => length(local.named_accounts_alloc[id])}
+}
+
+output "keystore_files" {
+  value = [for idx in local.node_indices : format("%s/%s",local.keystore_folder, regex("UTC.+$", quorum_bootstrap_keystore.accountkeys-generator[idx].account[0].account_url))]
+}
+
+output "keystore_password_file" {
+  value = local.keystore_password_file
 }

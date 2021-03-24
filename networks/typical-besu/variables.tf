@@ -38,9 +38,9 @@ variable "besu_docker_image" {
 }
 
 variable "tessera_docker_image" {
-    type        = object({ name = string, local = bool })
-    default     = { name = "quorumengineering/tessera:latest", local = false }
-    description = "Local=true indicates that the image is already available locally and don't need to pull from registry"
+  type        = object({ name = string, local = bool })
+  default     = { name = "quorumengineering/tessera:latest", local = false }
+  description = "Local=true indicates that the image is already available locally and don't need to pull from registry"
 }
 
 variable "ethsigner_docker_image" {
@@ -55,8 +55,8 @@ variable "docker_registry" {
 }
 
 variable "additional_quorum_container_vol" {
-  type = map(list(object({container_path = string, host_path = string})))
-  default = {}
+  type        = map(list(object({ container_path = string, host_path = string })))
+  default     = {}
   description = "Additional volume mounts for geth container. Each map key is the node index (0-based)"
 }
 

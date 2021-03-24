@@ -5,7 +5,7 @@ locals {
 
 resource "docker_container" "ethsigner" {
   count = local.number_of_nodes
-  name  = format("%s-ethsigner-node%d", var.network_name, count.index)
+  name  = format("%s-ethsigner%d", var.network_name, count.index)
   depends_on = [
     docker_container.besu,
     docker_image.registry,
@@ -61,10 +61,8 @@ resource "docker_container" "ethsigner" {
     "--logging=TRACE",
     "file-based-signer",
     "-k",
-    "/data/ethsigner/keyfile",
-    // TODO ricardolyn
+    format("%s/%s", local.container_ethsigner_datadir_mounted, var.keystore_files[count.index]),
     "-p",
-    "/data/ethsigner/passwordfile",
-    // TODO ricardolyn
+    format("%s/%s", local.container_ethsigner_datadir_mounted, var.keystore_password_file),
   ]
 }

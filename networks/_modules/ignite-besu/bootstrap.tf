@@ -8,7 +8,8 @@ locals {
     enode_urls = [for idx in local.node_indices : local.enode_urls[idx] if lookup(local.node_initial_paticipants, idx, "false") == "true"]
   }
 
-  besu_dirs = [for idx in local.node_indices : format("%s/%s%s", quorum_bootstrap_network.this.network_dir_abs, local.node_dir_prefix, idx)]
+  besu_dirs      = [for idx in local.node_indices : format("%s/%s%s", quorum_bootstrap_network.this.network_dir_abs, local.node_dir_prefix, idx)]
+  ethsigner_dirs = [for idx in local.node_indices : format("%s/%s%s", quorum_bootstrap_network.this.network_dir_abs, local.ethsigner_dir_prefix, idx)]
 
   chainId = random_integer.network_id.result
 }
@@ -36,16 +37,22 @@ resource "quorum_bootstrap_network" "this" {
 
 resource "quorum_bootstrap_keystore" "accountkeys-generator" {
   count                = local.number_of_nodes
-  keystore_dir         = format("%s/%s%s/keystore", quorum_bootstrap_network.this.network_dir_abs, local.node_dir_prefix, count.index)
+  keystore_dir         = format("%s/%s", local.ethsigner_dirs[count.index], local.keystore_folder)
   use_light_weight_kdf = true
 
   dynamic "account" {
     for_each = lookup(local.named_accounts_alloc, count.index)
     content {
-      passphrase = ""
+      passphrase = local.keystore_password
       balance    = "1000000000000000000000000000"
     }
   }
+}
+
+resource "local_file" "keystore_password" {
+  count    = local.number_of_nodes
+  filename = format("%s/%s", local.ethsigner_dirs[count.index], local.keystore_password_file)
+  content  = local.keystore_password
 }
 
 resource "quorum_bootstrap_node_key" "nodekeys-generator" {
@@ -146,12 +153,6 @@ resource "local_file" "permissioned-nodes" {
   count    = local.number_of_nodes
   filename = format("%s/permissioned-nodes.json", local.besu_dirs[count.index])
   content  = local_file.static-nodes[count.index].content
-}
-
-resource "local_file" "passwords" {
-  count    = local.number_of_nodes
-  filename = format("%s/%s", local.besu_dirs[count.index], local.password_file)
-  content  = ""
 }
 
 resource "local_file" "genesisfile" {

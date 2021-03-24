@@ -2,9 +2,9 @@ resource "null_resource" "scp" {
   count      = var.remote_docker_config == null ? 0 : 1
   depends_on = [module.network]
   triggers = {
-    data_dirs = join(",", module.network.besu_dirs)
-    tm_dirs   = join(",", module.network.tm_dirs)
-    ethsigner_dirs   = join(",", module.network.ethsigner_dirs)
+    data_dirs      = join(",", module.network.besu_dirs)
+    tm_dirs        = join(",", module.network.tm_dirs)
+    ethsigner_dirs = join(",", module.network.ethsigner_dirs)
   }
   connection {
     type        = "ssh"

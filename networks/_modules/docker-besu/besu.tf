@@ -1,7 +1,7 @@
 locals {
   publish_besu_http_ports = [for idx in local.node_indices : [
   var.besu_networking[idx].port.http]]
-  publish_besu_ws_ports =  [for idx in local.node_indices : [
+  publish_besu_ws_ports = [for idx in local.node_indices : [
   var.besu_networking[idx].port.ws]]
   publish_besu_graphql_ports = [for idx in local.node_indices : [
   var.besu_networking[idx].port.graphql]]
