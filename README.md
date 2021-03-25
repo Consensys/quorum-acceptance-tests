@@ -1,4 +1,4 @@
-![Run Acceptance Tests](https://github.com/jpmorganchase/quorum-acceptance-tests/workflows/Run%20Acceptance%20Tests/badge.svg?branch=master)
+![Run Acceptance Tests](https://github.com/ConsenSys/quorum-acceptance-tests/workflows/Run%20Acceptance%20Tests/badge.svg?branch=master)
 
 # Quick Start
 

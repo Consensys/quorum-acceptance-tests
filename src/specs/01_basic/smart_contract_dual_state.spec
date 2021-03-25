@@ -3,9 +3,9 @@
  Tags: basic, dual-state, contract-interaction
 
 References:
-1. The dual public and private state [explained in details](https://github.com/jpmorganchase/quorum/blob/eab8d793f946f292954ff8e150645661ba599164/NOTES.md)
+1. The dual public and private state [explained in details](https://github.com/ConsenSys/quorum/blob/eab8d793f946f292954ff8e150645661ba599164/NOTES.md)
 2. `STATICCALL` opcode update in [Solc 0.5.0 breaking changes](https://solidity.readthedocs.io/en/latest/050-breaking-changes.html)
-3. [Pull Request](https://github.com/jpmorganchase/quorum/pull/592) to handle `StaticCall` with dual state implementation
+3. [Pull Request](https://github.com/ConsenSys/quorum/pull/592) to handle `StaticCall` with dual state implementation
 
 The following smart contracts are used:
 

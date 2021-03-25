@@ -8,7 +8,7 @@ variable "network_name" {
 
 variable "besu_datadirs" {
   type        = list(string)
-  description = "List of node's datadirs"
+  description = "List of Besu working directories"
 }
 
 variable "tessera_datadirs" {
@@ -18,7 +18,7 @@ variable "tessera_datadirs" {
 
 variable "ethsigner_datadirs" {
   type        = list(string)
-  description = "List of Tessera working directories"
+  description = "List of EthSigner working directories"
 }
 
 variable "keystore_files" {

@@ -4,5 +4,4 @@ This is best used along with the main module and submodule `docker-helper` to si
 
 ## Environment Variables
 
-* `ALWAYS_REFRESH`: when `geth` container starts, it always replaces its data folder from host data folder.
-* `ADDITIONAL_GETH_ARGS`: string value being appended to `geth`
+* `ALWAYS_REFRESH`: when `besu` container starts, it always replaces its data folder from host data folder.

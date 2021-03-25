@@ -1,5 +1,5 @@
 A Terraform module that uses [`terraform-provider-quorum`](https://github.com/terraform-providers/terraform-provider-quorum) 
-to bootstrap resources locally in order to run a [Quorum](https://github.com/jpmorganchase/quorum) network from scratch.
+to bootstrap resources locally in order to run a [Quorum](https://github.com/ConsenSys/quorum) network from scratch.
 
 The generated resources are organized in a folder (created from `network_name` input) under `output_dir` folder.
 
