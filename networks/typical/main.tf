@@ -58,7 +58,10 @@ module "network" {
 
   override_tm_named_key_allocation  = var.override_tm_named_key_allocation
   override_named_account_allocation = var.override_named_account_allocation
-  override_vnodes = var.override_vnodes
+  override_vnodes                   = var.override_vnodes
+
+  additional_tessera_config = var.additional_tessera_config
+  additional_genesis_config = var.additional_genesis_config
 }
 
 module "docker" {
@@ -78,7 +81,7 @@ module "docker" {
   geth_datadirs      = var.remote_docker_config == null ? module.network.data_dirs : split(",", join("", null_resource.scp[*].triggers.data_dirs))
   tessera_datadirs   = var.remote_docker_config == null ? module.network.tm_dirs : split(",", join("", null_resource.scp[*].triggers.tm_dirs))
 
-  additional_geth_args             = {for idx in local.node_indices : idx => local.more_args}
+  additional_geth_args             = { for idx in local.node_indices : idx => local.more_args }
   additional_geth_container_vol    = var.additional_quorum_container_vol
   additional_tessera_container_vol = var.additional_tessera_container_vol
   tessera_app_container_path       = var.tessera_app_container_path
