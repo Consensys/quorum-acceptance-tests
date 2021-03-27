@@ -76,8 +76,13 @@ public class GraphQLService extends AbstractService {
             Call call = httpClient.newCall(request);
             try {
                 Response response = call.execute();
-                InputStream responseBody = response.body().byteStream();
-                subscriber.onSuccess(new ObjectMapper().readValue(responseBody, Map.class));
+                if (response.isSuccessful()) {
+                    InputStream responseBody = response.body().byteStream();
+                    subscriber.onSuccess(new ObjectMapper().readValue(responseBody, Map.class));
+                } else {
+                    String error = response.body().string();
+                    subscriber.onError(new Exception(error));
+                }
             } catch (Exception e) {
                 subscriber.onError(e);
             }

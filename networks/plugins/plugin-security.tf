@@ -26,6 +26,7 @@ quorum:
 %{if lookup(local.support_security, id, false)~}
     ${id}:
       url: ${replace(replace(lookup(n, "url"), "http://", "https://"), "ws://", "wss://")}
+      graphql-url: ${replace(replace(lookup(n, "graphql-url"), "http://", "https://"), "ws://", "wss://")}
 %{endif~}
 %{endfor~}
 YML
