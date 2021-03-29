@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.quorum.Quorum;
+import org.web3j.quorum.tx.ClientTransactionManager;
 import org.web3j.tx.Contract;
 import org.web3j.tx.ReadonlyTransactionManager;
 import org.web3j.tx.TransactionManager;
@@ -152,11 +153,9 @@ public class StorageMasterService extends AbstractService {
         Quorum client = connectionFactory().getConnection(source);
 
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
-            org.web3j.tx.ClientTransactionManager txManager = vanillaClientTransactionManager(client, address);
-            return StorageMaster.deploy(client,
-                txManager,
-                BigInteger.valueOf(0),
-                gas).flowable().toObservable();
+//            ClientTransactionManager txManager = vanillaClientTransactionManager(client, address);
+            org.web3j.tx.ClientTransactionManager txManager = new org.web3j.tx.ClientTransactionManager(client, address, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS);
+            return StorageMaster.deploy(client, txManager, BigInteger.valueOf(0), gas).flowable().toObservable();
         });
     }
 

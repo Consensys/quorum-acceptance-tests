@@ -53,7 +53,6 @@ import org.web3j.quorum.Quorum;
 import org.web3j.quorum.tx.ClientTransactionManager;
 import org.web3j.tx.Contract;
 import org.web3j.tx.ReadonlyTransactionManager;
-import org.web3j.tx.TransactionManager;
 import org.web3j.tx.exceptions.ContractCallException;
 
 import java.io.IOException;
@@ -382,7 +381,7 @@ public class ContractService extends AbstractService {
         Quorum client = connectionFactory().getConnection(node);
 
         String fromAddress = accountService.getDefaultAccountAddress(node).blockingFirst();
-        TransactionManager txManager;
+        EnhancedClientTransactionManager txManager;
         if (isPrivate) {
             txManager = new EnhancedClientTransactionManager(
                 client,
@@ -538,16 +537,9 @@ public class ContractService extends AbstractService {
 
     public Observable<TransactionReceipt> updateClientReceiptPrivate(QuorumNode source, QuorumNode target, String contractAddress, BigInteger value) {
         Quorum client = connectionFactory().getConnection(source);
-        return accountService.getDefaultAccountAddress(source).flatMap(address -> {
-            ClientTransactionManager txManager = clientTransactionManager(
-                client,
-                address,
-                null,
-                List.of(privacyService.id(target)));
-            return ClientReceipt.load(contractAddress, client, txManager,
-                BigInteger.valueOf(0),
-                DEFAULT_GAS_LIMIT).deposit(new byte[32], value).flowable().toObservable();
-        });
+        return accountService.getDefaultAccountAddress(source)
+            .flatMap(address -> Observable.just(clientTransactionManager(client, address, null, List.of(privacyService.id(target)))))
+            .flatMap(txManager -> ClientReceipt.load(contractAddress, client, txManager, BigInteger.valueOf(0), DEFAULT_GAS_LIMIT).deposit(new byte[32], value).flowable().toObservable());
     }
 
     public Observable<EthSendTransactionAsync> createClientReceiptContractAsync(int initialValue, QuorumNode source, String sourceAccount, QuorumNode target, String callbackUrl) {

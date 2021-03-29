@@ -70,11 +70,14 @@ public class FillTransaction extends AbstractSpecImplementation {
             Predicate<? super EthGetTransactionReceipt> isReceiptPresent
                 = ethGetTransactionReceipt -> ethGetTransactionReceipt.getTransactionReceipt().isPresent();
 
-            Optional<TransactionReceipt> receipt = transactionService.getTransactionReceipt(QuorumNode.Node1, txHash)
-                .repeatWhen(completed -> completed.delay(2, TimeUnit.SECONDS))
-                .takeUntil(isReceiptPresent)
-                .timeout(10, TimeUnit.SECONDS)
-                .blockingLast().getTransactionReceipt();
+            Optional<TransactionReceipt> receipt = transactionService
+                .pollTransactionReceipt(networkProperty.getNode(QuorumNode.Node1.name()), txHash);
+
+//            Optional<TransactionReceipt> receipt = transactionService.getTransactionReceipt(QuorumNode.Node1, txHash)
+//                .repeatWhen(completed -> completed.delay(2, TimeUnit.SECONDS))
+//                .takeUntil(isReceiptPresent)
+//                .timeout(10, TimeUnit.SECONDS)
+//                .blockingLast().getTransactionReceipt();
 
             assertThat(receipt.isPresent()).isTrue();
             assertThat(receipt.get().getBlockNumber()).isNotEqualTo(currentBlockNumber());

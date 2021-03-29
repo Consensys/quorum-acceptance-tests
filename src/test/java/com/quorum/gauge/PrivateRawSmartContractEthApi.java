@@ -19,6 +19,7 @@
 
 package com.quorum.gauge;
 
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.core.AbstractSpecImplementation;
@@ -74,17 +75,10 @@ public class PrivateRawSmartContractEthApi extends AbstractSpecImplementation {
     }
 
     @Step("Transaction Receipt is present in <node> for eth_signTransaction signed <contractName> from <node>'s default account")
-    public void verifyTransactionReceipt(QuorumNode node, String contractName, QuorumNode source) {
+    public void verifyTransactionReceipt(QuorumNetworkProperty.Node node, String contractName, QuorumNode source) {
         String transactionHash = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName + "_transactionHash", String.class);
-        Optional<TransactionReceipt> receipt = transactionService.getTransactionReceipt(node, transactionHash)
-            .map(ethGetTransactionReceipt -> {
-                if (ethGetTransactionReceipt.getTransactionReceipt().isPresent()) {
-                    return ethGetTransactionReceipt;
-                } else {
-                    throw new RuntimeException("retry");
-                }
-            }).retryWhen(new RetryWithDelay(20, 3000))
-            .blockingFirst().getTransactionReceipt();
+
+        Optional<TransactionReceipt> receipt = transactionService.pollTransactionReceipt(node, transactionHash);
 
         assertThat(receipt.isPresent()).isTrue();
         assertThat(receipt.get().getBlockNumber()).isNotEqualTo(currentBlockNumber());

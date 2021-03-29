@@ -45,8 +45,7 @@ public class StorageMasterSmartContract extends AbstractSpecImplementation {
     public void setupStorageMasterPublicContract(QuorumNode source, String contractName) {
         saveCurrentBlockNumber();
         logger.debug("Setting up public storage master contract from {}", source);
-        Contract contract = storageMasterService.createStorageMasterPublicContract(
-            source, AbstractService.DEFAULT_GAS_LIMIT).blockingFirst();
+        Contract contract = storageMasterService.createStorageMasterPublicContract(source, AbstractService.DEFAULT_GAS_LIMIT).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);

@@ -57,11 +57,11 @@ public class QuorumNodeConnectionFactory {
     }
 
     public Web3j getWeb3jConnection(QuorumNode node) {
-        return Web3j.build(getWeb3jService(node));
+        return Quorum.build(getWeb3jService(node));
     }
 
     public Web3j getWeb3jConnection(QuorumNetworkProperty.Node node) {
-        return Web3j.build(getWeb3jService(node));
+        return Quorum.build(getWeb3jService(node));
     }
 
     public Web3jService getWeb3jService(QuorumNode node) {

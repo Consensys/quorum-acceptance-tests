@@ -21,6 +21,7 @@ package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.Context;
 import com.quorum.gauge.common.QuorumNetworkProperty;
+import com.quorum.gauge.ext.EnhancedClientTransactionManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
@@ -87,7 +88,7 @@ public abstract class AbstractService {
     }
 
     public ClientTransactionManager clientTransactionManager(Web3j web3j, String fromAddress, String privateFrom, List<String> privateFor) {
-        return new ClientTransactionManager(web3j, fromAddress, privateFrom, privateFor, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS);
+        return new EnhancedClientTransactionManager((Quorum) web3j, fromAddress, privateFrom, privateFor);
     }
 
     public org.web3j.tx.ClientTransactionManager vanillaClientTransactionManager(Web3j web3j, String fromAddress) {

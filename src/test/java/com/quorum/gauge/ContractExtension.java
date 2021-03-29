@@ -49,6 +49,8 @@ public class ContractExtension extends AbstractSpecImplementation {
 
         final Contract existingContract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
 
+        Thread.sleep(1000);
+
         final QuorumExtendContract result = extensionService
             .initiateContractExtension(creator, existingContract.getContractAddress(), newNode, privacyFlag)
             .blockingFirst();

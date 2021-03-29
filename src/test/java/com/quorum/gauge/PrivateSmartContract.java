@@ -112,15 +112,8 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     @Step("Transaction Receipt is present in <node> for <contractName> from <node>'s default account")
     public void verifyTransactionReceipt(QuorumNode node, String contractName, QuorumNode source) {
         String transactionHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "_transactionHash", String.class);
-        Optional<TransactionReceipt> receipt = transactionService.getTransactionReceipt(node, transactionHash)
-                .map(ethGetTransactionReceipt -> {
-                    if (ethGetTransactionReceipt.getTransactionReceipt().isPresent()) {
-                        return ethGetTransactionReceipt;
-                    } else {
-                        throw new RuntimeException("retry");
-                    }
-                }).retryWhen(new RetryWithDelay(20, 3000))
-                .blockingFirst().getTransactionReceipt();
+        Optional<TransactionReceipt> receipt = transactionService
+            .pollTransactionReceipt(networkProperty.getNode(node.name()), transactionHash);
 
         assertThat(receipt.isPresent()).isTrue();
         assertThat(receipt.get().getBlockNumber()).isNotEqualTo(currentBlockNumber());
@@ -204,17 +197,11 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     @Step("Deploy <count> private smart contracts between a default account in <source> and a default account in <target>")
     public void createMultiple(int count, QuorumNode source, QuorumNode target) {
         int arbitraryValue = 10;
-        List<Observable<? extends Contract>> allObservableContracts = new ArrayList<>();
+
+        List<Contract> contracts = new ArrayList<>();
         for (int i = 0; i < count; i++) {
-            allObservableContracts.add(contractService.createSimpleContract(arbitraryValue, source, target).subscribeOn(Schedulers.io()));
+            contracts.add(contractService.createSimpleContract(arbitraryValue, source, target).blockingFirst());
         }
-        List<Contract> contracts = Observable.zip(allObservableContracts, args -> {
-            List<Contract> tmp = new ArrayList<>();
-            for (Object o : args) {
-                tmp.add((Contract) o);
-            }
-            return tmp;
-        }).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(String.format("%s_source_contract", source), contracts);
         DataStoreFactory.getSpecDataStore().put(String.format("%s_target_contract", target), contracts);
@@ -387,7 +374,10 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
             QuorumNode source = mustHaveValue(DataStoreFactory.getScenarioDataStore(), cName + "_source", QuorumNode.class);
             QuorumNode target = mustHaveValue(DataStoreFactory.getScenarioDataStore(), cName + "_target", QuorumNode.class);
             for (int i = 0; i < count; i++) {
-                observables.add(contractService.updateClientReceiptPrivate(source, target, c.getContractAddress(), BigInteger.ZERO).subscribeOn(Schedulers.io()));
+                TransactionReceipt txReceipt = contractService.updateClientReceiptPrivate(source, target, c.getContractAddress(), BigInteger.ZERO).blockingFirst();
+                TransactionReceipt realReceipt = transactionService.pollTransactionReceipt(networkProperty.getNode(source.name()), txReceipt.getTransactionHash()).get();
+
+                observables.add(Observable.just(realReceipt));
             }
         }
         List<TransactionReceipt> receipts = Observable.zip(observables, objects -> Observable.fromArray(objects).map(o -> (TransactionReceipt) o).toList().blockingGet()).blockingFirst();
@@ -416,7 +406,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         for (QuorumNode targetNode : targetNodes) {
             for (int i = 0; i < count; i++) {
                 int arbitraryValue = new Random().nextInt(50) + 1;
-                allObservableContracts.add(contractService.createSimpleContract(arbitraryValue, source, targetNode).subscribeOn(Schedulers.io()));
+                allObservableContracts.add(contractService.createSimpleContract(arbitraryValue, source, targetNode));
             }
         }
         BigInteger blockNumber = Observable.zip(allObservableContracts, args -> utilService.getCurrentBlockNumber().blockingFirst()).blockingFirst().getBlockNumber();
