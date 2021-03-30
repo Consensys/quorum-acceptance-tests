@@ -120,8 +120,6 @@ public class EstimateGas extends AbstractSpecImplementation {
     public void verifyEstimate(String expectedValue, String tolerance) {
         EthEstimateGas estimatedValue = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "estimatedValue", EthEstimateGas.class);
 
-        System.err.println(estimatedValue.getAmountUsed());
-
         Double percentage = Double.valueOf(tolerance);
         try {
             assertThat(estimatedValue.getAmountUsed()).isCloseTo(new BigInteger(expectedValue), Percentage.withPercentage(percentage));

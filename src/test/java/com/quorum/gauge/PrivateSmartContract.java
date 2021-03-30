@@ -112,8 +112,15 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     @Step("Transaction Receipt is present in <node> for <contractName> from <node>'s default account")
     public void verifyTransactionReceipt(QuorumNode node, String contractName, QuorumNode source) {
         String transactionHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "_transactionHash", String.class);
-        Optional<TransactionReceipt> receipt = transactionService
-            .pollTransactionReceipt(networkProperty.getNode(node.name()), transactionHash);
+        Optional<TransactionReceipt> receipt = transactionService.getTransactionReceipt(node, transactionHash)
+                .map(ethGetTransactionReceipt -> {
+                    if (ethGetTransactionReceipt.getTransactionReceipt().isPresent()) {
+                        return ethGetTransactionReceipt;
+                    } else {
+                        throw new RuntimeException("retry");
+                    }
+                }).retryWhen(new RetryWithDelay(20, 3000))
+                .blockingFirst().getTransactionReceipt();
 
         assertThat(receipt.isPresent()).isTrue();
         assertThat(receipt.get().getBlockNumber()).isNotEqualTo(currentBlockNumber());

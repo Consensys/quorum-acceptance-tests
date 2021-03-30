@@ -63,9 +63,16 @@ public class ContractDeployment extends AbstractSpecImplementation {
         List<Observable<Optional<TransactionReceipt>>> receiptObsevables = new ArrayList<>();
         for (String nodeStr : nodes) {
             QuorumNetworkProperty.Node node = networkProperty.getNode(nodeStr);
-            receiptObsevables.add(
-                Observable.just(transactionService.pollTransactionReceipt(node, transactionHash))
-            );
+            receiptObsevables.add(transactionService.getTransactionReceipt(node, transactionHash)
+                .map(ethGetTransactionReceipt -> {
+                    if (ethGetTransactionReceipt.getTransactionReceipt().isPresent()) {
+                        return ethGetTransactionReceipt;
+                    } else {
+                        throw new RuntimeException("retry");
+                    }
+                }).retryWhen(new RetryWithDelay(20, 3000))
+                .map(ethReceipt -> ethReceipt.getTransactionReceipt())
+                .subscribeOn(Schedulers.io()));
         }
         Observable.zip(receiptObsevables, receipts -> {
             for (int i = 0; i < receipts.length; i++) {

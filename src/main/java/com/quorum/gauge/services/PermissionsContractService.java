@@ -28,7 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.web3j.quorum.tx.ClientTransactionManager;
 import org.web3j.tx.Contract;
 import org.web3j.tx.TransactionManager;
 
@@ -47,7 +46,7 @@ public class PermissionsContractService extends AbstractService {
     public Observable<? extends Contract> createPermissionsGenericContracts(QuorumNetworkProperty.Node node, String contractName, String upgrContractAddress, String version) {
         Web3j client = connectionFactory().getWeb3jConnection(node);
 
-        org.web3j.tx.ClientTransactionManager transactionManager = getTxManager(node, client);
+        TransactionManager transactionManager = getTxManager(node, client);
 
         if(version.toLowerCase().equals("v2")){
             switch (contractName.toLowerCase().trim()) {

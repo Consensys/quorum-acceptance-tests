@@ -508,22 +508,19 @@ public class RawContractService extends AbstractService {
 
         return Observable.fromCallable(() -> wallet)
             .flatMap(walletData -> Observable.fromCallable(() -> WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath())))
-            .flatMap(cred -> Observable.just(
-                new OpenQuorumTransactionManager(client,
-                    cred,
-                    privacyService.id(source, sourceNamedKey),
-                    targetNamedKeys.stream().map(privacyService::id).collect(Collectors.toList()),
-                    enclave,
-                    // for this specific case do not wait for the transaction receipt (as we will only get a receipt after we send the next transaction)
-                    1,
-                    DEFAULT_SLEEP_DURATION_IN_MILLIS) {
-                        @Override
-                        protected BigInteger getNonce() throws IOException {
-                            return super.getNonce().add(BigInteger.valueOf(nonceShift));
-                        }
-                    }
-                )
-            )
+            .flatMap(cred -> Observable.just(new OpenQuorumTransactionManager(client,
+                cred,
+                privacyService.id(source, sourceNamedKey),
+                targetNamedKeys.stream().map(privacyService::id).collect(Collectors.toList()),
+                enclave,
+                // for this specific case do not wait for the transaction receipt (as we will only get a receipt after we send the next transaction)
+                1,
+                DEFAULT_SLEEP_DURATION_IN_MILLIS){
+                @Override
+                protected BigInteger getNonce() throws IOException {
+                    return super.getNonce().add(BigInteger.valueOf(nonceShift));
+                }
+            }))
             .flatMap(qrtxm -> SneakyWrapper.load(contractAddress, client,
                 qrtxm,
                 BigInteger.valueOf(0),

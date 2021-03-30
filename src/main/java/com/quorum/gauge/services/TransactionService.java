@@ -86,15 +86,14 @@ public class TransactionService extends AbstractService {
 
     public Observable<EthGetTransactionReceipt> getTransactionReceipt(QuorumNetworkProperty.Node node, String transactionHash) {
         Quorum client = connectionFactory().getConnection(node);
-        return client.ethGetTransactionReceipt(transactionHash).flowable().toObservable();
-    }
+        return client.ethGetTransactionReceipt(transactionHash)
+            .flowable()
+            .toObservable()
+            .flatMap(r -> {
+                if (r.getTransactionReceipt().isEmpty()) {
+                    return Observable.just(r);
+                }
 
-    public Optional<TransactionReceipt> pollTransactionReceipt(QuorumNetworkProperty.Node node, String transactionHash) {
-        for (int i = 0; i < 60; i++) {
-            EthGetTransactionReceipt r = getTransactionReceipt(node, transactionHash)
-                .delay(1, TimeUnit.SECONDS)
-                .blockingFirst();
-            if (r.getTransactionReceipt().isPresent()) {
                 TransactionReceipt q = r.getTransactionReceipt().get();
                 if("0x000000000000000000000000000000007FfFfFFf".equalsIgnoreCase(q.getTo())) {
                     // fetch the private tx receipt, since we have a marker receipt
@@ -104,12 +103,21 @@ public class TransactionService extends AbstractService {
                         connectionFactory().getWeb3jService(node),
                         EthGetTransactionReceipt.class
                     );
-                    Optional<TransactionReceipt> transactionReceipt = request.flowable().toObservable().blockingFirst().getTransactionReceipt();
-                    if(transactionReceipt.isPresent()) {
-                        return transactionReceipt;
+                    EthGetTransactionReceipt ethGetTransactionReceipt = request.flowable().toObservable().blockingFirst();
+                    if(ethGetTransactionReceipt.getTransactionReceipt().isPresent()) {
+                        return Observable.just(ethGetTransactionReceipt);
                     }
                 }
+                return Observable.just(r);
+            });
+    }
 
+    public Optional<TransactionReceipt> pollTransactionReceipt(QuorumNetworkProperty.Node node, String transactionHash) {
+        for (int i = 0; i < 60; i++) {
+            EthGetTransactionReceipt r = getTransactionReceipt(node, transactionHash)
+                .delay(3, TimeUnit.SECONDS)
+                .blockingFirst();
+            if (r.getTransactionReceipt().isPresent()) {
                 return r.getTransactionReceipt();
             }
         }

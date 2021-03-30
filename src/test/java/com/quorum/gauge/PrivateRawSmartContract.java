@@ -19,7 +19,6 @@
 
 package com.quorum.gauge;
 
-import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.common.config.WalletData;
@@ -64,9 +63,17 @@ public class PrivateRawSmartContract extends AbstractSpecImplementation {
     }
 
     @Step("Transaction Receipt is present in <node> for <contractName> from external wallet <wallet>")
-    public void verifyTransactionReceipt(QuorumNetworkProperty.Node node, String contractName, WalletData wallet) {
+    public void verifyTransactionReceipt(QuorumNode node, String contractName, WalletData wallet) {
         String transactionHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "_transactionHash", String.class);
-        Optional<TransactionReceipt> receipt = transactionService.pollTransactionReceipt(node, transactionHash);
+        Optional<TransactionReceipt> receipt = transactionService.getTransactionReceipt(node, transactionHash)
+            .map(ethGetTransactionReceipt -> {
+                if (ethGetTransactionReceipt.getTransactionReceipt().isPresent()) {
+                    return ethGetTransactionReceipt;
+                } else {
+                    throw new RuntimeException("retry");
+                }
+            }).retryWhen(new RetryWithDelay(20, 3000))
+            .blockingFirst().getTransactionReceipt();
 
         assertThat(receipt.isPresent()).isTrue();
         assertThat(receipt.get().getBlockNumber()).isNotEqualTo(currentBlockNumber());
