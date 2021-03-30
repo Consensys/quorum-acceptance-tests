@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    quorum = {
+      source = "ConsenSys/quorum"
+      version = "0.2.0"
+    }
+  }
+}
+
 locals {
   network_name              = coalesce(var.network_name, random_string.network-name.result)
   generated_dir             = var.output_dir
