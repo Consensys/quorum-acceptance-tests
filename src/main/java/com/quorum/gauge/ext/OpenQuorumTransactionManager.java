@@ -1,6 +1,7 @@
 package com.quorum.gauge.ext;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
@@ -8,7 +9,13 @@ import org.web3j.crypto.Credentials;
 import org.web3j.crypto.RawTransaction;
 import org.web3j.crypto.TransactionEncoder;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.Web3jService;
+import org.web3j.protocol.core.JsonRpc2_0Web3j;
+import org.web3j.protocol.core.Request;
+import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.exceptions.TransactionException;
 import org.web3j.quorum.Quorum;
 import org.web3j.quorum.enclave.Enclave;
 import org.web3j.quorum.enclave.SendResponse;
@@ -32,6 +39,8 @@ public class OpenQuorumTransactionManager extends RawTransactionManager {
     private List privateFor;
 
     private final Enclave enclave;
+
+    private Web3jService web3jService;
 
 
     public EthSendTransaction sendTransaction(BigInteger gasPrice, BigInteger gasLimit, String to, String data, BigInteger value) throws IOException {
@@ -119,6 +128,23 @@ public class OpenQuorumTransactionManager extends RawTransactionManager {
         return result;
     }
 
+    @Override
+    protected TransactionReceipt executeTransaction(BigInteger gasPrice, BigInteger gasLimit, String to, String data, BigInteger value) throws IOException, TransactionException {
+        TransactionReceipt receipt = super.executeTransaction(gasPrice, gasLimit, to, data, value);
+
+        if("0x000000000000000000000000000000007FfFfFFf".equalsIgnoreCase(receipt.getTo())) {
+            // fetch the private tx receipt, since we have a marker receipt
+            Request<?, EthGetTransactionReceipt> request = new Request<Object, EthGetTransactionReceipt>(
+                "eth_getPrivateTransactionReceipt",
+                List.of(receipt.getTransactionHash()),
+                web3jService,
+                EthGetTransactionReceipt.class
+            );
+            return request.flowable().toObservable().blockingFirst().getTransactionReceipt().orElse(receipt);
+        }
+        return receipt;
+    }
+
     public final Quorum getWeb3j() {
         return this.web3j;
     }
@@ -142,6 +168,15 @@ public class OpenQuorumTransactionManager extends RawTransactionManager {
         this.publicKey = publicKey;
         this.privateFor = privateFor;
         this.enclave = enclave;
+
+        try {
+            JsonRpc2_0Web3j q = (JsonRpc2_0Web3j) web3j;
+            Field f = JsonRpc2_0Web3j.class.getDeclaredField("web3jService"); //NoSuchFieldException
+            f.setAccessible(true);
+            this.web3jService = (Web3jService) f.get(q); //IllegalAccessException
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
    public OpenQuorumTransactionManager(Quorum web3j, Credentials credentials, String publicKey, List privateFor, Enclave enclave) {

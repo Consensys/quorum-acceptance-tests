@@ -59,10 +59,10 @@ import org.web3j.quorum.enclave.SendResponse;
 import org.web3j.quorum.enclave.Tessera;
 import org.web3j.quorum.enclave.protocol.EnclaveService;
 import org.web3j.quorum.methods.request.PrivateTransaction;
-import org.web3j.quorum.tx.QuorumTransactionManager;
 import org.web3j.tx.Contract;
 import org.web3j.tx.RawTransactionManager;
 import org.web3j.tx.ReadonlyTransactionManager;
+import org.web3j.tx.TransactionManager;
 import org.web3j.tx.exceptions.ContractCallException;
 import org.web3j.utils.Numeric;
 
@@ -181,7 +181,7 @@ public class RawContractService extends AbstractService {
         try {
             Credentials credentials = WalletUtils.loadCredentials(wallet.getWalletPass(), wallet.getWalletPath());
 
-            QuorumTransactionManager qrtxm = quorumTransactionManager(client,
+            TransactionManager qrtxm = quorumTransactionManager(client,
                     credentials,
                     privacyService.id(source),
                     List.of(privacyService.id(target)),
@@ -209,7 +209,7 @@ public class RawContractService extends AbstractService {
         try {
             Credentials credentials = WalletUtils.loadCredentials(wallet.getWalletPass(), wallet.getWalletPath());
 
-            QuorumTransactionManager qrtxm = quorumTransactionManager(client,
+            TransactionManager qrtxm = quorumTransactionManager(client,
                     credentials,
                     privacyService.id(source),
                     List.of(privacyService.id(target)),
