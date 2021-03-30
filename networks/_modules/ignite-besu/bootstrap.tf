@@ -91,9 +91,18 @@ resource "local_file" "genesis-file" {
   filename = format("%s/genesis.json", quorum_bootstrap_network.this.network_dir_abs)
   content  = <<-EOF
 {
+  "coinbase": "0x0000000000000000000000000000000000000000",
   "config" : {
     "chainId" : ${local.chainId},
-    "constantinoplefixblock" : 0,
+      "homesteadBlock": 0,
+      "byzantiumBlock": 0,
+      "constantinopleBlock":0,
+      "istanbulBlock":0,
+      "petersburgBlock":0,
+      "eip150Block": 0,
+      "eip155Block": 0,
+      "eip150Hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "eip158Block": 0,
 %{if var.consensus == "ibft2"~}
     "ibft2" : {
       "blockperiodseconds" : 1,
@@ -103,13 +112,13 @@ resource "local_file" "genesis-file" {
 %{endif~}
     "isQuorum": true
   },
-  "nonce" : "0x0",
-  "timestamp": "0x00",
-  "gasLimit" : "0xFFFFFF00",
   "difficulty" : "0x1",
-  "mixhash": "${data.quorum_bootstrap_genesis_mixhash.this.istanbul}",
   "extraData": "${quorum_bootstrap_istanbul_extradata.this.extradata}",
-  "coinbase" : "0x0000000000000000000000000000000000000000",
+  "gasLimit" : "0xFFFFFF00",
+  "mixhash": "${data.quorum_bootstrap_genesis_mixhash.this.istanbul}",
+  "nonce" : "0x0",
+  "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "timestamp": "0x00",
   "alloc": {
       ${join(",", formatlist("\"%s\" : { \"balance\": \"%s\" }", quorum_bootstrap_keystore.accountkeys-generator[*].account[0].address, quorum_bootstrap_keystore.accountkeys-generator[*].account[0].balance))},
       "0x0000000000000000000000000000000000008888": {

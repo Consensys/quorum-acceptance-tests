@@ -68,7 +68,7 @@ variable "besu" {
       port  = { http = 8545, ws= 8546, graphql= 8547, p2p= 30303 }
     }
     host = {
-      port = { http_start = 22000 , ws_start= 22100, graphql_start= 22200 }
+      port = { http_start = 23000 , ws_start= 23100, graphql_start= 23200 }
     }
   }
   description = "besu Docker container configuration "
@@ -90,7 +90,7 @@ variable "ethsigner" {
       port  = 8545
     }
     host = {
-      port_start = 23000
+      port_start = 22000
     }
   }
   description = "ethsigner Docker container configuration "

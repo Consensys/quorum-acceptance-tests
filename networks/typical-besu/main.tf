@@ -33,9 +33,9 @@ module "helper" {
     }
     host = {
       port = {
-        http_start    = 22000,
-        ws_start      = 22100,
-        graphql_start = 22200
+        http_start    = 23000,
+        ws_start      = 23100,
+        graphql_start = 23200
       }
     }
   }
@@ -61,7 +61,7 @@ module "helper" {
       port  = 8545
     }
     host = {
-      port_start = 23000
+      port_start = 22000
     }
   }
 }
