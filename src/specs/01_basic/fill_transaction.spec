@@ -2,7 +2,7 @@
 
  Tags: basic
 
-##  test fill transaction
+## Test fill transaction
 
 * Deploy Simple Storage contract using fillTransaction api with an initial value of "129" called from "Node1" private for "Node2". Name this contract as "C1"
 

@@ -1,18 +1,16 @@
 FROM alpine:latest
 
-ARG TERRAFORM_VERSION=0.12.26
+ARG TERRAFORM_VERSION=0.14.7
 ARG SOLC_VERSION=0.5.5
 ARG GAUGE_VERSION=1.0.8
 # To have a consistent run, this must be the same as gauge-java.version in pom.xml
 ARG GAUGE_JAVA_VERSION=0.7.7
-ARG TERRAFORM_PROVIDER_QUORUM_VERSION=1.0.0-beta.1
 ARG MAVEN_VERSION=3.6.3
 ARG JDK_VERSION=11.0.7
 LABEL maintainer="info@goquorum.com" \
     TERRAFORM_VERSION="${TERRAFORM_VERSION}" \
     SOLC_VERSION=""${SOLC_VERSION} \
     GAUGE_VERSION="${GAUGE_VERSION}" \
-    TERRAFORM_PROVIDER_QUORUM_VERSION="${TERRAFORM_PROVIDER_QUORUM_VERSION}" \
     MAVEN_VERSION="${MAVEN_VERSION}" \
     JDK_VERSION="openjdk-${JDK_VERSION}"
 WORKDIR /workspace
@@ -32,9 +30,6 @@ RUN apk -q --no-cache --update add tar bash \
         (wget -O /tmp/downloads/gauge.zip -q https://github.com/getgauge/gauge/releases/download/v${GAUGE_VERSION}/gauge-${GAUGE_VERSION}-linux.x86_64.zip \
         && unzip -q -o /tmp/downloads/gauge.zip -d bin && gauge install java --version ${GAUGE_JAVA_VERSION} > /dev/null && gauge install > /dev/null) & \
         p="$!"; pids="$pids $p"; echo "  >> Installing Gauge ${GAUGE_VERSION} - PID $p"; \
-        (wget -O /tmp/downloads/provider.zip -q https://dl.bintray.com/quorumengineering/terraform/terraform-provider-quorum/v${TERRAFORM_PROVIDER_QUORUM_VERSION}/terraform-provider-quorum_${TERRAFORM_PROVIDER_QUORUM_VERSION}_linux_amd64.zip \
-        && unzip -q -o /tmp/downloads/provider.zip -d bin) & \
-        p="$!"; pids="$pids $p"; echo "  >> Installing Terraform Quorum Provider ${TERRAFORM_PROVIDER_QUORUM_VERSION} - PID $p"; \
         (wget -O /tmp/downloads/maven.tar.gz -q https://apache.osuosl.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
         && tar -xzf /tmp/downloads/maven.tar.gz -C /usr/local/maven --strip-components=1) & \
         p="$!"; pids="$pids $p"; echo "  >> Installing Maven ${MAVEN_VERSION} - PID $p"; \

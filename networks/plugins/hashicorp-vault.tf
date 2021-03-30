@@ -37,7 +37,7 @@ resource "docker_container" "vault_server" {
     name     = local.vault_server_container_name
     hostname = local.vault_server_container_name
     networks_advanced {
-      name = data.docker_network.quorum.name
+      name = module.docker.docker_network_name
       ipv4_address = cidrhost(lookup(local.network_config, "subnet"), 201)
       aliases = [local.cert_san_workaround_hostname]
     }
