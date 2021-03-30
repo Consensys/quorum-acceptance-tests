@@ -91,7 +91,7 @@ public class EnhancedClientTransactionManager extends ClientTransactionManager {
     protected TransactionReceipt executeTransaction(BigInteger gasPrice, BigInteger gasLimit, String to, String data, BigInteger value) throws IOException, TransactionException {
         TransactionReceipt receipt = super.executeTransaction(gasPrice, gasLimit, to, data, value);
 
-        if("0x000000000000000000000000000000007FfFfFFf".equalsIgnoreCase(receipt.getTo())) {
+        if("0x000000000000000000000000000000000000007e".equalsIgnoreCase(receipt.getTo())) {
             // fetch the private tx receipt, since we have a marker receipt
             Request<?, EthGetTransactionReceipt> request = new Request<>(
                 "eth_getPrivateTransactionReceipt",

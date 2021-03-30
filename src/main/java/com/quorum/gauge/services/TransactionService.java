@@ -95,7 +95,7 @@ public class TransactionService extends AbstractService {
                 }
 
                 TransactionReceipt q = r.getTransactionReceipt().get();
-                if("0x000000000000000000000000000000007FfFfFFf".equalsIgnoreCase(q.getTo())) {
+                if("0x000000000000000000000000000000000000007e".equalsIgnoreCase(q.getTo())) {
                     // fetch the private tx receipt, since we have a marker receipt
                     Request<?, EthGetTransactionReceipt> request = new Request<>(
                         "eth_getPrivateTransactionReceipt",
