@@ -4,7 +4,7 @@ locals {
   oauth2_server_admin_port = { internal = 4445, external = 4445 } # for admin
   include_security         = lookup(var.plugins, "security", null) != null
 
-  network_config = element(tolist(data.docker_network.quorum.ipam_config), 0)
+  network_config = element(tolist(module.docker.docker_network_ipam_config), 0)
 
   application_yml = yamldecode(file(module.network.application_yml_file))
 }
@@ -27,17 +27,13 @@ quorum:
 YML
 }
 
-data "docker_network" "quorum" {
-  name = module.docker.docker_network_name
-}
-
 resource "docker_container" "hydra" {
   count    = local.include_security ? 1 : 0
   image    = "oryd/hydra:v1.3.2-alpine"
   name     = local.oauth2_server
   hostname = local.oauth2_server
   networks_advanced {
-    name         = data.docker_network.quorum.name
+    name         = module.docker.docker_network_name
     ipv4_address = cidrhost(lookup(local.network_config, "subnet"), 200)
   }
   env = [
