@@ -129,7 +129,7 @@ public class Configuration {
                 return chain.proceed(chain.request());
             }
             Request request = chain.request().newBuilder()
-                .addHeader("GoQuorum-PSI", psi)
+                .addHeader("Quorum-PSI", psi)
                 .build();
             return chain.proceed(request);
         });
