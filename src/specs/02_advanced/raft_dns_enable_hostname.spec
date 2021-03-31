@@ -14,7 +14,7 @@
   1) adding node 4 with its hostname
   2) test compatibility between dns enabled node 1,2,3 and dns disabled node 4
   3) raft.addPeer should work as expected and hostname should be displayed in raft.cluster
-  (https://github.com/jpmorganchase/quorum/pull/937)
+  (https://github.com/ConsenSys/quorum/pull/937)
 
 * Start a Quorum Network, named it "default", consisting of "Node1,Node2,Node3" with "raftdnsenable" using raft consensus
 * Add new raft peer "Node4" with "raftdnsdisable" to network "default"

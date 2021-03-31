@@ -15,11 +15,11 @@ output "container_tm_datadir" {
 }
 
 output "quorum_containers" {
-  value = docker_container.geth[*].id
+  value       = docker_container.geth[*].id
   description = "List of container ids"
 }
 
 output "tessera_containers" {
-  value = docker_container.tessera[*].id
+  value       = docker_container.tessera[*].id
   description = "List of container ids"
 }

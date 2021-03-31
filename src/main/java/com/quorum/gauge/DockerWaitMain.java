@@ -45,7 +45,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * This is to wait for all docker containers to be running and healthy.
- *
+ * <p>
  * Requires DockerWaitMain.properties in the classpath
  */
 @SpringBootApplication
@@ -56,12 +56,12 @@ public class DockerWaitMain implements CommandLineRunner {
 
     private static final String PROP_FILE_TEMP = "DockerWaitMain-%s.properties";
 
-    enum WaitType { infra, network }
+    enum WaitType {infra, network}
 
     private static WaitType waitType;
 
-    public static void main(String[] args) throws Exception{
-        if (args.length != 1 ) {
+    public static void main(String[] args) throws Exception {
+        if (args.length != 1) {
             throw new IllegalArgumentException("Missing arg");
         }
         waitType = WaitType.valueOf(args[0]);
@@ -78,17 +78,17 @@ public class DockerWaitMain implements CommandLineRunner {
             return;
         }
         String[] updatedArgs = props.keySet().stream()
-                .map(String::valueOf)
-                .filter(p -> p.startsWith("quorum."))
-                .map(p -> String.format("--%s=%s", p, props.get(p)))
-                .toArray(String[]::new);
+            .map(String::valueOf)
+            .filter(p -> p.startsWith("quorum."))
+            .map(p -> String.format("--%s=%s", p, props.get(p)))
+            .toArray(String[]::new);
         new SpringApplicationBuilder(DockerWaitMain.class)
-                .properties(props)
-                .web(WebApplicationType.NONE)
-                .lazyInitialization(true)
-                .profiles("dockerwaitmain")
-                .run(updatedArgs)
-                .close();
+            .properties(props)
+            .web(WebApplicationType.NONE)
+            .lazyInitialization(true)
+            .profiles("dockerwaitmain")
+            .run(updatedArgs)
+            .close();
     }
 
     @Autowired(required = false)
@@ -113,13 +113,13 @@ public class DockerWaitMain implements CommandLineRunner {
 
     private void waitForInfra() throws Exception {
         Observable.just(new AtomicInteger(1))
-                .doOnNext(c -> logger.info("Waiting attempt {} for infra to be ready ...", c.getAndIncrement()))
-                .flatMap(c -> dockerService.info())
-                .retryWhen(o -> o.delay(5, TimeUnit.SECONDS))
-                .timeout(5, TimeUnit.MINUTES)
-                .blockingSubscribe(i -> {
-                    logger.info("Infra is ready! {}", i.getName());
-                });
+            .doOnNext(c -> logger.info("Waiting attempt {} for infra to be ready ...", c.getAndIncrement()))
+            .flatMap(c -> dockerService.info())
+            .retryWhen(o -> o.delay(5, TimeUnit.SECONDS))
+            .timeout(5, TimeUnit.MINUTES)
+            .blockingSubscribe(i -> {
+                logger.info("Infra is ready! {}", i.getName());
+            });
     }
 
     private void waitForNetwork() throws Exception {
@@ -129,9 +129,12 @@ public class DockerWaitMain implements CommandLineRunner {
             QuorumNetworkProperty.DockerInfrastructureProperty.DockerContainerProperty prop = docker.getNodes().get(node);
             all.add(dockerService.getState(prop.getQuorumContainerId()));
             all.add(dockerService.getState(prop.getTesseraContainerId()));
+            if (prop.getEthSignerContainerId().isPresent()) {
+                all.add(dockerService.getState(prop.getEthSignerContainerId().get()));
+            }
         }
         // check containers
-        int attemptCount = 20;
+        int attemptCount = 60;
         int allUp = 1;
         for (int i = 0; i < attemptCount; i++) {
             AtomicReference<DockerInfrastructureService.BasicContainerState> deathState = new AtomicReference<>();
