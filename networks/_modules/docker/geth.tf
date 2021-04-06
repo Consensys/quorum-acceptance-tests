@@ -145,6 +145,7 @@ exec geth \
   --rpcaddr 0.0.0.0 \
   --rpcport ${var.geth_networking[count.index].port.http.internal} \
   --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,quorumPermission,quorumExtension,${(var.consensus == "istanbul" || var.consensus == "qbft" ? "istanbul" : "raft")} \
+  --privacymarker.enable \
 %{if var.geth_networking[count.index].port.ws != null~}
   --ws \
   --wsaddr 0.0.0.0 \
