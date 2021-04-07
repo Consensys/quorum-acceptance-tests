@@ -63,3 +63,5 @@ additional_tessera_config = {
     ]
   }
 }
+
+enable_privacy_marker_tx = { block = 0, enabled = true }

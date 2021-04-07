@@ -84,6 +84,8 @@ module "docker" {
   ethstats_ip     = module.helper.ethstat_ip
   ethstats_secret = module.helper.ethstats_secret
 
+  enable_privacy_marker_tx = var.enable_privacy_marker_tx
+
   network_name       = module.network.network_name
   network_id         = module.network.network_id
   node_keys_hex      = module.network.node_keys_hex

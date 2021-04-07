@@ -91,6 +91,12 @@ variable "consensus" {}
 
 variable "network_id" {}
 
+variable "enable_privacy_marker_tx" {
+  type        = object({ block = number, enabled = bool })
+  default     = { block = 0, enabled = false }
+  description = "privacy enhancements state (enabled/disabled) and the block height at which they are enabled"
+}
+
 variable "ethstats_secret" {}
 
 variable "ethstats_ip" {}

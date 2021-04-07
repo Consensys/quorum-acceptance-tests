@@ -6,3 +6,4 @@ number_of_nodes       = 4
 exclude_initial_nodes = [3]
 consensus             = "raft"
 addtional_geth_args   = "--allow-insecure-unlock"
+enable_privacy_marker_tx = { block = 0, enabled = true }

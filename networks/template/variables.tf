@@ -13,6 +13,12 @@ variable "privacy_enhancements" {
     description = "privacy enhancements state (enabled/disabled) and the block height at which they are enabled"
 }
 
+variable "enable_privacy_marker_tx" {
+  type        = object({ block = number, enabled = bool })
+  default     = { block = 0, enabled = false }
+  description = "privacy enhancements state (enabled/disabled) and the block height at which they are enabled"
+}
+
 variable "output_dir" {
   default = "/tmp"
 }
