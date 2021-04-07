@@ -95,7 +95,8 @@ jobs:
       matrix:
         # list of tag expression being executed in parallel
         tag:
-          - '(basic && !basic-raft && !raft) || networks/typical-besu::ibft2'
+          - '(basic && !basic-raft && !raft) || basic-istanbul || networks/typical-besu::ibft2'
+          - 'basic || basic-istanbul || networks/typical::istanbul'
           # - 'basic || basic-raft || (advanced && raft) || networks/typical::raft'
           # - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
           # - 'gcmode && block-sync && networks/template::raft-3plus1'
