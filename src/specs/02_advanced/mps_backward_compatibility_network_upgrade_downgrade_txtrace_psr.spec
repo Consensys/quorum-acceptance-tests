@@ -3,7 +3,7 @@
  Tags: mps-upgrade-txtrace, pre-condition/no-record-blocknumber
 
         | q_from_version | q_to_version | t_from_version | t_to_version |
-        | 21.1.1         | latest       | 21.1.0         | latest       |
+        | 21.4.0         | latest       | 21.1.0         | latest       |
 
 * Start the network with:
     | node  | quorum           | tessera          |
@@ -21,7 +21,7 @@
 
 ## Run selective node upgrade & downgrade with tx trces and private state root checks
 
-// Tags: post-condition/datadir-cleanup, post-condition/network-cleanup
+ Tags: post-condition/datadir-cleanup, post-condition/network-cleanup
 
 // public contract
 * Deploy a public accumulator contract in "Node1"'s default account with initial value "1", name this contract as "accPublic1"

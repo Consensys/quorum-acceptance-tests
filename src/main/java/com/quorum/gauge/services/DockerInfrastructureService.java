@@ -88,7 +88,7 @@ public class DockerInfrastructureService
             .put("latest", new QuorumImageConfig("quorumengineering/quorum:latest", GethArgBuilder.newBuilder().allowInsecureUnlock(true)))
             .put("v2.5.0", new QuorumImageConfig("quorumengineering/quorum:2.5.0", GethArgBuilder.newBuilder()))
             .put("21.1.0", new QuorumImageConfig("quorumengineering/quorum:21.1.0", GethArgBuilder.newBuilder().allowInsecureUnlock(true)))
-            .put("21.1.1", new QuorumImageConfig("quorumengineering/quorum:21.1.1", GethArgBuilder.newBuilder().allowInsecureUnlock(true)))
+            .put("21.4.0", new QuorumImageConfig("quorumengineering/quorum:21.4.0", GethArgBuilder.newBuilder().allowInsecureUnlock(true)))
             .put("2.7.0", new QuorumImageConfig("quorumengineering/quorum:2.7.0", GethArgBuilder.newBuilder().allowInsecureUnlock(true)))
             .build();
         tesseraDockerImageCatalog =  ImmutableMap.of(
