@@ -26,8 +26,8 @@ module "helper" {
   number_of_nodes = local.number_of_nodes
   geth = {
     container = {
-      image = var.quorum_docker_image
-      port  = { raft = 50400, p2p = 21000, http = 8545, ws = -1 }
+      image   = var.quorum_docker_image
+      port    = { raft = 50400, p2p = 21000, http = 8545, ws = -1 }
       graphql = true
     }
     host = {
@@ -37,10 +37,10 @@ module "helper" {
   tessera = {
     container = {
       image = var.tessera_docker_image
-      port  = { thirdparty = 9080, p2p = 9000 }
+      port  = { thirdparty = 9080, p2p = 9000, q2t = 9081, q2t = 9081 }
     }
     host = {
-      port = { thirdparty_start = 9080 }
+      port = { thirdparty_start = 9080, q2t_start = 49081 }
     }
   }
 }
