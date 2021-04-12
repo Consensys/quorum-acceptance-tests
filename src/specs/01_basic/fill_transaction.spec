@@ -8,7 +8,7 @@
 
 ## Transaction payload is secured
 
- Tags: private, transaction
+ Tags: private, transaction, get-quorum-payload
 
 * If fillTransaction is successful, verify that "C1"'s payload is retrievable from "Node1"
 * If fillTransaction is successful, verify that "C1"'s payload is retrievable from "Node2"

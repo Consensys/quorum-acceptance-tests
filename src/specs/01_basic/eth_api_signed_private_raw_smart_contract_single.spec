@@ -31,14 +31,14 @@ contract SimpleStorage {
 
 ## Storage Root storing private smart contracts must be the same
 
- Tags: raw
+ Tags: raw, storage-root
 
 * "contract31" stored in "Node1" and "Node4" must have the same storage root
 * "contract31" stored in "Node1" and "Node3" must not have the same storage root
 
 ## Transaction payload is secured
 
- Tags: raw
+ Tags: raw, get-quorum-payload
 
 * "contract31"'s payload is retrievable from "Node1"
 * "contract31"'s payload is retrievable from "Node4"
