@@ -116,6 +116,10 @@ jobs:
           - 'multitenancy && networks/plugins::raft-multitenancy'
           - 'basic || basic-raft || (advanced && raft) || networks/typical::raft-simple-mps'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul-simple-mps'
+          - 'basic || networks/typical::raftmps'
+          - 'basic || networks/typical::istanbulmps'
+          - 'mps-upgrade-txtrace || networks/template::raft-4nodes-mps'
+          - 'mps-upgrade-txtrace || networks/template::istanbul-4nodes-mps'
         privacy-enhancements:
           - 'false'
         include:
