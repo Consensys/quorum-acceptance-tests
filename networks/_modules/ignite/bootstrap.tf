@@ -11,6 +11,7 @@ locals {
   # chain config
   qip714Block_config              = var.permission_qip714Block.enabled ? { qip714Block = var.permission_qip714Block.block } : {}
   privacyEnhancementsBlock_config = var.privacy_enhancements.enabled ? { privacyEnhancementsBlock = var.privacy_enhancements.block } : {}
+  quorumPrecompilesV1Block_config = 0
 
   istanbul_config       = var.consensus == "istanbul" || var.consensus == "qbft" ? { istanbul = { epoch = 30000, policy = 0, ceil2Nby3Block = 0 } } : {}
   qbft_config  = (var.consensus == "istanbul" || var.consensus == "qbft") && var.qbftBlock.enabled ? { istanbul = { epoch = 30000, policy = 0, testQBFTBlock = var.qbftBlock.block, ceil2Nby3Block = 0 } } : {}
@@ -36,7 +37,7 @@ locals {
           size  = 80
         }
       ]
-  }, local.qip714Block_config, local.privacyEnhancementsBlock_config, local.qbft_istanbul_config, lookup(var.additional_genesis_config, idx, {}))]
+    }, local.qip714Block_config, local.privacyEnhancementsBlock_config, local.quorumPrecompilesV1Block_config local.qbft_istanbul_config, lookup(var.additional_genesis_config, idx, {}))]
 }
 
 data "null_data_source" "meta" {

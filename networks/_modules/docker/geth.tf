@@ -129,6 +129,9 @@ if [ -f /data/qdata/cleanStorage ]; then
   rm -rf /data/qdata/geth /data/qdata/quorum-raft-state /data/qdata/raft-snap /data/qdata/raft-wal /data/qdata/cleanStorage
 fi
 
+echo "CHRISSY genesis.json"
+cat ${local.container_geth_datadir}/genesis.json
+
 geth --datadir ${local.container_geth_datadir} init ${local.container_geth_datadir}/genesis.json
 
 #exit if geth init fails
@@ -145,7 +148,7 @@ exec geth \
   --rpcaddr 0.0.0.0 \
   --rpcport ${var.geth_networking[count.index].port.http.internal} \
   --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,quorumPermission,quorumExtension,${(var.consensus == "istanbul" || var.consensus == "qbft" ? "istanbul" : "raft")} \
-%{if var.enable_privacy_marker_tx.enabled~}
+%{if var.enable_privacy_marker_txs~}
   --privacymarker.enable \
 %{endif~}
 %{if var.geth_networking[count.index].port.ws != null~}

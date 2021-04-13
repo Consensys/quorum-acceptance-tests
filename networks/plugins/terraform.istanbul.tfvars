@@ -6,4 +6,3 @@ plugins = {
     expose_api = true
   }
 }
-enable_privacy_marker_tx = { block = 0, enabled = true }
