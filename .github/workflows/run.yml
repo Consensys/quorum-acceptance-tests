@@ -177,7 +177,7 @@ jobs:
           echo "::set-output name=outputDir::${{ runner.temp }}"
           echo "::set-output name=dockerEnvFile::$dockerEnvFile"
       - name: 'Run tests using ${{ needs.condition.outputs.infra }}'
-        continue-on-error: ${{ besu-network }}
+        continue-on-error: ${{ besu-network == 'true' }}
         run: |
           # we don't remove the container after run as we need to clean up the infra if used
           docker run \
@@ -192,7 +192,7 @@ jobs:
                 -Dauto.jobid=${{ steps.setup.outputs.tag }}
       - name: 'Failure info'
         if: ${{ failure() }}
-        continue-on-error: ${{ besu-network }}
+        continue-on-error: ${{ besu-network == 'true' }}
         run: |
             echo "acceptance tests failures"
             docker images
@@ -200,7 +200,7 @@ jobs:
             for containerId in $(docker ps -qa); do echo "container: $containerId"; docker container inspect $containerId; docker container logs $containerId; done
       - name: 'Read test report'
         if: always()
-        continue-on-error: ${{ besu-network }}
+        continue-on-error: ${{ besu-network == 'true' }}
         run: |
           failuresRaw="$(cat ${{ steps.setup.outputs.outputDir }}/failures.txt | jq -r '.[] | @base64')"
           SAVEIFS=$IFS   # Save current IFS
@@ -218,7 +218,7 @@ jobs:
           done
           cat ${{ steps.setup.outputs.outputDir}}/summary.txt
       - name: 'Upload test report'
-        continue-on-error: ${{ besu-network }}
+        continue-on-error: ${{ besu-network == 'true' }}
         if: always()
         uses: actions/upload-artifact@v2
         with:
