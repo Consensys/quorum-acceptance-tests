@@ -88,8 +88,8 @@ exec /opt/besu/bin/besu \
         --privacy-url="${local.container_tm_q2t_urls[count.index]}" \
         --privacy-public-key-file=${local.container_besu_datadir}/tmkey.pub \
         --privacy-onchain-groups-enabled=false \
-        --rpc-http-api=EEA,WEB3,ETH,NET,PRIV,PERM,GOQUORUM,IBFT \
-        --rpc-ws-api=EEA,WEB3,ETH,NET,PRIV,PERM,GOQUORUM,IBFT ;
+        --rpc-http-api=EEA,WEB3,ETH,MINER,NET,PRIV,PERM,GOQUORUM,IBFT \
+        --rpc-ws-api=EEA,WEB3,ETH,MINER,NET,PRIV,PERM,GOQUORUM,IBFT ;
 EOF
   }
 }
