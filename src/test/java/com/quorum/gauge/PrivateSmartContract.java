@@ -204,11 +204,17 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     @Step("Deploy <count> private smart contracts between a default account in <source> and a default account in <target>")
     public void createMultiple(int count, QuorumNode source, QuorumNode target) {
         int arbitraryValue = 10;
-
-        List<Contract> contracts = new ArrayList<>();
+        List<Observable<? extends Contract>> allObservableContracts = new ArrayList<>();
         for (int i = 0; i < count; i++) {
-            contracts.add(contractService.createSimpleContract(arbitraryValue, source, target).blockingFirst());
+            allObservableContracts.add(contractService.createSimpleContract(arbitraryValue, source, target));
         }
+        List<Contract> contracts = Observable.zip(allObservableContracts, args -> {
+            List<Contract> tmp = new ArrayList<>();
+            for (Object o : args) {
+                tmp.add((Contract) o);
+            }
+            return tmp;
+        }).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(String.format("%s_source_contract", source), contracts);
         DataStoreFactory.getSpecDataStore().put(String.format("%s_target_contract", target), contracts);
@@ -359,15 +365,14 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     }
 
     @Step("Execute <contractName>'s `deposit()` function <count> times with arbitrary id and value from <source>. And it's private for <target>")
-    public void executeDeposit(String contractName, int count, QuorumNode source, QuorumNode target) throws InterruptedException {
+    public void executeDeposit(String contractName, int count, QuorumNode source, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         Scheduler scheduler = threadLocalDelegateScheduler(count);
-        List<TransactionReceipt> receipts = new ArrayList<>();
+        List<Observable<TransactionReceipt>> observables = new ArrayList<>();
         for (int i = 0; i < count; i++) {
-            TransactionReceipt transactionReceipt = contractService.updateClientReceiptPrivate(source, target, c.getContractAddress(), BigInteger.ZERO).blockingFirst();
-            receipts.add(transactionReceipt);
-            Thread.sleep(1000 * 2);
+            observables.add(contractService.updateClientReceiptPrivate(source, target, c.getContractAddress(), BigInteger.ZERO));
         }
+        List<TransactionReceipt> receipts = Observable.zip(observables, objects -> Observable.fromArray(objects).map(o -> (TransactionReceipt) o).toList().blockingGet()).blockingFirst();
 
         DataStoreFactory.getScenarioDataStore().put("receipts", receipts);
     }
@@ -381,10 +386,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
             QuorumNode source = mustHaveValue(DataStoreFactory.getScenarioDataStore(), cName + "_source", QuorumNode.class);
             QuorumNode target = mustHaveValue(DataStoreFactory.getScenarioDataStore(), cName + "_target", QuorumNode.class);
             for (int i = 0; i < count; i++) {
-                TransactionReceipt txReceipt = contractService.updateClientReceiptPrivate(source, target, c.getContractAddress(), BigInteger.ZERO).blockingFirst();
-                TransactionReceipt realReceipt = transactionService.pollTransactionReceipt(networkProperty.getNode(source.name()), txReceipt.getTransactionHash()).get();
-
-                observables.add(Observable.just(realReceipt));
+                observables.add(contractService.updateClientReceiptPrivate(source, target, c.getContractAddress(), BigInteger.ZERO));
             }
         }
         List<TransactionReceipt> receipts = Observable.zip(observables, objects -> Observable.fromArray(objects).map(o -> (TransactionReceipt) o).toList().blockingGet()).blockingFirst();
