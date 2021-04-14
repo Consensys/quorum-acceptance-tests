@@ -56,7 +56,12 @@ public class EnhancedClientTransactionManager extends ClientTransactionManager {
 
     @Override
     public EthSendTransaction sendTransaction(BigInteger gasPrice, BigInteger gasLimit, String to, String data, BigInteger value) throws IOException {
-        EnhancedPrivateTransaction tx = new EnhancedPrivateTransaction(getFromAddress(), null, gasLimit, to, value, data, getPrivateFrom(), getPrivateFor(), contractFlag);
+        PrivateTransaction tx;
+        if (contractFlag != null) {
+            tx = new EnhancedPrivateTransaction(getFromAddress(), null, gasLimit, to, value, data, getPrivateFrom(), getPrivateFor(), contractFlag);
+        } else {
+            tx = new PrivateTransaction(getFromAddress(), null, gasLimit, to, value, data, getPrivateFrom(), getPrivateFor());
+        }
         return quorum.ethSendTransaction(tx).send();
     }
 
