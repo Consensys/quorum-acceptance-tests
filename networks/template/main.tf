@@ -12,7 +12,11 @@ provider "docker" {
 }
 
 locals {
+  number_of_nodes = var.number_of_nodes
   node_indices         = range(var.number_of_nodes)
+  more_args = join(" ", [
+    "--allow-insecure-unlock" # since 1.9.7 upgrade
+  ])
   pulled_docker_images = concat(var.docker_images, var.quorum_docker_image.local ? [] : list(var.quorum_docker_image.name), var.tessera_docker_image.local ? [] : list(var.tessera_docker_image.name))
 }
 
@@ -25,7 +29,7 @@ module "helper" {
     container = {
       image   = var.quorum_docker_image
       port    = { raft = 50400, p2p = 21000, http = 8545, ws = -1 }
-      graphql = false
+      graphql = true
     }
     host = {
       port = { http_start = 22000, ws_start = -1 }
@@ -45,13 +49,21 @@ module "helper" {
 module "network" {
   source = "../_modules/ignite"
 
-  concensus             = module.helper.consensus
-  privacy_enhancements  = var.privacy_enhancements
-  network_name          = var.network_name
-  geth_networking       = module.helper.geth_networking
-  tm_networking         = module.helper.tm_networking
-  output_dir            = var.output_dir
-  exclude_initial_nodes = var.exclude_initial_nodes
+  concensus                         = module.helper.consensus
+  isMPS                             = var.isMPS
+  privacy_enhancements              = var.privacy_enhancements
+  network_name                      = var.network_name
+  geth_networking                   = module.helper.geth_networking
+  tm_networking                     = module.helper.tm_networking
+  output_dir                        = var.output_dir
+  exclude_initial_nodes             = var.exclude_initial_nodes
+
+  override_tm_named_key_allocation  = var.override_tm_named_key_allocation
+  override_named_account_allocation = var.override_named_account_allocation
+  override_vnodes                   = var.override_vnodes
+
+  additional_tessera_config         = var.additional_tessera_config
+  additional_genesis_config         = var.additional_genesis_config
 }
 
 module "docker" {
@@ -74,6 +86,9 @@ module "docker" {
   start_quorum          = false
   start_tessera         = false
   additional_geth_args  = { for idx in local.node_indices : idx => var.addtional_geth_args }
+  additional_geth_container_vol    = var.additional_quorum_container_vol
+  additional_tessera_container_vol = var.additional_tessera_container_vol
+  tessera_app_container_path       = var.tessera_app_container_path
   accounts_count        = module.network.accounts_count
 }
 

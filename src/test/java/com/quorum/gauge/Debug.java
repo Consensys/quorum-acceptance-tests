@@ -65,6 +65,13 @@ public class Debug extends AbstractSpecImplementation {
         assertThat(psr1Val).isEqualTo(psr2Val);
     }
 
+    @Step("Check that private state root <psr1> is different from <psr2>")
+    public void psrsAreDifferent(String psr1, String psr2){
+        String psr1Val = mustHaveValue(psr1, String.class);
+        String psr2Val = mustHaveValue(psr2, String.class);
+        assertThat(psr1Val).isNotEqualTo(psr2Val);
+    }
+
 
     @Step("Check that <trace1> is equal to <trace2>")
     public void tracesAreEqual(String trace1, String trace2){

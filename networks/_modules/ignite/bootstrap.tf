@@ -25,7 +25,7 @@ locals {
       eip150Hash = "0x0000000000000000000000000000000000000000000000000000000000000000"
       eip158Block = 0
       isQuorum = true
-      isMPS = var.isMPS
+      isMPS = var.isMPS || local.vnodes[idx].mpsEnabled
       maxCodeSizeConfig = [
         {
           block = 0

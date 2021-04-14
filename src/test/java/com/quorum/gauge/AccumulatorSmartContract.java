@@ -44,6 +44,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 @Service
 public class AccumulatorSmartContract extends AbstractSpecImplementation {
@@ -167,6 +168,24 @@ public class AccumulatorSmartContract extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(txReference, receipt.getTransactionHash());
     }
 
+    @Step("Invoking a <privacyFlags> accumulator.inc with value <value> in contract <contract> in <source>'s default account and it's private for <privateFor> fails with error <error>")
+    public void incAccumulatorPrivateContractFailsWithError(String privacyFlags, int value, String contract, String source, String privateFor, String error) {
+        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contract, Contract.class);
+        saveCurrentBlockNumber();
+        List<QuorumNetworkProperty.Node> privateForList = Arrays.stream(privateFor.split(","))
+            .map(s -> networkProperty.getNode(s))
+            .collect(Collectors.toList());
+        logger.debug("Invoking accumulator.inc in accumulator contract from {}", source);
+        assertThatThrownBy(
+            () -> accumulatorService.incAccumulatorPrivate(
+            networkProperty.getNode(source), privateForList, c.getContractAddress(), AbstractService.DEFAULT_GAS_LIMIT,
+            value,
+            Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList()))
+                .blockingFirst()
+        ).as("Expected exception thrown")
+            .hasMessageContaining(error);
+    }
+
     @Step("Accumulator <contractName>'s `get()` function execution in <node> returns <expectedValue>")
     public void getFromAccumulatorContract(String storageMaster, String source, int expectedValue) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), storageMaster, Contract.class);
@@ -196,6 +215,13 @@ public class AccumulatorSmartContract extends AbstractSpecImplementation {
     public void verifyTransactionReceiptHasNoLogs(String node, String txReference) {
         TransactionReceipt receipt = getTransactionReceipt(networkProperty.getNode(node), txReference);
         assertThat(receipt.getLogs().size()).isZero();
+    }
+
+
+    @Step("Transaction Receipt in <node> for <txReference> has status <status>")
+    public void verifyTransactionReceiptHasStatus(String node, String txReference, String status) {
+        TransactionReceipt receipt = getTransactionReceipt(networkProperty.getNode(node), txReference);
+        assertThat(receipt.getStatus()).isEqualTo(status);
     }
 
     @Step("Transaction Receipt in <node> for <txReference> has one IncEvent log with value <value>")
