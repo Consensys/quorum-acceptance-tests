@@ -16,10 +16,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -110,15 +107,13 @@ public class PluginHashicorpVaultAccountSigning extends AbstractSpecImplementati
         final String expected = "0xf84f80808347b76080808300000025a050b4ca82805d053fea92514fabe2ecd8518c90f2064451d68cabac0b2bd2f04ea03aa1355d44807826e8152a6a6c59abc8d9459680086fe4df4e678f58952f1022";
 
         final Transaction toSign = hashicorpVaultSigningService.toSign(BigInteger.ZERO, "0x6038dc01869425004ca0b8370f6c81cf464213b3");
-        final Map<String, Object> result = transactionService
+        final Optional<String> raw = transactionService
             .personalSignTransaction(node, toSign, "")
             .blockingFirst()
-            .getResult();
+            .getRaw();
 
-        assertThat(result).isNotNull();
-        final String signed = (String) result.get("raw");
-        assertThat(signed).isNotNull();
-        assertThat(signed).isEqualTo(expected);
+        assertThat(raw.isPresent()).isTrue();
+        assertThat(raw.get()).isEqualTo(expected);
     }
 
     @Step("<node> gets the expected result when signing known arbitrary data with account 0x6038dc01869425004ca0b8370f6c81cf464213b3")

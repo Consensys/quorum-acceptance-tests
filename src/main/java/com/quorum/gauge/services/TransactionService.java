@@ -149,9 +149,7 @@ public class TransactionService extends AbstractService {
                 return request.flowable().toObservable();
             })
             .flatMap(ethSignTransaction -> {
-                Map<String, Object> response = ethSignTransaction.getResult();
-                logger.debug("{}", response);
-                String rawHexString = (String) response.get("raw");
+                String rawHexString = ethSignTransaction.getRaw().orElseThrow();
                 return client.ethSendRawTransaction(rawHexString).flowable().toObservable();
             });
     }
@@ -205,9 +203,7 @@ public class TransactionService extends AbstractService {
                 return request.flowable().toObservable();
             })
             .flatMap(ethSignTransaction -> {
-                Map<String, Object> response = ethSignTransaction.getResult();
-                logger.debug("{}", response);
-                String rawHexString = (String) response.get("raw");
+                String rawHexString = ethSignTransaction.getRaw().orElseThrow();
                 return client.ethSendRawTransaction(rawHexString).flowable().toObservable();
             });
     }
@@ -254,9 +250,8 @@ public class TransactionService extends AbstractService {
 
         Observable<EthSignTransaction> ethSignTransaction = request.flowable().toObservable();
 
-        Map<String, Object> response = ethSignTransaction.blockingFirst().getResult();
-        logger.debug("{}", response);
-        String rawHexString = (String) response.get("raw");
+        String rawHexString = ethSignTransaction.blockingFirst().getRaw().orElseThrow();
+        logger.debug("rawHexString", rawHexString);
 
         return quorumClient.ethSendRawPrivateTransaction(rawHexString, Arrays.asList(privacyService.id(privateFor))).flowable().toObservable();
     }
