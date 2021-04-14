@@ -97,7 +97,7 @@ public class ContractService extends AbstractService {
         return createSimpleContract(initialValue, source, ethAccount, privateFromAlias, privateForAliases, flags, DEFAULT_GAS_LIMIT);
     }
 
-    public Observable<? extends Contract> createSimpleContract(int initialValue, Node source, String ethAccount, String privateFromAliases, List<String> privateForAliases, List<PrivacyFlag> flags,  BigInteger gas) {
+    public Observable<? extends Contract> createSimpleContract(int initialValue, Node source, String ethAccount, String privateFromAliases, List<String> privateForAliases, List<PrivacyFlag> flags, BigInteger gas) {
         if (CollectionUtils.isEmpty(flags)) {
             flags = emptyList();
         }
@@ -123,7 +123,14 @@ public class ContractService extends AbstractService {
     }
 
     public Observable<? extends Contract> createSimpleContract(int initialValue, QuorumNode source, QuorumNode target, BigInteger gas) {
-        return createSimpleContract(initialValue, source, null, Arrays.asList(target), gas, Arrays.asList(PrivacyFlag.StandardPrivate));
+        List<QuorumNode> targets = null;
+        List<PrivacyFlag> flags = null;
+        if (target != null) {
+            targets = Arrays.asList(target);
+            flags = Arrays.asList(PrivacyFlag.StandardPrivate);
+        }
+
+        return createSimpleContract(initialValue, source, null, targets, gas, flags);
     }
 
     public Observable<? extends Contract> createSimpleContract(int initialValue, QuorumNode source, String ethAccount, List<QuorumNode> targets, BigInteger gas, List<PrivacyFlag> flags) {
@@ -152,6 +159,7 @@ public class ContractService extends AbstractService {
 
     /**
      * Need to use EthCall to manipulate the error as webj3 doesn't
+     *
      * @param node
      * @param contractAddress
      * @return
@@ -160,7 +168,8 @@ public class ContractService extends AbstractService {
         Quorum client = connectionFactory().getConnection(node);
         Function function = new Function(FUNC_GET,
             Arrays.<Type>asList(),
-            Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}));
+            Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {
+            }));
         return client.ethCoinbase().flowable().toObservable()
             .map(Response::getResult)
             .flatMap(address -> {
