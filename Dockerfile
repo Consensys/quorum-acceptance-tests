@@ -36,9 +36,9 @@ RUN apk -q --no-cache --update add tar bash \
         (apk -q --no-cache add openjdk11 --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community) & \
         p="$!"; pids="$pids $p"; echo "  >> Installing OpenJDK ${JDK_VERSION} - PID $p"; \
         for pid in $pids; do if ! wait "$pid"; then echo "PID Failed: $pid"; exit 1; fi; done) \
-    && echo "  >> Caching Maven Project Dependencies" \
-    && mvn -q dependency:resolve dependency:resolve-plugins \
+    && echo "  >> Caching Maven Project Build" \
+    && mvn -q compile \
     && rm -rf /tmp/downloads
 
-ENTRYPOINT ["mvn", "--no-transfer-progress", "-B"]
+ENTRYPOINT ["mvn", "--no-transfer-progress", "-B", "-DskipToolsCheck", "-DskipGenerateSol"]
 CMD ["test", "-Dtags=basic"]
