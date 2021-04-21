@@ -103,7 +103,11 @@ resource "local_file" "plugin-settings" {
   filename = format("%s/plugin-settings.json", module.network.data_dirs[count.index])
   content  = <<JSON
 {
-	"providers": ${jsonencode(local.providers)}
+  "central": {
+    "baseURL": "https://provisional-plugins-repo.quorum.consensys.net",
+    "publicKeyURI": ".pgp/Central.pgp.pk"
+  },
+  "providers": ${jsonencode(local.providers)}
 }
 JSON
 }
