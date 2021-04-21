@@ -106,7 +106,7 @@ Sets the allocations for TM & Eth keys to a Node name, sat under a particular Qu
 E.g.:
 {
     0 = {
-        mpsEnabled = "true",
+        mpsEnabled = true,
         vnodes = {
             VNode1 = {
                 name = "Node1"
@@ -121,7 +121,7 @@ E.g.:
         }
     },
     1 = {
-        mpsEnabled = "false",
+        mpsEnabled = false,
         vnodes = {
             VNode3 = {
                 name = "Node5"

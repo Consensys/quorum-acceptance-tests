@@ -43,7 +43,7 @@ locals {
 
   vnodes = merge(
     { for id in local.node_indices : id => {
-      mpsEnabled = "false",
+      mpsEnabled = false,
       vnodes = {
         id = {
           name = format("Node%s", id+1)

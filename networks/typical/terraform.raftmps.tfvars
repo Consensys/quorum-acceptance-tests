@@ -1,5 +1,4 @@
 consensus    = "raft"
-isMPS        = true
 
 # this is to setup the TM keys allocation per acceptance tests requirement
 override_tm_named_key_allocation = {
@@ -16,7 +15,7 @@ override_named_account_allocation = {
 # Quorum instance 1 has the name "Node5" as the default is "Node1" and would clash with the allocation in Quorum instance 0
 override_vnodes = {
     0 = {
-        mpsEnabled = "true",
+        mpsEnabled = true,
         vnodes = {
             VNode1 = {
                 name = "Node1"
@@ -31,7 +30,7 @@ override_vnodes = {
         }
     },
     1 = {
-        mpsEnabled = "false",
+        mpsEnabled = false,
         vnodes = {
             VNode3 = {
                 name = "Node5"

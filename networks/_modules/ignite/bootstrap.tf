@@ -25,7 +25,7 @@ locals {
       eip150Hash = "0x0000000000000000000000000000000000000000000000000000000000000000"
       eip158Block = 0
       isQuorum = true
-      isMPS = var.isMPS || local.vnodes[idx].mpsEnabled
+      isMPS = local.vnodes[idx].mpsEnabled
       maxCodeSizeConfig = [
         {
           block = 0
@@ -208,6 +208,9 @@ resource "local_file" "tmconfigs-template-generator" {
       "keyData": [${data.null_data_source.meta[count.index].inputs.tmKeys}]
     },
     "features" : {
+%{if local.vnodes[count.index].mpsEnabled}
+      "enableMultiplePrivateStates" : "true",
+%{endif~}
 %{if var.privacy_enhancements.enabled~}
       "enablePrivacyEnhancements" : "true",
 %{endif~}

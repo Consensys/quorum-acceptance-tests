@@ -49,7 +49,6 @@ module "network" {
   source = "../_modules/ignite"
 
   concensus            = module.helper.consensus
-  isMPS                = var.isMPS
   privacy_enhancements = var.privacy_enhancements
   network_name         = var.network_name
   geth_networking      = module.helper.geth_networking

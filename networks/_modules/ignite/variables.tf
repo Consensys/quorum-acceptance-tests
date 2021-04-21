@@ -37,11 +37,6 @@ variable "concensus" {
   description = "Consensus algorithm being used in the network. Supported values are: istanbul and raft"
 }
 
-variable "isMPS" {
-  default     = false
-  description = "whether or not the the host supports multiple private states"
-}
-
 variable "privacy_enhancements" {
     type        = object({ block = number, enabled = bool })
     default     = { block = 0, enabled = false }
