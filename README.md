@@ -85,7 +85,7 @@ Below is the summary of various parameters:
 | `-Dinfra.skipApply` | Don't create the infrastructure. Default is `false` |
 | `-Dinfra.skipWait` | Don't perform health check and wait for GoQuorum Network. Default is `false` |
 | `-DskipToolsCheck` | Don't check local tools required to run tests. Default is `false` |
-| `-DskipGenerateSol` | Don't generate Java stubs for Solidity files. Default is `false` |
+| `-DskipGenerateSol` | Don't generate Java stubs for Solidity files. Default is `false`. When running Permission spec, this should not be set to `true` as the spec depends on version of Solidity files |
 
 ### With local binaries
 
@@ -110,13 +110,13 @@ In order to run acceptance tests during GoQuorum/Tessera development:
 
 ### With custom GoQuorum/Tessera Docker images
 
-By default, official Docker images `quorumengineering/quorum:latest` and `quorumengineering/tessera:latest` in [Docker Hub](https://hub.docker.com/u/quorumengineering) will be used.
+By default, official Docker images `quorumengineering/quorum:develop` and `quorumengineering/tessera:develop` in [Docker Hub](https://hub.docker.com/u/quorumengineering) will be used.
 If you need to use your custom images, please follow the below guides:
 
 - Name the branch with prefix `dev-`. E.g.: `dev-mybranch`
 - Push custom GoQuorum/Tessera Docker images to [Github Container Registry](https://docs.github.com/en/packages/guides/pushing-and-pulling-docker-images) of this repo with image name and version convention
-  - GoQuorum: `quorum-dev-mybranch:latest`
-  - Tessera: `tessera-dev-mybranch:latest`
+  - GoQuorum: `quorum-dev-mybranch:develop`
+  - Tessera: `tessera-dev-mybranch:develop`
 - Pushing changes to `dev-mybranch` will kick off github Action workflow running tests using custom images
 
 ### With existing `quorum-examples` network
