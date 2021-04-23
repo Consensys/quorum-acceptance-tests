@@ -26,7 +26,7 @@ contract SimpleStorage {
 ## Get block number from graphql query and compare it with RPC result
 
 * Capture the current block height, named it as "snapshot"
-* Get block number from "Node1" graphql and it should equal to "snapshot"
+* Get block number from "Node1" graphql and it should be greater than or equal to "snapshot"
 
 ## Get private transaction details from graphql query
 
