@@ -9,7 +9,7 @@ private state root of the single private state on a standalone quorum node (whic
  Tags: mps-mixed-network-psr-check, pre-condition/no-record-blocknumber
 
         | q_non_mps_version | q_mps_version | t_non_mps_version | t_mps_version |
-        | 21.4.0            | latest        | 21.1.0            | latest        |
+        | 21.4.0            | develop       | 21.1.0            | develop       |
 
 * Start the network with:
     | node  | quorum              | tessera             |
