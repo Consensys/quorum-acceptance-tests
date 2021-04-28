@@ -1,6 +1,6 @@
 # Network migration from one version with data in ancient db (freezerdb) to the later version of `geth`
 
- Tags: networks/template::raft-4nodes-ancientdb, networks/template::istanbul-4nodes-ancientdb, migration, pre-condition/no-record-blocknumber, ricardolyn
+ Tags: networks/template::raft-4nodes-ancientdb, networks/template::istanbul-4nodes-ancientdb, migration, pre-condition/no-record-blocknumber
 
 In this spec, we assume that all nodes in the network are initially in the same version and together
 upgradable to the new version. Also, the immutability threshold is 30 for ancient db
