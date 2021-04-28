@@ -40,5 +40,5 @@ RUN apk -q --no-cache --update add tar bash \
     && mvn -q compile \
     && rm -rf /tmp/downloads
 
-ENTRYPOINT ["mvn", "--no-transfer-progress", "-B", "-DskipToolsCheck", "-DskipGenerateSol"]
+ENTRYPOINT ["mvn", "--no-transfer-progress", "-B", "-DskipToolsCheck"]
 CMD ["test", "-Dtags=basic"]

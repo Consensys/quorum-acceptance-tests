@@ -36,10 +36,14 @@ public class RetryWithDelay implements Function<Observable<? extends Throwable>,
 
     private int retryCount;
 
+    private String accessToken;
+
     public RetryWithDelay(final int maxRetries, final int retryDelayMillis) {
         this.maxRetries = maxRetries;
         this.retryDelayMillis = retryDelayMillis;
         this.retryCount = 0;
+        // save the current acccess token so it can be used later when retry happening in other thread
+        this.accessToken = Context.retrieveAccessToken();
     }
 
     @Override
@@ -49,7 +53,8 @@ public class RetryWithDelay implements Function<Observable<? extends Throwable>,
                 if (++retryCount < maxRetries) {
                     // When this Observable calls onNext, the original
                     // Observable will be retried
-                    return Observable.timer(retryDelayMillis, TimeUnit.MILLISECONDS);
+                    return Observable.timer(retryDelayMillis, TimeUnit.MILLISECONDS)
+                        .doOnNext(tick -> Context.storeAccessToken(accessToken));
                 }
 
                 // Max retries hit, just pass the error along.

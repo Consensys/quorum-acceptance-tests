@@ -32,10 +32,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @Service
 public class GraphQL extends AbstractSpecImplementation {
-    @Step("Get block number from <node> graphql and it should equal to <snapshotName>")
+    @Step("Get block number from <node> graphql and it should be greater than or equal to <snapshotName>")
     public void getCurrentBlockNumber(QuorumNode node, String snapshotName) {
         int currentBlockHeight = ((BigInteger) DataStoreFactory.getScenarioDataStore().get(snapshotName)).intValue();
-        assertThat(graphQLService.getBlockNumber(node).blockingGet().intValue()).isEqualTo(currentBlockHeight);
+        // When running istanbul it is possible that the snapshot block height increases between the calls to eth.blockHeight and
+        // graphql block{number}. Update the test to verify that the graphql returned value (the latter call) is greater
+        // than or equal to the value returned by eth.blockNumber.
+        assertThat(graphQLService.getBlockNumber(node).blockingGet().intValue()).isGreaterThanOrEqualTo(currentBlockHeight);
     }
 
     @Step("Get isPrivate field for <contractName>'s contract deployment transaction using GraphQL query from <node> and it should equal to <isPrivate>")

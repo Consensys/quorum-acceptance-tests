@@ -6,15 +6,15 @@ In this spec, we assume that all nodes in the network are initially in the same 
 upgradable to the new version
 
         | from_version | to_version |
-        | v2.5.0       | latest     |
+        | v2.5.0       | develop     |
 
 * Start the network with:
     | node  | quorum         | tessera |
     |-------|----------------|---------|
-    | Node1 | <from_version> | latest  |
-    | Node2 | <from_version> | latest  |
-    | Node3 | <from_version> | latest  |
-    | Node4 | <from_version> | latest  |
+    | Node1 | <from_version> | develop  |
+    | Node2 | <from_version> | develop  |
+    | Node3 | <from_version> | develop  |
+    | Node4 | <from_version> | develop  |
 * Use SimpleStorage smart contract, populate network with "500" public transactions and "500" private transactions randomly between "Node1,Node2,Node3,Node4"
 * Record the current block number, named it as "recordedBlockNumber"
 
@@ -25,10 +25,10 @@ upgradable to the new version
 * Restart the network with:
     | node  | quorum       | tessera |
     |-------|--------------|---------|
-    | Node1 | <to_version> | latest  |
-    | Node2 | <to_version> | latest  |
-    | Node3 | <to_version> | latest  |
-    | Node4 | <to_version> | latest  |
+    | Node1 | <to_version> | develop  |
+    | Node2 | <to_version> | develop  |
+    | Node3 | <to_version> | develop  |
+    | Node4 | <to_version> | develop  |
 * Verify block number in "Node1,Node2,Node3,Node4" in sync with "recordedBlockNumber"
 * Use SimpleStorage smart contract, populate network with "10" public transactions and "10" private transactions randomly between "Node1,Node2,Node3,Node4"
 * Network is running

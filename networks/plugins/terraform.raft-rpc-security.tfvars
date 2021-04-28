@@ -1,9 +1,8 @@
-consensus    = "raft"
-network_name = "plugins-raft"
+consensus = "raft"
 plugins = {
   security = {
     name       = "quorum-security-plugin-enterprise"
-    version    = "0.1.0"
+    version    = "0.1.2"
     expose_api = false
   }
 }

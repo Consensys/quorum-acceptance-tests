@@ -155,8 +155,8 @@ jobs:
           gitref_path=${gitref_path/refs\/heads\//} # for refs/heads/my-branch
           if [[ $gitref_path == dev-* ]]; then
             echo "${{ github.token }}" | docker login https://docker.pkg.github.com -u ${{ github.repository_owner }} --password-stdin
-            quorum_docker_image="docker.pkg.github.com/${{ github.repository }}/quorum-$gitref_path:latest"
-            tessera_docker_image="docker.pkg.github.com/${{ github.repository }}/tessera-$gitref_path:latest"
+            quorum_docker_image="docker.pkg.github.com/${{ github.repository }}/quorum-$gitref_path:develop"
+            tessera_docker_image="docker.pkg.github.com/${{ github.repository }}/tessera-$gitref_path:develop"
             has_quorum_docker_image=$(docker pull $quorum_docker_image >/dev/null 2>&1; echo $?)
             has_tessera_docker_image=$(docker pull $tessera_docker_image >/dev/null 2>&1; echo $?)
             echo "$quorum_docker_image: $has_quorum_docker_image"
@@ -164,11 +164,13 @@ jobs:
             if [ $has_quorum_docker_image -eq 0 ]; then
               echo "::warning ::Using $quorum_docker_image"
               echo "TF_VAR_quorum_docker_image={name=\"$quorum_docker_image\", local=true}" >> $dockerEnvFile
+              docker pull quorumengineering/quorum:develop
               docker pull quorumengineering/quorum:latest
             fi
             if [ $has_tessera_docker_image -eq 0 ]; then
               echo "::warning ::Using $tessera_docker_image"
               echo "TF_VAR_tessera_docker_image={name=\"$tessera_docker_image\", local=true}" >> $dockerEnvFile
+              docker pull quorumengineering/tessera:develop
               docker pull quorumengineering/tessera:latest
             fi
           fi
