@@ -25,12 +25,15 @@ import com.quorum.gauge.ext.PendingTransaction;
 import io.reactivex.Observable;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.Response;
+import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.EthBlockNumber;
 import org.web3j.protocol.core.methods.response.NetPeerCount;
 import org.web3j.protocol.core.methods.response.Transaction;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
@@ -48,6 +51,11 @@ public class UtilService extends AbstractService {
     public Observable<EthBlockNumber> getCurrentBlockNumberFrom(QuorumNode node) {
         Web3j client = connectionFactory().getWeb3jConnection(node);
         return client.ethBlockNumber().flowable().toObservable();
+    }
+
+    public Observable<EthBlock> getBlockByNumber(QuorumNode node, int number) {
+        Web3j client = connectionFactory().getWeb3jConnection(node);
+        return client.ethGetBlockByNumber(DefaultBlockParameter.valueOf(BigInteger.valueOf(number)), false).flowable().toObservable();
     }
 
     public List<Transaction> getPendingTransactions(QuorumNode node) {

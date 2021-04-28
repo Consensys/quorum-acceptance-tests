@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.Response;
+import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.EthBlockNumber;
 import org.web3j.tx.Contract;
 
@@ -273,6 +274,13 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         BigInteger currentBlockNumber = utilService.getCurrentBlockNumberFrom(node).blockingFirst().getBlockNumber();
         logger.debug("Current block number = {}", currentBlockNumber);
         DataStoreFactory.getScenarioDataStore().put(name, currentBlockNumber);
+    }
+
+    @Step("Check if we are able to get the block number <number> from <node>")
+    public void getBlockNumberFromNode(int number, QuorumNode node) {
+        EthBlock.Block block = utilService.getBlockByNumber(node, number).blockingFirst().getBlock();
+        logger.debug("Block = {}", block);
+        assertThat(block).isNotNull();
     }
 
     @Step("Wait for node <node> to catch up to <block>")
