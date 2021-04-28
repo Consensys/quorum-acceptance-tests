@@ -298,7 +298,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
     public void waitForNodeToReachBlockNumber(Node node, BigInteger blockNumber) {
         BigInteger currentBlockHeight = utilService.getCurrentBlockNumberFrom(node).blockingFirst().getBlockNumber();
         int i = 0;
-        final int MAX_COUNT = Integer.max(blockNumber.intValue() - currentBlockHeight.intValue(), 20);
+        final int MAX_COUNT = 20;
         while (currentBlockHeight.compareTo(blockNumber) < 0) {
             try {
                 Thread.sleep(5000);
