@@ -98,15 +98,21 @@ module "docker" {
   accounts_count                   = module.network.accounts_count
 }
 
+# we randomize the plugin central configuration so some nodes use the proxy
+# and some nodes use the default configuration (only available in Quorum 21.4.1+).
+# - even node id will have the proxy configuration
+# - odd node id will have the default configuration
 resource "local_file" "plugin-settings" {
   count    = var.number_of_nodes
   filename = format("%s/plugin-settings.json", module.network.data_dirs[count.index])
   content  = <<JSON
 {
+%{if count.index % 2 == 0~}
   "central": {
     "baseURL": "https://provisional-plugins-repo.quorum.consensys.net",
     "publicKeyURI": ".pgp/Central.pgp.pk"
   },
+%{endif~}
   "providers": ${jsonencode(local.providers)}
 }
 JSON
