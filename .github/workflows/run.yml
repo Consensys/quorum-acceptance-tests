@@ -116,16 +116,16 @@ jobs:
 #          - 'privacy-enhancements-upgrade || networks/template::raft-4nodes-pe'
 #          - 'privacy-enhancements-upgrade || networks/template::istanbul-4nodes-pe'
 #          - 'multitenancy && networks/plugins::raft-multitenancy'
-        privacy-enhancements:
-          - 'false'
-        include:
-          - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || basic-raft || (advanced && raft) || networks/typical::raft'
-            privacy-enhancements: 'true'
-          - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
-            privacy-enhancements: 'true'
-          - tag: '(basic && !privacy-enhancements-disabled && !async && !extension && !storage-root && !get-quorum-payload && !personal-api-signed) || networks/typical-besu::ibft2'
-            privacy-enhancements: 'false'
-            besu-network: 'true'
+#        privacy-enhancements:
+#          - 'false'
+#        include:
+#          - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || basic-raft || (advanced && raft) || networks/typical::raft'
+#            privacy-enhancements: 'true'
+#          - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
+#            privacy-enhancements: 'true'
+#          - tag: '(basic && !privacy-enhancements-disabled && !async && !extension && !storage-root && !get-quorum-payload && !personal-api-signed) || networks/typical-besu::ibft2'
+#            privacy-enhancements: 'false'
+#            besu-network: 'true'
     runs-on: ubuntu-18.04
     steps:
       - name: 'Download docker image'
