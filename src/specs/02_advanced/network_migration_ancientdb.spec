@@ -6,7 +6,7 @@ In this spec, we assume that all nodes in the network are initially in the same 
 upgradable to the new version. Also, the immutability threshold is 30 for ancient db
 
         | from_version | to_version |
-        | v20.10.0       | develop    |
+        | 20.10.0       | develop    |
 
 * Start the network with:
     | node  | quorum         | tessera |
@@ -15,8 +15,9 @@ upgradable to the new version. Also, the immutability threshold is 30 for ancien
     | Node2 | <from_version> | develop  |
     | Node3 | <from_version> | develop  |
     | Node4 | <from_version> | develop  |
-* Use SimpleStorage smart contract, populate network with "500" public transactions and "500" private transactions randomly between "Node1,Node2,Node3,Node4"
-* Wait for node "Node1" to catch up to "60"
+* Use SimpleStorage smart contract, populate network with "200" public transactions and "200" private transactions randomly between "Node1,Node2,Node3,Node4"
+* Wait for node "Node1" to catch up to block number "60"
+* Use SimpleStorage smart contract, populate network with "200" public transactions and "200" private transactions randomly between "Node1,Node2,Node3,Node4"
 * Check if we are able to get the block number "10" from "Node1"
 * Record the current block number, named it as "recordedBlockNumber"
 

@@ -82,25 +82,25 @@ public class BlockSynchronization extends AbstractSpecImplementation {
 
     public void startQuorumNetwork(String networkType, String id, List<Node> nodes, String gcmode, String permissionVersion) {
         GethArgBuilder additionalGethArgs = GethArgBuilder.newBuilder()
-                .permissioned("permissioned".equalsIgnoreCase(networkType))
-                .gcmode(gcmode);
+            .permissioned("permissioned".equalsIgnoreCase(networkType))
+            .gcmode(gcmode);
 
         NetworkResources networkResources = new NetworkResources();
         try {
             Observable.fromIterable(nodes)
-                    .flatMap(n -> infraService.startNode(
-                            NodeAttributes.forNode(n.getName()).withAdditionalGethArgs(additionalGethArgs),
-                            resourceId -> networkResources.add(n.getName(), resourceId)
-                    ))
-                    .doOnNext(ok -> {
-                        assertThat(ok).as("Node must start successfully").isTrue();
-                    })
-                    .doOnComplete(() -> {
-                        Duration gracePeriod = networkProperty.getConsensusGracePeriod();
-                        logger.debug("Waiting {}s for network to be up completely...", gracePeriod.toSeconds());
-                        Thread.sleep(gracePeriod.toMillis());
-                    })
-                    .blockingSubscribe();
+                .flatMap(n -> infraService.startNode(
+                    NodeAttributes.forNode(n.getName()).withAdditionalGethArgs(additionalGethArgs),
+                    resourceId -> networkResources.add(n.getName(), resourceId)
+                ))
+                .doOnNext(ok -> {
+                    assertThat(ok).as("Node must start successfully").isTrue();
+                })
+                .doOnComplete(() -> {
+                    Duration gracePeriod = networkProperty.getConsensusGracePeriod();
+                    logger.debug("Waiting {}s for network to be up completely...", gracePeriod.toSeconds());
+                    Thread.sleep(gracePeriod.toMillis());
+                })
+                .blockingSubscribe();
         } finally {
             DataStoreFactory.getScenarioDataStore().put("networkResources", networkResources);
         }
@@ -128,27 +128,27 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         // fire 5 public and 5 private txs
         for (Node n : nodes) {
             parallelSender.add(sendTxs(n, txCountPerNode, threadsPerNode, null)
-                    .subscribeOn(Schedulers.io()));
+                .subscribeOn(Schedulers.io()));
             parallelSender.add(sendTxs(n, txCountPerNode, threadsPerNode, randomNode(nodes, n))
-                    .subscribeOn(Schedulers.io()));
+                .subscribeOn(Schedulers.io()));
         }
         Observable.zip(parallelSender, oks -> true)
-                .doOnComplete(() -> {
-                    BigInteger currentBlockNumber = utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber();
-                    logger.debug("Current block number = {}", currentBlockNumber);
-                    DataStoreFactory.getScenarioDataStore().put(latestBlockHeightName, currentBlockNumber);
-                })
-                .blockingSubscribe();
+            .doOnComplete(() -> {
+                BigInteger currentBlockNumber = utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber();
+                logger.debug("Current block number = {}", currentBlockNumber);
+                DataStoreFactory.getScenarioDataStore().put(latestBlockHeightName, currentBlockNumber);
+            })
+            .blockingSubscribe();
     }
 
 
     private Observable<? extends Contract> sendTxs(Node n, int txCountPerNode, int threadsPerNode, Node target) {
         return Observable.range(0, txCountPerNode)
-                .doOnNext(c -> logger.debug("Sending tx {} to {}", c, n))
-                .flatMap(v -> Observable.just(v)
-                                .flatMap(num -> contractService.createSimpleContract(40, n, target))
-                                .subscribeOn(Schedulers.io())
-                        , threadsPerNode);
+            .doOnNext(c -> logger.debug("Sending tx {} to {}", c, n))
+            .flatMap(v -> Observable.just(v)
+                    .flatMap(num -> contractService.createSimpleContract(40, n, target))
+                    .subscribeOn(Schedulers.io())
+                , threadsPerNode);
     }
 
     private Node randomNode(List<Node> nodes, Node n) {
@@ -179,12 +179,13 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         nodes.stream().forEach(n -> {
             logger.debug("istanbul.propose targetNode:{} fromNode:{} vote:{} nodeAddr:{}", targetNode.getName(), n.getName(), vote, nodeAddr);
             istanbulService.propose(QuorumNode.valueOf(n.getName()), nodeAddr, vote)
-                    .doOnNext(res -> {
-                        Response.Error err2 = Optional.ofNullable(res.getError()).orElse(new Response.Error());
-                        assertThat(err2.getMessage()).as("istanbul.propose must succeed").isBlank();
-                    }).blockingSubscribe();
+                .doOnNext(res -> {
+                    Response.Error err2 = Optional.ofNullable(res.getError()).orElse(new Response.Error());
+                    assertThat(err2.getMessage()).as("istanbul.propose must succeed").isBlank();
+                }).blockingSubscribe();
         });
     }
+
     @Step("Add new node, named it <newNode>, and join the network <id> as <nodeType>")
     public void addNewNode(Node newNode, String id, NodeType nodeType) {
         addNewNode(null, newNode, id, nodeType);
@@ -197,27 +198,27 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         switch (networkProperty.getConsensus()) {
             case "raft":
                 raftService.addPeer(networkResources.aNodeName(), newNode.getEnodeUrl(), nodeType)
-                        .doOnNext(res -> {
-                            Response.Error err = Optional.ofNullable(res.getError()).orElse(new Response.Error());
-                            assertThat(err.getMessage()).as("raft.add" + nodeType.name() + " must succeed").isBlank();
-                            if (nodeType == NodeType.learner)
-                                DataStoreFactory.getScenarioDataStore().put(newNode.getName() + "_raftId", res.getResult());
-                        })
-                        .map(Response::getResult)
-                        .flatMap(raftId -> infraService.startNode(
-                                NodeAttributes.forNode(newNode.getName())
-                                        .withAdditionalGethArgs(additionalGethArgs.raftjoinexisting(raftId).gcmode(gcmode)),
-                                resourceId -> networkResources.add(newNode.getName(), resourceId)
-                        ))
-                        .blockingSubscribe();
+                    .doOnNext(res -> {
+                        Response.Error err = Optional.ofNullable(res.getError()).orElse(new Response.Error());
+                        assertThat(err.getMessage()).as("raft.add" + nodeType.name() + " must succeed").isBlank();
+                        if (nodeType == NodeType.learner)
+                            DataStoreFactory.getScenarioDataStore().put(newNode.getName() + "_raftId", res.getResult());
+                    })
+                    .map(Response::getResult)
+                    .flatMap(raftId -> infraService.startNode(
+                        NodeAttributes.forNode(newNode.getName())
+                            .withAdditionalGethArgs(additionalGethArgs.raftjoinexisting(raftId).gcmode(gcmode)),
+                        resourceId -> networkResources.add(newNode.getName(), resourceId)
+                    ))
+                    .blockingSubscribe();
                 break;
             case "istanbul":
                 // this node is non-validator node, just start it up
                 infraService.startNode(
-                        NodeAttributes.forNode(newNode.getName())
-                                .withAdditionalGethArgs(additionalGethArgs.gcmode(gcmode)),
-                        resourceId -> networkResources.add(newNode.getName(), resourceId))
-                        .blockingSubscribe();
+                    NodeAttributes.forNode(newNode.getName())
+                        .withAdditionalGethArgs(additionalGethArgs.gcmode(gcmode)),
+                    resourceId -> networkResources.add(newNode.getName(), resourceId))
+                    .blockingSubscribe();
                 break;
             default:
                 throw new UnsupportedOperationException(networkProperty.getConsensus() + " not supported yet");
@@ -225,20 +226,20 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         // update static-nodes.json and permissioned-nodes.json from all the nodes
         // including the new node we just started
         Observable.fromIterable(networkResources.allResourceIds())
-                .filter(containerId -> infraService.isGeth(containerId).blockingFirst())
-                .doOnNext(gethContainerId -> logger.debug("Modifying files in container {}", StringUtils.substring(gethContainerId, 0, 12)))
-                .flatMap(gethContainerId -> infraService.modifyFile(gethContainerId,
-                        "/data/qdata/static-nodes.json",
-                        InfrastructureService.JSONListModifier.with(newNode.getEnodeUrl())))
-                .flatMap(gethContainerId -> infraService.modifyFile(gethContainerId,
-                        "/data/qdata/permissioned-nodes.json",
-                        InfrastructureService.JSONListModifier.with(newNode.getEnodeUrl())))
-                .doOnComplete(() -> {
-                    Duration duration = networkProperty.getConsensusGracePeriod();
-                    logger.debug("Waiting {}s while network reflects new modification ...", duration.getSeconds());
-                    Thread.sleep(duration.toMillis());
-                })
-                .blockingSubscribe();
+            .filter(containerId -> infraService.isGeth(containerId).blockingFirst())
+            .doOnNext(gethContainerId -> logger.debug("Modifying files in container {}", StringUtils.substring(gethContainerId, 0, 12)))
+            .flatMap(gethContainerId -> infraService.modifyFile(gethContainerId,
+                "/data/qdata/static-nodes.json",
+                InfrastructureService.JSONListModifier.with(newNode.getEnodeUrl())))
+            .flatMap(gethContainerId -> infraService.modifyFile(gethContainerId,
+                "/data/qdata/permissioned-nodes.json",
+                InfrastructureService.JSONListModifier.with(newNode.getEnodeUrl())))
+            .doOnComplete(() -> {
+                Duration duration = networkProperty.getConsensusGracePeriod();
+                logger.debug("Waiting {}s while network reflects new modification ...", duration.getSeconds());
+                Thread.sleep(duration.toMillis());
+            })
+            .blockingSubscribe();
     }
 
     @Step("Verify node <node> has the block height greater or equal to <latestBlockHeightName>")
@@ -286,10 +287,19 @@ public class BlockSynchronization extends AbstractSpecImplementation {
     @Step("Wait for node <node> to catch up to <block>")
     public void waitForNodeToReachBlockNumber(Node node, String name) {
         final BigInteger lastBlockHeight = mustHaveValue(DataStoreFactory.getScenarioDataStore(), name, BigInteger.class);
+        this.waitForNodeToReachBlockNumber(node, lastBlockHeight);
+    }
+
+    @Step("Wait for node <node> to catch up to block number <block>")
+    public void waitForNodeToReachBlockNumber(Node node, int blockNum) {
+        this.waitForNodeToReachBlockNumber(node, BigInteger.valueOf(blockNum));
+    }
+
+    public void waitForNodeToReachBlockNumber(Node node, BigInteger blockNumber) {
         BigInteger currentBlockHeight = utilService.getCurrentBlockNumberFrom(node).blockingFirst().getBlockNumber();
         int i = 0;
-        final int MAX_COUNT = 20;
-        while (currentBlockHeight.compareTo(lastBlockHeight) < 0) {
+        final int MAX_COUNT = Integer.max(blockNumber.intValue() - currentBlockHeight.intValue(), 20);
+        while (currentBlockHeight.compareTo(blockNumber) < 0) {
             try {
                 Thread.sleep(5000);
             } catch (InterruptedException e) {
@@ -306,8 +316,8 @@ public class BlockSynchronization extends AbstractSpecImplementation {
     public void stopAllNodes(String id) {
         NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
         Observable.fromIterable(networkResources.allResourceIds())
-                .flatMap(infraService::stopResource)
-                .blockingSubscribe();
+            .flatMap(infraService::stopResource)
+            .blockingSubscribe();
     }
 
     @Step("Start all nodes in the network <id>")
@@ -315,20 +325,20 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
         // start all nodes
         Observable.fromIterable(networkResources.allResourceIds())
-                .flatMap(infraService::startResource)
-                .blockingSubscribe();
+            .flatMap(infraService::startResource)
+            .blockingSubscribe();
         // wait for them to be healthy
         Observable.fromIterable(networkResources.allResourceIds())
-                .flatMap(infraService::wait)
-                .doOnNext(ok -> {
-                    assertThat(ok).as("Node must be up").isTrue();
-                })
-                .doOnComplete(() -> {
-                    Duration duration = networkProperty.getConsensusGracePeriod();
-                    logger.debug("Waiting {}s for network to be up completely...", duration.toSeconds());
-                    Thread.sleep(duration.toMillis());
-                })
-                .blockingSubscribe();
+            .flatMap(infraService::wait)
+            .doOnNext(ok -> {
+                assertThat(ok).as("Node must be up").isTrue();
+            })
+            .doOnComplete(() -> {
+                Duration duration = networkProperty.getConsensusGracePeriod();
+                logger.debug("Waiting {}s for network to be up completely...", duration.toSeconds());
+                Thread.sleep(duration.toMillis());
+            })
+            .blockingSubscribe();
         logger.debug("started all nodes");
     }
 
@@ -337,11 +347,11 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         BigInteger expectedBlockNumber = mustHaveValue(DataStoreFactory.getScenarioDataStore(), blockHeightName, BigInteger.class);
         NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
         Observable.fromIterable(networkResources.getNodeNames())
-                .doOnNext(n -> {
-                    EthBlockNumber b = utilService.getCurrentBlockNumberFrom(networkProperty.getNode(n)).blockingFirst();
-                    assertThat(b.getBlockNumber()).as("Block number from node " + n).isGreaterThanOrEqualTo(expectedBlockNumber);
-                })
-                .blockingSubscribe();
+            .doOnNext(n -> {
+                EthBlockNumber b = utilService.getCurrentBlockNumberFrom(networkProperty.getNode(n)).blockingFirst();
+                assertThat(b.getBlockNumber()).as("Block number from node " + n).isGreaterThanOrEqualTo(expectedBlockNumber);
+            })
+            .blockingSubscribe();
     }
 
     @Step("<nodeName> is able to seal new blocks")
@@ -364,9 +374,9 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         Duration longerDuration = Duration.ofSeconds(networkProperty.getConsensusGracePeriod().getSeconds() * 2);
         logger.debug("Grepping '{}' in the log stream for {}s ...", expectedLogMsg, longerDuration.getSeconds());
         Boolean found = Observable.fromIterable(networkResources.get(nodeName.getName()))
-                .filter(id -> infraService.isGeth(id).blockingFirst())
-                .flatMap(id -> infraService.grepLog(id, expectedLogMsg, longerDuration.getSeconds(), TimeUnit.SECONDS))
-                .blockingFirst();
+            .filter(id -> infraService.isGeth(id).blockingFirst())
+            .flatMap(id -> infraService.grepLog(id, expectedLogMsg, longerDuration.getSeconds(), TimeUnit.SECONDS))
+            .blockingFirst();
 
         assertThat(found).as(expectedLogMsg).isTrue();
     }
@@ -377,11 +387,11 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         switch (networkProperty.getConsensus()) {
             case "raft":
                 raftService.promoteToPeer(fromNode.getName(), raftId)
-                        .doOnNext(res -> {
-                            Response.Error err = Optional.ofNullable(res.getError()).orElse(new Response.Error());
-                            assertThat(err.getMessage()).as("raft.promoteToPeer must succeed").isBlank();
-                            assertThat(res.getResult()).isTrue();
-                        }).blockingSubscribe();
+                    .doOnNext(res -> {
+                        Response.Error err = Optional.ofNullable(res.getError()).orElse(new Response.Error());
+                        assertThat(err.getMessage()).as("raft.promoteToPeer must succeed").isBlank();
+                        assertThat(res.getResult()).isTrue();
+                    }).blockingSubscribe();
                 break;
             default:
                 throw new UnsupportedOperationException(networkProperty.getConsensus() + " not supported yet");
@@ -444,19 +454,19 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         NetworkResources networkResources = new NetworkResources();
         try {
             Observable.fromIterable(nodes)
-                    .flatMap(n -> infraService.startNode(
-                            NodeAttributes.forNode(n.getName()).withAdditionalGethArgs(additionalGethArgs),
-                            resourceId -> networkResources.add(n.getName(), resourceId)
-                    ))
-                    .doOnNext(ok -> {
-                        assertThat(ok).as("Node must start successfully").isTrue();
-                    })
-                    .doOnComplete(() -> {
-                        Duration gracePeriod = networkProperty.getConsensusGracePeriod();
-                        logger.debug("Waiting {}s for network to be up completely...", gracePeriod.toSeconds());
-                        Thread.sleep(gracePeriod.toMillis());
-                    })
-                    .blockingSubscribe();
+                .flatMap(n -> infraService.startNode(
+                    NodeAttributes.forNode(n.getName()).withAdditionalGethArgs(additionalGethArgs),
+                    resourceId -> networkResources.add(n.getName(), resourceId)
+                ))
+                .doOnNext(ok -> {
+                    assertThat(ok).as("Node must start successfully").isTrue();
+                })
+                .doOnComplete(() -> {
+                    Duration gracePeriod = networkProperty.getConsensusGracePeriod();
+                    logger.debug("Waiting {}s for network to be up completely...", gracePeriod.toSeconds());
+                    Thread.sleep(gracePeriod.toMillis());
+                })
+                .blockingSubscribe();
         } finally {
             DataStoreFactory.getScenarioDataStore().put("networkResources", networkResources);
         }
