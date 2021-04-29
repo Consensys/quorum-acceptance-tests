@@ -25,9 +25,11 @@ import com.quorum.gauge.ext.EthGetQuorumPayload;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import org.springframework.stereotype.Service;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 
 import java.math.BigInteger;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Service
@@ -44,8 +46,15 @@ public class GraphQL extends AbstractSpecImplementation {
     @Step("Get isPrivate field for <contractName>'s contract deployment transaction using GraphQL query from <node> and it should equal to <isPrivate>")
     public void GetIsPrivate(String contractName, QuorumNode node, Boolean isPrivate) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
-        String transactionHash = c.getTransactionReceipt().orElseThrow(() -> new RuntimeException("no transaction receipt for contract")).getTransactionHash();
-        assertThat(graphQLService.getIsPrivate(node, transactionHash).blockingGet().booleanValue()).isEqualTo(isPrivate);
+        TransactionReceipt receipt = c.getTransactionReceipt().orElseThrow(() -> new RuntimeException("no transaction receipt for contract"));
+
+        boolean got;
+        if("0x000000000000000000000000000000000000007e".equalsIgnoreCase(receipt.getTo())) {
+            got = graphQLService.getInternalIsPrivate(node, receipt.getTransactionHash()).blockingGet();
+        } else {
+            got = graphQLService.getIsPrivate(node, receipt.getTransactionHash()).blockingGet();
+        }
+        assertThat(got).isEqualTo(isPrivate);
     }
 
     @Step("Get privateInputData field for <contractName>'s contract deployment transaction using GraphQL query from <node> and it should be the same as eth_getQuorumPayload")

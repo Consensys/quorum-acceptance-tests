@@ -19,6 +19,7 @@
 
 package com.quorum.gauge.services;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
@@ -30,7 +31,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
-import java.util.Map;
 
 @Service
 public class GraphQLService extends AbstractService {
@@ -42,19 +42,25 @@ public class GraphQLService extends AbstractService {
     public Single<Integer> getBlockNumber(QuorumNode node) {
         String query = "{ \"query\": \"{ block { number } }\" }";
         return executeGraphQL(node, query)
-            .map( jsonObject -> Integer.decode(((Map<String, Object>)((Map<String, Object>)jsonObject.get("data")).get("block")).get("number").toString()));
+            .map( jsonObject -> Integer.decode(jsonObject.get("data").get("block").get("number").asText()));
     }
 
     public Single<Boolean> getIsPrivate(QuorumNode node, String hash) {
         String query = "{ \"query\": \"{ transaction(hash: \\\"" + hash + "\\\") { isPrivate } }\" }";
         return executeGraphQL(node, query)
-            .map( jsonObject -> Boolean.parseBoolean(((Map<String, Object>)((Map<String, Object>)jsonObject.get("data")).get("transaction")).get("isPrivate").toString()));
+            .map( jsonObject -> Boolean.parseBoolean(jsonObject.get("data").get("transaction").get("isPrivate").asText()));
+    }
+
+    public Single<Boolean> getInternalIsPrivate(QuorumNode node, String hash) {
+        String query = "{ \"query\": \"{ transaction(hash: \\\"" + hash + "\\\") { privateTransaction{ isPrivate } } }\" }";
+        return executeGraphQL(node, query)
+            .map( jsonObject -> Boolean.parseBoolean((jsonObject.get("data").get("transaction").get("privateTransaction").get("isPrivate").asText())));
     }
 
     public Single<String> getPrivatePayload(QuorumNode node, String hash) {
         String query = "{ \"query\": \"{ transaction(hash: \\\"" + hash + "\\\") { privateInputData } }\" }";
         return executeGraphQL(node, query)
-            .map( jsonObject -> ((Map<String, Object>)((Map<String, Object>)jsonObject.get("data")).get("transaction")).get("privateInputData").toString());
+            .map( jsonObject -> (jsonObject.get("data").get("transaction").get("privateInputData").asText()));
     }
 
     private String graphqlUrl(QuorumNode node) {
@@ -65,7 +71,7 @@ public class GraphQLService extends AbstractService {
         return nodeConfig.getGraphqlUrl();
     }
 
-    private Single<Map<String, Object>> executeGraphQL(QuorumNode node, String query) {
+    private Single<JsonNode> executeGraphQL(QuorumNode node, String query) {
         return Single.create( subscriber -> {
             RequestBody body = RequestBody.create(
                 MediaType.parse("application/json"), query);
@@ -78,7 +84,7 @@ public class GraphQLService extends AbstractService {
                 Response response = call.execute();
                 if (response.isSuccessful()) {
                     InputStream responseBody = response.body().byteStream();
-                    subscriber.onSuccess(new ObjectMapper().readValue(responseBody, Map.class));
+                    subscriber.onSuccess(new ObjectMapper().readTree(responseBody));
                 } else {
                     String error = response.body().string();
                     subscriber.onError(new Exception(error));
