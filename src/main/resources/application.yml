@@ -2,7 +2,7 @@ server:
   port: 0
 logging:
   level:
-    com.quorum.gauge: INFO
+    com.quorum.gauge: DEBUG
     org.apache.sshd.common.forward.DefaultForwardingFilter: DEBUG # to display port forwarding info
 
 quorum:
