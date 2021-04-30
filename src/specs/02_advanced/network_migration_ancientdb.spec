@@ -6,7 +6,7 @@ In this spec, we assume that all nodes in the network are initially in the same 
 upgradable to the new version. Also, the immutability threshold is 5 for ancient db
 
         | from_version | to_version |
-        | 20.10.0       | develop    |
+        | 20.10.0       | 21.4.0    |
 
 * Start the network with:
     | node  | quorum         | tessera |
