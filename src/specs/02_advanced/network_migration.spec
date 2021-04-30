@@ -6,7 +6,7 @@ In this spec, we assume that all nodes in the network are initially in the same 
 upgradable to the new version
 
         | from_version | to_version |
-        | v20.10.0       | develop     |
+        | v2.5.0       | develop     |
 
 * Start the network with:
     | node  | quorum         | tessera |
