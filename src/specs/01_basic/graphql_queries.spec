@@ -1,6 +1,6 @@
 # GraphQL query block and private transaction
 
-  Tags: basic, graphql
+  Tags: basic, graphql, chrissy
 
 The following smart contract is used:
 ```
