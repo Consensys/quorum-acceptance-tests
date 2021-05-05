@@ -24,16 +24,22 @@ import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.ext.EthGetQuorumPayload;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 
 import java.math.BigInteger;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Service
 public class GraphQL extends AbstractSpecImplementation {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(GraphQL.class);
+
     @Step("Get block number from <node> graphql and it should be greater than or equal to <snapshotName>")
     public void getCurrentBlockNumber(QuorumNode node, String snapshotName) {
         int currentBlockHeight = ((BigInteger) DataStoreFactory.getScenarioDataStore().get(snapshotName)).intValue();
@@ -43,18 +49,26 @@ public class GraphQL extends AbstractSpecImplementation {
         assertThat(graphQLService.getBlockNumber(node).blockingGet().intValue()).isGreaterThanOrEqualTo(currentBlockHeight);
     }
 
-    @Step("Get isPrivate field for <contractName>'s contract deployment transaction using GraphQL query from <node> and it should equal to <isPrivate>")
-    public void GetIsPrivate(String contractName, QuorumNode node, Boolean isPrivate) {
+    @Step("Get isPrivate field for <contractName>'s contract deployment transaction using GraphQL query from <node> and it should equal to <expected>")
+    public void GetIsPrivate(String contractName, QuorumNode node, Boolean expected) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         TransactionReceipt receipt = c.getTransactionReceipt().orElseThrow(() -> new RuntimeException("no transaction receipt for contract"));
 
-        boolean got;
-        if("0x000000000000000000000000000000000000007e".equalsIgnoreCase(receipt.getTo())) {
-            got = graphQLService.getInternalIsPrivate(node, receipt.getTransactionHash()).blockingGet();
-        } else {
-            got = graphQLService.getIsPrivate(node, receipt.getTransactionHash()).blockingGet();
+        boolean got = graphQLService.getIsPrivate(node, receipt.getTransactionHash()).blockingGet();
+
+        LOGGER.error("CHRISSY GraphQL::GetIsPrivate() - got={}", got);
+        if(expected && !got) {
+            // may be a privacy marker tx, check if there's an internal private tx
+            LOGGER.error("CHRISSY GraphQL::GetIsPrivate() - checking if there's an internal private tx");
+            Optional<Boolean> gotInternalIsPrivate = graphQLService.getInternalIsPrivate(node, receipt.getTransactionHash()).blockingGet();
+            if(gotInternalIsPrivate.isPresent()) {
+                LOGGER.error("CHRISSY GraphQL::GetIsPrivate() - there is an internal private tx, updating got");
+                got = gotInternalIsPrivate.get();
+            }
+            LOGGER.error("CHRISSY GraphQL::GetIsPrivate() - got={}", got);
         }
-        assertThat(got).isEqualTo(isPrivate);
+        LOGGER.error("CHRISSY GraphQL::GetIsPrivate() - got={} expected={}", got, expected);
+        assertThat(got).isEqualTo(expected);
     }
 
     @Step("Get privateInputData field for <contractName>'s contract deployment transaction using GraphQL query from <node> and it should be the same as eth_getQuorumPayload")

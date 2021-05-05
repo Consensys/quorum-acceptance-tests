@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
+import java.util.Optional;
 
 @Service
 public class GraphQLService extends AbstractService {
@@ -51,10 +52,15 @@ public class GraphQLService extends AbstractService {
             .map( jsonObject -> Boolean.parseBoolean(jsonObject.get("data").get("transaction").get("isPrivate").asText()));
     }
 
-    public Single<Boolean> getInternalIsPrivate(QuorumNode node, String hash) {
+    public Single<Optional<Boolean>> getInternalIsPrivate(QuorumNode node, String hash) {
         String query = "{ \"query\": \"{ transaction(hash: \\\"" + hash + "\\\") { privateTransaction{ isPrivate } } }\" }";
         return executeGraphQL(node, query)
-            .map( jsonObject -> Boolean.parseBoolean((jsonObject.get("data").get("transaction").get("privateTransaction").get("isPrivate").asText())));
+            .map(jsonObject -> Optional.ofNullable(jsonObject.get("data"))
+                .map(o -> o.get("transaction"))
+                .map(o -> o.get("privateTransaction"))
+                .map(o -> o.get("isPrivate"))
+                .map(JsonNode::asText)
+                .map(Boolean::parseBoolean));
     }
 
     public Single<String> getPrivatePayload(QuorumNode node, String hash) {
