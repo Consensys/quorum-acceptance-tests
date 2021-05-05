@@ -44,6 +44,7 @@ import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.*;
 import org.web3j.quorum.Quorum;
 import org.web3j.quorum.methods.request.PrivateTransaction;
+import org.web3j.quorum.methods.response.PrivatePayload;
 import org.web3j.tx.Contract;
 
 import java.io.IOException;
@@ -293,6 +294,23 @@ public class TransactionService extends AbstractService {
                 );
                 return request.flowable().toObservable();
             });
+    }
+
+    // Delegate for eth_getQuorumPayload
+    public Observable<PrivatePayload> getQuorumPayload(QuorumNode node, String encryptedPayloadHash) {
+        Quorum client = connectionFactory().getConnection(node);
+        return client.quorumGetPrivatePayload(encryptedPayloadHash).flowable().toObservable();
+    }
+
+    // Invoking eth_getPrivateTransaction
+    public Observable<EthTransaction> getPrivateTransaction(QuorumNode node, String transactionHash) {
+        Request<?, EthTransaction> request = new Request<Object, EthTransaction>(
+            "eth_getPrivateTransactionByHash",
+            Arrays.asList(transactionHash),
+            connectionFactory().getWeb3jService(node),
+            EthTransaction.class
+        );
+        return request.flowable().toObservable();
     }
 
     // Invoking eth_getLogs

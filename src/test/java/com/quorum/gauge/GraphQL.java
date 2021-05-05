@@ -27,11 +27,11 @@ import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 
 import java.math.BigInteger;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -55,19 +55,19 @@ public class GraphQL extends AbstractSpecImplementation {
         TransactionReceipt receipt = c.getTransactionReceipt().orElseThrow(() -> new RuntimeException("no transaction receipt for contract"));
 
         boolean got = graphQLService.getIsPrivate(node, receipt.getTransactionHash()).blockingGet();
+        assertThat(got).isEqualTo(expected);
+    }
 
-        LOGGER.error("CHRISSY GraphQL::GetIsPrivate() - got={}", got);
-        if(expected && !got) {
-            // may be a privacy marker tx, check if there's an internal private tx
-            LOGGER.error("CHRISSY GraphQL::GetIsPrivate() - checking if there's an internal private tx");
-            Optional<Boolean> gotInternalIsPrivate = graphQLService.getInternalIsPrivate(node, receipt.getTransactionHash()).blockingGet();
-            if(gotInternalIsPrivate.isPresent()) {
-                LOGGER.error("CHRISSY GraphQL::GetIsPrivate() - there is an internal private tx, updating got");
-                got = gotInternalIsPrivate.get();
-            }
-            LOGGER.error("CHRISSY GraphQL::GetIsPrivate() - got={}", got);
-        }
-        LOGGER.error("CHRISSY GraphQL::GetIsPrivate() - got={} expected={}", got, expected);
+    @Step("Get isPrivate field for <contractName>'s contract deployment internal transaction using GraphQL query from <node> and it should equal to <expectedStr>")
+    public void GetInternalIsPrivate(String contractName, QuorumNode node, String expectedStr) {
+        Boolean expected = "null".equals(expectedStr) ? null : Boolean.parseBoolean(expectedStr);
+
+        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
+        TransactionReceipt receipt = c.getTransactionReceipt().orElseThrow(() -> new RuntimeException("no transaction receipt for contract"));
+
+        Boolean got = graphQLService.getInternalIsPrivate(node, receipt.getTransactionHash())
+            .blockingGet()
+            .orElse(null);
         assertThat(got).isEqualTo(expected);
     }
 
@@ -77,5 +77,47 @@ public class GraphQL extends AbstractSpecImplementation {
         String transactionHash = c.getTransactionReceipt().orElseThrow(() -> new RuntimeException("no transaction receipt for contract")).getTransactionHash();
         EthGetQuorumPayload payload = transactionService.getPrivateTransactionPayload(node, transactionHash).blockingFirst();
         assertThat(graphQLService.getPrivatePayload(node, transactionHash).blockingGet()).isEqualTo(payload.getResult());
+    }
+
+    @Step("Get privateInputData field for <contractName>'s contract deployment transaction using GraphQL query from <node> and it should be equal to <expected>")
+    public void GetPrivateInputData(String contractName, QuorumNode node, String expected) {
+        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
+        String transactionHash = c.getTransactionReceipt().orElseThrow(() -> new RuntimeException("no transaction receipt for contract")).getTransactionHash();
+        assertThat(graphQLService.getPrivatePayload(node, transactionHash).blockingGet()).isEqualTo(expected);
+    }
+
+    @Step("Get privateInputData field for <contractName>'s contract deployment internal transaction using GraphQL query from <node> and it should be the same as eth_getQuorumPayload")
+    public void GetInternalPrivateInputData(String contractName, QuorumNode node) {
+        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
+        String transactionHash = c.getTransactionReceipt().orElseThrow(() -> new RuntimeException("no transaction receipt for contract")).getTransactionHash();
+
+        Transaction privateTx = transactionService.getPrivateTransaction(node, transactionHash)
+            .blockingFirst()
+            .getTransaction()
+            .orElseThrow(() -> new RuntimeException("no internal transaction for transaction"));
+
+        String expected = transactionService.getQuorumPayload(node, privateTx.getInput())
+            .blockingFirst()
+            .getPrivatePayload();
+
+        String got = graphQLService.getInternalPrivatePayload(node, transactionHash)
+            .blockingGet()
+            .orElse(null);
+
+        assertThat(got).isEqualTo(expected);
+    }
+
+    @Step("Get privateInputData field for <contractName>'s contract deployment internal transaction using GraphQL query from <node> and it should be equal to <expected>")
+    public void GetInternalPrivateInputData(String contractName, QuorumNode node, String expected) {
+        expected = "null".equals(expected) ? null : expected;
+
+        Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
+        String transactionHash = c.getTransactionReceipt().orElseThrow(() -> new RuntimeException("no transaction receipt for contract")).getTransactionHash();
+
+        String got = graphQLService.getInternalPrivatePayload(node, transactionHash)
+            .blockingGet()
+            .orElse(null);
+
+        assertThat(got).isEqualTo(expected);
     }
 }

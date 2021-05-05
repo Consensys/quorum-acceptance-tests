@@ -69,6 +69,16 @@ public class GraphQLService extends AbstractService {
             .map( jsonObject -> (jsonObject.get("data").get("transaction").get("privateInputData").asText()));
     }
 
+    public Single<Optional<String>> getInternalPrivatePayload(QuorumNode node, String hash) {
+        String query = "{ \"query\": \"{ transaction(hash: \\\"" + hash + "\\\") { privateTransaction { privateInputData } } }\" }";
+        return executeGraphQL(node, query)
+            .map(jsonObject -> Optional.ofNullable(jsonObject.get("data"))
+                .map(o -> o.get("transaction"))
+                .map(o -> o.get("privateTransaction"))
+                .map(o -> o.get("privateInputData"))
+                .map(JsonNode::asText));
+    }
+
     private String graphqlUrl(QuorumNode node) {
         QuorumNetworkProperty.Node nodeConfig = networkProperty().getNodes().get(node.name());
         if (nodeConfig == null) {
