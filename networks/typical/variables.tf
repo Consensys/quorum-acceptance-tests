@@ -19,8 +19,8 @@ variable "quorum_precompiles_v1" {
 }
 
 variable "privacy_marker_transactions" {
-  type = bool
-  default = false
+  type        = bool
+  default     = false
   description = "Enable privacy marker transactions on the node"
 }
 

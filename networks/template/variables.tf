@@ -8,9 +8,9 @@ variable "isMPS" {
 }
 
 variable "privacy_enhancements" {
-    type        = object({ block = number, enabled = bool })
-    default     = { block = 0, enabled = false }
-    description = "privacy enhancements state (enabled/disabled) and the block height at which they are enabled"
+  type        = object({ block = number, enabled = bool })
+  default     = { block = 0, enabled = false }
+  description = "privacy enhancements state (enabled/disabled) and the block height at which they are enabled"
 }
 
 variable "quorum_precompiles_v1" {
@@ -20,8 +20,8 @@ variable "quorum_precompiles_v1" {
 }
 
 variable "privacy_marker_transactions" {
-  type = bool
-  default = false
+  type        = bool
+  default     = false
   description = "Enable privacy marker transactions on the node"
 }
 
@@ -62,9 +62,9 @@ variable "quorum_docker_image" {
 }
 
 variable "tessera_docker_image" {
-    type        = object({ name = string, local = bool })
-    default     = { name = "quorumengineering/tessera:develop", local = false }
-    description = "Local=true indicates that the image is already available locally and don't need to pull from registry"
+  type        = object({ name = string, local = bool })
+  default     = { name = "quorumengineering/tessera:develop", local = false }
+  description = "Local=true indicates that the image is already available locally and don't need to pull from registry"
 }
 
 variable "docker_registry" {
@@ -92,7 +92,7 @@ variable "docker_images" {
 }
 
 variable "addtional_geth_args" {
-  default = ""
+  default     = ""
   description = "These are immutable args which will be written in the container entrypoint"
 }
 

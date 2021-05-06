@@ -92,7 +92,7 @@ module "docker" {
   besu_datadirs          = var.remote_docker_config == null ? module.network.besu_dirs : split(",", join("", null_resource.scp[*].triggers.data_dirs))
   tessera_datadirs       = var.remote_docker_config == null ? module.network.tm_dirs : split(",", join("", null_resource.scp[*].triggers.tm_dirs))
   ethsigner_datadirs     = var.remote_docker_config == null ? module.network.ethsigner_dirs : split(",", join("", null_resource.scp[*].triggers.ethsigner_dirs))
-  keystore_files          = module.network.keystore_files
+  keystore_files         = module.network.keystore_files
   keystore_password_file = module.network.keystore_password_file
 
   tessera_app_container_path = var.tessera_app_container_path

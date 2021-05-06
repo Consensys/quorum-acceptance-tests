@@ -1,1 +1,1 @@
-consensus    = "istanbul"
+consensus = "istanbul"

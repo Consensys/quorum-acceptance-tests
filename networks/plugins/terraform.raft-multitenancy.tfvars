@@ -1,4 +1,4 @@
-consensus    = "raft"
+consensus = "raft"
 plugins = {
   security = {
     name       = "quorum-security-plugin-enterprise"

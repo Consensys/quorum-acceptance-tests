@@ -17,8 +17,8 @@ variable "quorum_precompiles_v1" {
 }
 
 variable "privacy_marker_transactions" {
-  type = bool
-  default = false
+  type        = bool
+  default     = false
   description = "Enable privacy marker transactions on the node"
 }
 
@@ -75,8 +75,8 @@ variable "docker_registry" {
 }
 
 variable "additional_quorum_container_vol" {
-  type = map(list(object({container_path = string, host_path = string})))
-  default = {}
+  type        = map(list(object({ container_path = string, host_path = string })))
+  default     = {}
   description = "Additional volume mounts for geth container. Each map key is the node index (0-based)"
 }
 
