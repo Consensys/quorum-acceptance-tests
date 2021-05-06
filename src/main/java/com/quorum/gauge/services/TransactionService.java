@@ -95,22 +95,29 @@ public class TransactionService extends AbstractService {
                     return Observable.just(r);
                 }
 
+                String privacyPrecompileAddress = privacyService.getPrivacyPrecompileAddress(node).blockingFirst().getResult();
+
                 TransactionReceipt q = r.getTransactionReceipt().get();
-                if("0x000000000000000000000000000000000000007e".equalsIgnoreCase(q.getTo())) {
+                if(privacyPrecompileAddress.equalsIgnoreCase(q.getTo())) {
                     // fetch the private tx receipt, since we have a marker receipt
-                    Request<?, EthGetTransactionReceipt> request = new Request<>(
-                        "eth_getPrivateTransactionReceipt",
-                        List.of(q.getTransactionHash()),
-                        connectionFactory().getWeb3jService(node),
-                        EthGetTransactionReceipt.class
-                    );
-                    EthGetTransactionReceipt ethGetTransactionReceipt = request.flowable().toObservable().blockingFirst();
-                    if(ethGetTransactionReceipt.getTransactionReceipt().isPresent()) {
-                        return Observable.just(ethGetTransactionReceipt);
+                    EthGetTransactionReceipt privateTxReceipt = getPrivateTransactionReceipt(node, transactionHash).blockingFirst();
+                    if(privateTxReceipt.getTransactionReceipt().isPresent()) {
+                        return Observable.just(privateTxReceipt);
                     }
                 }
                 return Observable.just(r);
             });
+    }
+
+    public Observable<EthGetTransactionReceipt> getPrivateTransactionReceipt(QuorumNetworkProperty.Node node, String transactionHash) {
+        // fetch the private tx receipt, since we have a marker receipt
+        Request<?, EthGetTransactionReceipt> request = new Request<>(
+            "eth_getPrivateTransactionReceipt",
+            List.of(transactionHash),
+            connectionFactory().getWeb3jService(node),
+            EthGetTransactionReceipt.class
+        );
+        return request.flowable().toObservable();
     }
 
     public Optional<TransactionReceipt> pollTransactionReceipt(QuorumNetworkProperty.Node node, String transactionHash) {
