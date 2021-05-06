@@ -14,8 +14,8 @@ variable "privacy_enhancements" {
 }
 
 variable "quorum_precompiles_v1" {
-  type        = object({ enabled = bool, block = number })
-  default     = { enabled = false, block = 0 }
+  type        = object({ block = number, enabled = bool })
+  default     = { block = 0, enabled = false }
   description = "Set the quorumPrecompilesV1Block fork"
 }
 

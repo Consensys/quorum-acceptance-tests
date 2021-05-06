@@ -93,7 +93,6 @@ variable "network_id" {}
 
 variable "privacy_marker_transactions" {
   type        = bool
-  default     = false
   description = "Enable privacy marker transactions on the node"
 }
 
