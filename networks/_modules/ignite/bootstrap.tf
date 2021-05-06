@@ -11,7 +11,7 @@ locals {
   # chain config
   qip714Block_config              = var.permission_qip714Block.enabled ? { qip714Block = var.permission_qip714Block.block } : {}
   privacyEnhancementsBlock_config = var.privacy_enhancements.enabled ? { privacyEnhancementsBlock = var.privacy_enhancements.block } : {}
-  quorumPrecompilesV1Block_config = 0
+  quorumPrecompilesV1Block_config = var.quorum_precompiles_v1.enabled ? { quorumPrecompilesV1Block = var.quorum_precompiles_v1.block } : {}
 
   istanbul_config       = var.consensus == "istanbul" || var.consensus == "qbft" ? { istanbul = { epoch = 30000, policy = 0, ceil2Nby3Block = 0 } } : {}
   qbft_config  = (var.consensus == "istanbul" || var.consensus == "qbft") && var.qbftBlock.enabled ? { istanbul = { epoch = 30000, policy = 0, testQBFTBlock = var.qbftBlock.block, ceil2Nby3Block = 0 } } : {}

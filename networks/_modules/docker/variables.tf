@@ -91,10 +91,10 @@ variable "consensus" {}
 
 variable "network_id" {}
 
-variable "enable_privacy_marker_txs" {
-  type        = bool
-  default     = true
-  description = "enable privacy marker transactions"
+variable "privacy_marker_transactions" {
+  type = bool
+  default = false
+  description = "Enable privacy marker transactions on the node"
 }
 
 variable "ethstats_secret" {}

@@ -49,6 +49,12 @@ variable "permission_qip714Block" {
   description = "required for testing permission model"
 }
 
+variable "quorum_precompiles_v1" {
+  type        = object({ enabled = bool, block = number })
+  default     = { enabled = false, block = 0 }
+  description = "Set the quorumPrecompilesV1Block fork"
+}
+
 variable "output_dir" {
   default     = "build"
   description = "Target directory that contains generated resources for the network"

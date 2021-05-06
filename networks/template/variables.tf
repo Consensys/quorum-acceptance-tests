@@ -13,11 +13,16 @@ variable "privacy_enhancements" {
     description = "privacy enhancements state (enabled/disabled) and the block height at which they are enabled"
 }
 
-// TODO(cjh) do we need this var definition if its already defined in the docker module?
-variable "enable_privacy_marker_txs" {
-  type        = bool
-  default     = true
-  description = "enable privacy marker transactions"
+variable "quorum_precompiles_v1" {
+  type        = object({ enabled = bool, block = number })
+  default     = { enabled = false, block = 0 }
+  description = "Set the quorumPrecompilesV1Block fork"
+}
+
+variable "privacy_marker_transactions" {
+  type = bool
+  default = false
+  description = "Enable privacy marker transactions on the node"
 }
 
 variable "output_dir" {

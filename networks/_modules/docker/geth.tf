@@ -148,7 +148,7 @@ exec geth \
   --rpcaddr 0.0.0.0 \
   --rpcport ${var.geth_networking[count.index].port.http.internal} \
   --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,quorumPermission,quorumExtension,${(var.consensus == "istanbul" || var.consensus == "qbft" ? "istanbul" : "raft")} \
-%{if var.enable_privacy_marker_txs~}
+%{if var.privacy_marker_transactions~}
   --privacymarker.enable \
 %{endif~}
 %{if var.geth_networking[count.index].port.ws != null~}
