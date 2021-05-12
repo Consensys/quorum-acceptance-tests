@@ -40,6 +40,11 @@ additional_genesis_config = {
 # this is config will be merged to the default Tessera JSON config per node
 additional_tessera_config = {
   0 = {
+    "features": {
+        "enablePrivacyEnhancements":"true",
+        "enableRemoteKeyValidation":"true",
+        "enableMultiplePrivateStates" : "true"
+    },
     residentGroups = [
       {
         name = "JPM"
