@@ -85,7 +85,7 @@ jobs:
     # This workflow uses tag expression and its sha256 hash to aggregate test results
     # from each execution. It is important that the job name has tag expression in the
     # suffix and encapsulated within parathensis
-    name: Tests tagged with (${{ matrix.tag }})
+    name: Test (${{ matrix.tag }}) (privacy-enhancements=${{matrix.privacy-enhancements}}, quorum-precompiles-v1=${{matrix.quorum-precompiles-v1}}, privacy-marker-transactions=${{matrix.privacy-marker-transactions}})
     if: needs.condition.outputs.should_run == 'true'
     needs:
       - condition
