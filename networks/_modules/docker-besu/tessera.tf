@@ -88,16 +88,7 @@ if [ -f /data/tm/cleanStorage ]; then
   fi
 fi
 
-exec /home/tessera-extracted/bin/tessera \
-  --override jdbc.url="jdbc:h2:${local.container_tm_datadir}/db;MODE=Oracle;TRACE_LEVEL_SYSTEM_OUT=0" \
-  --override serverConfigs[1].serverAddress=${local.container_tm_q2t_urls[count.index]} \
-  --override serverConfigs[2].sslConfig.serverKeyStore="${local.container_tm_datadir}/serverKeyStore" \
-  --override serverConfigs[2].sslConfig.serverTrustStore="${local.container_tm_datadir}/serverTrustStore" \
-  --override serverConfigs[2].sslConfig.knownClientsFile="${local.container_tm_datadir}/knownClientsFile" \
-  --override serverConfigs[2].sslConfig.clientKeyStore="${local.container_tm_datadir}/clientKeyStore" \
-  --override serverConfigs[2].sslConfig.clientTrustStore="${local.container_tm_datadir}/clientTrustStore" \
-  --override serverConfigs[2].sslConfig.knownServersFile="${local.container_tm_datadir}/knownServersFile" \
-  --configfile ${local.container_tm_datadir}/config.json
+exec $START_TESSERA
 EOF
   ]
 }
