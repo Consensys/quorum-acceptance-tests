@@ -50,8 +50,7 @@ resource "docker_container" "tessera" {
     <<EOF
 echo "Tessera${count.index + 1}"
 
-START_TESSERA="java -Xms128M -Xmx128M \
-  -jar ${lookup(var.tessera_app_container_path, count.index, "/tessera/tessera-app.jar")} \
+START_TESSERA="/home/tessera-extracted/bin/tessera \
   --override jdbc.url=jdbc:h2:${local.container_tm_datadir}/db;MODE=Oracle;TRACE_LEVEL_SYSTEM_OUT=0 \
   --override serverConfigs[1].serverAddress="${local.container_tm_q2t_urls[count.index]}" \
   --override serverConfigs[2].sslConfig.serverKeyStore=${local.container_tm_datadir}/serverKeyStore \
@@ -89,8 +88,7 @@ if [ -f /data/tm/cleanStorage ]; then
   fi
 fi
 
-exec java -Xms128M -Xmx128M \
-  -jar ${lookup(var.tessera_app_container_path, count.index, "/tessera/tessera-app.jar")} \
+exec /home/tessera-extracted/bin/tessera \
   --override jdbc.url="jdbc:h2:${local.container_tm_datadir}/db;MODE=Oracle;TRACE_LEVEL_SYSTEM_OUT=0" \
   --override serverConfigs[1].serverAddress=${local.container_tm_q2t_urls[count.index]} \
   --override serverConfigs[2].sslConfig.serverKeyStore="${local.container_tm_datadir}/serverKeyStore" \
