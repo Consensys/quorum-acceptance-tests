@@ -24,4 +24,4 @@ EstimateGas api call should return valid 'close' estimate of required gas.
 ## Estimate gas required for zero value public transaction
 
 * Estimate gas for public transaction transferring zero Wei from a default account in "Node1" to a default account in "Node2"
-* Gas estimate "25352" is returned within "10" percent
+* Gas estimate "22024" is returned within "10" percent
