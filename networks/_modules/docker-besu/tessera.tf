@@ -50,8 +50,19 @@ resource "docker_container" "tessera" {
     <<EOF
 echo "Tessera${count.index + 1}"
 
-START_TESSERA="java -Xms128M -Xmx128M \
-  -jar ${lookup(var.tessera_app_container_path, count.index, "/tessera/tessera-app.jar")} \
+JAVA_OPTS="-Xms128M -Xmx128M"
+RUN_COMMAND="/home/tessera-extracted/bin/tessera"
+
+// TODO: remove following block when Jigsaw dist is default
+JAR_FILE="${lookup(var.tessera_app_container_path, count.index, "/tessera/tessera-app.jar")}"
+
+if [[ -f "$${JAR_FILE}" ]];
+then
+  RUN_COMMAND="java -Xms128M -Xmx128M -jar $${JAR_FILE}"
+fi
+// end of block to remove
+
+START_TESSERA="$${RUN_COMMAND} \
   --override jdbc.url=jdbc:h2:${local.container_tm_datadir}/db;MODE=Oracle;TRACE_LEVEL_SYSTEM_OUT=0 \
   --override serverConfigs[1].serverAddress="${local.container_tm_q2t_urls[count.index]}" \
   --override serverConfigs[2].sslConfig.serverKeyStore=${local.container_tm_datadir}/serverKeyStore \
@@ -89,17 +100,7 @@ if [ -f /data/tm/cleanStorage ]; then
   fi
 fi
 
-exec java -Xms128M -Xmx128M \
-  -jar ${lookup(var.tessera_app_container_path, count.index, "/tessera/tessera-app.jar")} \
-  --override jdbc.url="jdbc:h2:${local.container_tm_datadir}/db;MODE=Oracle;TRACE_LEVEL_SYSTEM_OUT=0" \
-  --override serverConfigs[1].serverAddress=${local.container_tm_q2t_urls[count.index]} \
-  --override serverConfigs[2].sslConfig.serverKeyStore="${local.container_tm_datadir}/serverKeyStore" \
-  --override serverConfigs[2].sslConfig.serverTrustStore="${local.container_tm_datadir}/serverTrustStore" \
-  --override serverConfigs[2].sslConfig.knownClientsFile="${local.container_tm_datadir}/knownClientsFile" \
-  --override serverConfigs[2].sslConfig.clientKeyStore="${local.container_tm_datadir}/clientKeyStore" \
-  --override serverConfigs[2].sslConfig.clientTrustStore="${local.container_tm_datadir}/clientTrustStore" \
-  --override serverConfigs[2].sslConfig.knownServersFile="${local.container_tm_datadir}/knownServersFile" \
-  --configfile ${local.container_tm_datadir}/config.json
+exec $START_TESSERA
 EOF
   ]
 }
