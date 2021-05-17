@@ -53,7 +53,19 @@ resource "docker_container" "tessera" {
     <<EOF
 #Tessera${count.index + 1}
 
-START_TESSERA="/home/tessera-extracted/bin/tessera \
+// TODO: remove following block when Jigsaw dist is default
+FILE="${lookup(var.tessera_app_container_path, count.index, "/tessera/tessera-app.jar")}"
+
+if [[ -f "$${FILE}" ]];
+then
+  COMMAND="java -Xms128M -Xmx128M -jar $${FILE}"
+else
+  JAVA_OPTS="-Xms128M -Xmx128M"
+  COMMAND="/home/tessera-extracted/bin/tessera"
+fi
+// end of block to remove
+
+START_TESSERA="$${COMMAND} \
   --override jdbc.url=jdbc:h2:${local.container_tm_datadir}/db;MODE=Oracle;TRACE_LEVEL_SYSTEM_OUT=0 \
   --override serverConfigs[1].serverAddress=unix:${local.container_tm_ipc_file} \
   --override serverConfigs[2].sslConfig.serverKeyStore=${local.container_tm_datadir}/serverKeyStore \
