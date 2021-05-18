@@ -77,9 +77,6 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
             Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())
         ).blockingFirst();
 
-        logger.error("CHRISSY contract tx receipt isPresent {}", contract.getTransactionReceipt().isPresent());
-        logger.error("CHRISSY contract tx receipt {}", contract.getTransactionReceipt().get().toString());
-
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
     }
