@@ -19,6 +19,7 @@
 
 package com.quorum.gauge;
 
+ import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.core.AbstractSpecImplementation;
@@ -176,6 +177,28 @@ public class PublicSmartContract extends AbstractSpecImplementation {
                     .flatMap(i -> utilService.getCurrentBlockNumber())
                     .blockingFirst()
                     .getBlockNumber();
+        }
+    }
+
+    @Step("Wait for block height is multiple of <count> by sending arbitrary public transactions on <node>")
+    public void waitForBlockHeightBySendingPublicTransactionOnNode(int count, QuorumNetworkProperty.Node node) {
+        int bloomConfirmations = 256; // this value comes from bloomConfirms which is the number of confirmation blocks before a bloom section is moved
+        int delta = 20; // marginal tollerance
+        BigInteger currentBlockHeight = currentBlockNumber();
+        int targetBlockHeight = currentBlockHeight.intValue() + (count - currentBlockHeight.intValue() % count) + bloomConfirmations + delta;
+        List<Observable<? extends Contract>> contractObservables = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            QuorumNode n = QuorumNode.valueOf(node.getName());
+            contractObservables.add(contractService.createClientReceiptSmartContract(n).subscribeOn(Schedulers.io()));
+        }
+        while (currentBlockHeight.intValue() < targetBlockHeight) {
+            // as this test will take time to complete so this log is important
+            // to tell Travis not to kill the CI
+            logger.warn("[Travis] Current block height = {}, targetBlockHeight = {}", currentBlockHeight.intValue(), targetBlockHeight);
+            currentBlockHeight = Observable.zip(contractObservables, args -> args.length)
+                .flatMap(i -> utilService.getCurrentBlockNumber())
+                .blockingFirst()
+                .getBlockNumber();
         }
     }
 }

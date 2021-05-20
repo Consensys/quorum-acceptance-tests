@@ -3,6 +3,10 @@
 variable "network_name" {}
 variable "consensus" {}
 
+variable "isMPS" {
+  default = false
+}
+
 variable "privacy_enhancements" {
     type        = object({ block = number, enabled = bool })
     default     = { block = 0, enabled = false }
@@ -57,6 +61,18 @@ variable "docker_registry" {
   description = "List of docker registeries to pull images from"
 }
 
+variable "additional_quorum_container_vol" {
+  type = map(list(object({container_path = string, host_path = string})))
+  default = {}
+  description = "Additional volume mounts for geth container. Each map key is the node index (0-based)"
+}
+
+variable "additional_tessera_container_vol" {
+  type        = map(list(object({ container_path = string, host_path = string })))
+  default     = {}
+  description = "Additional volume mounts for tessera container. Each map key is the node index (0-based)"
+}
+
 variable "docker_images" {
   type        = list(string)
   default     = []
@@ -66,4 +82,94 @@ variable "docker_images" {
 variable "addtional_geth_args" {
   default = ""
   description = "These are immutable args which will be written in the container entrypoint"
+}
+
+variable "tessera_app_container_path" {
+  type        = map(string)
+  default     = {}
+  description = "Path to Tessera app jar file in the container. Each map key is the node index (0-based)"
+}
+
+variable "override_tm_named_key_allocation" {
+  default     = {}
+  description = <<-EOT
+Override default allocation of transaction management named public key
+E.g.: use 2 named keys: A1, A2 for node 1
+{
+  0 = ["A1", "A2"]
+}
+EOT
+}
+
+variable "override_named_account_allocation" {
+  default     = {}
+  description = <<-EOT
+Override default allocation of accounts
+E.g.: use 2 named account: ACC1, ACC2 for node 1
+{
+  0 = ["ACC1", "ACC2"]
+}
+EOT
+}
+
+variable "override_vnodes" {
+  type        = map(object({ mpsEnabled = bool, vnodes = map(object({name = string, tmKeys = list(string), ethKeys = list(string)})) }))
+  default     = {}
+  description = <<-EOT
+Sets the allocations for TM & Eth keys to a Node name, sat under a particular Quorum instance
+E.g.:
+{
+    0 = {
+        mpsEnabled = true,
+        vnodes = {
+            VNode1 = {
+                name = "Node1"
+                tmKeys = ["Key1", "Key2"],
+                ethKeys = ["EthKey1", "EthKey2"]
+            },
+            VNode2 = {
+                name = "Node2"
+                tmKeys = ["Key3"],
+                ethKeys = ["EthKey3"]
+            }
+        }
+    },
+    1 = {
+        mpsEnabled = false,
+        vnodes = {
+            VNode3 = {
+                name = "Node5"
+                tmKeys = ["Key3", "Key4"],
+                ethKeys = ["EthKey4"]
+            }
+        }
+    }
+}
+EOT
+}
+
+variable "additional_genesis_config" {
+  default = {}
+  description = <<-EOT
+Merge this config with the chain config in the genesis per node. This will override existing keys
+E.g.: enable isMPS for node 1
+{
+  0 = {
+    isMPS = true
+  }
+}
+EOT
+}
+
+variable "additional_tessera_config" {
+  default = {}
+  description = <<-EOT
+Merge this config with the default config per node. This will override existing keys
+E.g.: add config to node 1
+{
+  0 = {
+    alwaysSendTo = ["xyz"]
+  }
+}
+EOT
 }

@@ -214,24 +214,17 @@ public class ContractExtension extends AbstractSpecImplementation {
 
     @Step("<node> has <contractName> listed in all active extensions")
     public void contractIsListed(final QuorumNetworkProperty.Node node, final String contractName) {
-
-        final Contract contract = mustHaveValue(contractName, Contract.class);
-
-        final QuorumActiveExtensionContracts result = this.extensionService
-            .getExtensionContracts(node)
-            .blockingFirst();
-
-        final Optional<Map<Object, Object>> first = result.getResult()
-            .stream()
-            .filter(contractStatus -> contractStatus.containsValue(contract.getContractAddress()))
-            .findFirst();
-
-        assertThat(first).isPresent();
+        assertThat(getListedStatus(node, contractName)).isPresent();
     }
 
-    //TODO: deduplicate with opposite step ("contractIsListed")
     @Step("<node> does not see <contractName> listed in all active extensions")
     public void contractIsNotListed(final QuorumNetworkProperty.Node node, final String contractName) {
+        assertThat(getListedStatus(node, contractName)).isNotPresent();
+    }
+
+    public Optional<Map<Object, Object>> getListedStatus(final QuorumNetworkProperty.Node node, final String contractName) {
+        final Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
+        accessToken.ifPresent(Context::storeAccessToken);
 
         final Contract contract = mustHaveValue(contractName, Contract.class);
 
@@ -239,13 +232,12 @@ public class ContractExtension extends AbstractSpecImplementation {
             .getExtensionContracts(node)
             .blockingFirst();
 
-        final Optional<Map<Object, Object>> first = result.getResult()
+        Context.removeAccessToken();
+
+        return result.getResult()
             .stream()
             .filter(contractStatus -> contractStatus.containsValue(contract.getContractAddress()))
             .findFirst();
-
-        assertThat(first).isNotPresent();
-
     }
 
     @Step("<node> sees <contractName> has status <status>")

@@ -4,6 +4,7 @@
 
 * Configure the authorization server to grant `"Client_1"` access to scopes `"rpc://eth_*,rpc://rpc_modules"` in `"Node1,Node2"`
 * Configure the authorization server to grant `"Operator_A"` access to scopes `"rpc://admin_peers"` in `"Node1,Node2"`
+* Configure the authorization server to grant `"Client_3"` access to scopes `"rpc://graphql_*"` in `"Node1,Node2"`
 
 ## Clients are authorized to access APIs based on specific scope granted
 
@@ -116,3 +117,13 @@ In this scenario, the assumption is that some of APIs in the batch are authorize
 * `"Client_1"` requests access token for scope(s) `"rpc://eth_*"` and audience(s) `"Node1,Node3,Node4"` from the authorization server
 * Setup `"Client_1"` access token for subsequent calls
 * Verify privacy between "Node1" and "Node4" excluding "Node3" when using a simple smart contract
+
+## Client graphql access
+
+ Tags: basic-rpc-security
+
+* `"Client_3"` requests access token for scope(s) `"rpc://graphql_*"` and audience(s) `"Node1,Node2"` from the authorization server
+* `"Client_3"` is responded with "success" when trying to access graphql on "Node1"
+* `"Client_3"` is responded with "invalid audience claim (aud)" when trying to access graphql on "Node3"
+* `"Operator_A"` requests access token for scope(s) `"rpc://admin_peers"` and audience(s) `"Node1,Node2"` from the authorization server
+* `"Operator_A"` is responded with "access denied" when trying to access graphql on "Node1"

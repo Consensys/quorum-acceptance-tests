@@ -21,6 +21,7 @@ package com.quorum.gauge;
 
 import com.quorum.gauge.common.Context;
 import com.quorum.gauge.common.QuorumNetworkProperty;
+import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.ext.BatchRequest;
 import com.quorum.gauge.ext.ObjectResponse;
@@ -159,6 +160,27 @@ public class PluginSecurity extends AbstractSpecImplementation {
             .blockingForEach(t -> {
                 DataStoreFactory.getScenarioDataStore().put(clientId, t);
             });
+    }
+
+    @Step("`<clientId>` is responded with <policy> when trying to access graphql on <targetNode>")
+    public void invokeGraphql(String clientId, String policy, QuorumNode targetNode) {
+        boolean expectAuthorized = "success".equalsIgnoreCase(policy);
+        String token = mustHaveValue(DataStoreFactory.getScenarioDataStore(), clientId, String.class);
+        Context.storeAccessToken(token);
+        String description = policy + ": graphql_getBlockNumber @" + targetNode.name();
+        graphQLService.getBlockNumber(targetNode)
+            .subscribe(
+                result -> {
+                    assertThat(expectAuthorized).as(description).isTrue();},
+                e -> {
+                    assertThat(expectAuthorized).as(description).isFalse();
+                    assertThat(e.getMessage())
+                    .as(description).contains(policy);
+                if (expectAuthorized) {
+                    assertThat(Optional.ofNullable(e).orElse(new Throwable()).getMessage())
+                        .as(description).isNullOrEmpty();
+                }}
+            );
     }
 
     private String cleanData(String d) {

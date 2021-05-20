@@ -85,3 +85,35 @@ variable "non_validator_nodes" {
   default     = []
   description = "Exclude nodes (0-based index) as validators. Default all nodes are validators"
 }
+
+variable "override_vnodes" {
+  type        = map(object({ mpsEnabled = bool, vnodes = map(object({name = string, tmKeys = list(string), ethKeys = list(string)})) }))
+  default     = {}
+  description = ""
+}
+
+variable "additional_tessera_config" {
+  default = {}
+  description = <<-EOT
+Merge this config with the default config per node. This takes precedence over existing keys.
+E.g.: add config to node 1
+{
+  0 = {
+    alwaysSendTo = ["xyz"]
+  }
+}
+EOT
+}
+
+variable "additional_genesis_config" {
+  default = {}
+  description = <<-EOT
+Merge this config with the chain config in the genesis per node. This will override existing keys
+E.g.: enable isMPS for node 1
+{
+  0 = {
+    isMPS = true
+  }
+}
+EOT
+}

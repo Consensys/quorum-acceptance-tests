@@ -25,6 +25,10 @@ locals {
   providers = { for k, v in var.plugins : k => { name = v.name, version = v.version, config = format("file://%s/plugins/%s-config.json", module.docker.container_geth_datadir, k) } }
 
   with_hashicorp_plugin = contains(values(var.plugins)[*].name, "quorum-account-plugin-hashicorp-vault")
+
+  additional_geth_args = merge(
+    {for idx in local.node_indices : idx => format("--rpcapi %s --plugins file://%s/plugin-settings.json %s", local.apis, "/data/qdata", local.more_args)},
+    var.override_additional_geth_args)
 }
 
 module "helper" {
@@ -65,6 +69,8 @@ module "network" {
 
   override_tm_named_key_allocation  = var.override_tm_named_key_allocation
   override_named_account_allocation = var.override_named_account_allocation
+  additional_tessera_config         = var.additional_tessera_config
+  additional_genesis_config         = var.additional_genesis_config
 }
 
 module "docker" {
@@ -85,7 +91,7 @@ module "docker" {
   tessera_datadirs   = var.remote_docker_config == null ? module.network.tm_dirs : split(",", join("", null_resource.scp[*].triggers.tm_dirs))
 
   # provide additional geth args
-  additional_geth_args = format("--rpcapi %s --plugins file://%s/plugin-settings.json %s", local.apis, "/data/qdata", local.more_args)
+  additional_geth_args = local.additional_geth_args
   additional_geth_env = {
     (local.plugin_token_envvar_name) = local.vault_server_token
   }

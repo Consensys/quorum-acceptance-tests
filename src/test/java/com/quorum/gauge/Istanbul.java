@@ -63,7 +63,8 @@ public class Istanbul extends AbstractSpecImplementation {
 
         Gauge.writeMessage(String.format("Stopping %d validators from total of %d validators", numOfValidatorsToStop, totalNodesLive));
 
-        List<QuorumNode> nodes = Observable.fromArray(QuorumNode.values()).take(totalNodesConfigured).toList().blockingGet();
+        final QuorumNode[] quorumNodes = networkProperty.getNodes().keySet().stream().map(QuorumNode::valueOf).toArray(QuorumNode[]::new);
+        List<QuorumNode> nodes = Observable.fromArray(quorumNodes).take(totalNodesConfigured).toList().blockingGet();
         Collections.shuffle(nodes);
         List<QuorumNode> stoppedNodes = nodes.subList(0, numOfValidatorsToStop);
         Observable.fromIterable(stoppedNodes)

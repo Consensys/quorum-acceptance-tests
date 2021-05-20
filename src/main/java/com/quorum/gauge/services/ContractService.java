@@ -48,10 +48,7 @@ import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.Response;
 import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.request.Transaction;
-import org.web3j.protocol.core.methods.response.EthCall;
-import org.web3j.protocol.core.methods.response.EthLog;
-import org.web3j.protocol.core.methods.response.EthUninstallFilter;
-import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.core.methods.response.*;
 import org.web3j.quorum.Quorum;
 import org.web3j.quorum.tx.ClientTransactionManager;
 import org.web3j.tx.Contract;
@@ -619,5 +616,11 @@ public class ContractService extends AbstractService {
                     delegateContractAddress)
                     .flowable().toObservable();
             });
+    }
+
+    public Observable<EthGetCode> getCode(Node node, String contractAddress) {
+        Quorum client = connectionFactory().getConnection(node);
+        return client.ethGetCode(contractAddress, DefaultBlockParameterName.LATEST)
+            .flowable().toObservable();
     }
 }

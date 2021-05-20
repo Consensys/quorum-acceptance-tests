@@ -27,6 +27,7 @@ public class Context {
     private static final Logger logger = LoggerFactory.getLogger(Context.class);
     static ThreadLocal<QuorumNodeConnectionFactory> connectionFactoryThreadLocal = new ThreadLocal<>();
     static ThreadLocal<String> accessTokenHolder = new ThreadLocal<>();
+    static ThreadLocal<String> psiHolder = new ThreadLocal<>();
 
     public static void setConnectionFactory(QuorumNodeConnectionFactory c) {
         if (c == null) {
@@ -59,5 +60,18 @@ public class Context {
 
     public static void removeAccessToken() {
         accessTokenHolder.remove();
+    }
+
+    public static void removePSI() {
+        psiHolder.remove();
+    }
+
+    public static String storePSI(String psi) {
+        psiHolder.set(psi);
+        return psi;
+    }
+
+    public static String retrievePSI() {
+        return psiHolder.get();
     }
 }

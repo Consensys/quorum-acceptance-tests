@@ -57,7 +57,7 @@ public class AccountService extends AbstractService {
     public Observable<String> getDefaultAccountAddress(QuorumNetworkProperty.Node node) {
         Map<String, String> accountAliases = node.getAccountAliases();
         if (CollectionUtils.isEmpty(accountAliases) || !accountAliases.containsKey("Default")) {
-            return getAccountAddresses(QuorumNode.valueOf(node.getName())).firstOrError().toObservable();
+            return Observable.just(accountAliases.values().iterator().next());
         } else {
             return Observable.just(accountAliases.get("Default"));
         }
