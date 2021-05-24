@@ -16,7 +16,7 @@ upgradable to the new version. Also, the immutability threshold is 5 for ancient
     | Node3 | <from_version> | develop  |
     | Node4 | <from_version> | develop  |
 * Network is running
-* Use SimpleStorage smart contract, populate network with "100" public transactions and "100" private transactions randomly between "Node1,Node2,Node3,Node4"
+* Use SimpleStorage smart contract, populate network with "50" public transactions and "50" private transactions randomly between "Node1,Node2,Node3,Node4"
 * Record the current block number, named it as "recordedBlockNumber"
 * Wait for node "Node1" to catch up to block number "10"
 * Check if we are able to get the block number "10" from "Node1"
