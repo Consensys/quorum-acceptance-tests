@@ -132,8 +132,8 @@ public class NetworkMigration extends AbstractSpecImplementation {
         }
     }
 
-    @Step("Use SimpleStorage smart contract, populate network with <publicTxCount> public transactions and <privateTxCount> private transactions randomly between <nodesStr>")
-    public void deploySimpleStorageContract(int publicTxCount, int privateTxCount, String nodesStr) {
+    @Step("Use SimpleStorage smart contract, populate network with <publicTxCount> public transactions randomly between <nodesStr>")
+    public void deploySimpleStoragePublicContract(int publicTxCount, String nodesStr) {
         List<String> nodes = Arrays.stream(nodesStr.split(",")).map(String::trim).collect(Collectors.toList());
         int threadsPerNode = 10;
         // build calls for public transactions

@@ -15,7 +15,7 @@ upgradable to the new version
     | Node2 | <from_version> | develop  |
     | Node3 | <from_version> | develop  |
     | Node4 | <from_version> | develop  |
-* Use SimpleStorage smart contract, populate network with "500" public transactions and "500" private transactions randomly between "Node1,Node2,Node3,Node4"
+* Use SimpleStorage smart contract, populate network with "500" public transactions randomly between "Node1,Node2,Node3,Node4"
 * Record the current block number, named it as "recordedBlockNumber"
 
 ## Migrate all nodes in the network at the same time
@@ -30,7 +30,7 @@ upgradable to the new version
     | Node3 | <to_version> | develop  |
     | Node4 | <to_version> | develop  |
 * Verify block number in "Node1,Node2,Node3,Node4" in sync with "recordedBlockNumber"
-* Use SimpleStorage smart contract, populate network with "10" public transactions and "10" private transactions randomly between "Node1,Node2,Node3,Node4"
+* Use SimpleStorage smart contract, populate network with "10" public transactions randomly between "Node1,Node2,Node3,Node4"
 * Network is running
 
 ## Migrate node by node in the network
@@ -45,5 +45,5 @@ upgradable to the new version
 * Verify block number in "Node3" in sync with "recordedBlockNumber"
 * Stop and start "quorum" in "Node4" using <to_version>
 * Verify block number in "Node4" in sync with "recordedBlockNumber"
-* Use SimpleStorage smart contract, populate network with "10" public transactions and "10" private transactions randomly between "Node1,Node2,Node3,Node4"
+* Use SimpleStorage smart contract, populate network with "10" public transactions randomly between "Node1,Node2,Node3,Node4"
 * Network is running

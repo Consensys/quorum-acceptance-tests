@@ -16,7 +16,7 @@ upgradable to the new version. Also, the immutability threshold is 5 for ancient
     | Node3 | <from_version> | develop  |
     | Node4 | <from_version> | develop  |
 * Network is running
-* Use SimpleStorage smart contract, populate network with "50" public transactions and "50" private transactions randomly between "Node1,Node2,Node3,Node4"
+* Use SimpleStorage smart contract, populate network with "50" public transactions randomly between "Node1,Node2,Node3,Node4"
 * Record the current block number, named it as "recordedBlockNumber"
 * Wait for node "Node1" to catch up to block number "10"
 * Check if we are able to get the block number "10" from "Node1"
@@ -35,7 +35,7 @@ upgradable to the new version. Also, the immutability threshold is 5 for ancient
     | Node3 | <to_version> | develop  |
     | Node4 | <to_version> | develop  |
 * Verify block number in "Node1,Node2,Node3,Node4" in sync with "recordedBlockNumber"
-* Use SimpleStorage smart contract, populate network with "5" public transactions and "5" private transactions randomly between "Node1,Node2,Node3,Node4"
+* Use SimpleStorage smart contract, populate network with "20" public transactions randomly between "Node1,Node2,Node3,Node4"
 * Network is running
 * Check if we are able to get the block number "2" from "Node1"
 * Check if we are able to get the block number "2" from "Node2"
@@ -58,7 +58,7 @@ upgradable to the new version. Also, the immutability threshold is 5 for ancient
 //* Stop and start "quorum" in "Node4" using <to_version>
 //* Verify block number in "Node4" in sync with "recordedBlockNumber"
 //* Check if we are able to get the block number "2" from "Node4"
-//* Use SimpleStorage smart contract, populate network with "10" public transactions and "10" private transactions randomly between "Node1,Node2,Node3,Node4"
+//* Use SimpleStorage smart contract, populate network with "10" public transactions randomly between "Node1,Node2,Node3,Node4"
 //* Network is running
 //* Check if we are able to get the block number "2" from "Node1"
 //* Check if we are able to get the block number "2" from "Node2"
