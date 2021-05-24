@@ -19,15 +19,22 @@
 
 package com.quorum.gauge.services;
 
+import com.quorum.gauge.Configuration;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.Web3jService;
 import org.web3j.protocol.http.HttpService;
+import org.web3j.quorum.JsonRpc2_0Quorum;
 import org.web3j.quorum.Quorum;
+import org.web3j.utils.Async;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class QuorumNodeConnectionFactory {
@@ -43,6 +50,10 @@ public class QuorumNodeConnectionFactory {
 
     public Quorum getConnection(QuorumNetworkProperty.Node node) {
         return Quorum.build(getWeb3jService(node));
+    }
+
+    public Quorum getConnection(QuorumNetworkProperty.Node node, long pollingInterval) {
+        return new JsonRpc2_0Quorum(getWeb3jService(node), pollingInterval, Async.defaultExecutorService());
     }
 
     public Web3j getWeb3jConnection(QuorumNode node) {

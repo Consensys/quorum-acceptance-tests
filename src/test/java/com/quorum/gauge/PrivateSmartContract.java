@@ -129,6 +129,22 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         assertThat(receipt.get().getFrom()).isEqualTo(senderAddr);
     }
 
+    @Step("Transaction Receipt is present in <node> for <txReference>")
+    public void verifyTransactionReceipt(QuorumNode node, String txReference) {
+        String transactionHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), txReference, String.class);
+        Optional<TransactionReceipt> receipt = transactionService.getTransactionReceipt(node, transactionHash)
+            .map(ethGetTransactionReceipt -> {
+                if (ethGetTransactionReceipt.getTransactionReceipt().isPresent()) {
+                    return ethGetTransactionReceipt;
+                } else {
+                    throw new RuntimeException("retry");
+                }
+            }).retryWhen(new RetryWithDelay(20, 3000))
+            .blockingFirst().getTransactionReceipt();
+
+        assertThat(receipt.isPresent()).isTrue();
+    }
+
     @Step("<contractName> stored in <source> and <target> must have the same storage root")
     public void verifyStorageRoot(String contractName, QuorumNode source, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);

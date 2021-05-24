@@ -1,0 +1,31 @@
+# This is for 4nodes network provisioned locally using `quorum-cloud/travis/4nodes`
+quorum:
+  nodes:
+    Node1:
+      privacy-address: R56gy4dn24YOjwyesTczYa8m5xhP6hF2uTMCju/1xkY=
+      url: http://localhost:22000/?PSI=PS1
+      third-party-url: http://localhost:9081
+      graphql-url: http://localhost:22000/graphql/?PSI=PS1
+      account-aliases:
+        EthKey1: "0x0638e1574728b6d862dd5d3a3e0942c3be47d996"
+    Node2:
+      privacy-address: UfNSeSGySeKg11DVNEnqrUtxYRVor4+CvluI8tVv62Y=
+      url: http://localhost:22000/?PSI=PS2
+      third-party-url: http://localhost:9081
+      graphql-url: http://localhost:22000/graphql/?PSI=PS2
+      account-aliases:
+        EthKey1: "0xae9bc6cd5145e67fbd1887a5145271fd182f0ee7"
+    Node3:
+      privacy-address: ROAZBWtSacxXQrOe3FGAqJDyJjFePR5ce4TSIzmJ0Bc=
+      url: http://localhost:22000/?PSI=PS3
+      third-party-url: http://localhost:9081
+      graphql-url: http://localhost:22000/graphql/?PSI=PS3
+      account-aliases:
+        EthKey1: "0xcc71c7546429a13796cf1bf9228bff213e7ae9cc"
+    Node4:
+      privacy-address: oNspPPgszVUFw0qmGFfWwh1uxVUXgvBxleXORHj07g8=
+      url: http://localhost:22003
+      third-party-url: http://localhost:9084
+      graphql-url: http://localhost:22003/graphql
+      account-aliases:
+        EthKey1: "0x9186eb3d20cbd1f5f992a950d808c4495153abd5"

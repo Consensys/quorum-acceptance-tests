@@ -54,79 +54,22 @@ public class Configuration {
     @Autowired
     QuorumNetworkProperty networkProperty;
 
-    @Bean
-    public OkHttpClient okHttpClient(Optional<SocksProxyEmbeddedServer> socksProxyEmbeddedServer) {
+    public static OkHttpClient.Builder cloneBuilderFromClient(OkHttpClient client){
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        configureTimeoutsAndSSL(builder);
+
+        client.interceptors().forEach(builder::addInterceptor);
+
+        if (client.proxy() != null){
+            builder.proxy(client.proxy());
+        }
+        return builder;
+    }
+
+    private static void configureTimeoutsAndSSL(OkHttpClient.Builder builder){
         builder.readTimeout(5, TimeUnit.MINUTES);
         builder.writeTimeout(5, TimeUnit.MINUTES);
         builder.connectTimeout(5, TimeUnit.MINUTES);
-        if (networkProperty.getOauth2Server() != null) {
-            builder.addInterceptor(chain -> {
-                String token = Context.retrieveAccessToken();
-                if (StringUtils.isEmpty(token)) {
-                    return chain.proceed(chain.request());
-                }
-                Request request = chain.request().newBuilder()
-                        .addHeader("Authorization", token)
-                        .build();
-                return chain.proceed(request);
-            });
-        }
-        Logger httpLogger = LoggerFactory.getLogger(Configuration.class.getPackageName() + ".HttpLogger");
-        if (httpLogger.isDebugEnabled()) {
-            HttpLoggingInterceptor logging = new HttpLoggingInterceptor(httpLogger::debug);
-            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-            builder.addInterceptor(logging);
-        }
-        QuorumNetworkProperty.SocksProxy socksProxyConfig = networkProperty.getSocksProxy();
-        if (socksProxyConfig != null) {
-            InetSocketAddress address = null;
-            if (socksProxyEmbeddedServer.isPresent()) {
-                if (socksProxyEmbeddedServer.get().isStarted()) {
-                    address = new InetSocketAddress(socksProxyEmbeddedServer.get().getListenerAddress(), socksProxyEmbeddedServer.get().getListenerPort());
-                } else {
-                    logger.warn("SocksProxy tunneling is configured but not started");
-                }
-            } else {
-                address = new InetSocketAddress(socksProxyConfig.getHost(), socksProxyConfig.getPort());
-            }
-            if (address != null) {
-                logger.info("Configured SOCKS Proxy ({}) for HTTPClient", address);
-                builder.proxy(new Proxy(Proxy.Type.SOCKS, address));
-            }
-        }
-        // configure to ignore SSL
-        try {
-            // Create a trust manager that does not validate certificate chains
-            final TrustManager[] trustAllCerts = new TrustManager[]{
-                    new X509TrustManager() {
-                        @Override
-                        public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) {
-                        }
-
-                        @Override
-                        public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) {
-                        }
-
-                        @Override
-                        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                            return new java.security.cert.X509Certificate[]{};
-                        }
-                    }
-            };
-
-            // Install the all-trusting trust manager
-            final SSLContext sslContext = SSLContext.getInstance("SSL");
-            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-            // Create an ssl socket factory with our all-trusting manager
-            final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
-
-            builder.sslSocketFactory(sslSocketFactory, (X509TrustManager)trustAllCerts[0]);
-            builder.hostnameVerifier((hostname, session) -> true);
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
         // configure to ignore SSL
         try {
             // Create a trust manager that does not validate certificate chains
@@ -158,6 +101,60 @@ public class Configuration {
 
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Bean
+    public OkHttpClient okHttpClient(Optional<SocksProxyEmbeddedServer> socksProxyEmbeddedServer) {
+        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+
+        configureTimeoutsAndSSL(builder);
+
+        if (networkProperty.getOauth2Server() != null) {
+            builder.addInterceptor(chain -> {
+                // TODO - event polling is done in various threads spawned by the the web3j library itself so I don't think thread local for auth is good enough
+                String token = Context.retrieveAccessToken();
+                if (StringUtils.isEmpty(token)) {
+                    return chain.proceed(chain.request());
+                }
+                Request request = chain.request().newBuilder()
+                        .addHeader("Authorization", token)
+                        .build();
+                return chain.proceed(request);
+            });
+        }
+        builder.addInterceptor(chain -> {
+            String psi = Context.retrievePSI();
+            if (StringUtils.isEmpty(psi)) {
+                return chain.proceed(chain.request());
+            }
+            Request request = chain.request().newBuilder()
+                .addHeader("Quorum-PSI", psi)
+                .build();
+            return chain.proceed(request);
+        });
+        Logger httpLogger = LoggerFactory.getLogger(Configuration.class.getPackageName() + ".HttpLogger");
+        if (httpLogger.isDebugEnabled()) {
+            HttpLoggingInterceptor logging = new HttpLoggingInterceptor(httpLogger::debug);
+            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+            builder.addInterceptor(logging);
+        }
+        QuorumNetworkProperty.SocksProxy socksProxyConfig = networkProperty.getSocksProxy();
+        if (socksProxyConfig != null) {
+            InetSocketAddress address = null;
+            if (socksProxyEmbeddedServer.isPresent()) {
+                if (socksProxyEmbeddedServer.get().isStarted()) {
+                    address = new InetSocketAddress(socksProxyEmbeddedServer.get().getListenerAddress(), socksProxyEmbeddedServer.get().getListenerPort());
+                } else {
+                    logger.warn("SocksProxy tunneling is configured but not started");
+                }
+            } else {
+                address = new InetSocketAddress(socksProxyConfig.getHost(), socksProxyConfig.getPort());
+            }
+            if (address != null) {
+                logger.info("Configured SOCKS Proxy ({}) for HTTPClient", address);
+                builder.proxy(new Proxy(Proxy.Type.SOCKS, address));
+            }
         }
 
         return builder.build();

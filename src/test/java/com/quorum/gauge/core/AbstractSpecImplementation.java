@@ -54,6 +54,12 @@ public abstract class AbstractSpecImplementation {
     protected StorageMasterService storageMasterService;
 
     @Autowired
+    protected AccumulatorService accumulatorService;
+
+    @Autowired
+    protected DebugService debugService;
+
+    @Autowired
     protected NestedContractService nestedContractService;
 
     @Autowired

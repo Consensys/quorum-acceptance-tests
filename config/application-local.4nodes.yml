@@ -6,18 +6,26 @@ quorum:
       url: http://localhost:22000
       third-party-url: http://localhost:9081
       graphql-url: http://localhost:22000/graphql
+      account-aliases:
+        EthKey1: "0xed9d02e382b34818e88b88a309c7fe71e65f419d"
     Node2:
       privacy-address: QfeDAys9MPDs2XHExtc84jKGHxZg/aj52DTh0vtA3Xc=
       url: http://localhost:22001
       third-party-url: http://localhost:9082
       graphql-url: http://localhost:22001/graphql
+      account-aliases:
+        EthKey1: "0xca843569e3427144cead5e4d5999a3d0ccf92b8e"
     Node3:
       privacy-address: 1iTZde/ndBHvzhcl7V68x44Vx7pl8nwx9LqnM/AfJUg=
       url: http://localhost:22002
       third-party-url: http://localhost:9083
       graphql-url: http://localhost:22002/graphql
+      account-aliases:
+        EthKey1: "0x0fbdc686b912d7722dc86510934589e0aaf3b55a"
     Node4:
       privacy-address: oNspPPgszVUFw0qmGFfWwh1uxVUXgvBxleXORHj07g8=
       url: http://localhost:22003
       third-party-url: http://localhost:9084
       graphql-url: http://localhost:22003/graphql
+      account-aliases:
+        EthKey1: "0x9186eb3d20cbd1f5f992a950d808c4495153abd5"

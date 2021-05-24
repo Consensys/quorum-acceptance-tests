@@ -53,9 +53,7 @@ public class QuorumNetworkProperty {
     }
 
     public void setNodes(Map<String, Node> nodes) {
-        for (Map.Entry<String, Node> entry : nodes.entrySet()) {
-            entry.getValue().setName(entry.getKey());
-        }
+        nodes.forEach( (key,val) -> val.setName(key));
         this.nodes = nodes;
     }
 
@@ -218,6 +216,7 @@ public class QuorumNetworkProperty {
         private String istanbulValidatorId;
         private String enodeUrl;
         private String graphqlUrl;
+        private String psi;
 
         public String getPrivacyAddress() {
             return privacyAddress;
@@ -296,12 +295,24 @@ public class QuorumNetworkProperty {
         public void setAccountAliases(Map<String, String> accountAliases) {
             this.accountAliases = accountAliases;
         }
+
+        public String getPsi() {
+            return psi;
+        }
+
+        public void setPsi(String psi) {
+            this.psi = psi;
+        }
     }
 
     public static class DockerInfrastructureProperty {
         private boolean enabled;
         private String host;
         private Map<String, DockerContainerProperty> nodes = new HashMap<>();
+        // Quorum image provided by Terraform var.quorum_docker_image
+        private String targetQuorumImage;
+        // Tessera image provided by Terraform var.tessera_docker_image
+        private String targetTesseraImage;
 
         public DockerInfrastructureProperty() {
             this.enabled = false;
@@ -329,6 +340,22 @@ public class QuorumNetworkProperty {
 
         public void setNodes(Map<String, DockerContainerProperty> nodes) {
             this.nodes = nodes;
+        }
+
+        public String getTargetQuorumImage() {
+            return targetQuorumImage;
+        }
+
+        public void setTargetQuorumImage(String targetQuorumImage) {
+            this.targetQuorumImage = targetQuorumImage;
+        }
+
+        public String getTargetTesseraImage() {
+            return targetTesseraImage;
+        }
+
+        public void setTargetTesseraImage(String targetTesseraImage) {
+            this.targetTesseraImage = targetTesseraImage;
         }
 
         public static class DockerContainerProperty {
