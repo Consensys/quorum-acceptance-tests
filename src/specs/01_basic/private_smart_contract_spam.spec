@@ -1,6 +1,6 @@
 # Multiple private smart contracts between nodes
 
- Tags: basic
+ Tags: basic, spam
 
 ## Send transactions from one node to others
 
