@@ -37,7 +37,7 @@ locals {
           size  = 80
         }
       ]
-    }, local.qip714Block_config, local.privacyEnhancementsBlock_config, local.quorumPrecompilesV1Block_config local.qbft_istanbul_config, lookup(var.additional_genesis_config, idx, {}))]
+    }, local.qip714Block_config, local.privacyEnhancementsBlock_config, local.quorumPrecompilesV1Block_config, local.qbft_istanbul_config, lookup(var.additional_genesis_config, idx, {}))]
 }
 
 data "null_data_source" "meta" {
