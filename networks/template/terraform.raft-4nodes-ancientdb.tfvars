@@ -8,4 +8,4 @@ consensus = "raft"
 docker_images = [
     "quorumengineering/quorum:20.10.0",
     "quorumengineering/quorum:21.4.0"]
-addtional_geth_args = "--immutabilitythreshold 5 --allow-insecure-unlock"
+addtional_geth_args = "--immutabilitythreshold 3 --allow-insecure-unlock"
