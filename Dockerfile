@@ -37,7 +37,7 @@ RUN apk -q --no-cache --update add tar bash \
         p="$!"; pids="$pids $p"; echo "  >> Installing OpenJDK ${JDK_VERSION} - PID $p"; \
         for pid in $pids; do if ! wait "$pid"; then echo "PID Failed: $pid"; exit 1; fi; done) \
     && echo "  >> Caching Maven Project Build" \
-    && mvn -q compile \
+    && mvn -q compile dependency:go-offline \
     && rm -rf /tmp/downloads
 
 ENTRYPOINT ["mvn", "--no-transfer-progress", "-B", "-DskipToolsCheck"]
