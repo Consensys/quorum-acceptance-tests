@@ -132,12 +132,16 @@ public class NetworkMigration extends AbstractSpecImplementation {
         }
     }
 
-    @Step("Use SimpleStorage smart contract, populate network with <publicTxCount> public transactions and <privateTxCount> private transactions randomly between <nodesStr>")
-    public void deploySimpleStorageContract(int publicTxCount, int privateTxCount, String nodesStr) {
+    @Step("Use SimpleStorage smart contract, populate network with <publicTxCount> public transactions randomly between <nodesStr>")
+    public void deploySimpleStoragePublicContract(int publicTxCount, String nodesStr) {
+        this.deploySimpleStoragePublicContract(publicTxCount, nodesStr, 10);
+    }
+
+    @Step("Use SimpleStorage smart contract, populate network with <publicTxCount> public transactions randomly between <nodesStr> with <number> of threads per node")
+    public void deploySimpleStoragePublicContract(int publicTxCount, String nodesStr,int threadsPerNode) {
         List<String> nodes = Arrays.stream(nodesStr.split(",")).map(String::trim).collect(Collectors.toList());
-        int threadsPerNode = 10;
         // build calls for public transactions
-        // fire to each node in parallel, max 10 threads for each node
+        // fire to each node in parallel, max <threadsPerNode>> threads for each node
         int txCountPerNode = (int) Math.round(Math.ceil((double)publicTxCount / nodes.size()));
         if (txCountPerNode < threadsPerNode) {
             threadsPerNode = txCountPerNode;
