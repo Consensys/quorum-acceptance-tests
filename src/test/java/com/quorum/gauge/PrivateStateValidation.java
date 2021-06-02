@@ -227,9 +227,12 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
         TransactionReceipt receipt = nestedContractService.updateC2Contract(
             source,
             Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
-            c.getContractAddress(), newValue,  Arrays.asList(PrivacyFlag.StandardPrivate)).blockingFirst();
+            c.getContractAddress(), newValue, Arrays.asList(PrivacyFlag.StandardPrivate)).blockingFirst();
 
         assertThat(receipt.getTransactionHash()).isNotBlank();
         assertThat(receipt.getBlockNumber()).isNotEqualTo(currentBlockNumber());
+
+        TransactionReceipt receiptPrivateFor = transactionService.waitForTransactionReceipt(QuorumNode.valueOf(privateFor), receipt.getTransactionHash());
+        assertThat(receiptPrivateFor.getBlockNumber()).isNotEqualTo(currentBlockNumber());
     }
 }
