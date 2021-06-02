@@ -42,7 +42,7 @@ variable "tessera" {
   })
   default = {
     container = {
-      image = { name = "quorumengineering/tessera:latest", local = false }
+      image = { name = "quorumengineering/tessera:develop", local = false }
       port  = { thirdparty = 9080, p2p = 9000, q2t = 9081 }
     }
     host = {
@@ -64,7 +64,7 @@ variable "besu" {
   })
   default = {
     container = {
-      image = { name = "hyperledger/besu:latest", local = false }
+      image = { name = "hyperledger/besu:develop", local = false }
       port  = { http = 8545, ws= 8546, graphql= 8547, p2p= 30303 }
     }
     host = {
