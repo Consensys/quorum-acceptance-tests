@@ -161,7 +161,8 @@ jobs:
           gitref_path=${gitref_path/refs\/heads\//} # for refs/heads/my-branch
           if [[ $gitref_path == dev-* ]]; then
             echo "${{ github.token }}" | docker login https://docker.pkg.github.com -u ${{ github.repository_owner }} --password-stdin
-            quorum_docker_image=$(echo "docker.pkg.github.com/${{ github.repository }}/quorum-$gitref_path:develop" | tr '[:upper:]' '[:lower:]' )
+            echo "${{ github.token }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+            quorum_docker_image=$(echo "ghcr.io/${{ github.repository_owner }}/quorum-$gitref_path:develop" | tr '[:upper:]' '[:lower:]' )
             tessera_docker_image=$(echo "docker.pkg.github.com/${{ github.repository }}/tessera-$gitref_path:develop" | tr '[:upper:]' '[:lower:]')
             has_quorum_docker_image=$(docker pull $quorum_docker_image >/dev/null 2>&1; echo $?)
             has_tessera_docker_image=$(docker pull $tessera_docker_image >/dev/null 2>&1; echo $?)
