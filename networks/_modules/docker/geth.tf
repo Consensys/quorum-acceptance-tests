@@ -144,12 +144,12 @@ exec geth \
   --rpc \
   --rpcaddr 0.0.0.0 \
   --rpcport ${var.geth_networking[count.index].port.http.internal} \
-  --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,quorumPermission,quorumExtension,${var.consensus} \
+  --rpcapi admin,db,eth,debug,miner,net,txpool,personal,web3,quorum,quorumPermission,quorumExtension,${var.consensus} \
 %{if var.geth_networking[count.index].port.ws != null~}
   --ws \
   --wsaddr 0.0.0.0 \
   --wsport ${var.geth_networking[count.index].port.ws.internal} \
-  --wsapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,${var.consensus} \
+  --wsapi admin,db,eth,debug,miner,net,txpool,personal,web3,quorum,${var.consensus} \
 %{endif~}
 %{if var.geth_networking[count.index].graphql~}
   --graphql \
