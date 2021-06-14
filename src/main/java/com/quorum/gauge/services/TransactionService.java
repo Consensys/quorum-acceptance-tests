@@ -34,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.Type;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
@@ -309,7 +310,9 @@ public class TransactionService extends AbstractService {
             throw new RuntimeException(e);
         }
 
-        String data = c.getContractBinary();
+        //TODO change 0 by initVal
+        String encodedConstructor = FunctionEncoder.encodeConstructor(Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(0)));
+        String data = c.getContractBinary() + encodedConstructor;
         Transaction tx = Transaction.createContractTransaction(fromAddress,
             null, // TODO ricardolyn: should we really not send nonce?
             BigInteger.ZERO,
@@ -329,7 +332,10 @@ public class TransactionService extends AbstractService {
             throw new RuntimeException(e);
         }
 
-        String data = c.getContractBinary();
+
+        //TODO change 0 by initVal
+        String encodedConstructor = FunctionEncoder.encodeConstructor(Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(0)));
+        String data = c.getContractBinary() + encodedConstructor;
         return client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST)
             .flowable().toObservable()
             .flatMap(ethGetTransactionCount -> {
