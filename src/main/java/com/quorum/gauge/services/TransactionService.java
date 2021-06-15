@@ -300,7 +300,8 @@ public class TransactionService extends AbstractService {
             });
     }
 
-    public Observable<EthEstimateGas> estimateGasForPublicContract(QuorumNetworkProperty.Node from, Contract c) {
+    // encodedData is the encoded smart contract binary + the encoded parameter list
+    public Observable<EthEstimateGas> estimateGasForPublicContract(QuorumNetworkProperty.Node from, String encodedData) {
         Web3j client = connectionFactory().getWeb3jConnection(from);
         String fromAddress;
         try {
@@ -310,19 +311,17 @@ public class TransactionService extends AbstractService {
             throw new RuntimeException(e);
         }
 
-        //TODO change 0 by initVal
-        String encodedConstructor = FunctionEncoder.encodeConstructor(Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(0)));
-        String data = c.getContractBinary() + encodedConstructor;
         Transaction tx = Transaction.createContractTransaction(fromAddress,
             null, // TODO ricardolyn: should we really not send nonce?
             BigInteger.ZERO,
             DEFAULT_GAS_LIMIT,
             BigInteger.ZERO,
-            data);
+            encodedData);
         return client.ethEstimateGas(tx).flowable().toObservable();
     }
 
-    public Observable<EthEstimateGas> estimateGasForPrivateContract(QuorumNode from, QuorumNode privateFor, Contract c) {
+    // encodedData is the encoded smart contract binary + the encoded parameter list
+    public Observable<EthEstimateGas> estimateGasForPrivateContract(QuorumNode from, QuorumNode privateFor, String encodedData) {
         Web3j client = connectionFactory().getWeb3jConnection(from);
         String fromAddress;
         try {
@@ -332,10 +331,7 @@ public class TransactionService extends AbstractService {
             throw new RuntimeException(e);
         }
 
-
-        //TODO change 0 by initVal
         String encodedConstructor = FunctionEncoder.encodeConstructor(Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(0)));
-        String data = c.getContractBinary() + encodedConstructor;
         return client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST)
             .flowable().toObservable()
             .flatMap(ethGetTransactionCount -> {
@@ -345,7 +341,7 @@ public class TransactionService extends AbstractService {
                     DEFAULT_GAS_LIMIT,
                     null,
                     BigInteger.ZERO,
-                    data,
+                    encodedData,
                     null,
                     Arrays.asList(privacyService.id(privateFor))
                 );
