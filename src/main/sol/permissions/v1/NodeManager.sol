@@ -1,4 +1,4 @@
-pragma solidity ^0.5.3;
+pragma solidity ^0.5.17;
 
 import "./PermissionsUpgradable.sol";
 /** @title Node manager contract

@@ -5,7 +5,7 @@
 This is to verify that a private smart contract between 2 parties are not accessible by others.
 A simple smart contract is to store a int value and to provide `get()` and `set()` functions.
 ```
-pragma solidity ^0.4.15;
+pragma solidity ^0.5.17;
 
 contract SimpleStorage {
     uint private storedData;

@@ -4,7 +4,7 @@
 
 Sending multiple private smart contracts between nodes and verify if all nodes have received.
 ```
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.17;
 
 contract SimpleStorage {
     uint private storedData;

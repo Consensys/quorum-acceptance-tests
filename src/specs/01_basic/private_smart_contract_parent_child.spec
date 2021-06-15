@@ -5,7 +5,7 @@
 This is to verify that a SimpleStorage smart contract created via a parent StorageMaster works as expected when used in
 both public and private transactions.
 ```
-pragma solidity ^0.4.15;
+pragma solidity ^0.5.17;
 
 contract SimpleStorage {
     uint private storedData;

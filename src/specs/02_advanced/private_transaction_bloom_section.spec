@@ -10,7 +10,7 @@ we explicitly use `raft` consensus.
 
 The following smart contract is used:
 ```
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.17;
 
 contract ClientReceipt {
     event Deposit(
