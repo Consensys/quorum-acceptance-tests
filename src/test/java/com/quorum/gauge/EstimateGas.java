@@ -27,6 +27,8 @@ import com.thoughtworks.gauge.datastore.DataStore;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import org.assertj.core.data.Percentage;
 import org.springframework.stereotype.Service;
+import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.FunctionEncoder;
 import org.web3j.exceptions.MessageDecodingException;
 import org.web3j.protocol.core.methods.response.EthEstimateGas;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
@@ -63,11 +65,17 @@ public class EstimateGas extends AbstractSpecImplementation {
         DataStoreFactory.getSpecDataStore().put("publicContract1", c);
     }
 
+    private static String getEncodedContractDeployData(Contract c, int initVal) {
+        String encodedConstructor = FunctionEncoder.encodeConstructor(Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(initVal)));
+        return c.getContractBinary() + encodedConstructor;
+    }
+
     @Step("Estimate gas for deploying `SimpleContract` public smart contract from a default account in <from>")
     public void estimatePublicContract(QuorumNetworkProperty.Node from) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), "publicContract1", Contract.class);
 
-        EthEstimateGas estimatedValue = transactionService.estimateGasForPublicContract(from, c).blockingFirst();
+        String encodedData = getEncodedContractDeployData(c, 0);
+        EthEstimateGas estimatedValue = transactionService.estimateGasForPublicContract(from, encodedData).blockingFirst();
 
         DataStoreFactory.getScenarioDataStore().put("estimatedValue", estimatedValue);
     }
@@ -93,7 +101,8 @@ public class EstimateGas extends AbstractSpecImplementation {
     public void estimatePrivateContract(QuorumNode from, QuorumNode privateFor) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), "privateContract1", Contract.class);
 
-        EthEstimateGas estimatedValue = transactionService.estimateGasForPrivateContract(from, privateFor, c).blockingFirst();
+        String encodedData = getEncodedContractDeployData(c, 0);
+        EthEstimateGas estimatedValue = transactionService.estimateGasForPrivateContract(from, privateFor, encodedData).blockingFirst();
 
         DataStoreFactory.getScenarioDataStore().put("estimatedValue", estimatedValue);
     }

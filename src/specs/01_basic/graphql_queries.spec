@@ -4,7 +4,7 @@
 
 The following smart contract is used:
 ```
-pragma solidity ^0.4.15;
+pragma solidity ^0.5.17;
 
 contract SimpleStorage {
     uint private storedData;

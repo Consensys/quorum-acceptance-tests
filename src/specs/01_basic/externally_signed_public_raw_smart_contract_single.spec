@@ -4,7 +4,7 @@
 
 A smart contract, `ClientReceipt`, logs all the deposits that have been performed.
 ```
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.17;
 
 contract SimpleStorage {
     uint private storedData;

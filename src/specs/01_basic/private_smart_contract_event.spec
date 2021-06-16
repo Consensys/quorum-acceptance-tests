@@ -5,7 +5,7 @@
 Log events in total are only available in participated parties.
 A private smart contract, `ClientReceipt`, logs all the deposits that have been performed.
 ```
-pragma solidity ^0.4.0;
+pragma solidity ^0.5.17;
 
 contract ClientReceipt {
     event Deposit(

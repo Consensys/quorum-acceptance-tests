@@ -6,7 +6,7 @@ This is to verify that nested private smart contracts between 2 parties are not 
 
 A simple smart contract is to store a int value and to provide `get()` and `set()` functions.
 ```
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.17;
 
 contract C1 {
 

@@ -9,7 +9,7 @@ have the same ACOTH only one transaction hash is forwarded to tessera.
 This scenario helps justify relaxing the ACOTH checks in state transition (removing the logic that verifies the actual
 affected contracts counter is equal to length of the received privacy metadata ACHashes array).
 ```
-pragma solidity ^0.4.15;
+pragma solidity ^0.5.17;
 
 contract SimpleStorage {
     uint private storedData;

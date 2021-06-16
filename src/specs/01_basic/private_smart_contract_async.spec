@@ -4,7 +4,7 @@
 
 Ability to submit a simple private smart contract asynchrously with callback
 ```
-pragma solidity ^0.4.15;
+pragma solidity ^0.5.17;
 
 contract SimpleStorage {
     uint private storedData;

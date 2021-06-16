@@ -8,7 +8,7 @@ proposer rotation.
 
 Using the following smart contracts:
 ```
-pragma solidity ^0.4.21;
+pragma solidity ^0.5.17;
 
 contract SimpleStorage {
     uint private storedData;
@@ -26,7 +26,7 @@ contract SimpleStorage {
     }
 }
 
-pragma solidity ^0.4.21;
+pragma solidity ^0.5.17;
 
 contract ClientReceipt {
     event Deposit(

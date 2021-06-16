@@ -8,7 +8,7 @@ There are 2 set of contracts to be used selectively in the below scenarios.
 
 Single smart contract
 ```
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.17;
 
 contract SimpleStorage {
     uint private storedData;
@@ -29,7 +29,7 @@ contract SimpleStorage {
 
 Nested smart contracts
 ```
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.17;
 
 import "./C2.sol";
 
@@ -57,7 +57,7 @@ contract C1 {
     }
 }
 
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.17;
 
 import "./C1.sol";
 

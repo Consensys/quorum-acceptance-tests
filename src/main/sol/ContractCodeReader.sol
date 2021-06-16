@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.17;
 
 // this contract is to demonstrate ability to read other contract code/hash/size
 // via EXTCODECOPY, EXTCODEHASH and EXTCODESIZE opcodes
