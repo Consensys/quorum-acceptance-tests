@@ -16,7 +16,7 @@ Development environment requires the following:
 
 - JDK 11+
 - Maven 3.6.x
-- [Solidity Compiler](https://solidity.readthedocs.io/en/latest/installing-solidity.html) (make sure `solc` is installed and not `solcjs`)
+- [Solidity Compiler](https://solidity.readthedocs.io/en/latest/installing-solidity.html) (make sure `solc` version `0.5.17` is installed and not `solcjs`)
   - For MacOS: use `brew`
   - For Linux: use `apt`, `snap` or `emerge`
   - For Windows: download from [here](https://github.com/ethereum/solidity/releases)
