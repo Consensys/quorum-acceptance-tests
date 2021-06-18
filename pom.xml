@@ -33,7 +33,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.version>11</java.version>
+        <java.version>14</java.version>
         <generated.sol.dir>${project.build.directory}/generate-sources/sol</generated.sol.dir>
         <skipGenerateSol>false</skipGenerateSol>
         <skipToolsCheck>false</skipToolsCheck>
