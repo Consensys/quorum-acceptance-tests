@@ -16,9 +16,9 @@ Development environment requires the following:
 
 - JDK 11+
 - Maven 3.6.x
-- [Solidity Compiler](https://solidity.readthedocs.io/en/latest/installing-solidity.html) (make sure `solc` is installed and not `solcjs`)
+- [Solidity Compiler](https://solidity.readthedocs.io/en/latest/installing-solidity.html) (make sure `solc` version `0.5.17` is installed and not `solcjs`)
   - For MacOS: use `brew`
-  - For Linux: use `apt`, `snap` or `emerge`
+  - For Linux: download from [here](https://github.com/ethereum/solidity/releases) and put in one of the directory of `$PATH`
   - For Windows: download from [here](https://github.com/ethereum/solidity/releases)
 - [Gauge](https://gauge.org/get_started)
 - Run `mvn compile` to initiate the project with generated Java sources from Solidity source
