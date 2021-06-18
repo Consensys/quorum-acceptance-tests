@@ -51,7 +51,7 @@
         <i2p-eddsa.version>0.3.0</i2p-eddsa.version>
         <!-- this must be the same value in Dockerfile
             via `gauge install java -version <x.y.z>`  -->
-        <gauge-java.version>0.7.7</gauge-java.version>
+        <gauge-java.version>0.7.15</gauge-java.version>
 
         <!-- plugins -->
         <gauge-maven-plugin.version>1.4.1</gauge-maven-plugin.version>
