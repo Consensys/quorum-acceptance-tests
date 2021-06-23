@@ -54,7 +54,7 @@
         <gauge-java.version>0.7.15</gauge-java.version>
 
         <!-- plugins -->
-        <gauge-maven-plugin.version>1.4.3</gauge-maven-plugin.version>
+        <gauge-maven-plugin.version>1.4.1</gauge-maven-plugin.version>
         <web3j-maven-plugin.version>4.2.0</web3j-maven-plugin.version>
         <builder-maven-plugin.version>3.0.0</builder-maven-plugin.version>
         <maven-site-plugin.version>3.7.1</maven-site-plugin.version>
