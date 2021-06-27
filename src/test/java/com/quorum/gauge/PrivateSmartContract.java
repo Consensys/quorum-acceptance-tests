@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.quorum.gauge.common.PrivacyFlag;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.common.RetryWithDelay;
+import com.quorum.gauge.common.config.WalletData;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.ext.EthGetQuorumPayload;
 import com.quorum.gauge.services.AbstractService;
@@ -417,6 +418,24 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
             for (int i = 0; i < count; i++) {
                 int arbitraryValue = new Random().nextInt(50) + 1;
                 allObservableContracts.add(contractService.createSimpleContract(arbitraryValue, source, targetNode).subscribeOn(Schedulers.io()));
+            }
+        }
+        BigInteger blockNumber = Observable.zip(allObservableContracts, args -> utilService.getCurrentBlockNumber().blockingFirst()).blockingFirst().getBlockNumber();
+        assertThat(blockNumber).isNotEqualTo(currentBlockNumber());
+    }
+
+    @Step("Send <count> simple private raw smart contracts from wallet <wallet> in <source> and it's separately private for <targets>")
+    public void sendRawPrivateSmartContracts(int count, WalletData wallet, QuorumNode source, String targets) {
+        String[] target = targets.split(",");
+        QuorumNode[] targetNodes = new QuorumNode[target.length];
+        for (int i = 0; i < targetNodes.length; i++) {
+            targetNodes[i] = QuorumNode.valueOf(target[i]);
+        }
+        List<Observable<? extends Contract>> allObservableContracts = new ArrayList<>();
+        for (QuorumNode targetNode: targetNodes) {
+            for (int i = 0; i < count; i++) {
+                int arbitraryValue = new Random().nextInt(50) + 1;
+                allObservableContracts.add(rawContractService.createRawSimplePrivateContract(arbitraryValue, wallet, source, targetNode));
             }
         }
         BigInteger blockNumber = Observable.zip(allObservableContracts, args -> utilService.getCurrentBlockNumber().blockingFirst()).blockingFirst().getBlockNumber();
