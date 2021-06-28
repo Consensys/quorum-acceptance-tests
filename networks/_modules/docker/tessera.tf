@@ -54,7 +54,7 @@ resource "docker_container" "tessera" {
 #Tessera${count.index + 1}
 
 JAVA_OPTS="-Xms128M -Xmx128M"
-RUN_COMMAND="/home/tessera-extracted/bin/tessera"
+RUN_COMMAND="/tessera/bin/tessera"
 
 // TODO: remove following block when Jigsaw dist is default
 JAR_FILE="${lookup(var.tessera_app_container_path, count.index, "/tessera/tessera-app.jar")}"
