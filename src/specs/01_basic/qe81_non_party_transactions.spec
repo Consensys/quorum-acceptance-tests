@@ -159,7 +159,7 @@ Transactions, regardless if it succeeds or not, sent by non-party node must not 
 * Contract `C1`("parentContractC1_14")'s `get()` function execution in "Node4" returns "30"
 * Contract `C1`("parentContractC1_14")'s `get()` function execution in "Node2" returns "0"
 * Contract `C2`("childContractC2_12")'s `get()` function execution in "Node1" returns "30"
-* Fail to execute contract `C2`("childContractC2_12")'s `get()` function in "Node4" with error "execution reverted"
+* Contract `C2`("childContractC2_12")'s `get()` function execution in "Node4" returns "0"
 * Fail to execute contract `C2`("childContractC2_12")'s `get()` function in "Node2" with error "execution reverted"
 
 ## Privacy is maintained when a transaction to a contract creating another contract then in turn referencing its creator
