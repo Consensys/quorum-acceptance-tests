@@ -14,10 +14,10 @@ LABEL maintainer="info@goquorum.com" \
     MAVEN_VERSION="${MAVEN_VERSION}" \
     JDK_VERSION="openjdk-${JDK_VERSION}"
 WORKDIR /workspace
-COPY . .
 ENV JAVA_HOME="/usr/lib/jvm/default-jvm" \
     PATH="/workspace/bin:/usr/local/maven/bin:${JAVA_HOME}/bin:${PATH}"
 # require BASH for gauge to work as gauge-java plugin runs a shell script (launch.sh) which requires #!/bin/bash
+COPY pom.xml manifest.json ./
 RUN apk -q --no-cache --update add tar bash \
     && mkdir -p /tmp/downloads /usr/local/maven bin \
     && (pids=""; \
@@ -37,8 +37,11 @@ RUN apk -q --no-cache --update add tar bash \
         p="$!"; pids="$pids $p"; echo "  >> Installing OpenJDK ${JDK_VERSION} - PID $p"; \
         for pid in $pids; do if ! wait "$pid"; then echo "PID Failed: $pid"; exit 1; fi; done) \
     && echo "  >> Caching Maven Project Build" \
-    && mvn -q compile dependency:go-offline \
     && rm -rf /tmp/downloads
+
+COPY . .
+
+RUN mvn -q compile dependency:go-offline
 
 ENTRYPOINT ["mvn", "--no-transfer-progress", "-B", "-DskipToolsCheck"]
 CMD ["test", "-Dtags=basic"]
