@@ -21,19 +21,15 @@ package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.ext.EnhancedClientTransactionManager;
-import com.quorum.gauge.ext.RevertReasonTransactionReceipt;
 import com.quorum.gauge.sol.IncreasingSimpleStorage;
 import io.reactivex.Observable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.web3j.protocol.Web3jService;
-import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.quorum.Quorum;
 import org.web3j.tx.Contract;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -50,14 +46,14 @@ public class IncreasingSimpleStorageContractService extends AbstractService {
     AccountService accountService;
 
 
-    public Observable<? extends Contract> createPublicIncreasingSimpleStorageContract(int initialValue, String source, String ethAccount, String privateFromAliases, List<String> privateForAliases) {
+    public Observable<? extends Contract> createIncreasingSimpleStorageContract(int initialValue, String source, List<String> privateForNodes) {
         Quorum client = connectionFactory().getConnection(networkProperty().getNode(source));
-        return accountService.getAccountAddress(networkProperty().getNode(source), ethAccount).flatMap(address -> {
+        return accountService.getAccountAddress(networkProperty().getNode(source), null).flatMap(address -> {
             EnhancedClientTransactionManager clientTransactionManager = new EnhancedClientTransactionManager(
                 client,
                 address,
-                privateFromAliases != null ? privacyService.id(privateFromAliases) : null,
-                privateForAliases != null ? privateForAliases.stream().map(privacyService::id).collect(Collectors.toList()) : null,
+                null,
+                privateForNodes != null ? privateForNodes.stream().map(QuorumNode::valueOf).map(privacyService::id).collect(Collectors.toList()) : null,
                 emptyList());
             return IncreasingSimpleStorage.deploy(client,
                 clientTransactionManager,
@@ -67,10 +63,10 @@ public class IncreasingSimpleStorageContractService extends AbstractService {
         });
     }
 
-    public Observable<TransactionReceipt> setValue(String contractAddress, int value, String source) {
+    public Observable<TransactionReceipt> setValue(String contractAddress, int value, String source, List<String> privateForNodes) {
         final Quorum client = connectionFactory().getConnection(QuorumNode.valueOf(source));
         return accountService.getDefaultAccountAddress(networkProperty().getNode(source))
-            .map(address -> new EnhancedClientTransactionManager(client, address, null, null, Collections.emptyList()))
+            .map(address -> new EnhancedClientTransactionManager(client, address, null, privateForNodes != null ? privateForNodes.stream().map(QuorumNode::valueOf).map(privacyService::id).collect(Collectors.toList()) : null, Collections.emptyList()))
             .flatMap(txManager -> Observable.fromFuture(IncreasingSimpleStorage.load(
                 contractAddress, client, txManager, BigInteger.ZERO, DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(value)).sendAsync())
             );
@@ -84,11 +80,5 @@ public class IncreasingSimpleStorageContractService extends AbstractService {
                 contractAddress, client, txManager, BigInteger.ZERO, DEFAULT_GAS_LIMIT).get().flowable().toObservable()
             );
     }
-
-    public Observable<RevertReasonTransactionReceipt> getRevertReasonTransactionReceipt(String transactionHash, String source) {
-        final Web3jService web3jService = connectionFactory().getWeb3jService(QuorumNode.valueOf(source));
-        return (new Request("eth_getTransactionReceipt", Arrays.asList(transactionHash), web3jService, RevertReasonTransactionReceipt.EthGetRevertReasonTransactionReceipt.class)).flowable().toObservable();
-    }
-
 
 }

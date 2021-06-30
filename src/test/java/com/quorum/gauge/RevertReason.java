@@ -23,14 +23,24 @@ import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.services.IncreasingSimpleStorageContractService;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import org.assertj.core.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.web3j.abi.FunctionReturnDecoder;
+import org.web3j.abi.TypeReference;
+import org.web3j.abi.datatypes.AbiTypes;
+import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.datatypes.Utf8String;
 import org.web3j.protocol.exceptions.TransactionException;
 import org.web3j.tx.Contract;
 
 import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -38,31 +48,60 @@ import static org.assertj.core.api.Assertions.fail;
 @Service
 public class RevertReason extends AbstractSpecImplementation {
     private static final Logger logger = LoggerFactory.getLogger(RevertReason.class);
+    private static final String REVERT_REASON_METHOD_ID = "0x08c379a0"; // Numeric.toHexString(Hash.sha3("Error(string)".getBytes())).substring(0, 10)
+    private static final List<TypeReference<Type>> REVERT_REASON_TYPES = Collections.singletonList(TypeReference.create((Class<Type>) AbiTypes.getType("string")));
 
     @Autowired
     private IncreasingSimpleStorageContractService increasingSimpleStorageContractService;
 
+    private static List<String> parseNodes(String nodes) {
+        List<String> privateForList = null;
+        if (!Strings.isNullOrEmpty(nodes)) {
+            privateForList = Arrays.stream(nodes.split(","))
+                .map(String::trim)
+                .collect(Collectors.toList());
+        }
+        return privateForList;
+    }
+
     @Step("Deploy IncreasingSimpleStorage contract with initial value <value> from <node>")
     public void deployIncreasingSimpleStorage(int value, String node) {
-        Contract contract = increasingSimpleStorageContractService.createPublicIncreasingSimpleStorageContract(value, node, null, null, null).blockingFirst();
+        this.deployIncreasingSimpleStorage(value, node, null);
+    }
+
+    @Step("Deploy private IncreasingSimpleStorage contract with initial value <value> from <node> and private for <nodes>")
+    public void deployIncreasingSimpleStorage(int value, String node, String nodes) {
+        Contract contract = increasingSimpleStorageContractService.createIncreasingSimpleStorageContract(value, node, parseNodes(nodes)).blockingFirst();
         DataStoreFactory.getScenarioDataStore().put("contractAddress", contract.getContractAddress());
     }
 
     @Step("Set value <value> from <node>")
     public void setValueOnContract(int value, String node) throws TransactionException {
-        String contractAddress = DataStoreFactory.getScenarioDataStore().get("contractAddress").toString();
-        increasingSimpleStorageContractService.setValue(contractAddress, value, node).blockingFirst();
+        this.setValueOnContract(value, node, null);
     }
 
-    @Step("Set value <value> from <node> fails with reason <reasonHash>")
-    public void setValueOnContractFailsWithReason(int value, String node, String reasonHash) {
+    @Step("Set value <value> from <node> and private for <nodes>")
+    public void setValueOnContract(int value, String node, String nodes) throws TransactionException {
+        String contractAddress = DataStoreFactory.getScenarioDataStore().get("contractAddress").toString();
+        increasingSimpleStorageContractService.setValue(contractAddress, value, node, parseNodes(nodes)).blockingFirst();
+    }
+
+    @Step("Set value <value> from <node> fails with reason <reasonText>")
+    public void setValueOnContractFailsWithReason(int value, String node, String reasonText) {
+        this.setValueOnContractFailsWithReason(value, node, null, reasonText);
+    }
+
+    @Step("Set value <value> from <node> and private for <nodes> fails with reason <reasonText>")
+    public void setValueOnContractFailsWithReason(int value, String node, String nodes, String reasonText) {
         String contractAddress = DataStoreFactory.getScenarioDataStore().get("contractAddress").toString();
         try {
-            increasingSimpleStorageContractService.setValue(contractAddress, value, node).map(r -> r.getBlockNumber()).blockingFirst();
+            increasingSimpleStorageContractService.setValue(contractAddress, value, node, parseNodes(nodes)).map(r -> r.getBlockNumber()).blockingFirst();
             fail("Expected to fail");
         } catch (RuntimeException err) {
             TransactionException exception = (TransactionException) err.getCause().getCause();
-            assertThat(increasingSimpleStorageContractService.getRevertReasonTransactionReceipt(exception.getTransactionHash().get(), node).map(r -> r.getRevertReason()).blockingFirst()).isEqualTo(reasonHash);
+            String revertReason = exception.getTransactionReceipt().get().getRevertReason().substring(REVERT_REASON_METHOD_ID.length());
+            Utf8String decodedRevertReason = (Utf8String) FunctionReturnDecoder.decode(revertReason, REVERT_REASON_TYPES).get(0);
+            assertThat(decodedRevertReason.getValue()).isEqualTo(reasonText);
         }
     }
 
