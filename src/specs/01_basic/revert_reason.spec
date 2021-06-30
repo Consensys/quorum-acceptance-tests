@@ -1,6 +1,6 @@
 # Revert Reason is present on Transaction Receipts
 
- Tags: basic, revert-reason, networks/typical::raft, networks/typical::istanbul, networks/typical-besu::ibft2
+ Tags: revert-reason, networks/typical::raft, networks/typical::istanbul, networks/typical-besu::ibft2
 
 ## For Public Contracts
 
