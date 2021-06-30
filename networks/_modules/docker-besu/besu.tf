@@ -84,7 +84,6 @@ exec /opt/besu/bin/besu \
         --genesis-file=${local.container_besu_datadir}/genesis.json \
         --node-private-key-file=${local.container_besu_datadir}/key \
         --min-gas-price=0 \
-        --goquorum-compatibility-enabled \
         --privacy-url="${local.container_tm_q2t_urls[count.index]}" \
         --privacy-public-key-file=${local.container_besu_datadir}/tmkey.pub \
         --privacy-onchain-groups-enabled=false \
