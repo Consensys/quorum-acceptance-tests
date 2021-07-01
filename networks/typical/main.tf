@@ -15,8 +15,8 @@ locals {
   number_of_nodes = var.number_of_nodes
   node_indices = range(local.number_of_nodes)
   more_args = join(" ", [
+    # since 1.9.7 upgrade, --allow-insecure-unlock is needed§
     "--allow-insecure-unlock",
-    # since 1.9.7 upgrade,
     "--revertreason"
   ])
 }
