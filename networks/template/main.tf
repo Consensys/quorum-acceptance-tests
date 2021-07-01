@@ -49,7 +49,7 @@ module "helper" {
 module "network" {
   source = "../_modules/ignite"
 
-  concensus                         = module.helper.consensus
+  consensus                         = module.helper.consensus
   privacy_enhancements              = var.privacy_enhancements
   network_name                      = var.network_name
   geth_networking                   = module.helper.geth_networking

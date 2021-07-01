@@ -11,7 +11,7 @@ locals {
   # chain config
   qip714Block_config = var.permission_qip714Block.enabled ? { qip714Block = var.permission_qip714Block.block} : {}
   privacyEnhancementsBlock_config = var.privacy_enhancements.enabled ? { privacyEnhancementsBlock = var.privacy_enhancements.block } : {}
-  istanbul_config = var.concensus == "istanbul" ? { istanbul = { epoch = 30000, policy = 0, ceil2Nby3Block =  0 }} : {}
+  istanbul_config = var.consensus == "istanbul" ? { istanbul = { epoch = 30000, policy = 0, ceil2Nby3Block =  0 }} : {}
   chain_configs = [for idx in local.node_indices : merge(
     {
       homesteadBlock = 0
@@ -101,10 +101,10 @@ resource "local_file" "genesis-file" {
 {
     "coinbase": "0x0000000000000000000000000000000000000000",
     "config": ${jsonencode(local.chain_configs[count.index])},
-    "difficulty": "${var.concensus == "istanbul" ? "0x1" : "0x0"}",
-    "extraData": "${var.concensus == "istanbul" ? quorum_bootstrap_istanbul_extradata.this.extradata : "0x0000000000000000000000000000000000000000000000000000000000000000"}",
+    "difficulty": "${var.consensus == "istanbul" ? "0x1" : "0x0"}",
+    "extraData": "${var.consensus == "istanbul" ? quorum_bootstrap_istanbul_extradata.this.extradata : "0x0000000000000000000000000000000000000000000000000000000000000000"}",
     "gasLimit": "0xFFFFFF00",
-    "mixhash": "${var.concensus == "istanbul" ? data.quorum_bootstrap_genesis_mixhash.this.istanbul : "0x00000000000000000000000000000000000000647572616c65787365646c6578"}",
+    "mixhash": "${var.consensus == "istanbul" ? data.quorum_bootstrap_genesis_mixhash.this.istanbul : "0x00000000000000000000000000000000000000647572616c65787365646c6578"}",
     "nonce": "0x0",
     "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
     "timestamp": "0x00",
