@@ -90,18 +90,30 @@ public class EnhancedClientTransactionManager extends ClientTransactionManager {
     @Override
     protected TransactionReceipt executeTransaction(BigInteger gasPrice, BigInteger gasLimit, String to, String data, BigInteger value) throws IOException, TransactionException {
         TransactionReceipt receipt = super.executeTransaction(gasPrice, gasLimit, to, data, value);
-
         if("0x000000000000000000000000000000000000007e".equalsIgnoreCase(receipt.getTo())) {
-            // fetch the private tx receipt, since we have a marker receipt
-            Request<?, EthGetTransactionReceipt> request = new Request<>(
-                "eth_getPrivateTransactionReceipt",
-                List.of(receipt.getTransactionHash()),
-                web3j,
-                EthGetTransactionReceipt.class
-            );
-            return request.flowable().toObservable().blockingFirst().getTransactionReceipt().orElse(receipt);
+            return handlePrivacyMarkerTransactionReceipt(receipt);
         }
         return receipt;
+    }
+
+    @Override
+    protected TransactionReceipt executeTransaction(BigInteger gasPrice, BigInteger gasLimit, String to, String data, BigInteger value, boolean constructor) throws IOException, TransactionException {
+        TransactionReceipt receipt = super.executeTransaction(gasPrice, gasLimit, to, data, value, constructor);
+        if("0x000000000000000000000000000000000000007e".equalsIgnoreCase(receipt.getTo())) {
+            return handlePrivacyMarkerTransactionReceipt(receipt);
+        }
+        return receipt;
+    }
+
+    private TransactionReceipt handlePrivacyMarkerTransactionReceipt(TransactionReceipt receipt) {
+        // fetch the private tx receipt, since we have a marker receipt
+        Request<?, EthGetTransactionReceipt> request = new Request<Object, EthGetTransactionReceipt>(
+            "eth_getPrivateTransactionReceipt",
+            List.of(receipt.getTransactionHash()),
+            web3j,
+            EthGetTransactionReceipt.class
+        );
+        return request.flowable().toObservable().blockingFirst().getTransactionReceipt().orElse(receipt);
     }
 
     public static class EnhancedPrivateTransaction extends PrivateTransaction {
