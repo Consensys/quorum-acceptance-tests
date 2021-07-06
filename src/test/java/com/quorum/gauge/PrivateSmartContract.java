@@ -21,9 +21,7 @@ package com.quorum.gauge;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.quorum.gauge.common.PrivacyFlag;
-import com.quorum.gauge.common.QuorumNode;
-import com.quorum.gauge.common.RetryWithDelay;
+import com.quorum.gauge.common.*;
 import com.quorum.gauge.common.config.WalletData;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.ext.EthGetQuorumPayload;
@@ -38,6 +36,7 @@ import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 import org.bouncycastle.util.encoders.Hex;
+import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -424,21 +423,32 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         assertThat(blockNumber).isNotEqualTo(currentBlockNumber());
     }
 
-    @Step("Send <count> simple private raw smart contracts from wallet <wallet> in <source> and it's separately private for <targets>")
-    public void sendRawPrivateSmartContracts(int count, WalletData wallet, QuorumNode source, String targets) {
+    @Step("Send <count> simple private raw smart contracts from wallet <wallet> in <source> and it's separately private for <targets> and saved under <store>")
+    public void sendRawPrivateSmartContracts(int count, WalletData wallet, QuorumNode source, String targets, String store) {
         String[] target = targets.split(",");
         QuorumNode[] targetNodes = new QuorumNode[target.length];
         for (int i = 0; i < targetNodes.length; i++) {
             targetNodes[i] = QuorumNode.valueOf(target[i]);
         }
-        List<Observable<? extends Contract>> allObservableContracts = new ArrayList<>();
-        for (QuorumNode targetNode: targetNodes) {
-            for (int i = 0; i < count; i++) {
-                int arbitraryValue = new Random().nextInt(50) + 1;
-                allObservableContracts.add(rawContractService.createRawSimplePrivateContract(arbitraryValue, wallet, source, targetNode));
-            }
+
+        try {
+            List deployedContracts = Observable.zip(
+                rawContractService.createNRawSimplePrivateContract(count, wallet, source, targetNodes),
+                (a) -> a
+            ).collectInto(new ArrayList<>(), (objects, deployedContract) -> objects.addAll(Arrays.asList(deployedContract))).subscribeOn(Schedulers.io()).blockingGet();
+            DataStoreFactory.getScenarioDataStore().put(store, deployedContracts);
+        } catch (Exception e) {
+            Assert.fail();
         }
-        BigInteger blockNumber = Observable.zip(allObservableContracts, args -> utilService.getCurrentBlockNumber().blockingFirst()).blockingFirst().getBlockNumber();
-        assertThat(blockNumber).isNotEqualTo(currentBlockNumber());
+    }
+
+    @Step("Verify the stored data <store> into the store to have the random value")
+    public void verifyStoredData(String store) {
+        List<RawDeployedContractTarget> deployedContracts = (List<RawDeployedContractTarget>) mustHaveValue(DataStoreFactory.getScenarioDataStore(), store, List.class);
+
+        deployedContracts.forEach(o -> {
+            int value = contractService.readSimpleContractValue(o.target, o.receipt.getContractAddress());
+            assertThat(value).isEqualTo(o.value);
+        });
     }
 }
