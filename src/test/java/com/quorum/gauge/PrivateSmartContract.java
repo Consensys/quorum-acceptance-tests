@@ -438,11 +438,11 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
             ).collectInto(new ArrayList<>(), (objects, deployedContract) -> objects.addAll(Arrays.asList(deployedContract))).subscribeOn(Schedulers.io()).blockingGet();
             DataStoreFactory.getScenarioDataStore().put(store, deployedContracts);
         } catch (Exception e) {
-            Assert.fail();
+            Assert.fail(e.getMessage());
         }
     }
 
-    @Step("Verify the stored data <store> into the store to have the random value")
+    @Step("Verify the stored data <store> into the store to have the right value")
     public void verifyStoredData(String store) {
         List<RawDeployedContractTarget> deployedContracts = (List<RawDeployedContractTarget>) mustHaveValue(DataStoreFactory.getScenarioDataStore(), store, List.class);
 
