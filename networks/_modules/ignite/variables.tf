@@ -32,7 +32,7 @@ variable "tm_networking" {
   description = "Networking configuration for `tessera` nodes in the network. Number of items must match `geth_networking`"
 }
 
-variable "concensus" {
+variable "consensus" {
   default     = "istanbul"
   description = "Consensus algorithm being used in the network. Supported values are: istanbul and raft"
 }

@@ -146,7 +146,7 @@ public class SmartContractDualState extends AbstractSpecImplementation {
             // TODO add an API to check if privacy enhancements are enabled and invoke it in order decide what
             // error message to test for
             logger.debug("expected exception", txe);
-            assertThat( txe.getMessage().contains("Transaction has failed")).isTrue();
+            assertThat( txe.getMessage().matches(".*Transaction [a-fA-F0-9xX]{66} has failed.*")).isTrue();
         }
     }
 
@@ -182,7 +182,7 @@ public class SmartContractDualState extends AbstractSpecImplementation {
             logger.debug("{} {} {}, txHash = {}", contractNameKey, contractName, methodName, tr.getTransactionHash());
         } catch (Exception txe) {
             logger.debug("expected exception", txe);
-            assertThat(txe).hasMessageContaining("Transaction has failed");
+            assertThat( txe.getMessage().matches(".*Transaction [a-fA-F0-9xX]{66} has failed.*")).isTrue();
         }
     }
 }

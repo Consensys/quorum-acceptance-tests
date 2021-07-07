@@ -73,7 +73,7 @@ quorum:
 
 %{for a, b in local.vnodes[i].vnodes~}
     ${format("%s:", b.name)}
-%{ if var.concensus == "istanbul" ~}
+%{ if var.consensus == "istanbul" ~}
       istanbul-validator-id: "${quorum_bootstrap_node_key.nodekeys-generator[i].istanbul_address}"
 %{ endif ~}
 %{if local.vnodes[i].mpsEnabled ~}

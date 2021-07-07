@@ -43,8 +43,8 @@
         <env>run-local</env> <!-- Gauge environment being used -->
 
         <!-- dependencies -->
-        <web3j-quorum.version>4.5.8</web3j-quorum.version>
-        <web3j.version>4.2.0</web3j.version>
+        <web3j-quorum.version>4.8.4</web3j-quorum.version>
+        <web3j.version>4.8.4</web3j.version>
         <commons-lang.version>2.6</commons-lang.version>
         <docker-java.version>3.2.2</docker-java.version>
         <apache-sshd.version>2.4.0</apache-sshd.version>
@@ -64,6 +64,11 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.9.0</version>
+        </dependency>
         <dependency>
             <groupId>org.web3j</groupId>
             <artifactId>core</artifactId>
