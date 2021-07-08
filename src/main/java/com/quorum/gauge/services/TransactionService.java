@@ -46,6 +46,7 @@ import org.web3j.quorum.Quorum;
 import org.web3j.quorum.methods.request.PrivateTransaction;
 import org.web3j.quorum.methods.response.PrivatePayload;
 import org.web3j.tx.Contract;
+import org.web3j.utils.Strings;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -97,12 +98,15 @@ public class TransactionService extends AbstractService {
 
                 String privacyPrecompileAddress = privacyService.getPrivacyPrecompileAddress(node).blockingFirst().getResult();
 
-                TransactionReceipt q = r.getTransactionReceipt().get();
-                if(privacyPrecompileAddress.equalsIgnoreCase(q.getTo())) {
-                    // fetch the private tx receipt, since we have a marker receipt
-                    EthGetTransactionReceipt privateTxReceipt = getPrivateTransactionReceipt(node, transactionHash).blockingFirst();
-                    if(privateTxReceipt.getTransactionReceipt().isPresent()) {
-                        return Observable.just(privateTxReceipt);
+                // privacyPrecompileAddress is null for older quorum versions which do not support it
+                if (!Strings.isEmpty(privacyPrecompileAddress)) {
+                    TransactionReceipt q = r.getTransactionReceipt().get();
+                    if (privacyPrecompileAddress.equalsIgnoreCase(q.getTo())) {
+                        // fetch the private tx receipt, since we have a marker receipt
+                        EthGetTransactionReceipt privateTxReceipt = getPrivateTransactionReceipt(node, transactionHash).blockingFirst();
+                        if (privateTxReceipt.getTransactionReceipt().isPresent()) {
+                            return Observable.just(privateTxReceipt);
+                        }
                     }
                 }
                 return Observable.just(r);
