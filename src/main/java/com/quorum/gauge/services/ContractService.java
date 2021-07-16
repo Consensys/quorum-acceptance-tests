@@ -67,6 +67,7 @@ import java.util.stream.Collectors;
 
 import static com.quorum.gauge.sol.SimpleStorage.FUNC_GET;
 import static java.util.Collections.emptyList;
+import static org.web3j.tx.Contract.deployRemoteCall;
 
 @Service
 public class ContractService extends AbstractService {
@@ -486,11 +487,8 @@ public class ContractService extends AbstractService {
                     BigInteger.valueOf(0),
                     DEFAULT_GAS_LIMIT, BigInteger.valueOf(initalValue), dpContractAddress).flowable().toObservable();
             case "storec":
-                return Storec.deploy(
-                    client,
-                    transactionManager,
-                    BigInteger.valueOf(0),
-                    DEFAULT_GAS_LIMIT, BigInteger.valueOf(initalValue)).flowable().toObservable();
+                String encodedConstructorC = FunctionEncoder.encodeConstructor(Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(initalValue)));
+                return deployRemoteCall(Storec.class, client, transactionManager, BigInteger.valueOf(0), DEFAULT_GAS_LIMIT, Storec.BINARY, encodedConstructorC).flowable().toObservable();
             default:
                 throw new RuntimeException("invalid contract name " + contractName);
         }
@@ -544,6 +542,7 @@ public class ContractService extends AbstractService {
                 address,
                 null,
                 List.of(privacyService.id(target)));
+
             return ClientReceipt.load(contractAddress, client, txManager,
                 BigInteger.valueOf(0),
                 DEFAULT_GAS_LIMIT).deposit(new byte[32], value).flowable().toObservable();

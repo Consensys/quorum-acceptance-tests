@@ -227,12 +227,12 @@ jobs:
             echo "::error file=$(_jq '.file'),line=$(_jq '.line'),col=$(_jq '.col')::$(_jq '.message')"
           done
           cat ${{ steps.setup.outputs.outputDir}}/summary.txt
-      - name: 'Upload test report'
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: testreport-${{ steps.setup.outputs.tag }}
-          path: ${{ steps.setup.outputs.outputDir }}/*.* # only files not directory
+#      - name: 'Upload test report'
+#        if: always()
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: testreport-${{ steps.setup.outputs.tag }}
+#          path: ${{ steps.setup.outputs.outputDir }}/*.* # only files not directory
       - name: 'Destroy infrastructure resources if ever created'
         if: always() && needs.condition.outputs.use_aws == 'true'
         # we don't care about containers running on the remote VM

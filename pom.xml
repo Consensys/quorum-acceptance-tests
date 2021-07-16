@@ -33,7 +33,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.version>11</java.version>
+        <java.version>14</java.version>
         <generated.sol.dir>${project.build.directory}/generate-sources/sol</generated.sol.dir>
         <skipGenerateSol>false</skipGenerateSol>
         <skipToolsCheck>false</skipToolsCheck>
@@ -44,18 +44,18 @@
 
         <!-- dependencies -->
         <web3j-quorum.version>4.8.4</web3j-quorum.version>
-        <web3j.version>4.8.4</web3j.version>
+        <web3j.version>4.8.5</web3j.version>
         <commons-lang.version>2.6</commons-lang.version>
         <docker-java.version>3.2.2</docker-java.version>
         <apache-sshd.version>2.4.0</apache-sshd.version>
         <i2p-eddsa.version>0.3.0</i2p-eddsa.version>
         <!-- this must be the same value in Dockerfile
             via `gauge install java -version <x.y.z>`  -->
-        <gauge-java.version>0.7.7</gauge-java.version>
+        <gauge-java.version>0.7.15</gauge-java.version>
 
         <!-- plugins -->
-        <gauge-maven-plugin.version>1.4.1</gauge-maven-plugin.version>
-        <web3j-maven-plugin.version>4.2.0</web3j-maven-plugin.version>
+        <gauge-maven-plugin.version>1.5.0</gauge-maven-plugin.version>
+        <web3j-maven-plugin.version>4.8.2</web3j-maven-plugin.version>
         <builder-maven-plugin.version>3.0.0</builder-maven-plugin.version>
         <maven-site-plugin.version>3.7.1</maven-site-plugin.version>
         <maven-project-info-reports-plugin.version>3.0.0</maven-project-info-reports-plugin.version>
@@ -142,6 +142,12 @@
             <groupId>org.springframework.vault</groupId>
             <artifactId>spring-vault-core</artifactId>
             <version>2.2.2.RELEASE</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.openjdk.nashorn/nashorn-core -->
+        <dependency>
+            <groupId>org.openjdk.nashorn</groupId>
+            <artifactId>nashorn-core</artifactId>
+            <version>15.0</version>
         </dependency>
     </dependencies>
 
@@ -295,7 +301,9 @@
                         <executions>
                             <execution>
                                 <id>check-required-tools</id>
-                                <goals><goal>run</goal></goals>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
                                 <phase>process-test-resources</phase>
                                 <configuration>
                                     <skip>${skipToolsCheck}</skip>
@@ -304,31 +312,33 @@
                                     <exportAntProperties>false</exportAntProperties>
                                     <target name="Check required tools and display their info">
                                         <ant antfile="${basedir}/src/main/ant/helper.xml"
-                                            target="tools"/>
+                                             target="tools"/>
                                     </target>
                                 </configuration>
                             </execution>
                             <execution>
                                 <id>extract</id>
-                                <goals><goal>run</goal></goals>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
                                 <phase>initialize</phase>
                                 <configuration>
                                     <exportAntProperties>true</exportAntProperties>
                                     <target name="Extract network location and profile">
-                                        <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+                                        <taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
                                         <macrodef name="parser">
-                                            <attribute name="raw" default="undefined" />
-                                            <attribute name="prefix" default="networks" />
-                                            <attribute name="folderPropertyName" />
-                                            <attribute name="defaultFolder" default="target/tf-scratchpad" />
-                                            <attribute name="profilePropertyName" />
-                                            <attribute name="defaultProfile" default="undefined" />
+                                            <attribute name="raw" default="undefined"/>
+                                            <attribute name="prefix" default="networks"/>
+                                            <attribute name="folderPropertyName"/>
+                                            <attribute name="defaultFolder" default="target/tf-scratchpad"/>
+                                            <attribute name="profilePropertyName"/>
+                                            <attribute name="defaultProfile" default="undefined"/>
                                             <sequential>
-                                                <mkdir dir="@{defaultFolder}" />
-                                                <local name="folder_extract" />
-                                                <local name="profile_extract" />
-                                                <local name="silent" />
-                                                <echo message="Extract from: @{raw}" level="info" />
+                                                <mkdir dir="@{defaultFolder}"/>
+                                                <local name="folder_extract"/>
+                                                <local name="profile_extract"/>
+                                                <local name="silent"/>
+                                                <echo message="Extract from: @{raw}" level="info"/>
                                                 <propertyregex property="folder_extract"
                                                                input="@{raw}"
                                                                regexp="(@{prefix}/[0-9a-zA-Z-_\.]+)::([0-9a-zA-Z-_\.]+)"
@@ -342,25 +352,29 @@
                                                                casesensitive="false"
                                                                defaultValue="@{defaultProfile}"/>
 
-                                                <property name="@{folderPropertyName}" value="${folder_extract}" />
-                                                <property name="@{profilePropertyName}" value="${profile_extract}" />
+                                                <property name="@{folderPropertyName}" value="${folder_extract}"/>
+                                                <property name="@{profilePropertyName}" value="${profile_extract}"/>
                                                 <if>
-                                                    <not><equals arg1="${profile_extract}" arg2="undefined" /></not>
+                                                    <not>
+                                                        <equals arg1="${profile_extract}" arg2="undefined"/>
+                                                    </not>
                                                     <then>
-                                                        <touch file="${folder_extract}/terraform.${profile_extract}.tfvars" mkdirs="true" />
+                                                        <touch
+                                                            file="${folder_extract}/terraform.${profile_extract}.tfvars"
+                                                            mkdirs="true"/>
                                                     </then>
                                                 </if>
-                                                <echo level="info" message="@{folderPropertyName}=${folder_extract}" />
-                                                <echo level="info" message="@{profilePropertyName}=${profile_extract}" />
+                                                <echo level="info" message="@{folderPropertyName}=${folder_extract}"/>
+                                                <echo level="info" message="@{profilePropertyName}=${profile_extract}"/>
                                                 <exec executable="terraform" dir="${folder_extract}"
                                                       failonerror="false" failifexecutionfails="false">
                                                     <arg line="workspace new ${profile_extract}"/>
                                                 </exec>
                                             </sequential>
                                         </macrodef>
-                                        <local name="networkRaw" />
+                                        <local name="networkRaw"/>
                                         <condition property="networkRaw" value="${network.target}" else="${tags}">
-                                            <isset property="network.target" />
+                                            <isset property="network.target"/>
                                         </condition>
                                         <parser raw="${networkRaw}" prefix="networks"
                                                 folderPropertyName="network.folder"
@@ -368,14 +382,14 @@
                                         <condition property="network.skipDestroy" value="true" else="false">
                                             <or>
                                                 <isfalse value="${network.forceDestroy}"/>
-                                                <equals arg1="${network.profile}" arg2="undefined" />
+                                                <equals arg1="${network.profile}" arg2="undefined"/>
                                             </or>
                                         </condition>
                                         <condition property="network.skipApply" value="true" else="false">
-                                            <equals arg1="${network.profile}" arg2="undefined" />
+                                            <equals arg1="${network.profile}" arg2="undefined"/>
                                         </condition>
                                         <condition property="network.skipWait" value="true" else="false">
-                                            <equals arg1="${network.profile}" arg2="undefined" />
+                                            <equals arg1="${network.profile}" arg2="undefined"/>
                                         </condition>
                                         <echo level="info" message="Auto-destroying network: ${network.forceDestroy}"/>
                                         <condition property="infra.disabled" value="false" else="true">
@@ -390,12 +404,13 @@
                                                 <condition property="infra.skipDestroy" value="false" else="true">
                                                     <istrue value="${infra.forceDestroy}"/>
                                                 </condition>
-                                                <echo level="info" message="Auto-destroying infra: ${infra.forceDestroy}"/>
+                                                <echo level="info"
+                                                      message="Auto-destroying infra: ${infra.forceDestroy}"/>
                                             </then>
                                             <else>
-                                                <property name="infra.skipDestroy" value="true" />
-                                                <property name="infra.skipApply" value="true" />
-                                                <property name="infra.skipWait" value="true" />
+                                                <property name="infra.skipDestroy" value="true"/>
+                                                <property name="infra.skipApply" value="true"/>
+                                                <property name="infra.skipWait" value="true"/>
                                             </else>
                                         </if>
                                     </target>
@@ -409,7 +424,9 @@
                         <executions>
                             <execution>
                                 <id>infra.terraform-init</id>
-                                <goals><goal>exec</goal></goals>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
                                 <phase>process-test-resources</phase>
                                 <configuration>
                                     <skip>${infra.skipApply}</skip>
@@ -419,7 +436,9 @@
                             </execution>
                             <execution>
                                 <id>infra.terraform-workspace</id>
-                                <goals><goal>exec</goal></goals>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
                                 <phase>process-test-resources</phase>
                                 <configuration>
                                     <skip>${infra.skipApply}</skip>
@@ -429,17 +448,24 @@
                             </execution>
                             <execution>
                                 <id>infra.terraform-apply</id>
-                                <goals><goal>exec</goal></goals>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
                                 <phase>process-test-resources</phase>
                                 <configuration>
                                     <skip>${infra.skipApply}</skip>
-                                    <commandlineArgs>apply --auto-approve -var-file terraform.${infra.profile}.tfvars -var tfvars_outdir='${basedir}/${network.folder}' -var properties_outdir='${project.build.outputDirectory}' -var run_on='${env}'</commandlineArgs>
+                                    <commandlineArgs>apply --auto-approve -var-file terraform.${infra.profile}.tfvars
+                                        -var tfvars_outdir='${basedir}/${network.folder}' -var
+                                        properties_outdir='${project.build.outputDirectory}' -var run_on='${env}'
+                                    </commandlineArgs>
                                     <workingDirectory>${infra.folder}</workingDirectory>
                                 </configuration>
                             </execution>
                             <execution>
                                 <id>infra.wait</id>
-                                <goals><goal>exec</goal></goals>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
                                 <phase>process-test-resources</phase>
                                 <configuration>
                                     <skip>${infra.skipWait}</skip>
@@ -454,7 +480,9 @@
                             </execution>
                             <execution>
                                 <id>network.terraform-init</id>
-                                <goals><goal>exec</goal></goals>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
                                 <phase>process-test-resources</phase>
                                 <configuration>
                                     <skip>${network.skipApply}</skip>
@@ -464,7 +492,9 @@
                             </execution>
                             <execution>
                                 <id>network.terraform-workspace</id>
-                                <goals><goal>exec</goal></goals>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
                                 <phase>process-test-resources</phase>
                                 <configuration>
                                     <skip>${network.skipApply}</skip>
@@ -474,17 +504,24 @@
                             </execution>
                             <execution>
                                 <id>network.terraform-apply</id>
-                                <goals><goal>exec</goal></goals>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
                                 <phase>process-test-resources</phase>
                                 <configuration>
                                     <skip>${network.skipApply}</skip>
-                                    <commandlineArgs>apply --auto-approve -var-file terraform.${network.profile}.tfvars -var properties_outdir='${project.build.outputDirectory}' -var gauge_env_outdir='${basedir}/env/${env}'</commandlineArgs>
+                                    <commandlineArgs>apply --auto-approve -var-file terraform.${network.profile}.tfvars
+                                        -var properties_outdir='${project.build.outputDirectory}' -var
+                                        gauge_env_outdir='${basedir}/env/${env}'
+                                    </commandlineArgs>
                                     <workingDirectory>${network.folder}</workingDirectory>
                                 </configuration>
                             </execution>
                             <execution>
                                 <id>network.wait</id>
-                                <goals><goal>exec</goal></goals>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
                                 <phase>process-test-resources</phase>
                                 <configuration>
                                     <skip>${network.skipWait}</skip>
@@ -500,34 +537,46 @@
                             <execution>
                                 <!-- this execution is run after Gauge test -->
                                 <id>network.terraform-destroy</id>
-                                <goals><goal>exec</goal></goals>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
                                 <phase>test</phase>
                                 <configuration>
                                     <skip>${network.skipDestroy}</skip>
-                                    <commandlineArgs>destroy --auto-approve -var-file terraform.${network.profile}.tfvars</commandlineArgs>
+                                    <commandlineArgs>destroy --auto-approve -var-file
+                                        terraform.${network.profile}.tfvars
+                                    </commandlineArgs>
                                     <workingDirectory>${network.folder}</workingDirectory>
                                 </configuration>
                             </execution>
                             <execution>
                                 <!-- this execution is run after Gauge test -->
                                 <id>infra.terraform-destroy</id>
-                                <goals><goal>exec</goal></goals>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
                                 <phase>test</phase>
                                 <configuration>
                                     <skip>${infra.skipDestroy}</skip>
-                                    <commandlineArgs>destroy --auto-approve -var-file terraform.${infra.profile}.tfvars</commandlineArgs>
+                                    <commandlineArgs>destroy --auto-approve -var-file
+                                        terraform.${infra.profile}.tfvars
+                                    </commandlineArgs>
                                     <workingDirectory>${infra.folder}</workingDirectory>
                                 </configuration>
                             </execution>
                             <execution>
                                 <id>extract-test-summary</id>
-                                <goals><goal>java</goal></goals>
+                                <goals>
+                                    <goal>java</goal>
+                                </goals>
                                 <phase>test</phase>
                                 <configuration>
                                     <skip>${skipTests}</skip>
                                     <mainClass>com.quorum.gauge.TestSummaryMain</mainClass>
                                     <!-- This will produce failures.txt and summary.txt in the output folder -->
-                                    <commandlineArgs>${auto.jobid} ${project.build.directory}/gauge/reports/xml-report/result.xml ${auto.outputDir}</commandlineArgs>
+                                    <commandlineArgs>${auto.jobid}
+                                        ${project.build.directory}/gauge/reports/xml-report/result.xml ${auto.outputDir}
+                                    </commandlineArgs>
                                 </configuration>
                             </execution>
                         </executions>
@@ -603,11 +652,13 @@
                             <execution>
                                 <id>determine-permission-type</id>
                                 <phase>initialize</phase>
-                                <goals><goal>run</goal></goals>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
                                 <configuration>
                                     <exportAntProperties>true</exportAntProperties>
                                     <target name="Determine permission type">
-                                        <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+                                        <taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
                                         <!-- extract permission type from tags -->
                                         <propertyregex property="permission.type"
                                                        input="${tags}"
@@ -615,7 +666,7 @@
                                                        select="\1"
                                                        casesensitive="false"
                                                        defaultValue="${defaultPermissionType}"/>
-                                        <echo level="info" message="permissionType=${permission.type}" />
+                                        <echo level="info" message="permissionType=${permission.type}"/>
                                     </target>
                                 </configuration>
                             </execution>
@@ -686,7 +737,10 @@
                                     <replacements>
                                         <replacement>
                                             <token>(private static final String BINARY)\s*=\s*"[^"]+"\s*;</token>
-                                            <value>$1 = com.quorum.gauge.common.SolBinUtils.readSolBin("com.quorum.gauge.sol", java.lang.invoke.MethodHandles.lookup().lookupClass());</value>
+                                            <value>$1 =
+                                                com.quorum.gauge.common.SolBinUtils.readSolBin("com.quorum.gauge.sol",
+                                                java.lang.invoke.MethodHandles.lookup().lookupClass());
+                                            </value>
                                         </replacement>
                                     </replacements>
                                 </configuration>

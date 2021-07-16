@@ -1,4 +1,5 @@
-pragma solidity ^0.5.17;
+// SPDX-License-Identifier: Apache-2.0
+pragma solidity ^0.5.0;
 
 import "./PermissionsUpgradable.sol";
 /** @title Organization manager contract
@@ -183,7 +184,7 @@ contract OrgManager {
 
     /** @notice returns org info for a given org index
       * @param _orgIndex org index
-      * @return org id
+      * @return orgId
       * @return parent org id
       * @return ultimate parent id
       * @return level in the org tree
@@ -197,7 +198,7 @@ contract OrgManager {
 
     /** @notice returns org info for a given org id
       * @param _orgId org id
-      * @return org id
+      * @return orgId
       * @return parent org id
       * @return ultimate parent id
       * @return level in the org tree
@@ -327,7 +328,7 @@ contract OrgManager {
         }
         orgNum++;
         OrgIndex[oid] = orgNum;
-        uint256 id = orgList.length++;
+        uint256 id = orgList.length+1;
         if (_level == 1) {
             orgList[id].level = _level;
             orgList[id].pindex = 0;
@@ -344,7 +345,7 @@ contract OrgManager {
             orgList[id].level = orgList[parentIndex].level + 1;
             orgList[id].pindex = parentIndex;
             orgList[id].ultParent = orgList[parentIndex].ultParent;
-            uint256 subOrgId = orgList[parentIndex].subOrgIndexList.length++;
+            uint256 subOrgId = orgList[parentIndex].subOrgIndexList.length+1;
             orgList[parentIndex].subOrgIndexList[subOrgId] = id;
             orgList[id].fullOrgId = string(abi.encodePacked(_pOrgId, ".", _orgId));
         }
