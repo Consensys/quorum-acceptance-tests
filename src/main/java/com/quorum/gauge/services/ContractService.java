@@ -487,8 +487,11 @@ public class ContractService extends AbstractService {
                     BigInteger.valueOf(0),
                     DEFAULT_GAS_LIMIT, BigInteger.valueOf(initalValue), dpContractAddress).flowable().toObservable();
             case "storec":
-                String encodedConstructorC = FunctionEncoder.encodeConstructor(Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(initalValue)));
-                return deployRemoteCall(Storec.class, client, transactionManager, BigInteger.valueOf(0), DEFAULT_GAS_LIMIT, Storec.BINARY, encodedConstructorC).flowable().toObservable();
+                return Storec.deploy(
+                    client,
+                    transactionManager,
+                    BigInteger.valueOf(0),
+                    DEFAULT_GAS_LIMIT, BigInteger.valueOf(initalValue)).flowable().toObservable();
             default:
                 throw new RuntimeException("invalid contract name " + contractName);
         }
@@ -542,7 +545,6 @@ public class ContractService extends AbstractService {
                 address,
                 null,
                 List.of(privacyService.id(target)));
-
             return ClientReceipt.load(contractAddress, client, txManager,
                 BigInteger.valueOf(0),
                 DEFAULT_GAS_LIMIT).deposit(new byte[32], value).flowable().toObservable();
