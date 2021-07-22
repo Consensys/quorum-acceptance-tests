@@ -32,7 +32,7 @@ resource "docker_container" "ethsigner" {
     host_path      = var.ethsigner_datadirs[count.index]
   }
   networks_advanced {
-    name         = docker_network.besu.name
+    name         = local.docker_network_name
     ipv4_address = var.ethsigner_networking[count.index].ip.private
     aliases = [
     format("ethsigner%d", count.index)]

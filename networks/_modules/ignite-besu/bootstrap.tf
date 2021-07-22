@@ -36,7 +36,7 @@ resource "quorum_bootstrap_network" "this" {
 }
 
 resource "quorum_bootstrap_keystore" "accountkeys-generator" {
-  count                = local.number_of_nodes
+  count                = local.hybrid_network ? 0 : local.number_of_nodes
   keystore_dir         = format("%s/%s", local.ethsigner_dirs[count.index], local.keystore_folder)
   use_light_weight_kdf = true
 
@@ -93,7 +93,7 @@ resource "local_file" "genesis-file" {
 {
   "coinbase": "0x0000000000000000000000000000000000000000",
   "config" : {
-    "chainId" : ${local.chainId},
+    "chainId" : ${var.hybrid_network ? var.hybrid_network_id : local.chainId},
       "homesteadBlock": 0,
       "byzantiumBlock": 0,
       "constantinopleBlock":0,
@@ -110,15 +110,31 @@ resource "local_file" "genesis-file" {
       "requesttimeoutseconds" : 10
     },
 %{endif~}
+%{if var.consensus == "qbft"~}
+    "qbft" : {
+      "blockperiodseconds" : 1,
+      "epochlength" : 30000,
+      "requesttimeoutseconds" : 10
+    },
+%{endif~}
     "isQuorum": true
   },
   "difficulty" : "0x1",
+%{if var.hybrid_network~}
+  "extraData": "${var.hybrid_extradata}",
+%{else~}
   "extraData": "${quorum_bootstrap_istanbul_extradata.this.extradata}",
+%{endif~}
   "gasLimit" : "0xFFFFFF00",
   "mixhash": "${data.quorum_bootstrap_genesis_mixhash.this.istanbul}",
   "nonce" : "0x0",
   "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
   "timestamp": "0x00",
+%{if var.hybrid_network~}
+  "alloc": {
+    ${join(",", var.hybrid_account_alloc)}
+  }
+%{else~}
   "alloc": {
       ${join(",", formatlist("\"%s\" : { \"balance\": \"%s\" }", quorum_bootstrap_keystore.accountkeys-generator[*].account[0].address, quorum_bootstrap_keystore.accountkeys-generator[*].account[0].balance))},
       "0x0000000000000000000000000000000000008888": {
@@ -142,6 +158,7 @@ resource "local_file" "genesis-file" {
         }
       }
     }
+%{endif~}
 }
 EOF
 }
@@ -149,13 +166,13 @@ EOF
 resource "local_file" "node-key" {
   count    = local.number_of_nodes
   filename = format("%s/key", local.besu_dirs[count.index])
-  content  = quorum_bootstrap_node_key.nodekeys-generator[count.index].node_key_hex
+  content  = var.hybrid_network ? var.hybrid_node_key[count.index] : quorum_bootstrap_node_key.nodekeys-generator[count.index].node_key_hex
 }
 
 resource "local_file" "static-nodes" {
   count    = local.number_of_nodes
   filename = format("%s/static-nodes.json", local.besu_dirs[count.index])
-  content  = "[${join(",", local.network.enode_urls)}]"
+  content  = var.hybrid_network == true ? "[${join(",", var.hybrid_enodeurls)}]" : "[${join(",", local.network.enode_urls)}]"
 }
 
 resource "local_file" "permissioned-nodes" {
@@ -206,7 +223,7 @@ EOF
 
 resource "local_file" "tmconfigs-generator" {
   count    = local.number_of_nodes
-  filename = format("%s/%s%s/config.json", quorum_bootstrap_network.this.network_dir_abs, local.tm_dir_prefix, count.index)
+  filename = format("%s/%s%s/config.json", quorum_bootstrap_network.this.network_dir_abs, local.tm_dir_prefix, local.hybrid_network ? local.number_of_nodes + count.index : count.index)
   content  = <<-JSON
 {
     "useWhiteList": false,
@@ -220,7 +237,7 @@ resource "local_file" "tmconfigs-generator" {
         {
             "app":"ThirdParty",
             "enabled": true,
-            "serverAddress": "http://${var.tm_networking[count.index].ip.private}:${var.tm_networking[count.index].port.thirdparty.internal}",
+            "serverAddress": "http://${var.tm_networking[local.hybrid_network ? local.number_of_nodes + count.index : count.index].ip.private}:${var.tm_networking[local.hybrid_network ? local.number_of_nodes + count.index : count.index].port.thirdparty.internal}",
             "communicationType" : "REST"
         },
         {
@@ -232,7 +249,7 @@ resource "local_file" "tmconfigs-generator" {
         {
             "app":"P2P",
             "enabled": true,
-            "serverAddress":"http://${var.tm_networking[count.index].ip.private}:${var.tm_networking[count.index].port.p2p}",
+            "serverAddress":"http://${var.tm_networking[local.hybrid_network ? local.number_of_nodes + count.index : count.index].ip.private}:${var.tm_networking[local.hybrid_network ? local.number_of_nodes + count.index : count.index].port.p2p}",
             "sslConfig": {
               "tls": "OFF",
               "generateKeyStoreIfNotExisted": true,

@@ -31,7 +31,7 @@ output "network_name" {
 }
 
 output "application_yml_file" {
-  value = local_file.configuration.filename
+  value = local.hybrid_network ? var.hybrid_configuration_filename : local_file.configuration[1].filename
 }
 
 output "accounts_count" {
@@ -39,7 +39,7 @@ output "accounts_count" {
 }
 
 output "keystore_files" {
-  value = [for idx in local.node_indices : format("%s/%s", local.keystore_folder, regex("UTC.+$", quorum_bootstrap_keystore.accountkeys-generator[idx].account[0].account_url))]
+  value = local.hybrid_network ? [] : [for idx in local.node_indices : format("%s/%s", local.keystore_folder, regex("UTC.+$", quorum_bootstrap_keystore.accountkeys-generator[idx].account[0].account_url))]
 }
 
 output "keystore_password_file" {
