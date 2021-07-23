@@ -97,10 +97,13 @@ jobs:
         tag:
           - 'basic || basic-raft || (advanced && raft) || networks/typical::raft'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft'
           - 'gcmode && block-sync && networks/template::raft-3plus1'
           - 'gcmode && block-sync && networks/template::istanbul-3plus1'
           - 'learner-peer-management || raftdnsenable && networks/template::raft-3plus1'
           - 'validator-management && networks/template::istanbul-3plus1'
+          - 'qbft-validator-management && networks/template::qbft-3plus1'
+          - 'qbft-transition-network && networks/template::qbft-4nodes-transition'
           - 'basic || basic-raft || (advanced && raft) || networks/plugins::raft'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul'
           - 'basic || basic-raft || (advanced && raft) || networks/plugins::raft-account-plugin-hashicorp-vault'
@@ -123,6 +126,8 @@ jobs:
           - 'mps-upgrade-txtrace || networks/template::raft-4nodes-mps'
           - 'mps-upgrade-txtrace || networks/template::istanbul-4nodes-mps'
           - '(basic && !nosupport && !mps && !(spam && !raw) && !eth-api-signed && !privacy-enhancements-disabled && !graphql && !async && !extension && !storage-root && !personal-api-signed) || networks/typical-besu::ibft2'
+          - '(basic && !nosupport && !mps && !(spam && !raw) && !eth-api-signed && !privacy-enhancements-disabled && !graphql && !async && !extension && !storage-root && !personal-api-signed) || networks/typical-hybrid'
+          - 'qbft-validator-management && networks/typical-hybrid' // Need to refactor
         privacy-enhancements:
           - 'false'
         include:

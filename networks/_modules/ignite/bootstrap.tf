@@ -11,7 +11,11 @@ locals {
   # chain config
   qip714Block_config              = var.permission_qip714Block.enabled ? { qip714Block = var.permission_qip714Block.block } : {}
   privacyEnhancementsBlock_config = var.privacy_enhancements.enabled ? { privacyEnhancementsBlock = var.privacy_enhancements.block } : {}
-  istanbul_config                 = var.consensus == "istanbul" || var.consensus == "qbft" ? { istanbul = { epoch = 30000, policy = 0, testQBFTBlock = var.qbftBlock.block, ceil2Nby3Block = 0 } } : {}
+
+  istanbul_config       = var.consensus == "istanbul" || var.consensus == "qbft" ? { istanbul = { epoch = 30000, policy = 0, ceil2Nby3Block = 0 } } : {}
+  istanbul_config_qbft  = (var.consensus == "istanbul" || var.consensus == "qbft") && var.qbftBlock.enabled ? { istanbul = { epoch = 30000, policy = 0, testQBFTBlock = var.qbftBlock.block, ceil2Nby3Block = 0 } } : {}
+  final_istanbul_config = merge(local.istanbul_config, local.istanbul_config_qbft)
+
   chain_configs = [for idx in local.node_indices : merge(
     {
       homesteadBlock      = 0
@@ -32,7 +36,7 @@ locals {
           size  = 80
         }
       ]
-  }, local.qip714Block_config, local.privacyEnhancementsBlock_config, local.istanbul_config, lookup(var.additional_genesis_config, idx, {}))]
+  }, local.qip714Block_config, local.privacyEnhancementsBlock_config, local.final_istanbul_config, lookup(var.additional_genesis_config, idx, {}))]
 }
 
 data "null_data_source" "meta" {
@@ -92,6 +96,7 @@ data "quorum_bootstrap_genesis_mixhash" "this" {
 
 resource "quorum_bootstrap_istanbul_extradata" "this" {
   istanbul_addresses = [for idx in local.node_indices : quorum_bootstrap_node_key.nodekeys-generator[idx].istanbul_address if lookup(local.istanbul_validators, idx, "false") == "true"]
+  mode               = var.qbftBlock.enabled && var.qbftBlock.block == 0 ? "qbft" : "ibft1"
 }
 
 resource "local_file" "genesis-file" {

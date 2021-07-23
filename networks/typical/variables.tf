@@ -7,9 +7,9 @@ variable "isMPS" {
 }
 
 variable "privacy_enhancements" {
-    type        = object({ block = number, enabled = bool })
-    default     = { block = 0, enabled = false }
-    description = "privacy enhancements state (enabled/disabled) and the block height at which they are enabled"
+  type        = object({ block = number, enabled = bool })
+  default     = { block = 0, enabled = false }
+  description = "privacy enhancements state (enabled/disabled) and the block height at which they are enabled"
 }
 
 variable "network_name" {
@@ -48,9 +48,9 @@ variable "quorum_docker_image" {
 }
 
 variable "tessera_docker_image" {
-    type        = object({ name = string, local = bool })
-    default     = { name = "quorumengineering/tessera:develop", local = false }
-    description = "Local=true indicates that the image is already available locally and don't need to pull from registry"
+  type        = object({ name = string, local = bool })
+  default     = { name = "quorumengineering/tessera:develop", local = false }
+  description = "Local=true indicates that the image is already available locally and don't need to pull from registry"
 }
 
 variable "docker_registry" {
@@ -59,8 +59,8 @@ variable "docker_registry" {
 }
 
 variable "additional_quorum_container_vol" {
-  type = map(list(object({container_path = string, host_path = string})))
-  default = {}
+  type        = map(list(object({ container_path = string, host_path = string })))
+  default     = {}
   description = "Additional volume mounts for geth container. Each map key is the node index (0-based)"
 }
 
@@ -99,7 +99,7 @@ EOT
 }
 
 variable "override_vnodes" {
-  type        = map(object({ mpsEnabled = bool, vnodes = map(object({name = string, tmKeys = list(string), ethKeys = list(string)})) }))
+  type        = map(object({ mpsEnabled = bool, vnodes = map(object({ name = string, tmKeys = list(string), ethKeys = list(string) })) }))
   default     = {}
   description = <<-EOT
 Sets the allocations for TM & Eth keys to a Node name, sat under a particular Quorum instance
@@ -135,7 +135,7 @@ EOT
 }
 
 variable "additional_genesis_config" {
-  default = {}
+  default     = {}
   description = <<-EOT
 Merge this config with the chain config in the genesis per node. This will override existing keys
 E.g.: enable isMPS for node 1
@@ -148,7 +148,7 @@ EOT
 }
 
 variable "additional_tessera_config" {
-  default = {}
+  default     = {}
   description = <<-EOT
 Merge this config with the default config per node. This will override existing keys
 E.g.: add config to node 1
@@ -158,4 +158,10 @@ E.g.: add config to node 1
   }
 }
 EOT
+}
+
+variable "qbftBlock" {
+  type        = object({ block = number, enabled = bool })
+  default     = { block = 0, enabled = false }
+  description = "qbft fork block (enabled/disabled) and the block height at which it is enabled"
 }
