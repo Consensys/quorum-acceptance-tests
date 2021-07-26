@@ -1,5 +1,6 @@
 locals {
   number_of_nodes                     = length(var.node_keys_hex)
+  quorum_nodes                        = var.number_of_quorum_nodes
   docker_network_name                 = format("%s-net", var.network_name)
   container_besu_datadir              = "/opt/besu/data"
   container_tm_datadir                = "/data/tm"
@@ -10,14 +11,14 @@ locals {
   "http://${var.tm_networking[idx].ip.private}:${var.tm_networking[idx].port.q2t.internal}"]
 
   node_indices             = range(local.number_of_nodes) // 0-based node index
-  tessera_node_indices     = var.hybrid-network ? [for id in range(local.number_of_nodes) : sum([id, local.number_of_nodes])] : range(local.number_of_nodes)
+  tessera_node_indices     = var.hybrid_network ? [for id in range(local.number_of_nodes) : sum([id, local.quorum_nodes])] : range(local.number_of_nodes)
   node_initial_paticipants = { for id in local.node_indices : id => "true" } // default to true for all
 
   tm_env = [for k, v in var.tm_env : "${k}=${v}"]
 }
 
 resource "docker_network" "besu" {
-  count = var.hybrid-network ? 0 : 1
+  count = var.hybrid_network ? 0 : 1
   name  = local.docker_network_name
   ipam_config {
     subnet = var.network_cidr
@@ -26,5 +27,5 @@ resource "docker_network" "besu" {
 
 resource "docker_volume" "shared_volume" {
   count = local.number_of_nodes
-  name  = format("%s-vol%d", var.network_name, var.hybrid-network ? local.number_of_nodes + count.index : count.index)
+  name  = format("%s-vol%d", var.network_name, var.hybrid_network ? local.number_of_nodes + count.index : count.index)
 }

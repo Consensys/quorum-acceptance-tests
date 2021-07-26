@@ -94,8 +94,13 @@ variable "tessera_app_container_path" {
 variable "accounts_count" {
 }
 
-variable "hybrid-network" {
+variable "hybrid_network" {
   type        = bool
   default     = false
   description = "true if it a besu-quorum hybrid network"
+}
+
+variable "number_of_quorum_nodes" {
+  default = 0
+  description = "Number of quorum nodes in the hybrid network"
 }

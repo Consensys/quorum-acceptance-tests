@@ -1,27 +1,27 @@
 resource "docker_container" "tessera" {
   count             = local.number_of_nodes
-  name              = format("%s-tm%d", var.network_name, var.hybrid-network ? local.number_of_nodes + count.index : count.index)
+  name              = format("%s-tm%d", var.network_name, local.tessera_node_indices[count.index])
   depends_on        = [docker_image.local, docker_image.registry]
-  image             = var.tm_networking[var.hybrid-network ? local.number_of_nodes + count.index : count.index].image.name
-  hostname          = format("tm%d", var.hybrid-network ? local.number_of_nodes + count.index : count.index)
+  image             = var.tm_networking[local.tessera_node_indices[count.index]].image.name
+  hostname          = format("tm%d", local.tessera_node_indices[count.index])
   restart           = "no"
   publish_all_ports = false
   must_run          = true
   start             = true
   labels {
     label = "TesseraContainer"
-    value = var.hybrid-network ? local.number_of_nodes + count.index : count.index
+    value = local.tessera_node_indices[count.index]
   }
   ports {
-    internal = var.tm_networking[var.hybrid-network ? local.number_of_nodes + count.index : count.index].port.p2p
+    internal = var.tm_networking[local.tessera_node_indices[count.index]].port.p2p
   }
   ports {
-    internal = var.tm_networking[var.hybrid-network ? local.number_of_nodes + count.index : count.index].port.thirdparty.internal
-    external = var.tm_networking[var.hybrid-network ? local.number_of_nodes + count.index : count.index].port.thirdparty.external
+    internal = var.tm_networking[local.tessera_node_indices[count.index]].port.thirdparty.internal
+    external = var.tm_networking[local.tessera_node_indices[count.index]].port.thirdparty.external
   }
   ports {
-    internal = var.tm_networking[var.hybrid-network ? local.number_of_nodes + count.index : count.index].port.q2t.internal
-    external = var.tm_networking[var.hybrid-network ? local.number_of_nodes + count.index : count.index].port.q2t.external
+    internal = var.tm_networking[local.tessera_node_indices[count.index]].port.q2t.internal
+    external = var.tm_networking[local.tessera_node_indices[count.index]].port.q2t.external
   }
   volumes {
     container_path = "/data"
@@ -33,12 +33,12 @@ resource "docker_container" "tessera" {
   }
   networks_advanced {
     name         = local.docker_network_name
-    ipv4_address = var.tm_networking[var.hybrid-network ? local.number_of_nodes + count.index : count.index].ip.private
-    aliases      = [format("tm%d", var.hybrid-network ? local.number_of_nodes + count.index : count.index)]
+    ipv4_address = var.tm_networking[local.tessera_node_indices[count.index]].ip.private
+    aliases      = [format("tm%d", local.tessera_node_indices[count.index])]
   }
   env = local.tm_env
   healthcheck {
-    test         = ["CMD", "nc", "-vz", "localhost", var.tm_networking[var.hybrid-network ? local.number_of_nodes + count.index : count.index].port.thirdparty.internal]
+    test         = ["CMD", "nc", "-vz", "localhost", var.tm_networking[local.tessera_node_indices[count.index]].port.thirdparty.internal]
     interval     = "5s"
     retries      = 60
     timeout      = "5s"
@@ -48,7 +48,7 @@ resource "docker_container" "tessera" {
     "/bin/sh",
     "-c",
     <<EOF
-echo "Tessera${var.hybrid-network ? (local.number_of_nodes + count.index + 1) : count.index + 1}"
+echo "Tessera${local.tessera_node_indices[count.index] + 1}"
 
 JAVA_OPTS="-Xms128M -Xmx128M"
 RUN_COMMAND="/tessera/bin/tessera"

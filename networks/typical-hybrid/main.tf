@@ -239,7 +239,8 @@ module "docker-besu" {
   tessera_app_container_path = var.tessera_app_container_path
   accounts_count             = module.network-besu.accounts_count
 
-  hybrid-network = local.hybrid_network
+  hybrid_network         = local.hybrid_network
+  number_of_quorum_nodes = local.number_of_quorum_nodes
 }
 
 # randomize the docker network cidr

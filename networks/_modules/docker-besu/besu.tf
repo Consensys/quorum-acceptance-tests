@@ -9,7 +9,7 @@ locals {
 
 resource "docker_container" "besu" {
   count = local.number_of_nodes
-  name  = format("%s-node%d", var.network_name, var.hybrid-network ? local.number_of_nodes + count.index : count.index)
+  name  = format("%s-node%d", var.network_name, var.hybrid_network ? local.number_of_nodes + count.index : count.index)
   depends_on = [docker_container.tessera, docker_image.registry, docker_image.local]
   image    = var.besu_networking[count.index].image.name
   hostname = format("node%d", count.index)
