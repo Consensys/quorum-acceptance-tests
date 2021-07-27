@@ -5,4 +5,3 @@
 number_of_nodes     = 4
 consensus           = "istanbul"
 qbftBlock           = { block = 0, enabled = true }
-quorum_docker_image = { name = "jbhurat/quorum:qbft", local = false }

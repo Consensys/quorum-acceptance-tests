@@ -62,7 +62,7 @@ variable "geth" {
   })
   default = {
     container = {
-      image   = { name = "localquorum:qbft", local = true }
+      image   = { name = "quorumengineering/quorum:develop", local = true }
       port    = { raft = 50400, p2p = 21000, http = 8545, ws = -1 }
       graphql = false
     }
@@ -107,11 +107,11 @@ variable "besu" {
   })
   default = {
     container = {
-      image = { name = "hyperledger/besu:21.7.0-RC1-SNAPSHOT-openjdk-11", local = false }
+      image = { name = "hyperledger/besu:develop", local = false }
       port  = { http = 8545, ws= 8546, graphql= 8547, p2p= 21000 }
     }
     host = {
-      port = { http_start = 23000 , ws_start= 23100, graphql_start= 23200 }
+      port = { http_start = 22000 , ws_start= 23100, graphql_start= 23200 }
     }
   }
   description = "besu Docker container configuration "

@@ -86,7 +86,7 @@ locals {
     {
       image = var.besu.container.image
       port = {
-        http    = { internal = var.besu.container.port.http, external = var.besu.host.port.http_start + idx }
+        http    = { internal = var.besu.container.port.http, external = var.besu.host.port.http_start + local.number_of_quorum_nodes + idx }
         ws      = { internal = var.besu.container.port.ws, external = var.besu.host.port.ws_start + idx }
         graphql = { internal = var.besu.container.port.graphql, external = var.besu.host.port.graphql_start + idx }
         p2p     = var.besu.container.port.p2p
