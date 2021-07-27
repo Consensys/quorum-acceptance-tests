@@ -118,7 +118,7 @@ module "helper" {
   hybrid-network         = local.hybrid_network
   geth = {
     container = {
-      image   = var.quorum_docker_image
+      image   = var.geth.container.image
       port    = { raft = 50400, p2p = 21000, http = 8545, ws = -1 }
       graphql = true
     }
@@ -128,7 +128,7 @@ module "helper" {
   }
   tessera = {
     container = {
-      image = var.tessera_docker_image
+      image = var.tessera.container.image
       port  = { thirdparty = 9080, p2p = 9000, q2t = 9081, q2t = 9081 }
     }
     host = {
@@ -137,7 +137,7 @@ module "helper" {
   }
   besu = {
     container = {
-      image = var.besu_docker_image
+      image = var.besu.container.image
       port  = { http = 8545, ws = 8546, graphql = 8547, p2p = 21000 }
     }
     host = {
@@ -146,7 +146,7 @@ module "helper" {
   }
   ethsigner = {
     container = {
-      image = var.ethsigner_docker_image
+      image = var.ethsigner.container.image
       port  = 8545
     }
     host = {

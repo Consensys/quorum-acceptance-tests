@@ -139,30 +139,6 @@ variable "ethsigner" {
   description = "ethsigner Docker container configuration "
 }
 
-variable "quorum_docker_image" {
-  type        = object({ name = string, local = bool })
-  default     = { name = "localquorum:qbft", local = true }
-  description = "Local=true indicates that the image is already available locally and don't need to pull from registry"
-}
-
-variable "tessera_docker_image" {
-    type        = object({ name = string, local = bool })
-    default     = { name = "quorumengineering/tessera:develop", local = false }
-    description = "Local=true indicates that the image is already available locally and don't need to pull from registry"
-}
-
-variable "besu_docker_image" {
-  type        = object({ name = string, local = bool })
-  default     = { name = "hyperledger/besu:latest", local = false }
-  description = "Local=true indicates that the image is already available locally and don't need to pull from registry"
-}
-
-variable "ethsigner_docker_image" {
-  type        = object({ name = string, local = bool })
-  default     = { name = "consensys/quorum-ethsigner:latest", local = false }
-  description = "Local=true indicates that the image is already available locally and don't need to pull from registry"
-}
-
 variable "docker_registry" {
   type    = list(object({ name = string, username = string, password = string }))
   default = []
