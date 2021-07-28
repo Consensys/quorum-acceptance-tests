@@ -92,6 +92,8 @@ public class TransactionService extends AbstractService {
             .flowable()
             .toObservable()
             .flatMap(r -> Observable.just(
+                // for PMTs: so that we don't have to duplicate all private tx tests for PMTs, we fetch the internal
+                // private tx receipt which can be used to get the contract address etc.
                 maybeGetPrivateTransactionReceipt(node, r).orElse(r)
             ));
     }
@@ -101,24 +103,10 @@ public class TransactionService extends AbstractService {
             return Optional.empty();
         }
 
-        TransactionReceipt receipt = publicReceiptResponse.getTransactionReceipt().get();
-
-        if (!precompiledContractService.isPrecompiledContract(receipt.getTo())) {
-            return Optional.empty();
-        }
-
-        final String privacyPrecompile = precompiledContractService.getPrivacyContractAddress(node);
-        if(Strings.isEmpty(privacyPrecompile) || !privacyPrecompile.equalsIgnoreCase(receipt.getTo())) {
-            return Optional.empty();
-        }
-
-        EthGetTransactionReceipt privateReceiptResponse = getPrivateTransactionReceipt(node, receipt.getTransactionHash()).blockingFirst();
-
-        if (privateReceiptResponse.getTransactionReceipt().isPresent()) {
-            return Optional.of(privateReceiptResponse);
-        } else {
-            return Optional.empty();
-        }
+        return QuorumTransactionManagerService.maybeGetPrivateTransactionReceipt(
+            connectionFactory().getWeb3jService(node),
+            publicReceiptResponse.getTransactionReceipt().get()
+        );
     }
 
     public Observable<EthGetTransactionReceipt> getPrivateTransactionReceipt(QuorumNetworkProperty.Node node, String transactionHash) {

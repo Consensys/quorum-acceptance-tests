@@ -22,6 +22,7 @@ package com.quorum.gauge.ext;
 import com.quorum.gauge.common.PrivacyFlag;
 import org.web3j.protocol.Web3jService;
 import org.web3j.protocol.core.JsonRpc2_0Web3j;
+import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.protocol.exceptions.TransactionException;
@@ -88,13 +89,19 @@ public class EnhancedClientTransactionManager extends ClientTransactionManager {
     @Override
     protected TransactionReceipt executeTransaction(BigInteger gasPrice, BigInteger gasLimit, String to, String data, BigInteger value) throws IOException, TransactionException {
         final TransactionReceipt receipt = super.executeTransaction(gasPrice, gasLimit, to, data, value);
-        return QuorumTransactionManagerService.maybeGetPrivateTransactionReceipt(web3j, receipt).orElse(receipt);
+
+        return QuorumTransactionManagerService.maybeGetPrivateTransactionReceipt(web3j, receipt)
+            .flatMap(EthGetTransactionReceipt::getTransactionReceipt)
+            .orElse(receipt);
     }
 
     @Override
     protected TransactionReceipt executeTransaction(BigInteger gasPrice, BigInteger gasLimit, String to, String data, BigInteger value, boolean constructor) throws IOException, TransactionException {
         final TransactionReceipt receipt = super.executeTransaction(gasPrice, gasLimit, to, data, value, constructor);
-        return QuorumTransactionManagerService.maybeGetPrivateTransactionReceipt(web3j, receipt).orElse(receipt);
+
+        return QuorumTransactionManagerService.maybeGetPrivateTransactionReceipt(web3j, receipt)
+            .flatMap(EthGetTransactionReceipt::getTransactionReceipt)
+            .orElse(receipt);
     }
 
     public static class EnhancedPrivateTransaction extends PrivateTransaction {
