@@ -20,6 +20,7 @@
 package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.common.RawDeployedContractTarget;
 import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.common.config.WalletData;
 import com.quorum.gauge.ext.OpenQuorumTransactionManager;
@@ -41,8 +42,10 @@ import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
+import org.web3j.crypto.RawTransaction;
 import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.Response;
 import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
@@ -543,6 +546,71 @@ public class RawContractService extends AbstractService {
         } catch (Exception e) {
             logger.error("readSimpleContractValue()", e);
             throw new RuntimeException(e);
+        }
+    }
+
+    public List<Observable<RawDeployedContractTarget>> createNRawSimplePrivateContract(int count, WalletData wallet, QuorumNode source, QuorumNode[] targetNodes) throws IOException, CipherException {
+        try {
+            Quorum client = connectionFactory().getConnection(source);
+            Credentials credentials = WalletUtils.loadCredentials(wallet.getWalletPass(), wallet.getWalletPath());
+            String fromAddress = credentials.getAddress();
+            BigInteger transactionCount = client.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST).flowable().toObservable().blockingFirst().getTransactionCount();
+            Enclave enclave = buildEnclave(source, client);
+            List<Observable<RawDeployedContractTarget>> allObservableContracts = new ArrayList<>();
+
+            int counter = 0;
+            for (QuorumNode targetNode :targetNodes) {
+                OpenQuorumTransactionManager oqrtxm = new OpenQuorumTransactionManager(
+                    client,
+                    credentials,
+                    credentials.getAddress(),
+                    Arrays.asList(privacyService.id(targetNode)),
+                    enclave
+                );
+                RawPrivateContract[] rawPrivateContracts = new RawPrivateContract[count];
+                for (int j = 0; j < count; j++) {
+                    int arbitraryValue = new Random().nextInt(50) + 1;
+                    String payload = base64SimpleStorageConstructorBytecode(arbitraryValue);
+                    SendResponse storeRawResponse = enclave.storeRawRequest(
+                        payload,
+                        privacyService.id(source),
+                        Collections.emptyList()
+                    );
+                    String tmHash = base64ToHex(storeRawResponse.getKey());
+                    RawTransaction tx = RawTransaction.createContractTransaction(
+                        transactionCount.add(BigInteger.valueOf(counter)),
+                        BigInteger.ZERO,
+                        DEFAULT_GAS_LIMIT,
+                        BigInteger.ZERO,
+                        tmHash
+                    );
+                    counter++;
+                    rawPrivateContracts[j] = new RawPrivateContract(oqrtxm.sign(tx), arbitraryValue, targetNode);
+                }
+                allObservableContracts.add(Observable.fromArray(rawPrivateContracts)
+                    .flatMap(raw -> sendRawPrivateTransaction(source, raw.rawTransaction, targetNode)
+                        .map(b -> transactionService.waitForTransactionReceipt(targetNode, b.getTransactionHash()))
+                        .map(receipt -> new RawDeployedContractTarget(raw.value, raw.node, receipt)).subscribeOn(Schedulers.io())));
+            }
+            return allObservableContracts;
+        } catch (IOException e) {
+            logger.error("RawTransaction - private", e);
+            throw e;
+        } catch (CipherException e) {
+            logger.error("RawTransaction - private - bad credentials", e);
+            throw e;
+        }
+    }
+
+    private static class RawPrivateContract {
+        String rawTransaction;
+        int value;
+        QuorumNode node;
+
+        public RawPrivateContract(String rawTransaction, int value, QuorumNode node) {
+            this.rawTransaction = rawTransaction;
+            this.value = value;
+            this.node = node;
         }
     }
 }
