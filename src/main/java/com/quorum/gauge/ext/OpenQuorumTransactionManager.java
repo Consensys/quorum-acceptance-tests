@@ -1,18 +1,11 @@
 package com.quorum.gauge.ext;
 
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.math.BigInteger;
-import java.util.Collection;
-import java.util.List;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.RawTransaction;
 import org.web3j.crypto.TransactionEncoder;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.Web3jService;
 import org.web3j.protocol.core.JsonRpc2_0Web3j;
-import org.web3j.protocol.core.Request;
-import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.protocol.exceptions.TransactionException;
@@ -27,6 +20,12 @@ import org.web3j.rlp.RlpString;
 import org.web3j.rlp.RlpType;
 import org.web3j.tx.RawTransactionManager;
 import org.web3j.utils.Numeric;
+
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.math.BigInteger;
+import java.util.Collection;
+import java.util.List;
 
 // the QuorumTransactionManager is implemented in Kotlin - so it is by default a final class
 // this is a copy of the "decompiled" version
@@ -130,31 +129,14 @@ public class OpenQuorumTransactionManager extends RawTransactionManager {
 
     @Override
     protected TransactionReceipt executeTransaction(BigInteger gasPrice, BigInteger gasLimit, String to, String data, BigInteger value) throws IOException, TransactionException {
-        TransactionReceipt receipt = super.executeTransaction(gasPrice, gasLimit, to, data, value);
-        if("0x000000000000000000000000000000000000007e".equalsIgnoreCase(receipt.getTo())) {
-            return handlePrivacyMarkerTransactionReceipt(receipt);
-        }
-        return receipt;
+        final TransactionReceipt receipt = super.executeTransaction(gasPrice, gasLimit, to, data, value);
+        return QuorumTransactionManagerService.maybeGetPrivateTransactionReceipt(web3jService, receipt).orElse(receipt);
     }
 
     @Override
     protected TransactionReceipt executeTransaction(BigInteger gasPrice, BigInteger gasLimit, String to, String data, BigInteger value, boolean constructor) throws IOException, TransactionException {
-        TransactionReceipt receipt = super.executeTransaction(gasPrice, gasLimit, to, data, value, constructor);
-        if("0x000000000000000000000000000000000000007e".equalsIgnoreCase(receipt.getTo())) {
-            return handlePrivacyMarkerTransactionReceipt(receipt);
-        }
-        return receipt;
-    }
-
-    private TransactionReceipt handlePrivacyMarkerTransactionReceipt(TransactionReceipt receipt) {
-        // fetch the private tx receipt, since we have a marker receipt
-        Request<?, EthGetTransactionReceipt> request = new Request<Object, EthGetTransactionReceipt>(
-            "eth_getPrivateTransactionReceipt",
-            List.of(receipt.getTransactionHash()),
-            web3jService,
-            EthGetTransactionReceipt.class
-        );
-        return request.flowable().toObservable().blockingFirst().getTransactionReceipt().orElse(receipt);
+        final TransactionReceipt receipt = super.executeTransaction(gasPrice, gasLimit, to, data, value, constructor);
+        return QuorumTransactionManagerService.maybeGetPrivateTransactionReceipt(web3jService, receipt).orElse(receipt);
     }
 
     public final Quorum getWeb3j() {

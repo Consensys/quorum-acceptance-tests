@@ -22,10 +22,7 @@ package com.quorum.gauge.services;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.common.RetryWithDelay;
-import com.quorum.gauge.ext.EthGetQuorumPayload;
-import com.quorum.gauge.ext.EthSignTransaction;
-import com.quorum.gauge.ext.ExtendedPrivateTransaction;
-import com.quorum.gauge.ext.StringResponse;
+import com.quorum.gauge.ext.*;
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 import org.slf4j.Logger;
@@ -67,6 +64,9 @@ public class TransactionService extends AbstractService {
     @Autowired
     PrivacyService privacyService;
 
+    @Autowired
+    PrecompiledContractService precompiledContractService;
+
     public TransactionReceipt waitForTransactionReceipt(QuorumNode node, String transactionHash) {
         Optional<TransactionReceipt> receipt = getTransactionReceipt(node, transactionHash)
             .map(ethGetTransactionReceipt -> {
@@ -91,26 +91,34 @@ public class TransactionService extends AbstractService {
         return client.ethGetTransactionReceipt(transactionHash)
             .flowable()
             .toObservable()
-            .flatMap(r -> {
-                if (r.getTransactionReceipt().isEmpty()) {
-                    return Observable.just(r);
-                }
+            .flatMap(r -> Observable.just(
+                maybeGetPrivateTransactionReceipt(node, r).orElse(r)
+            ));
+    }
 
-                String privacyPrecompileAddress = privacyService.getPrivacyPrecompileAddress(node).blockingFirst().getResult();
+    private Optional<EthGetTransactionReceipt> maybeGetPrivateTransactionReceipt(QuorumNetworkProperty.Node node, EthGetTransactionReceipt publicReceiptResponse) {
+        if (publicReceiptResponse.getTransactionReceipt().isEmpty()) {
+            return Optional.empty();
+        }
 
-                // privacyPrecompileAddress is null for older quorum versions which do not support it
-                if (!Strings.isEmpty(privacyPrecompileAddress)) {
-                    TransactionReceipt q = r.getTransactionReceipt().get();
-                    if (privacyPrecompileAddress.equalsIgnoreCase(q.getTo())) {
-                        // fetch the private tx receipt, since we have a marker receipt
-                        EthGetTransactionReceipt privateTxReceipt = getPrivateTransactionReceipt(node, transactionHash).blockingFirst();
-                        if (privateTxReceipt.getTransactionReceipt().isPresent()) {
-                            return Observable.just(privateTxReceipt);
-                        }
-                    }
-                }
-                return Observable.just(r);
-            });
+        TransactionReceipt receipt = publicReceiptResponse.getTransactionReceipt().get();
+
+        if (!precompiledContractService.isPrecompiledContract(receipt.getTo())) {
+            return Optional.empty();
+        }
+
+        final String privacyPrecompile = precompiledContractService.getPrivacyContractAddress(node);
+        if(Strings.isEmpty(privacyPrecompile) || !privacyPrecompile.equalsIgnoreCase(receipt.getTo())) {
+            return Optional.empty();
+        }
+
+        EthGetTransactionReceipt privateReceiptResponse = getPrivateTransactionReceipt(node, receipt.getTransactionHash()).blockingFirst();
+
+        if (privateReceiptResponse.getTransactionReceipt().isPresent()) {
+            return Optional.of(privateReceiptResponse);
+        } else {
+            return Optional.empty();
+        }
     }
 
     public Observable<EthGetTransactionReceipt> getPrivateTransactionReceipt(QuorumNetworkProperty.Node node, String transactionHash) {
