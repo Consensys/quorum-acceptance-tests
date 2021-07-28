@@ -55,6 +55,9 @@ locals {
     } },
     var.override_vnodes
   )
+
+  key_data       = var.hybrid_network ? var.hybrid_key_data : quorum_transaction_manager_keypair.tm.*.key_data
+  public_key_b64 = var.hybrid_network ? var.hybrid_public_key_b64 : quorum_transaction_manager_keypair.tm.*.public_key_b64
 }
 
 resource "random_string" "network-name" {
@@ -94,7 +97,7 @@ quorum:
 %{endif~}
       privacy-address-aliases:
 %{for k in b.tmKeys~}
-        ${k}: ${element(quorum_transaction_manager_keypair.tm.*.public_key_b64, index(local.tm_named_keys_all, k))}
+        ${k}: ${element(local.public_key_b64, index(local.tm_named_keys_all, k))}
 %{endfor~}
       account-aliases:
 %{for k, name in b.ethKeys~}

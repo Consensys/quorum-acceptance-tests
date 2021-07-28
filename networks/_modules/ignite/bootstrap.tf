@@ -43,7 +43,7 @@ data "null_data_source" "meta" {
   count = local.number_of_nodes
   inputs = {
     idx             = count.index
-    tmKeys          = join(",", [for k in local.tm_named_keys_alloc[count.index] : element(quorum_transaction_manager_keypair.tm.*.key_data, index(local.tm_named_keys_all, k))])
+    tmKeys          = join(",", [for k in local.tm_named_keys_alloc[count.index] : element(local.key_data, index(local.tm_named_keys_all, k))])
     nodeUrl         = format("http://%s:%d", var.geth_networking[count.index].ip.public, var.geth_networking[count.index].port.http.external)
     tmThirdpartyUrl = format("http://%s:%d", var.tm_networking[count.index].ip.public, var.tm_networking[count.index].port.thirdparty.external)
     graphqlUrl      = var.geth_networking[count.index].graphql ? format("http://%s:%d/graphql", var.geth_networking[count.index].ip.public, var.geth_networking[count.index].port.http.external) : ""
@@ -88,7 +88,7 @@ resource "quorum_transaction_manager_keypair" "tm" {
 resource "local_file" "tm" {
   count    = length(local.tm_named_keys_all)
   filename = format("%s/%s", local.tmkeys_generated_dir, element(local.tm_named_keys_all, count.index))
-  content  = quorum_transaction_manager_keypair.tm[count.index].key_data
+  content  = local.key_data[count.index]
 }
 
 data "quorum_bootstrap_genesis_mixhash" "this" {
@@ -220,7 +220,7 @@ resource "local_file" "tmconfigs-template-generator" {
     "peer": [${join(",", formatlist("{\"url\" : \"http://%s:%d\"}", var.tm_networking[*].ip.private, var.tm_networking[*].port.p2p))}],
     "keys": {
       "passwords": [],
-      "keyData": [${data.null_data_source.meta[count.index].inputs.tmKeys}]
+      "keyData": [${var.hybrid_network? var.hybrid_tmkeys[count.index] : data.null_data_source.meta[count.index].inputs.tmKeys}]
     },
     "features" : {
 %{if local.vnodes[count.index].mpsEnabled}
@@ -238,7 +238,7 @@ resource "local_file" "tmconfigs-template-generator" {
               "name": "${node.name}",
               "description":"${node.name}",
               "members":[
-                ${join(",", formatlist("\"%s\"", [for idx, keyName in node.tmKeys : element(quorum_transaction_manager_keypair.tm.*.public_key_b64, index(local.tm_named_keys_all, keyName))]))}
+                ${join(",", formatlist("\"%s\"", [for idx, keyName in node.tmKeys : element(local.public_key_b64, index(local.tm_named_keys_all, keyName))]))}
               ]
           },
         %{endfor~}
@@ -263,7 +263,7 @@ resource "local_file" "tmconfigs-generator" {
     local_file.tmconfigs-template-generator[count.index].filename,
     merge(
       // named key variable to the actual value
-      { for k in local.tm_named_keys_alloc[count.index] : k => element(quorum_transaction_manager_keypair.tm.*.public_key_b64, index(local.tm_named_keys_all, k)) },
+      { for k in local.tm_named_keys_alloc[count.index] : k => element(local.public_key_b64, index(local.tm_named_keys_all, k)) },
       // additional variable defines here
       {},
     )

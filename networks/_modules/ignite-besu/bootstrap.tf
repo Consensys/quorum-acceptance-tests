@@ -18,7 +18,7 @@ data "null_data_source" "meta" {
   count = local.number_of_nodes
   inputs = {
     idx             = count.index
-    tmKeys          = join(",", [for k in local.tm_named_keys_alloc[count.index] : element(quorum_transaction_manager_keypair.tm.*.key_data, index(local.tm_named_keys_all, k))])
+    tmKeys          = join(",", [for k in local.tm_named_keys_alloc[count.index] : element(local.key_data, index(local.tm_named_keys_all, k))])
     nodeUrl         = format("http://%s:%d", var.ethsigner_networking[count.index].ip.public, var.ethsigner_networking[count.index].port.external)
     tmThirdpartyUrl = format("http://%s:%d", var.tm_networking[count.index].ip.public, var.tm_networking[count.index].port.thirdparty.external)
     graphqlUrl      = format("http://%s:%d/graphql", var.besu_networking[count.index].ip.public, var.besu_networking[count.index].port.graphql.external)
@@ -69,13 +69,13 @@ resource "quorum_transaction_manager_keypair" "tm" {
 resource "local_file" "tm" {
   count    = length(local.tm_named_keys_all)
   filename = format("%s/%s", local.tmkeys_generated_dir, element(local.tm_named_keys_all, count.index))
-  content  = quorum_transaction_manager_keypair.tm[count.index].key_data
+  content  = local.key_data[count.index]
 }
 
 resource "local_file" "tm_publickey" {
   count    = length(local.tm_named_keys_all)
   filename = format("%s/tmkey.pub", local.besu_dirs[count.index])
-  content  = quorum_transaction_manager_keypair.tm[count.index].public_key_b64
+  content  = local.public_key_b64[count.index]
 }
 
 data "quorum_bootstrap_genesis_mixhash" "this" {
@@ -272,7 +272,7 @@ resource "local_file" "tmconfigs-generator" {
     "peer": [${join(",", formatlist("{\"url\" : \"http://%s:%d\"}", var.tm_networking[*].ip.private, var.tm_networking[*].port.p2p))}],
     "keys": {
       "passwords": [],
-      "keyData": [${data.null_data_source.meta[count.index].inputs.tmKeys}]
+      "keyData": [${var.hybrid_network ? var.hybrid_tmkeys[local.number_of_nodes + count.index] : data.null_data_source.meta[count.index].inputs.tmKeys}]
     },
     "alwaysSendTo": [],
     "features" : {

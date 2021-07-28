@@ -7,7 +7,7 @@ locals {
   container_besu_datadir_mounted      = "/opt/besu/mount"
   container_tm_datadir_mounted        = "/data/tm-mount"
   container_ethsigner_datadir_mounted = "/data/ethsigner"
-  container_tm_q2t_urls = [for idx in local.node_indices :
+  container_tm_q2t_urls = [for idx in local.tessera_node_indices :
   "http://${var.tm_networking[idx].ip.private}:${var.tm_networking[idx].port.q2t.internal}"]
 
   node_indices             = range(local.number_of_nodes) // 0-based node index

@@ -20,6 +20,7 @@ locals {
   keystore_password         = "besito1"
   genesis_file              = "genesis.json"
   number_of_nodes           = max(length(var.besu_networking), length(var.ethsigner_networking))
+  number_of_quorum_nodes    = var.number_of_quorum_nodes
   node_indices              = range(local.number_of_nodes)
   // 0-based node index
   // by default we allocate one named key per TM: K0, K1 ... Kn
@@ -34,6 +35,9 @@ locals {
   node_initial_paticipants = { for id in local.node_indices : id => "true" }
   istanbul_validators      = { for id in local.node_indices : id => "true" }
   hybrid_network           = var.hybrid_network
+
+  key_data       = var.hybrid_network ? var.hybrid_key_data : quorum_transaction_manager_keypair.tm.*.key_data
+  public_key_b64 = var.hybrid_network ? var.hybrid_public_key_b64 : quorum_transaction_manager_keypair.tm.*.public_key_b64
 }
 
 resource "random_string" "network-name" {
@@ -60,7 +64,7 @@ quorum:
 %{endfor~}
       privacy-address-aliases:
 %{for k in local.tm_named_keys_alloc[i]~}
-        ${k}: ${element(quorum_transaction_manager_keypair.tm.*.public_key_b64, index(local.tm_named_keys_all, k))}
+        ${k}: ${element(local.public_key_b64, index(local.tm_named_keys_all, k))}
 %{endfor~}
       url: ${data.null_data_source.meta[i].inputs.nodeUrl}
       third-party-url: ${data.null_data_source.meta[i].inputs.tmThirdpartyUrl}

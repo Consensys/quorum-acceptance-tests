@@ -48,7 +48,8 @@ locals {
     var.override_tm_named_key_allocation
   )
 
-  tm_named_keys_all = flatten(values(local.tm_named_keys_alloc))
+  tmkeys_generated_dir = "${local.generated_dir}/${local.network_name}/tmkeys"
+  tm_named_keys_all    = flatten(values(local.tm_named_keys_alloc))
 
   keystore_files = [for idx in local.besu_node_indices : format("%s/%s", local.keystore_folder, regex("UTC.+$", quorum_bootstrap_keystore.besu-accountkeys-generator[idx].account[0].account_url))]
 
@@ -171,6 +172,9 @@ module "network" {
   hybrid_network_id             = random_integer.hybrid_network_id.result
   hybrid_account_alloc          = concat(local.besu_alloc, local.quorum_alloc)
   hybrid_configuration_filename = local_file.configuration.filename
+  hybrid_key_data               = slice(quorum_transaction_manager_keypair.tm.*.key_data, 0, local.number_of_quorum_nodes)
+  hybrid_public_key_b64         = slice(quorum_transaction_manager_keypair.tm.*.public_key_b64, 0, local.number_of_quorum_nodes)
+  hybrid_tmkeys                 = slice(data.null_data_source.meta[*].inputs.tmKeys, 0, local.number_of_quorum_nodes)
   permission_qip714Block        = { block = 0, enabled = false }
 }
 
@@ -190,6 +194,10 @@ module "network-besu" {
   hybrid_account_alloc          = concat(local.besu_alloc, local.quorum_alloc)
   hybrid_node_key               = quorum_bootstrap_node_key.besu-nodekeys-generator[*].node_key_hex
   hybrid_configuration_filename = local_file.configuration.filename
+  hybrid_key_data               = slice(quorum_transaction_manager_keypair.tm.*.key_data, local.number_of_quorum_nodes, local.number_of_tessera_nodes)
+  hybrid_public_key_b64         = slice(quorum_transaction_manager_keypair.tm.*.public_key_b64, local.number_of_quorum_nodes, local.number_of_tessera_nodes)
+  hybrid_tmkeys                 = data.null_data_source.meta[*].inputs.tmKeys
+  number_of_quorum_nodes        = local.number_of_quorum_nodes
 }
 
 module "docker" {

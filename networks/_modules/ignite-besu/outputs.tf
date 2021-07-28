@@ -15,7 +15,7 @@ output "besu_dirs" {
 }
 
 output "tm_dirs" {
-  value = [for id in local.node_indices : format("%s/%s%s", quorum_bootstrap_network.this.network_dir_abs, local.tm_dir_prefix, id)]
+  value = [for id in local.node_indices : format("%s/%s%s", quorum_bootstrap_network.this.network_dir_abs, local.tm_dir_prefix, id + local.number_of_quorum_nodes)]
 }
 
 output "ethsigner_dirs" {

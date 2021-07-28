@@ -85,3 +85,23 @@ variable "hybrid_configuration_filename" {
   default = ""
   description = "Configuration filename for hybrid network"
 }
+
+variable "hybrid_tmkeys" {
+  default = []
+  description = "tmkeys to be used for hybrid network"
+}
+
+variable "hybrid_public_key_b64" {
+  default = []
+  description = "tessera public key in base64 encoding for hybrid network"
+}
+
+variable "hybrid_key_data" {
+  default = []
+  description = "tessera key data for hybrid network"
+}
+
+variable "number_of_quorum_nodes" {
+  default = 0
+  description = "Number of quorum nodes in the hybrid network"
+}
