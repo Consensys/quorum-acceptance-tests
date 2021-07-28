@@ -33,6 +33,7 @@ import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.AbiTypes;
 import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.Utf8String;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.protocol.exceptions.TransactionException;
 import org.web3j.tx.Contract;
 
@@ -40,6 +41,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -73,6 +75,7 @@ public class RevertReason extends AbstractSpecImplementation {
     public void deployIncreasingSimpleStorage(int value, String node, String nodes) {
         Contract contract = increasingSimpleStorageContractService.createIncreasingSimpleStorageContract(value, node, parseNodes(nodes)).blockingFirst();
         DataStoreFactory.getScenarioDataStore().put("contractAddress", contract.getContractAddress());
+        DataStoreFactory.getScenarioDataStore().put("transactionHash", contract.getTransactionReceipt().get().getTransactionHash());
     }
 
     @Step("Set value <value> from <node>")
@@ -83,7 +86,8 @@ public class RevertReason extends AbstractSpecImplementation {
     @Step("Set value <value> from <node> and private for <nodes>")
     public void setValueOnContract(int value, String node, String nodes) throws TransactionException {
         String contractAddress = DataStoreFactory.getScenarioDataStore().get("contractAddress").toString();
-        increasingSimpleStorageContractService.setValue(contractAddress, value, node, parseNodes(nodes)).blockingFirst();
+        TransactionReceipt transactionReceipt = increasingSimpleStorageContractService.setValue(contractAddress, value, node, parseNodes(nodes)).blockingFirst();
+        DataStoreFactory.getScenarioDataStore().put("transactionHash", transactionReceipt.getTransactionHash());
     }
 
     @Step("Set value <value> from <node> fails with reason <reasonText>")
@@ -108,6 +112,11 @@ public class RevertReason extends AbstractSpecImplementation {
     @Step("Get value from <node> matches <value>")
     public void validateValueOnContract(String node, int value) {
         String contractAddress = DataStoreFactory.getScenarioDataStore().get("contractAddress").toString();
+        String transactionHash = DataStoreFactory.getScenarioDataStore().get("transactionHash").toString();
+
+        Optional<TransactionReceipt> transactionReceipt = transactionService.pollTransactionReceipt(networkProperty.getNode(node), transactionHash);
+        assertThat(transactionReceipt).as("check %s has receipt for transaction %s", node, transactionHash).isPresent();
+
         BigInteger savedValue = increasingSimpleStorageContractService.getValue(contractAddress, node).blockingFirst();
         assertThat(savedValue.intValue()).isEqualTo(value);
     }
