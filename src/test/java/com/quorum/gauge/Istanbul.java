@@ -46,39 +46,40 @@ public class Istanbul extends AbstractSpecImplementation {
     @Autowired
     IstanbulService istanbulService;
 
-    @Step({"The consensus should work at the beginning", "The consensus should work after resuming", "The consensus should work after stopping 2F validators"})
+    @Step({"The consensus should work at the beginning", "The consensus should work after resuming", "The consensus should work after stopping F validators"})
     public void verifyConsensus() {
         int diff = 3;
         // wait for blockheight increases by 3 from the current one
         waitForBlockHeight(currentBlockNumber().intValue(), currentBlockNumber().intValue() + diff);
     }
 
-    @Step("Among all validators, stop some validators so there are less than 2F + 1 validators in the network")
-    public void stopValidators() {
+    @Step("Among all validators, stop F validators")
+    public void stopFValidators() {
         int totalNodesLive = utilService.getNumberOfNodes(QuorumNode.Node1) + 1;
         int totalNodesConfigured = numberOfQuorumNodes();
-        int numOfValidatorsToStop = Math.round((totalNodesLive - 1) / 2.0f);
+        int numOfValidatorsToStop = Math.round((totalNodesLive -1) / 3.0f);
+
         // we only can stop validators that are configured
         assertThat(numOfValidatorsToStop).describedAs("Not enough configured validators to perform STOP operation").isLessThanOrEqualTo(totalNodesConfigured);
 
         Gauge.writeMessage(String.format("Stopping %d validators from total of %d validators", numOfValidatorsToStop, totalNodesLive));
 
-        final QuorumNode[] quorumNodes = networkProperty.getNodes().keySet().stream().map(QuorumNode::valueOf).toArray(QuorumNode[]::new);
-        List<QuorumNode> nodes = Observable.fromArray(quorumNodes).take(totalNodesConfigured).toList().blockingGet();
+        List<QuorumNode> nodes = Observable.fromArray(QuorumNode.values()).take(totalNodesConfigured).toList().blockingGet();
         Collections.shuffle(nodes);
         List<QuorumNode> stoppedNodes = nodes.subList(0, numOfValidatorsToStop);
         Observable.fromIterable(stoppedNodes)
-                .flatMap(istanbulService::stopMining)
-                .blockingSubscribe();
+            .flatMap(istanbulService::stopMining)
+            .blockingSubscribe();
 
         DataStoreFactory.getScenarioDataStore().put("stoppedNodes", stoppedNodes);
     }
 
-    @Step("Among all validators, stop some validators so there are 2F validators in the network")
-    public void stop2FValidators() {
+    @Step("Among all validators, stop F+1 validators")
+    public void stopMoreThanFValidators() {
         int totalNodesLive = utilService.getNumberOfNodes(QuorumNode.Node1) + 1;
         int totalNodesConfigured = numberOfQuorumNodes();
-        int numOfValidatorsToStop = Math.round((totalNodesLive) / 2.0f);
+        int numOfValidatorsToStop = Math.round((totalNodesLive -1) / 3.0f) + 1;
+
         // we only can stop validators that are configured
         assertThat(numOfValidatorsToStop).describedAs("Not enough configured validators to perform STOP operation").isLessThanOrEqualTo(totalNodesConfigured);
 
