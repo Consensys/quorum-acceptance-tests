@@ -112,6 +112,10 @@ public class RevertReason extends AbstractSpecImplementation {
     @Step("Get value from <node> matches <value>")
     public void validateValueOnContract(String node, int value) {
         String contractAddress = DataStoreFactory.getScenarioDataStore().get("contractAddress").toString();
+
+        // if a transactionHash has been stored then wait until node has executed it
+        // TODO this is a temporary fix for particularly flaky tests where state is being read before it has been
+        // updated - we should probably rework all tests to check that the state is ready before getting
         String transactionHash = DataStoreFactory.getScenarioDataStore().get("transactionHash").toString();
 
         Optional<TransactionReceipt> transactionReceipt = transactionService.pollTransactionReceipt(networkProperty.getNode(node), transactionHash);

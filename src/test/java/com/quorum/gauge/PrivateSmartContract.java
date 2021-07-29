@@ -79,6 +79,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
+        DataStoreFactory.getScenarioDataStore().put("transactionHash", contract.getTransactionReceipt().get().getTransactionHash());
     }
 
     @Step("Deploying a <privacyFlags> simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target> fails with message <failureMessage>")

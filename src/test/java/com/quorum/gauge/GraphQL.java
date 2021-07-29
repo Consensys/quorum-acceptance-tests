@@ -32,6 +32,7 @@ import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 
 import java.math.BigInteger;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -53,6 +54,16 @@ public class GraphQL extends AbstractSpecImplementation {
     public void GetIsPrivate(String contractName, QuorumNode node, Boolean expected) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         TransactionReceipt receipt = c.getTransactionReceipt().orElseThrow(() -> new RuntimeException("no transaction receipt for contract"));
+
+        // if a transactionHash has been stored then wait until node has executed it
+        // TODO this is a temporary fix for particularly flaky tests where state is being read before it has been
+        // updated - we should probably rework all tests to check that the state is ready before getting
+        Optional<String> transactionHash = Optional.ofNullable(DataStoreFactory.getScenarioDataStore().get("transactionHash"))
+            .map(Object::toString);
+        if (transactionHash.isPresent()) {
+            Optional<TransactionReceipt> transactionReceipt = transactionService.pollTransactionReceipt(networkProperty.getNode(node.name()), transactionHash.get());
+            assertThat(transactionReceipt).as("check %s has receipt for transaction %s", node, transactionHash).isPresent();
+        }
 
         boolean got = graphQLService.getIsPrivate(node, receipt.getTransactionHash()).blockingGet();
         assertThat(got).isEqualTo(expected);
