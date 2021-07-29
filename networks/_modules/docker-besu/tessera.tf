@@ -32,7 +32,7 @@ resource "docker_container" "tessera" {
     host_path      = var.tessera_datadirs[count.index]
   }
   networks_advanced {
-    name         = local.docker_network_name
+    name         = var.hybrid_network ? local.docker_network_name : docker_network.besu[0].name
     ipv4_address = var.tm_networking[local.tessera_node_indices[count.index]].ip.private
     aliases      = [format("tm%d", local.tessera_node_indices[count.index])]
   }

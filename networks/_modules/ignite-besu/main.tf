@@ -38,6 +38,8 @@ locals {
 
   key_data       = var.hybrid_network ? var.hybrid_key_data : quorum_transaction_manager_keypair.tm.*.key_data
   public_key_b64 = var.hybrid_network ? var.hybrid_public_key_b64 : quorum_transaction_manager_keypair.tm.*.public_key_b64
+
+  total_node_indices     = var.hybrid_network ? [for id in range(local.number_of_nodes) : sum([id, local.number_of_quorum_nodes])] : range(local.number_of_nodes)
 }
 
 resource "random_string" "network-name" {

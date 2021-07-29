@@ -11,7 +11,7 @@ locals {
   besu_dirs      = [for idx in local.node_indices : format("%s/%s%s", quorum_bootstrap_network.this.network_dir_abs, local.node_dir_prefix, idx)]
   ethsigner_dirs = [for idx in local.node_indices : format("%s/%s%s", quorum_bootstrap_network.this.network_dir_abs, local.ethsigner_dir_prefix, idx)]
 
-  chainId = random_integer.network_id.result
+  chainId    = local.hybrid_network ? var.hybrid_network_id : random_integer.network_id.result
 }
 
 data "null_data_source" "meta" {
@@ -93,7 +93,7 @@ resource "local_file" "genesis-file" {
 {
   "coinbase": "0x0000000000000000000000000000000000000000",
   "config" : {
-    "chainId" : ${var.hybrid_network ? var.hybrid_network_id : local.chainId},
+    "chainId" : ${local.chainId},
       "homesteadBlock": 0,
       "byzantiumBlock": 0,
       "constantinopleBlock":0,
@@ -130,7 +130,7 @@ resource "local_file" "genesis-file" {
   "nonce" : "0x0",
   "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
   "timestamp": "0x00",
-%{if var.hybrid_network~}
+%{if local.hybrid_network~}
   "alloc": {
     ${join(",", var.hybrid_account_alloc)}
   }
@@ -166,13 +166,13 @@ EOF
 resource "local_file" "node-key" {
   count    = local.number_of_nodes
   filename = format("%s/key", local.besu_dirs[count.index])
-  content  = var.hybrid_network ? var.hybrid_node_key[count.index] : quorum_bootstrap_node_key.nodekeys-generator[count.index].node_key_hex
+  content  = local.hybrid_network ? var.hybrid_node_key[count.index] : quorum_bootstrap_node_key.nodekeys-generator[count.index].node_key_hex
 }
 
 resource "local_file" "static-nodes" {
   count    = local.number_of_nodes
   filename = format("%s/static-nodes.json", local.besu_dirs[count.index])
-  content  = var.hybrid_network == true ? "[${join(",", var.hybrid_enodeurls)}]" : "[${join(",", local.network.enode_urls)}]"
+  content  = local.hybrid_network == true ? "[${join(",", var.hybrid_enodeurls)}]" : "[${join(",", local.network.enode_urls)}]"
 }
 
 resource "local_file" "permissioned-nodes" {
@@ -223,7 +223,7 @@ EOF
 
 resource "local_file" "tmconfigs-generator" {
   count    = local.number_of_nodes
-  filename = format("%s/%s%s/config.json", quorum_bootstrap_network.this.network_dir_abs, local.tm_dir_prefix, local.hybrid_network ? local.number_of_nodes + count.index : count.index)
+  filename = format("%s/%s%s/config.json", quorum_bootstrap_network.this.network_dir_abs, local.tm_dir_prefix, local.total_node_indices[count.index])
   content  = <<-JSON
 {
     "useWhiteList": false,
@@ -237,7 +237,7 @@ resource "local_file" "tmconfigs-generator" {
         {
             "app":"ThirdParty",
             "enabled": true,
-            "serverAddress": "http://${var.tm_networking[local.hybrid_network ? local.number_of_nodes + count.index : count.index].ip.private}:${var.tm_networking[local.hybrid_network ? local.number_of_nodes + count.index : count.index].port.thirdparty.internal}",
+            "serverAddress": "http://${var.tm_networking[local.total_node_indices[count.index]].ip.private}:${var.tm_networking[local.total_node_indices[count.index]].port.thirdparty.internal}",
             "communicationType" : "REST"
         },
         {
@@ -249,7 +249,7 @@ resource "local_file" "tmconfigs-generator" {
         {
             "app":"P2P",
             "enabled": true,
-            "serverAddress":"http://${var.tm_networking[local.hybrid_network ? local.number_of_nodes + count.index : count.index].ip.private}:${var.tm_networking[local.hybrid_network ? local.number_of_nodes + count.index : count.index].port.p2p}",
+            "serverAddress":"http://${var.tm_networking[local.total_node_indices[count.index]].ip.private}:${var.tm_networking[local.total_node_indices[count.index]].port.p2p}",
             "sslConfig": {
               "tls": "OFF",
               "generateKeyStoreIfNotExisted": true,
@@ -272,7 +272,7 @@ resource "local_file" "tmconfigs-generator" {
     "peer": [${join(",", formatlist("{\"url\" : \"http://%s:%d\"}", var.tm_networking[*].ip.private, var.tm_networking[*].port.p2p))}],
     "keys": {
       "passwords": [],
-      "keyData": [${var.hybrid_network ? var.hybrid_tmkeys[local.number_of_nodes + count.index] : data.null_data_source.meta[count.index].inputs.tmKeys}]
+      "keyData": [${local.hybrid_network ? var.hybrid_tmkeys[local.number_of_quorum_nodes + count.index] : data.null_data_source.meta[count.index].inputs.tmKeys}]
     },
     "alwaysSendTo": [],
     "features" : {

@@ -31,7 +31,7 @@ output "network_name" {
 }
 
 output "application_yml_file" {
-  value = local.hybrid_network ? var.hybrid_configuration_filename : local_file.configuration[1].filename
+  value = local.hybrid_network ? var.hybrid_configuration_filename : local_file.configuration[0].filename
 }
 
 output "accounts_count" {

@@ -19,7 +19,7 @@ locals {
 
 resource "docker_network" "besu" {
   count = var.hybrid_network ? 0 : 1
-  name  = local.docker_network_name
+  name  = format("%s-net", var.network_name)
   ipam_config {
     subnet = var.network_cidr
   }
@@ -27,5 +27,5 @@ resource "docker_network" "besu" {
 
 resource "docker_volume" "shared_volume" {
   count = local.number_of_nodes
-  name  = format("%s-vol%d", var.network_name, var.hybrid_network ? local.number_of_nodes + count.index : count.index)
+  name  = format("%s-vol%d", var.network_name, local.tessera_node_indices[count.index])
 }

@@ -13,8 +13,8 @@ locals {
   privacyEnhancementsBlock_config = var.privacy_enhancements.enabled ? { privacyEnhancementsBlock = var.privacy_enhancements.block } : {}
 
   istanbul_config       = var.consensus == "istanbul" || var.consensus == "qbft" ? { istanbul = { epoch = 30000, policy = 0, ceil2Nby3Block = 0 } } : {}
-  istanbul_config_qbft  = (var.consensus == "istanbul" || var.consensus == "qbft") && var.qbftBlock.enabled ? { istanbul = { epoch = 30000, policy = 0, testQBFTBlock = var.qbftBlock.block, ceil2Nby3Block = 0 } } : {}
-  final_istanbul_config = merge(local.istanbul_config, local.istanbul_config_qbft)
+  qbft_config  = (var.consensus == "istanbul" || var.consensus == "qbft") && var.qbftBlock.enabled ? { istanbul = { epoch = 30000, policy = 0, testQBFTBlock = var.qbftBlock.block, ceil2Nby3Block = 0 } } : {}
+  qbft_istanbul_config = merge(local.istanbul_config, local.qbft_config)
 
   chain_configs = [for idx in local.node_indices : merge(
     {
@@ -36,7 +36,7 @@ locals {
           size  = 80
         }
       ]
-  }, local.qip714Block_config, local.privacyEnhancementsBlock_config, local.final_istanbul_config, lookup(var.additional_genesis_config, idx, {}))]
+  }, local.qip714Block_config, local.privacyEnhancementsBlock_config, local.qbft_istanbul_config, lookup(var.additional_genesis_config, idx, {}))]
 }
 
 data "null_data_source" "meta" {
