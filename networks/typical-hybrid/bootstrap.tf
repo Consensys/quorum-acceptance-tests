@@ -96,7 +96,7 @@ data "null_data_source" "meta" {
     idx             = count.index
     tmKeys          = join(",", [for k in local.tm_named_keys_alloc[count.index] : element(quorum_transaction_manager_keypair.tm.*.key_data, index(local.tm_named_keys_all, k))])
     tmThirdpartyUrl = format("http://%s:%d", local.tm_networking[count.index].ip.public, local.tm_networking[count.index].port.thirdparty.external)
-    nodeUrl         = count.index < local.number_of_quorum_nodes ? format("http://%s:%d", local.geth_networking[count.index].ip.public, local.geth_networking[count.index].port.http.external) : format("http://%s:%d", local.besu_networking[count.index - local.number_of_quorum_nodes].ip.public, local.besu_networking[count.index - local.number_of_quorum_nodes].port.http.external)
+    nodeUrl         = count.index < local.number_of_quorum_nodes ? format("http://%s:%d", local.geth_networking[count.index].ip.public, local.geth_networking[count.index].port.http.external) : format("http://%s:%d", local.ethsigner_networking[count.index - local.number_of_quorum_nodes].ip.public, local.ethsigner_networking[count.index - local.number_of_quorum_nodes].port.external)
     graphqlUrl      = count.index < local.number_of_quorum_nodes ? (local.geth_networking[count.index].graphql ? format("http://%s:%d/graphql", local.geth_networking[count.index].ip.public, local.geth_networking[count.index].port.http.external) : "") : (format("http://%s:%d/graphql", local.besu_networking[count.index - local.number_of_quorum_nodes].ip.public, local.besu_networking[count.index - local.number_of_quorum_nodes].port.graphql.external))
   }
 }
