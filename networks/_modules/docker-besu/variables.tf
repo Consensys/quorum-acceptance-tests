@@ -27,7 +27,7 @@ variable "keystore_files" {
 }
 
 variable "keystore_password_file" {
-  type        = string
+  type = string
 }
 
 variable "node_keys_hex" {
@@ -39,12 +39,12 @@ variable "besu_networking" {
   type = list(object({
     image = object({ name = string, local = bool })
     port = object({
-      http = object({ internal = number, external = number })
-      ws = object({ internal = number, external = number })
+      http    = object({ internal = number, external = number })
+      ws      = object({ internal = number, external = number })
       graphql = object({ internal = number, external = number })
-      p2p = number
+      p2p     = number
     })
-    ip      = object({ private = string, public = string })
+    ip = object({ private = string, public = string })
   }))
   description = "Networking configuration for `besu` nodes in the network. Number of items must match `besu_networking`"
 }
@@ -53,7 +53,7 @@ variable "ethsigner_networking" {
   type = list(object({
     image = object({ name = string, local = bool })
     port  = object({ internal = number, external = number })
-    ip      = object({ private = string, public = string })
+    ip    = object({ private = string, public = string })
   }))
   description = "Networking configuration for `ethsigner` nodes in the network. Number of items must match `ethsigner_networking`"
 }
@@ -63,7 +63,7 @@ variable "tm_networking" {
     image = object({ name = string, local = bool })
     port = object({
       thirdparty = object({ internal = number, external = number })
-      q2t = object({ internal = number, external = number })
+      q2t        = object({ internal = number, external = number })
       p2p        = number
     })
     ip = object({
@@ -92,4 +92,15 @@ variable "tessera_app_container_path" {
 }
 
 variable "accounts_count" {
+}
+
+variable "hybrid_network" {
+  type        = bool
+  default     = false
+  description = "true if it a besu-quorum hybrid network"
+}
+
+variable "number_of_quorum_nodes" {
+  default = 0
+  description = "Number of quorum nodes in the hybrid network"
 }

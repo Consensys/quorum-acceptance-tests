@@ -1,4 +1,5 @@
 consensus = "istanbul"
+qbftBlock = { block = 0, enabled = true }
 isMPS     = true
 
 # this is to setup the TM keys allocation per acceptance tests requirement

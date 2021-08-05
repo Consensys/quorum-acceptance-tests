@@ -1,5 +1,6 @@
 variable "number_of_nodes" {
   description = "Number of nodes in the network"
+  default     = 0
 }
 
 variable "consensus" {
@@ -56,19 +57,19 @@ variable "besu" {
   type = object({
     container = object({
       image = object({ name = string, local = bool })
-      port  = object({ http = number, ws = number,graphql = number, p2p = number })
+      port  = object({ http = number, ws = number, graphql = number, p2p = number })
     })
     host = object({
-      port = object({ http_start = number,ws_start = number,graphql_start = number })
+      port = object({ http_start = number, ws_start = number, graphql_start = number })
     })
   })
   default = {
     container = {
       image = { name = "hyperledger/besu:develop", local = false }
-      port  = { http = 8545, ws= 8546, graphql= 8547, p2p= 30303 }
+      port  = { http = 8545, ws = 8546, graphql = 8547, p2p = 21000 }
     }
     host = {
-      port = { http_start = 23000 , ws_start= 23100, graphql_start= 23200 }
+      port = { http_start = 23000, ws_start = 23100, graphql_start = 23200 }
     }
   }
   description = "besu Docker container configuration "
@@ -94,4 +95,20 @@ variable "ethsigner" {
     }
   }
   description = "ethsigner Docker container configuration "
+}
+
+variable "number_of_quorum_nodes" {
+  description = "Number of quorum nodes in the network"
+  default     = 0
+}
+
+variable "number_of_besu_nodes" {
+  description = "Number of besu nodes in the network"
+  default     = 0
+}
+
+variable "hybrid-network" {
+  type        = bool
+  default     = false
+  description = "true if it a besu-quorum hybrid network"
 }

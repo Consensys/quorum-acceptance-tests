@@ -27,7 +27,7 @@ output "network_name" {
 }
 
 output "application_yml_file" {
-  value = local_file.configuration.filename
+  value = local.hybrid_network ? var.hybrid_configuration_filename : local_file.configuration[0].filename
 }
 
 output "exclude_initial_nodes" {

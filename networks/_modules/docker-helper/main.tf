@@ -1,11 +1,14 @@
 locals {
-  node_indices = range(var.number_of_nodes) // 0-based node index
+  node_indices         = range(var.number_of_nodes) // 0-based node index
+  quorum_node_indices  = var.hybrid-network ? range(var.number_of_quorum_nodes) : range(var.number_of_nodes)
+  besu_node_indices    = var.hybrid-network ? range(var.number_of_besu_nodes) : range(var.number_of_nodes)
+  tessera_node_indices = var.hybrid-network ? range(var.number_of_quorum_nodes + var.number_of_besu_nodes) : local.node_indices
 
   container_network_cidr = cidrsubnet("172.16.0.0/16", 8, random_integer.additional_bits.id)
 
   ethstats_ip = cidrhost(local.container_network_cidr, 2)
 
-  geth_networking = [for idx in local.node_indices :
+  geth_networking = [for idx in local.quorum_node_indices :
     {
       image = var.geth.container.image
       port = {
@@ -21,7 +24,7 @@ locals {
       }
     }
   ]
-  tm_networking = [for idx in local.node_indices :
+  tm_networking = [for idx in local.tessera_node_indices :
     {
       image = var.tessera.container.image
       port = {
@@ -35,14 +38,14 @@ locals {
       }
     }
   ]
-  besu_networking = [for idx in local.node_indices :
+  besu_networking = [for idx in local.besu_node_indices :
     {
       image = var.besu.container.image
       port = {
-        http = { internal = var.besu.container.port.http, external = var.besu.host.port.http_start + idx }
-        ws   = { internal = var.besu.container.port.ws, external = var.besu.host.port.ws_start + idx }
-        graphql   = { internal = var.besu.container.port.graphql, external = var.besu.host.port.graphql_start + idx }
-        p2p = var.besu.container.port.p2p
+        http    = { internal = var.besu.container.port.http, external = var.besu.host.port.http_start + idx }
+        ws      = { internal = var.besu.container.port.ws, external = var.besu.host.port.ws_start + idx }
+        graphql = { internal = var.besu.container.port.graphql, external = var.besu.host.port.graphql_start + idx }
+        p2p     = var.besu.container.port.p2p
       }
       ip = {
         private = cidrhost(local.container_network_cidr, idx + 1 + 1)
@@ -50,7 +53,7 @@ locals {
       }
     }
   ]
-  ethsigner_networking = [for idx in local.node_indices :
+  ethsigner_networking = [for idx in local.besu_node_indices :
     {
       image = var.ethsigner.container.image
       port  = { internal = var.ethsigner.container.port, external = var.ethsigner.host.port_start + idx }
@@ -60,8 +63,8 @@ locals {
       }
     }
   ]
-  geth_consensus_args = [for idx in local.node_indices :
-    (var.consensus == "istanbul" ? "--istanbul.blockperiod 1 --syncmode full --mine --minerthreads 1" : "--raft --raftport ${local.geth_networking[idx].port.raft}")
+  geth_consensus_args = [for idx in local.quorum_node_indices :
+    (var.consensus == "istanbul" || var.consensus == "qbft" ? "--istanbul.blockperiod 1 --syncmode full --mine --minerthreads 1" : "--raft --raftport ${local.geth_networking[idx].port.raft}")
   ]
 }
 
