@@ -215,7 +215,7 @@ module "docker" {
   node_keys_hex      = quorum_bootstrap_node_key.quorum-nodekeys-generator[*].node_key_hex
   password_file_name = module.network.password_file_name
   geth_datadirs      = var.remote_docker_config == null ? module.network.data_dirs : split(",", join("", null_resource.scp[*].triggers.data_dirs))
-  tessera_datadirs   = var.remote_docker_config == null ? module.network.tm_dirs : split(",", join("", null_resource.scp[*].triggers.tm_dirs))
+  tessera_datadirs   = var.remote_docker_config == null ? module.network.tm_dirs : split(",", join("", null_resource.scp[*].triggers.quorum_tm_dirs))
 
   additional_geth_args             = { for idx in local.quorum_node_indices : idx => local.more_args }
   additional_geth_container_vol    = var.additional_quorum_container_vol
@@ -238,8 +238,8 @@ module "docker-besu" {
   network_name           = module.network-besu.network_name
   network_id             = random_integer.hybrid_network_id.result
   node_keys_hex          = quorum_bootstrap_node_key.besu-nodekeys-generator[*].node_key_hex
-  besu_datadirs          = var.remote_docker_config == null ? module.network-besu.besu_dirs : split(",", join("", null_resource.scp[*].triggers.data_dirs))
-  tessera_datadirs       = var.remote_docker_config == null ? module.network-besu.tm_dirs : split(",", join("", null_resource.scp[*].triggers.tm_dirs))
+  besu_datadirs          = var.remote_docker_config == null ? module.network-besu.besu_dirs : split(",", join("", null_resource.scp[*].triggers.besu_dirs))
+  tessera_datadirs       = var.remote_docker_config == null ? module.network-besu.tm_dirs : split(",", join("", null_resource.scp[*].triggers.besu_tm_dirs))
   ethsigner_datadirs     = var.remote_docker_config == null ? module.network-besu.ethsigner_dirs : split(",", join("", null_resource.scp[*].triggers.ethsigner_dirs))
   keystore_files         = local.keystore_files
   keystore_password_file = module.network-besu.keystore_password_file
