@@ -9,7 +9,7 @@ locals {
 
 resource "docker_container" "besu" {
   count = local.number_of_nodes
-  name  = format("%s-node%d", var.network_name, count.index)
+  name  = format("%s-node%d", var.network_name, local.tessera_node_indices[count.index])
   depends_on = [docker_container.tessera, docker_image.registry, docker_image.local]
   image    = var.besu_networking[count.index].image.name
   hostname = format("node%d", count.index)
@@ -36,7 +36,7 @@ resource "docker_container" "besu" {
     host_path      = var.besu_datadirs[count.index]
   }
   networks_advanced {
-    name         = docker_network.besu.name
+    name         = local.docker_network_name
     ipv4_address = var.besu_networking[count.index].ip.private
     aliases = [
     format("node%d", count.index)]
@@ -81,6 +81,7 @@ fi
 exec /opt/besu/bin/besu \
         --config-file=${local.container_besu_datadir}/config.toml \
         --p2p-host=${var.besu_networking[count.index].ip.private} \
+        --p2p-port=${var.besu_networking[count.index].port.p2p} \
         --genesis-file=${local.container_besu_datadir}/genesis.json \
         --node-private-key-file=${local.container_besu_datadir}/key \
         --revert-reason-enabled=true \

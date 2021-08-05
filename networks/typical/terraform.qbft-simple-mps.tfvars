@@ -1,15 +1,19 @@
+# This network is to enable MPS without changing how client interacts with the network
+# This represents a typical network upgrade scenario where a node (Node0) is setup to
+# enable MPS
+
 consensus = "istanbul"
-isMPS     = true
+qbftBlock = { block = 0, enabled = true }
+
+#Enable MPS but configure only 1 private state
 
 # this is to setup the TM keys allocation per acceptance tests requirement
 override_tm_named_key_allocation = {
-  0 = ["Key1", "Key2", "Key3"]
-  1 = ["Key4"]
+  0 = ["Key1"]
 }
 # this is to setup the Ethereum Accounts allocation per acceptance tests requirement
 override_named_account_allocation = {
-  0 = ["EthKey1", "EthKey2", "EthKey3"]
-  1 = ["EthKey4"]
+  0 = ["EthKey1"]
 }
 
 # sets up the MPS allocations
@@ -20,23 +24,8 @@ override_vnodes = {
     vnodes = {
       VNode1 = {
         name    = "Node1"
-        tmKeys  = ["Key1", "Key2"],
-        ethKeys = ["EthKey1", "EthKey2"]
-      },
-      VNode2 = {
-        name    = "Node2"
-        tmKeys  = ["Key3"],
-        ethKeys = ["EthKey3"]
-      }
-    }
-  },
-  1 = {
-    mpsEnabled = false,
-    vnodes = {
-      VNode3 = {
-        name    = "Node5"
-        tmKeys  = ["Key4"],
-        ethKeys = ["EthKey4"]
+        tmKeys  = ["Key1"],
+        ethKeys = ["EthKey1"]
       }
     }
   }

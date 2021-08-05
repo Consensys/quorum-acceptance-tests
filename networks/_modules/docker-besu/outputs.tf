@@ -1,5 +1,5 @@
 output "docker_network_name" {
-  value = docker_network.besu.name
+  value = local.docker_network_name
 }
 
 output "container_besu_datadir" {

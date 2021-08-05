@@ -1,8 +1,8 @@
 terraform {
   required_providers {
     quorum = {
-      source = "ConsenSys/quorum"
-      version = "0.2.0"
+      source  = "ConsenSys/quorum"
+      version = "0.3.0"
     }
   }
 }
@@ -12,12 +12,13 @@ locals {
   generated_dir             = var.output_dir
   tmkeys_generated_dir      = "${local.generated_dir}/${local.network_name}/tmkeys"
   accountkeys_generated_dir = "${local.generated_dir}/${local.network_name}/accountkeys"
-  node_dir_prefix           = "node-"
+  node_dir_prefix           = "quorum-"
   tm_dir_prefix             = "tm-"
   password_file             = "password.txt"
   genesis_file              = "genesis.json"
-  number_of_nodes           = max(length(var.geth_networking), length(var.tm_networking))
+  number_of_nodes           = length(var.geth_networking)
   node_indices              = range(local.number_of_nodes) // 0-based node index
+  hybrid_network            = var.hybrid_network
   // by default we allocate one named key per TM: K0, K1 ... Kn
   // this can be overrriden by the variable
   tm_named_keys_alloc = merge(
@@ -46,14 +47,17 @@ locals {
       mpsEnabled = false,
       vnodes = {
         id = {
-          name = format("Node%s", id+1)
-          tmKeys = local.tm_named_keys_alloc[id],
+          name    = format("Node%s", id + 1)
+          tmKeys  = local.tm_named_keys_alloc[id],
           ethKeys = local.named_accounts_alloc[id]
         }
       }
     } },
     var.override_vnodes
   )
+
+  key_data       = var.hybrid_network ? var.hybrid_key_data : quorum_transaction_manager_keypair.tm.*.key_data
+  public_key_b64 = var.hybrid_network ? var.hybrid_public_key_b64 : quorum_transaction_manager_keypair.tm.*.public_key_b64
 }
 
 resource "random_string" "network-name" {
@@ -65,6 +69,7 @@ resource "random_string" "network-name" {
 
 # metadata containing information required to interact with the newly created network
 resource "local_file" "configuration" {
+  count    = local.hybrid_network ? 0 : 1
   filename = format("%s/application-%s.yml", quorum_bootstrap_network.this.network_dir_abs, local.network_name)
   content  = <<-EOF
 quorum:
@@ -73,26 +78,26 @@ quorum:
 
 %{for a, b in local.vnodes[i].vnodes~}
     ${format("%s:", b.name)}
-%{ if var.consensus == "istanbul" ~}
+%{if var.consensus == "istanbul"~}
       istanbul-validator-id: "${quorum_bootstrap_node_key.nodekeys-generator[i].istanbul_address}"
-%{ endif ~}
-%{if local.vnodes[i].mpsEnabled ~}
+%{endif~}
+%{if local.vnodes[i].mpsEnabled~}
       url: ${data.null_data_source.meta[i].inputs.nodeUrl}/?PSI=${b.name}
 %{endif~}
-%{if !local.vnodes[i].mpsEnabled ~}
+%{if !local.vnodes[i].mpsEnabled~}
       url: ${data.null_data_source.meta[i].inputs.nodeUrl}
 %{endif~}
       enode-url: ${local.enode_urls[i]}
       third-party-url: ${data.null_data_source.meta[i].inputs.tmThirdpartyUrl}
-%{if local.vnodes[i].mpsEnabled ~}
+%{if local.vnodes[i].mpsEnabled~}
       graphql-url: ${data.null_data_source.meta[i].inputs.graphqlUrl}/?PSI=${b.name}
 %{endif~}
-%{if !local.vnodes[i].mpsEnabled ~}
+%{if !local.vnodes[i].mpsEnabled~}
       graphql-url: ${data.null_data_source.meta[i].inputs.graphqlUrl}
 %{endif~}
       privacy-address-aliases:
 %{for k in b.tmKeys~}
-        ${k}: ${element(quorum_transaction_manager_keypair.tm.*.public_key_b64, index(local.tm_named_keys_all, k))}
+        ${k}: ${element(local.public_key_b64, index(local.tm_named_keys_all, k))}
 %{endfor~}
       account-aliases:
 %{for k, name in b.ethKeys~}
