@@ -1,5 +1,5 @@
 locals {
-  besu_addr   = [for idx in local.besu_node_indices : quorum_bootstrap_node_key.besu-nodekeys-generator[idx].istanbul_address if lookup(local.istanbul_validators, idx, "false") == "true"]
+  besu_addr   = [for idx in local.besu_node_indices : quorum_bootstrap_node_key.besu-nodekeys-generator[idx].istanbul_address if lookup(local.istanbul_validators, idx + local.number_of_quorum_nodes, "false") == "true"]
   quorum_addr = [for idx in local.quorum_node_indices : quorum_bootstrap_node_key.quorum-nodekeys-generator[idx].istanbul_address if lookup(local.istanbul_validators, idx, "false") == "true"]
 
   besu_alloc   = formatlist("\"%s\" : { \"balance\": \"%s\" }", quorum_bootstrap_keystore.besu-accountkeys-generator[*].account[0].address, quorum_bootstrap_keystore.besu-accountkeys-generator[*].account[0].balance)

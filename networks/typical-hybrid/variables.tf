@@ -3,9 +3,9 @@ variable "consensus" {
 }
 
 variable "privacy_enhancements" {
-    type        = object({ block = number, enabled = bool })
-    default     = { block = 0, enabled = false }
-    description = "privacy enhancements state (enabled/disabled) and the block height at which they are enabled"
+  type        = object({ block = number, enabled = bool })
+  default     = { block = 0, enabled = false }
+  description = "privacy enhancements state (enabled/disabled) and the block height at which they are enabled"
 }
 
 variable "network_name" {
@@ -35,17 +35,17 @@ variable "gauge_env_outdir" {
 //---------- advanced inputs -----------
 variable "number_of_quorum_nodes" {
   description = "Number of quorum nodes"
-  default = 2
+  default     = 2
 }
 
 variable "number_of_besu_nodes" {
   description = "Number of besu nodes"
-  default = 2
+  default     = 2
 }
 
 variable "hybrid-network" {
-  type = bool
-  default = true
+  type        = bool
+  default     = true
   description = "true if it a besu-quorum hybrid network"
 }
 
@@ -99,19 +99,19 @@ variable "besu" {
   type = object({
     container = object({
       image = object({ name = string, local = bool })
-      port  = object({ http = number, ws = number,graphql = number, p2p = number })
+      port  = object({ http = number, ws = number, graphql = number, p2p = number })
     })
     host = object({
-      port = object({ http_start = number,ws_start = number,graphql_start = number })
+      port = object({ http_start = number, ws_start = number, graphql_start = number })
     })
   })
   default = {
     container = {
       image = { name = "hyperledger/besu:develop", local = false }
-      port  = { http = 8545, ws= 8546, graphql= 8547, p2p= 21000 }
+      port  = { http = 8545, ws = 8546, graphql = 8547, p2p = 21000 }
     }
     host = {
-      port = { http_start = 22000 , ws_start= 23100, graphql_start= 23200 }
+      port = { http_start = 22000, ws_start = 23100, graphql_start = 23200 }
     }
   }
   description = "besu Docker container configuration "
@@ -145,8 +145,8 @@ variable "docker_registry" {
 }
 
 variable "additional_quorum_container_vol" {
-  type = map(list(object({container_path = string, host_path = string})))
-  default = {}
+  type        = map(list(object({ container_path = string, host_path = string })))
+  default     = {}
   description = "Additional volume mounts for geth container. Each map key is the node index (0-based)"
 }
 
@@ -182,4 +182,30 @@ EOT
 variable "exclude_initial_nodes" {
   default     = []
   description = "Exclude nodes (0-based index) from initial list of participants. E.g: [3, 4, 5] to exclude Node4, Node5, and Node6 from the initial participants of the network"
+}
+
+variable "exclude_initial_besu_nodes" {
+  default     = []
+  description = "Exclude nodes (0-based index) from initial list of besu participants. E.g: [3, 4, 5] to exclude Node4, Node5, and Node6 from the initial participants of the network"
+}
+
+variable "exclude_initial_quorum_nodes" {
+  default     = []
+  description = "Exclude nodes (0-based index) from initial list of quorum participants. E.g: [3, 4, 5] to exclude Node4, Node5, and Node6 from the initial participants of the network"
+}
+
+variable "start_quorum" {
+  default = true
+}
+
+variable "start_tessera" {
+  default = true
+}
+
+variable "start_besu" {
+  default = true
+}
+
+variable "start_ethsigner" {
+  default = true
 }

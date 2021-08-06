@@ -123,6 +123,7 @@ public class DockerWaitMain implements CommandLineRunner {
     }
 
     private void waitForNetwork() throws Exception {
+        logger.info("waitForNetwork");
         QuorumNetworkProperty.DockerInfrastructureProperty docker = quorumNetworkProperty.getDockerInfrastructure();
         List<Observable<DockerInfrastructureService.BasicContainerState>> all = new ArrayList<>();
         for (String node : docker.getNodes().keySet()) {

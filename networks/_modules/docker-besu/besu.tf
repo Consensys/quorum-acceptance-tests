@@ -14,8 +14,8 @@ resource "docker_container" "besu" {
   image    = var.besu_networking[count.index].image.name
   hostname = format("node%d", count.index)
   restart  = "no"
-  must_run = true
-  start    = true
+  must_run = local.must_start[count.index]
+  start    = local.must_start[count.index]
   labels {
     label = "BesuContainer"
     value = count.index
