@@ -22,14 +22,13 @@ package com.quorum.gauge.services;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.sshd.client.ClientFactoryManager;
 import org.apache.sshd.client.SshClient;
 import org.apache.sshd.client.keyverifier.AcceptAllServerKeyVerifier;
 import org.apache.sshd.client.session.ClientSession;
-import org.apache.sshd.common.PropertyResolverUtils;
 import org.apache.sshd.common.auth.UserAuthMethodFactory;
 import org.apache.sshd.common.keyprovider.FileKeyPairProvider;
 import org.apache.sshd.common.util.net.SshdSocketAddress;
+import org.apache.sshd.core.CoreModuleProperties;
 import org.apache.sshd.server.forward.AcceptAllForwardingFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +40,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -71,8 +71,8 @@ public class SocksProxyEmbeddedServer implements InitializingBean, DisposableBea
         client = SshClient.setUpDefaultClient();
         client.setForwardingFilter(AcceptAllForwardingFilter.INSTANCE);
         client.setServerKeyVerifier(AcceptAllServerKeyVerifier.INSTANCE);
-        PropertyResolverUtils.updateProperty(client, ClientFactoryManager.HEARTBEAT_INTERVAL, TimeUnit.SECONDS.toMillis(30));
-        PropertyResolverUtils.updateProperty(client, ClientFactoryManager.HEARTBEAT_REPLY_WAIT, TimeUnit.SECONDS.toMillis(3));
+        CoreModuleProperties.HEARTBEAT_INTERVAL.set(client, Duration.ofMillis(30));
+        CoreModuleProperties.HEARTBEAT_REPLY_WAIT.set(client, Duration.ofMillis(3));
         client.setKeyIdentityProvider(new FileKeyPairProvider(Paths.get(resolveTilde(config.getPrivateKeyFile()))));
         client.setUserAuthFactoriesNames(UserAuthMethodFactory.PUBLIC_KEY);
         client.start();

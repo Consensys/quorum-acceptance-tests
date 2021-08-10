@@ -32,7 +32,7 @@ resource "docker_container" "ethsigner" {
     host_path      = var.ethsigner_datadirs[count.index]
   }
   networks_advanced {
-    name         = docker_network.besu.name
+    name         = local.docker_network_name
     ipv4_address = var.ethsigner_networking[count.index].ip.private
     aliases = [
     format("ethsigner%d", count.index)]
@@ -58,7 +58,7 @@ apt-get install -y netcat
   --chain-id=${var.chainId} \
   --http-listen-host=0.0.0.0 \
   --downstream-http-port=${var.besu_networking[count.index].port.http.internal} \
-  --downstream-http-host=${format("node%d", count.index)} \
+  --downstream-http-host=${var.besu_networking[count.index].ip.private} \
   --logging=DEBUG \
   file-based-signer \
   -k ${format("%s/%s", local.container_ethsigner_datadir_mounted, var.keystore_files[count.index])} \

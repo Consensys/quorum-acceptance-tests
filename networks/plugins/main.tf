@@ -27,8 +27,8 @@ locals {
   with_hashicorp_plugin = contains(values(var.plugins)[*].name, "quorum-account-plugin-hashicorp-vault")
 
   additional_geth_args = merge(
-    {for idx in local.node_indices : idx => format("--rpcapi %s --plugins file://%s/plugin-settings.json %s", local.apis, "/data/qdata", local.more_args)},
-    var.override_additional_geth_args)
+    { for idx in local.node_indices : idx => format("--rpcapi %s --plugins file://%s/plugin-settings.json %s", local.apis, "/data/qdata", local.more_args) },
+  var.override_additional_geth_args)
 }
 
 module "helper" {
@@ -66,6 +66,7 @@ module "network" {
   geth_networking      = module.helper.geth_networking
   tm_networking        = module.helper.tm_networking
   output_dir           = var.output_dir
+  qbftBlock            = var.qbftBlock
 
   override_tm_named_key_allocation  = var.override_tm_named_key_allocation
   override_named_account_allocation = var.override_named_account_allocation
