@@ -44,7 +44,7 @@
 
         <!-- dependencies -->
         <web3j-quorum.version>4.8.4</web3j-quorum.version>
-        <web3j.version>4.8.5</web3j.version>
+        <web3j.version>4.8.6</web3j.version>
         <commons-lang.version>2.6</commons-lang.version>
         <docker-java.version>3.2.2</docker-java.version>
         <apache-sshd.version>2.7.0</apache-sshd.version>
