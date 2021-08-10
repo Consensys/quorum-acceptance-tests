@@ -714,7 +714,7 @@
                             <dependency>
                                 <groupId>org.web3j</groupId>
                                 <artifactId>codegen</artifactId>
-                                <version>${web3j-maven-plugin.version}</version>
+                                <version>${web3j.version}</version>
                             </dependency>
                         </dependencies>
                     </plugin>
