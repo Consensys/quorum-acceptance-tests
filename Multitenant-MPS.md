@@ -1,6 +1,6 @@
 # Multitenant with multiple private states
 
-The new acceptance tests follow the logic detailed [here](https://github.com/nicolae-leonte-go/quorum-examples/blob/multitenant-mps-poc/examples/7nodes/MultiTenancy-POC.md). It is mainly an automated way to run a similar scenario.
+The new acceptance tests follow the logic detailed [here](https://github.com/ConsenSys/quorum-examples/blob/master/examples/7nodes/MultitenancyAndMultiplePrivateStates.md). It is mainly an automated way to run a similar scenario.
 
 There are two test specs:
 * private_accumulator_smart_contract.spec
@@ -11,20 +11,20 @@ The standalone version execises the private states on Node1, Node2 and Node3. Th
 
 The tests prove that the experience of interacting with multiple private states on Node1 is similar to interacting with separate quorum nodes. 
 
-## Runninng with quorum examples
+## Running with quorum examples
 
-Build [quorum](https://github.com/ConsenSysQuorum/quorum/tree/multitenant-mps) and [tessera](https://github.com/ConsenSysQuorum/tessera/tree/multitenant) from the respective multiple private states branches.
+Build [quorum](https://github.com/ConsenSys/quorum) and [tessera](https://github.com/ConsenSys/tessera).
 
-Start a raft network with quorum examples from the [multitenant poc branch](https://github.com/nicolae-leonte-go/quorum-examples/blob/multitenant-mps-poc).
+Start a raft network with [quorum examples](https://github.com/ConsenSys/quorum-examples/blob/master/examples/7nodes/MultitenancyAndMultiplePrivateStates.md).
 
 Run the acceptance tests exercising the multiple private states on Node1. 
 ```
-SPRING_PROFILES_ACTIVE=local.4nodes mvn clean test -Dtags="mps"
+SPRING_PROFILES_ACTIVE=local.4nodes-mps mvn clean test -Dtags="mps"
 ```
 
 After running the tests you can connect to Node1 and query a specific private state (use the PSI env variable to attach).
 
-## Runninng with vanilla quorum and tessera (standalone)
+## Running with vanilla quorum and tessera (standalone)
 
 This runs the standalone tests using the "latest" quorum and tessera docker images.
 
