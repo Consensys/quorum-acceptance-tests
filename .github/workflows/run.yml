@@ -74,7 +74,7 @@ jobs:
     # This workflow uses tag expression and its sha256 hash to aggregate test results
     # from each execution. It is important that the job name has tag expression in the
     # suffix and encapsulated within parathensis
-    name: Test (${{ matrix.tag }}) (privacy-enhancements=${{matrix.privacy-enhancements}}, quorum-precompiles-v1=${{matrix.quorum-precompiles-v1}}, privacy-marker-transactions=${{matrix.privacy-marker-transactions}})
+    name: Test (${{ matrix.tag }}) (privacy-enhancements=${{matrix.privacy-enhancements}}, privacy_precompile=${{matrix.privacy_precompile}}, privacy-marker-transactions=${{matrix.privacy-marker-transactions}})
     if: needs.condition.outputs.should_run == 'true'
     needs:
       - condition
@@ -123,56 +123,56 @@ jobs:
           - '(basic && !nosupport && !mps && !(spam && !raw) && !eth-api-signed && !privacy-enhancements-disabled && !graphql && !async && !extension && !storage-root && !personal-api-signed) || networks/typical-besu::ibft2'
           - '(basic && !nosupport && !mps && !(spam && !raw) && !eth-api-signed && !privacy-enhancements-disabled && !graphql && !async && !extension && !storage-root && !personal-api-signed) || networks/typical-hybrid::hybrid'
         privacy-enhancements: [ false ]
-        quorum-precompiles-v1: [ false, true ]
+        privacy_precompile: [ false, true ]
         privacy-marker-transactions: [ false ]
         include:
           - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || basic-raft || (advanced && raft) || networks/typical::raft'
             privacy-enhancements: true
-            quorum-precompiles-v1: false
+            privacy_precompile: false
             privacy-marker-transactions: false
           - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
             privacy-enhancements: true
-            quorum-precompiles-v1: false
+            privacy_precompile: false
             privacy-marker-transactions: false
           - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || privacy-precompile-enabled || basic-raft || (advanced && raft) || networks/typical::raft'
             privacy-enhancements: true
-            quorum-precompiles-v1: true
+            privacy_precompile: true
             privacy-marker-transactions: true
           - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
             privacy-enhancements: true
-            quorum-precompiles-v1: true
+            privacy_precompile: true
             privacy-marker-transactions: true
           - tag: '(basic && !privacy-precompile-disabled) || privacy-precompile-enabled || basic-raft || (advanced && raft) || networks/typical::raft'
             privacy-enhancements: false
-            quorum-precompiles-v1: true
+            privacy_precompile: true
             privacy-marker-transactions: true
           - tag: '(basic && !privacy-precompile-disabled) || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
             privacy-enhancements: false
-            quorum-precompiles-v1: true
+            privacy_precompile: true
             privacy-marker-transactions: true
           - tag: '(basic && !privacy-precompile-disabled) || privacy-precompile-enabled || basic-raft || (advanced && raft) || networks/plugins::raft'
             privacy-enhancements: false
-            quorum-precompiles-v1: true
+            privacy_precompile: true
             privacy-marker-transactions: true
           - tag: '(basic && !privacy-precompile-disabled) || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul'
             privacy-enhancements: false
-            quorum-precompiles-v1: true
+            privacy_precompile: true
             privacy-marker-transactions: true
           - tag: '(basic && !privacy-precompile-disabled) || privacy-precompile-enabled || basic-raft || (advanced && raft) || networks/plugins::raft-account-plugin-hashicorp-vault'
             privacy-enhancements: false
-            quorum-precompiles-v1: true
+            privacy_precompile: true
             privacy-marker-transactions: true
           - tag: '(basic && !privacy-precompile-disabled) || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul-account-plugin-hashicorp-vault'
             privacy-enhancements: false
-            quorum-precompiles-v1: true
+            privacy_precompile: true
             privacy-marker-transactions: true
           - tag: '(multitenancy || privacy-precompile-enabled) && networks/plugins::raft-multitenancy'
             privacy-enhancements: false
-            quorum-precompiles-v1: true
+            privacy_precompile: true
             privacy-marker-transactions: true
           - tag: '(basic && !privacy-enhancements-disabled && !async && !extension && !storage-root && !get-quorum-payload && !personal-api-signed) || networks/typical-besu::ibft2'
             privacy-enhancements: false
-            quorum-precompiles-v1: false
+            privacy_precompile: false
             privacy-marker-transactions: false
             besu-network: true
     runs-on: ubuntu-18.04
@@ -229,7 +229,7 @@ jobs:
             fi
           fi
           echo "TF_VAR_privacy_enhancements={block=0, enabled=${{ matrix.privacy-enhancements}}}" >> $dockerEnvFile
-          echo "TF_VAR_quorum_precompiles_v1={block=0, enabled=${{ matrix.quorum-precompiles-v1}}}" >> $dockerEnvFile
+          echo "TF_VAR_privacy_precompile={block=0, enabled=${{ matrix.privacy_precompile}}}" >> $dockerEnvFile
           echo "TF_VAR_privacy_marker_transactions=${{ matrix.privacy-marker-transactions}}" >> $dockerEnvFile
           echo "::set-output name=tag::$tagKey"
           echo "::set-output name=mvnArg::$mvnArg"

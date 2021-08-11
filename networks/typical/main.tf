@@ -68,7 +68,7 @@ module "network" {
 
   consensus            = module.helper.consensus
   privacy_enhancements = var.privacy_enhancements
-  quorum_precompiles_v1 = var.quorum_precompiles_v1
+  privacy_precompile = var.privacy_precompile
   network_name         = var.network_name
   geth_networking      = module.helper.geth_networking
   tm_networking        = module.helper.tm_networking

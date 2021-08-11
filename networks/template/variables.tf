@@ -13,10 +13,10 @@ variable "privacy_enhancements" {
   description = "privacy enhancements state (enabled/disabled) and the block height at which they are enabled"
 }
 
-variable "quorum_precompiles_v1" {
+variable "privacy_precompile" {
   type        = object({ block = number, enabled = bool })
   default     = { block = 0, enabled = false }
-  description = "Set the quorumPrecompilesV1Block fork"
+  description = "Set the privacyPrecompileBlock fork"
 }
 
 variable "privacy_marker_transactions" {

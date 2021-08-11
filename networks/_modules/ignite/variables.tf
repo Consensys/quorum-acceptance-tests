@@ -49,9 +49,9 @@ variable "permission_qip714Block" {
   description = "required for testing permission model"
 }
 
-variable "quorum_precompiles_v1" {
+variable "privacy_precompile" {
   type        = object({ block = number, enabled = bool })
-  description = "Set the quorumPrecompilesV1Block fork"
+  description = "Set the privacyPrecompileBlock fork"
 }
 
 variable "output_dir" {
