@@ -251,7 +251,7 @@ jobs:
             fi
           fi
           echo "TF_VAR_privacy_enhancements={block=0, enabled=${{ matrix.privacy-enhancements}}}" >> $dockerEnvFile
-          echo "TF_VAR_privacy_precompile={block=0, enabled=${{ matrix.privacy_precompile}}}" >> $dockerEnvFile
+          echo "TF_VAR_privacy_precompile={block=0, enabled=${{ matrix.privacy-precompile}}}" >> $dockerEnvFile
           echo "TF_VAR_privacy_marker_transactions=${{ matrix.privacy-marker-transactions}}" >> $dockerEnvFile
           echo "::set-output name=tag::$tagKey"
           echo "::set-output name=mvnArg::$mvnArg"
