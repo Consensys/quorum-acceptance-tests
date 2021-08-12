@@ -41,7 +41,6 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -117,9 +116,7 @@ public class RevertReason extends AbstractSpecImplementation {
         // TODO this is a temporary fix for particularly flaky tests where state is being read before it has been
         // updated - we should probably rework all tests to check that the state is ready before getting
         String transactionHash = DataStoreFactory.getScenarioDataStore().get("transactionHash").toString();
-
-        Optional<TransactionReceipt> transactionReceipt = transactionService.pollTransactionReceipt(networkProperty.getNode(node), transactionHash);
-        assertThat(transactionReceipt).as("check %s has receipt for transaction %s", node, transactionHash).isPresent();
+        transactionService.waitForTransactionReceipt(networkProperty.getQuorumNode(networkProperty.getNode(node)), transactionHash);
 
         BigInteger savedValue = increasingSimpleStorageContractService.getValue(contractAddress, node).blockingFirst();
         assertThat(savedValue.intValue()).isEqualTo(value);

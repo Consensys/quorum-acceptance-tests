@@ -43,7 +43,6 @@ import org.web3j.quorum.Quorum;
 import org.web3j.quorum.methods.request.PrivateTransaction;
 import org.web3j.quorum.methods.response.PrivatePayload;
 import org.web3j.tx.Contract;
-import org.web3j.utils.Strings;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -63,9 +62,6 @@ public class TransactionService extends AbstractService {
 
     @Autowired
     PrivacyService privacyService;
-
-    @Autowired
-    PrecompiledContractService precompiledContractService;
 
     public TransactionReceipt waitForTransactionReceipt(QuorumNode node, String transactionHash) {
         Optional<TransactionReceipt> receipt = getTransactionReceipt(node, transactionHash)
@@ -107,17 +103,6 @@ public class TransactionService extends AbstractService {
             connectionFactory().getWeb3jService(node),
             publicReceiptResponse.getTransactionReceipt().get()
         );
-    }
-
-    public Observable<EthGetTransactionReceipt> getPrivateTransactionReceipt(QuorumNetworkProperty.Node node, String transactionHash) {
-        // fetch the private tx receipt, since we have a marker receipt
-        Request<?, EthGetTransactionReceipt> request = new Request<>(
-            "eth_getPrivateTransactionReceipt",
-            List.of(transactionHash),
-            connectionFactory().getWeb3jService(node),
-            EthGetTransactionReceipt.class
-        );
-        return request.flowable().toObservable();
     }
 
     public Optional<TransactionReceipt> pollTransactionReceipt(QuorumNetworkProperty.Node node, String transactionHash) {

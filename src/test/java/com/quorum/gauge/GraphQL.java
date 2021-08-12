@@ -60,10 +60,7 @@ public class GraphQL extends AbstractSpecImplementation {
         // updated - we should probably rework all tests to check that the state is ready before getting
         Optional<String> transactionHash = Optional.ofNullable(DataStoreFactory.getScenarioDataStore().get("transactionHash"))
             .map(Object::toString);
-        if (transactionHash.isPresent()) {
-            Optional<TransactionReceipt> transactionReceipt = transactionService.pollTransactionReceipt(networkProperty.getNode(node.name()), transactionHash.get());
-            assertThat(transactionReceipt).as("check %s has receipt for transaction %s", node, transactionHash).isPresent();
-        }
+        transactionHash.ifPresent(h -> transactionService.waitForTransactionReceipt(node, h));
 
         boolean got = graphQLService.getIsPrivate(node, receipt.getTransactionHash()).blockingGet();
         assertThat(got).isEqualTo(expected);

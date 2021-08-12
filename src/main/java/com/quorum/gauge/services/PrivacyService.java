@@ -21,14 +21,10 @@ package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
-import com.quorum.gauge.ext.StringResponse;
-import io.reactivex.Observable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import org.web3j.protocol.core.Request;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -97,15 +93,5 @@ public class PrivacyService extends AbstractService {
             throw new IllegalArgumentException("Node " + node + " not found in config");
         }
         return nodeConfig;
-    }
-
-    public Observable<StringResponse> getPrivacyPrecompileAddress(QuorumNetworkProperty.Node node) {
-        Request<?, StringResponse> request = new Request<>(
-            "eth_getPrivacyPrecompileAddress",
-            Collections.emptyList(),
-            connectionFactory().getWeb3jService(node),
-            StringResponse.class
-        );
-        return request.flowable().toObservable();
     }
 }

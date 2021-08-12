@@ -1,5 +1,13 @@
 name: Run Acceptance Tests
 on:
+  schedule:
+    - cron: '0 12 * * *'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+    branches:
+      - '**'
   push:
     paths-ignore:
       - '**.md'
@@ -7,7 +15,6 @@ on:
     branches:
       - 'master'
       - 'dev-*'
-
 jobs:
   condition:
     name: Evaluate workflow run conditions
@@ -27,8 +34,12 @@ jobs:
           if [ "$val" == "false" ]; then
             echo "::warning ::Runs are conditionally skipped"
           fi
-          useAws="false"
-          infraName="GithubActionsVM"
+          useAws="true"
+          infraName="AWS"
+          if [ "${{ secrets.AWS_ACCESS_KEY_ID }}" == "" ] || [ "${{ github.event_name }}" == "pull_request" ] || [ "${{ secrets.DISABLE_AWS }}" == "true" ]; then
+            useAws="false"
+            infraName="GithubActionsVM"
+          fi
           echo "::warning ::Networks are provisioned using $infraName infrastructure"
           echo "::set-output name=val::$val"
           echo "::set-output name=useAws::$useAws"
@@ -303,3 +314,264 @@ jobs:
                 -Pauto \
                 -Dinfra.folder="${{ env.INFRA_FOLDER }}" \
                 -Dinfra.profile="${{ env.INFRA_PROFILE }}"
+  notify:
+    if: always() && github.event_name != 'pull_request' && needs.condition.outputs.should_run == 'true'
+    name: Notify
+    needs:
+      - condition
+      - docker-build
+      - run
+    runs-on: ubuntu-18.04
+    steps:
+      - name: 'Setup metadata'
+        id: setup
+        run: |
+          gitref_path="${{ github.ref }}"
+          gitref_path=${gitref_path/refs\/heads/tree} # for refs/heads/my-branch
+          gitref_path=${gitref_path/refs\/tags/tree}  # for refs/tags/v1.0.0
+          gitref_path=${gitref_path#refs\/}             # for refs/pull/123/merge
+          gitref_path=${gitref_path%/merge}           # for refs/pull/123/merge
+          echo "::set-output name=gitref-path::$gitref_path"
+      - name: 'Download test reports'
+        uses: actions/download-artifact@v2
+      - name: 'Aggregate test reports'
+        id: report
+        # all test reports are now downloaded and folders are prefixed with 'testreport'
+        # each test folder contains a JSON file: <sha256(tag)>.json
+        # this step will output 2 jsons:
+        # - an aggregated summary
+        # - a map: sha256(tag) => summary
+        run: |
+          # combine all json files into one
+          all="all.json"
+          for f in `ls -d testreport-*`; do
+            hash=${f#testreport-}
+            cat "$f/$hash.json" | jq --arg h "$hash" '{ ($h) : . }' >> $all
+          done
+          # combine into a JSON array and format output
+          reports=$(cat $all | jq -c -s add | jq -sR 'rtrimstr("\n")')
+          reports=${reports#\"}
+          reports=${reports%\"}
+          # sum up reports
+          summary=$(cat $all | jq -c -s 'reduce (.[]  | to_entries[] | .value | to_entries[]) as {$key,$value} ({}; .[$key] += $value)' | jq -sR 'rtrimstr("\n")')
+          summary=${summary#\"}
+          summary=${summary%\"}
+
+          echo "::set-output name=reports::$reports"
+          echo "::set-output name=summary::$summary"
+      - name: 'Prepare Slack message with full info'
+        id: status
+        uses: actions/github-script@0.8.0
+        with:
+          script: |
+            // need this utility function to hash the tag so we can read test report
+            var sha256=function a(b){function c(a,b){return a>>>b|a<<32-b}for(var d,e,f=Math.pow,g=f(2,32),h="length",i="",j=[],k=8*b[h],l=a.h=a.h||[],m=a.k=a.k||[],n=m[h],o={},p=2;64>n;p++)if(!o[p]){for(d=0;313>d;d+=p)o[d]=p;l[n]=f(p,.5)*g|0,m[n++]=f(p,1/3)*g|0}for(b+="\x80";b[h]%64-56;)b+="\x00";for(d=0;d<b[h];d++){if(e=b.charCodeAt(d),e>>8)return;j[d>>2]|=e<<(3-d)%4*8}for(j[j[h]]=k/g|0,j[j[h]]=k,e=0;e<j[h];){var q=j.slice(e,e+=16),r=l;for(l=l.slice(0,8),d=0;64>d;d++){var s=q[d-15],t=q[d-2],u=l[0],v=l[4],w=l[7]+(c(v,6)^c(v,11)^c(v,25))+(v&l[5]^~v&l[6])+m[d]+(q[d]=16>d?q[d]:q[d-16]+(c(s,7)^c(s,18)^s>>>3)+q[d-7]+(c(t,17)^c(t,19)^t>>>10)|0),x=(c(u,2)^c(u,13)^c(u,22))+(u&l[1]^u&l[2]^l[1]&l[2]);l=[w+x|0].concat(l),l[4]=l[4]+w|0}for(d=0;8>d;d++)l[d]=l[d]+r[d]|0}for(d=0;8>d;d++)for(e=3;e+1;e--){var y=l[d]>>8*e&255;i+=(16>y?0:"")+y.toString(16)}return i};
+            var summary = JSON.parse('${{ steps.report.outputs.summary }}')
+            var reports = JSON.parse('${{ steps.report.outputs.reports }}')
+            var gitref_path = "${{ steps.setup.outputs.gitref-path }}"
+            ////////////////////////////////////
+            // retrieve workflow run data
+            ////////////////////////////////////
+            console.log("get workflow run")
+            const wf_run = await github.actions.getWorkflowRun({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: ${{ github.run_id }}
+            })
+            console.log(wf_run.data)
+            console.log("get jobs for workflow run:", wf_run.data.jobs_url)
+            const jobs_response = await github.request(wf_run.data.jobs_url)
+            ////////////////////////////////////
+            // build slack notification message
+            ////////////////////////////////////
+            // some utility functions
+            var date_diff_func = function(start, end) {
+                var duration = end - start
+                // format the duration
+                var delta = duration / 1000
+                var days = Math.floor(delta / 86400)
+                delta -= days * 86400
+                var hours = Math.floor(delta / 3600) % 24
+                delta -= hours * 3600
+                var minutes = Math.floor(delta / 60) % 60
+                delta -= minutes * 60
+                var seconds = Math.floor(delta % 60)
+                var format_func = function(v, text, check) {
+                    if (v <= 0 && check) {
+                        return ""
+                    } else {
+                        return v + text
+                    }
+                }
+                return format_func(days, "d", true) + format_func(hours, "h", true) + format_func(minutes, "m", true) + format_func(seconds, "s", false)
+            }
+            var status_icon_func = function(s) {
+                switch (s) {
+                case "w_success":
+                    return ":white_check_mark:"
+                case "w_failure":
+                    return ":no_entry:"
+                case "w_cancelled":
+                    return ":warning:"
+                case "success":
+                    return "\u2713"
+                case "failure":
+                    return "\u2717"
+                default:
+                    return "\u20e0"
+                }
+            }
+            const commit = "${{ github.sha }}".substr(0, 6)
+            var pr = ""
+            for (p of wf_run.data.pull_requests) {
+              const pull_response = await github.request(p.url)
+              pr += `,<${pull_response.data.html_url}|PR #${p.number}>`
+            }
+            if (pr != "") {
+              pr = `for ${pr.substr(1)}`
+            }
+            // build the message
+            var job_blocks = []
+            var is_wf_success = true
+            var is_wf_failure = false
+            for (j of jobs_response.data.jobs) {
+                console.log(j.name, ":", j.status, j.conclusion, j.started_at, j.completed_at)
+                // ignore the current job running this script
+                if (j.status != "completed") {
+                    continue
+                }
+                if (j.conclusion != "success") {
+                  is_wf_success = false
+                }
+                if (j.conclusion == "failure") {
+                  is_wf_failure = true
+                }
+                // try to obtain the summary if available
+                var tag = j.name.replace(/[^\(]+\((.+)\)/g, "$1") // take only the tag which is in the curly brackets
+                var hash = sha256(tag)
+                console.log("Tag: " + tag + ", Hash: " + hash)
+                var job_summary = reports[hash]
+                var job_summary_text = ""
+                if (job_summary != undefined) {
+                  job_summary_text = `:sunny: ${job_summary.passed}   :thunder_cloud_and_rain: ${job_summary.failed}   :umbrella_with_rain_drops: ${job_summary.skipped}   `
+                }
+                job_blocks.push({
+                    type: "section",
+                    text: {
+                      type: "mrkdwn",
+                      text: `${status_icon_func(j.conclusion)} <${j.html_url}|${j.name}>\n${job_summary_text}:hourglass: ${date_diff_func(new Date(j.started_at), new Date(j.completed_at))}`
+                    }
+                })
+            }
+            var workflow_status = "w_cancelled"
+            if (is_wf_success) {
+              workflow_status = "w_success"
+            } else if (is_wf_failure) {
+              workflow_status = "w_failure"
+            }
+            var context_elements = [
+              {
+                  "type": "mrkdwn",
+                  "text": "*Repo:* <https://github.com/${{ github.repository }}|${{ github.repository }}>"
+              },
+              {
+                  "type": "mrkdwn",
+                  "text": `*Branch:* <https://github.com/${{ github.repository }}/${gitref_path}|${{ github.ref }}>`
+              },
+              {
+                  "type": "mrkdwn",
+                  "text": `*Event:* ${wf_run.data.event}`
+              }
+            ]
+            if (wf_run.data.event != 'schedule') {
+              context_elements.push(
+                {
+                    "type": "mrkdwn",
+                    "text": `*Commit:* <https://github.com/${{ github.repository }}/commit/${wf_run.data.head_commit.id}|${wf_run.data.head_commit.id.substr(0, 8)}>`
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": `*Author:* ${wf_run.data.head_commit.author.name}`
+                }
+              )
+            }
+            var summary_text =`:zap: ${job_blocks.length}   :sunny: ${summary.passed}   :thunder_cloud_and_rain: ${summary.failed}   :umbrella_with_rain_drops: ${summary.skipped}   :stopwatch: ${date_diff_func(new Date(wf_run.data.created_at), new Date(wf_run.data.updated_at))}`
+            var header_blocks = [
+                {
+                    type: "section",
+                    text: {
+                        type: "mrkdwn",
+                        text: `${status_icon_func(workflow_status)} *${{ github.workflow }}* (ran on ${{ needs.condition.outputs.infra }}) <${wf_run.data.html_url}|#${{ github.run_number }}>\n${summary_text}`
+                    }
+                },
+                {
+                    type: "context",
+                    elements: context_elements,
+                },
+                {
+                    type: "divider"
+                }
+            ]
+            var slack_msg = {
+                blocks: [].concat(header_blocks, job_blocks)
+            }
+            return slack_msg
+      - name: 'Prepare Slack message with partial info'
+        id: short_status
+        if: failure()
+        uses: actions/github-script@0.8.0
+        with:
+          script: |
+            ////////////////////////////////////
+            // retrieve workflow run data
+            ////////////////////////////////////
+            const wf_run = await github.actions.getWorkflowRun({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: ${{ github.run_id }}
+            })
+            var date_diff_func = function(start, end) {
+                var duration = end - start
+                // format the duration
+                var delta = duration / 1000
+                var days = Math.floor(delta / 86400)
+                delta -= days * 86400
+                var hours = Math.floor(delta / 3600) % 24
+                delta -= hours * 3600
+                var minutes = Math.floor(delta / 60) % 60
+                delta -= minutes * 60
+                var seconds = Math.floor(delta % 60)
+                var format_func = function(v, text, check) {
+                    if (v <= 0 && check) {
+                        return ""
+                    } else {
+                        return v + text
+                    }
+                }
+                return format_func(days, "d", true) + format_func(hours, "h", true) + format_func(minutes, "m", true) + format_func(seconds, "s", false)
+            }
+            var slack_msg = {
+                blocks: [
+                  {
+                      type: "section",
+                      text: {
+                          type: "mrkdwn",
+                          text: `:skull_and_crossbones: *${{ github.workflow }}* <${wf_run.data.html_url}|#${{ github.run_number }}>\n:stopwatch: ${date_diff_func(new Date(wf_run.data.created_at), new Date(wf_run.data.updated_at))}`
+                      }
+                  }
+                ]
+            }
+            return slack_msg
+      - name: 'Send to Slack'
+        if: always()
+        run: |
+          cat <<JSON > long_message.json
+          ${{ steps.status.outputs.result }}
+          JSON
+          cat <<JSON > short_message.json
+          ${{ steps.short_status.outputs.result }}
+          JSON
+          _post() {
+            curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} -H "Content-type: application/json" --data "@${1}"
+          }
+          _post "long_message.json" || _post "short_message.json"
