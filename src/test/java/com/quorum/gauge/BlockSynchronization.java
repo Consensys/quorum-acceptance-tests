@@ -21,15 +21,15 @@ package com.quorum.gauge;
 
 import com.quorum.gauge.common.GethArgBuilder;
 import com.quorum.gauge.common.NodeType;
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNetworkProperty.Node;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.ext.IstanbulNodeAddress;
-import com.quorum.gauge.services.InfrastructureService;
+import com.quorum.gauge.ext.IstanbulPropose;
+import com.quorum.gauge.services.*;
 import com.quorum.gauge.services.InfrastructureService.NetworkResources;
 import com.quorum.gauge.services.InfrastructureService.NodeAttributes;
-import com.quorum.gauge.services.IstanbulService;
-import com.quorum.gauge.services.RaftService;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import io.reactivex.Observable;
@@ -67,6 +67,9 @@ public class BlockSynchronization extends AbstractSpecImplementation {
 
     @Autowired
     private IstanbulService istanbulService;
+
+    @Autowired
+    private BesuQBFTService besuService;
 
     @Step("Start a <networkType> <permissionVersion> Quorum Network, named it <id>, consisting of <nodes>")
     public void startNetwork(String networkType, String permissionVersion, String id, List<Node> nodes) {
@@ -171,19 +174,41 @@ public class BlockSynchronization extends AbstractSpecImplementation {
     }
 
     public void proposeValidatorImpl(Node targetNode, List<Node> nodes, boolean vote) {
-        IstanbulNodeAddress nodeAddressRes = istanbulService.nodeAddress(QuorumNode.valueOf(targetNode.getName())).blockingFirst();
+        IstanbulNodeAddress nodeAddressRes = getNodeAddress(QuorumNode.valueOf(targetNode.getName()));
         Response.Error err1 = Optional.ofNullable(nodeAddressRes.getError()).orElse(new Response.Error());
         assertThat(err1.getMessage()).as("istanbul.nodeAddress must succeed").isBlank();
         String nodeAddr = nodeAddressRes.getResult();
         logger.debug("node {} node address: {}", targetNode.getName(), nodeAddr);
         nodes.stream().forEach(n -> {
             logger.debug("istanbul.propose targetNode:{} fromNode:{} vote:{} nodeAddr:{}", targetNode.getName(), n.getName(), vote, nodeAddr);
-            istanbulService.propose(QuorumNode.valueOf(n.getName()), nodeAddr, vote)
+            propose(QuorumNode.valueOf(n.getName()), nodeAddr, vote)
                 .doOnNext(res -> {
                     Response.Error err2 = Optional.ofNullable(res.getError()).orElse(new Response.Error());
                     assertThat(err2.getMessage()).as("istanbul.propose must succeed").isBlank();
                 }).blockingSubscribe();
         });
+    }
+
+    public IstanbulNodeAddress getNodeAddress(QuorumNode node) {
+        if(isBesuNode(node)) {
+            return besuService.nodeAddress(node).blockingFirst();
+        }
+        return istanbulService.nodeAddress(node).blockingFirst();
+    }
+
+    public Observable<IstanbulPropose> propose(QuorumNode node, String nodeAddr, boolean vote) {
+        if(isBesuNode(node)) {
+            return besuService.propose(node, nodeAddr, vote);
+        }
+        return istanbulService.propose(node, nodeAddr, vote);
+    }
+
+    public boolean isBesuNode(QuorumNode node) {
+        String nodeInfoName = utilService.getNodeInfoName(node);
+        if (nodeInfoName == null) {
+            return false;
+        }
+        return nodeInfoName.contains("besu");
     }
 
     @Step("Add new node, named it <newNode>, and join the network <id> as <nodeType>")
@@ -213,6 +238,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
                     .blockingSubscribe();
                 break;
             case "istanbul":
+            case "qbft":
                 // this node is non-validator node, just start it up
                 infraService.startNode(
                     NodeAttributes.forNode(newNode.getName())

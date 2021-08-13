@@ -30,7 +30,10 @@ locals {
   more_args = join(" ", [
     "--allow-insecure-unlock" # since 1.9.7 upgrade
   ])
-  istanbul_validators = { for id in local.tessera_node_indices : id => "true" }
+  istanbul_validators = merge(
+    { for id in local.tessera_node_indices : id => "true" }, // default to true for all
+    { for id in var.exclude_initial_nodes : id => "false" }
+  )
 
 
   besu_node_initial_paticipants = { for id in local.besu_node_indices : id => "true" }

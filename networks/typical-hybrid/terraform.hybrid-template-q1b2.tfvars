@@ -11,5 +11,5 @@ consensus                    = "qbft"
 qbftBlock                    = { block = 0, enabled = true }
 start_quorum                 = false
 start_besu                   = false
-start_ethsigner              = false
 start_tessera                = false
+template_network             = true

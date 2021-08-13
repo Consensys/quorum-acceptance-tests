@@ -209,3 +209,8 @@ variable "start_besu" {
 variable "start_ethsigner" {
   default = true
 }
+
+variable "template_network" {
+  description = "variable to represent a template network"
+  default = false
+}
