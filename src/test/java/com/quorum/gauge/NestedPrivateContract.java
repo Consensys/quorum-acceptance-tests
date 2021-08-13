@@ -101,5 +101,6 @@ public class NestedPrivateContract extends AbstractSpecImplementation {
             BigInteger.valueOf(newValue),
             Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())).blockingFirst();
         Gauge.writeMessage("Transaction Hash %s", receipt.getTransactionHash());
+        DataStoreFactory.getScenarioDataStore().put("transactionHash", receipt.getTransactionHash());
     }
 }

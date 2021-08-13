@@ -85,7 +85,7 @@ jobs:
     # This workflow uses tag expression and its sha256 hash to aggregate test results
     # from each execution. It is important that the job name has tag expression in the
     # suffix and encapsulated within parathensis
-    name: Tests tagged with (${{ matrix.tag }})
+    name: Test (${{ matrix.tag }}) (privacy-enhancements=${{matrix.privacy-enhancements}}, privacy_precompile=${{matrix.privacy-precompile}}, privacy-marker-transactions=${{matrix.privacy-marker-transactions}})
     if: needs.condition.outputs.should_run == 'true'
     needs:
       - condition
@@ -133,13 +133,70 @@ jobs:
           - 'mps-upgrade-txtrace || networks/template::istanbul-4nodes-mps'
           - '(basic && !nosupport && !mps && !(spam && !raw) && !eth-api-signed && !privacy-enhancements-disabled && !graphql && !async && !extension && !storage-root && !personal-api-signed) || networks/typical-besu::ibft2'
           - '(basic && !nosupport && !mps && !(spam && !raw) && !eth-api-signed && !privacy-enhancements-disabled && !graphql && !async && !extension && !storage-root && !personal-api-signed) || networks/typical-hybrid::hybrid'
-        privacy-enhancements:
-          - 'false'
+        privacy-enhancements: [false]
+        privacy-precompile: [false]
+        privacy-marker-transactions: [false]
         include:
           - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || basic-raft || (advanced && raft) || networks/typical::raft'
-            privacy-enhancements: 'true'
+            privacy-enhancements: true
+            privacy-precompile: false
+            privacy-marker-transactions: false
           - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
-            privacy-enhancements: 'true'
+            privacy-enhancements: true
+            privacy-precompile: false
+            privacy-marker-transactions: false
+#          - tag: 'basic || basic-raft || (advanced && raft) || networks/typical::raft'
+#            privacy-enhancements: false
+#            privacy-precompile: true
+#            privacy-marker-transactions: false
+#          - tag: 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
+#            privacy-enhancements: false
+#            privacy-precompile: true
+#            privacy-marker-transactions: false
+#          - tag: 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft'
+#            privacy-enhancements: false
+#            privacy-precompile: true
+#            privacy-marker-transactions: false
+#          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || privacy-precompile-enabled || basic-raft || (advanced && raft) || networks/typical::raft'
+#            privacy-enhancements: true
+#            privacy-precompile: true
+#            privacy-marker-transactions: true
+#          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
+#            privacy-enhancements: true
+#            privacy-precompile: true
+#            privacy-marker-transactions: true
+#          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/typical::qbft'
+#            privacy-enhancements: true
+#            privacy-precompile: true
+#            privacy-marker-transactions: true
+#          - tag: '(multitenancy || privacy-precompile-enabled) && networks/plugins::raft-multitenancy'
+#            privacy-enhancements: false
+#            privacy-precompile: true
+#            privacy-marker-transactions: true
+#          - tag: '(basic && !privacy-precompile-disabled) || basic-raft || (advanced && raft) || networks/typical::raft-simple-mps'
+#            privacy-enhancements: false
+#            privacy-precompile: true
+#            privacy-marker-transactions: true
+#          - tag: '(basic && !privacy-precompile-disabled) || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul-simple-mps'
+#            privacy-enhancements: false
+#            privacy-precompile: true
+#            privacy-marker-transactions: true
+#          - tag: '(basic && !privacy-precompile-disabled) || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-simple-mps'
+#            privacy-enhancements: false
+#            privacy-precompile: true
+#            privacy-marker-transactions: true
+#          - tag: '(basic && !privacy-precompile-disabled) || networks/typical::raftmps'
+#            privacy-enhancements: false
+#            privacy-precompile: true
+#            privacy-marker-transactions: true
+#          - tag: '(basic && !privacy-precompile-disabled) || networks/typical::istanbulmps'
+#            privacy-enhancements: false
+#            privacy-precompile: true
+#            privacy-marker-transactions: true
+#          - tag: '(basic && !privacy-precompile-disabled) || networks/typical::qbftmps'
+#            privacy-enhancements: false
+#            privacy-precompile: true
+#            privacy-marker-transactions: true
     runs-on: ubuntu-18.04
     steps:
       - name: 'Download docker image'
@@ -194,6 +251,8 @@ jobs:
             fi
           fi
           echo "TF_VAR_privacy_enhancements={block=0, enabled=${{ matrix.privacy-enhancements}}}" >> $dockerEnvFile
+          echo "TF_VAR_privacy_precompile={block=0, enabled=${{ matrix.privacy-precompile}}}" >> $dockerEnvFile
+          echo "TF_VAR_privacy_marker_transactions=${{ matrix.privacy-marker-transactions}}" >> $dockerEnvFile
           echo "::set-output name=tag::$tagKey"
           echo "::set-output name=mvnArg::$mvnArg"
           echo "::set-output name=dockerEnv::$dockerEnv"
@@ -215,10 +274,20 @@ jobs:
       - name: 'Failure info'
         if: ${{ failure() }}
         run: |
-            echo "acceptance tests failures"
+            echo "Docker container info"
+            set -x
             docker images
             docker ps -a
-            for containerId in $(docker ps -qa); do echo "container: $containerId"; docker container inspect $containerId; docker container logs $containerId; done
+            set +x
+
+            IFS=$'\n' # set internal field separator so we can iterate over docker ps output
+            for CONTAINER in $(docker ps -a --format {{.Names}})
+            do
+              echo "writing logs for $CONTAINER to ${CONTAINER}.log"
+              docker logs $CONTAINER > ${{ steps.setup.outputs.outputDir }}/${CONTAINER}.log 2>&1
+              echo "writing inspect output for $CONTAINER to ${CONTAINER}-inspect.json"
+              docker container inspect $CONTAINER > ${{ steps.setup.outputs.outputDir }}/${CONTAINER}-inspect.json 2>&1
+            done
       - name: 'Read test report'
         if: always()
         run: |

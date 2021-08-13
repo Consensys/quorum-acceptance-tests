@@ -8,6 +8,18 @@ variable "privacy_enhancements" {
     description = "privacy enhancements state (enabled/disabled) and the block height at which they are enabled"
 }
 
+variable "privacy_precompile" {
+  type        = object({ block = number, enabled = bool })
+  default     = { enabled = false, block = 0 }
+  description = "Set the privacyPrecompileBlock fork"
+}
+
+variable "privacy_marker_transactions" {
+  type        = bool
+  default     = false
+  description = "Enable privacy marker transactions on the node"
+}
+
 variable "network_name" {
   default = "typical-hybrid"
 }

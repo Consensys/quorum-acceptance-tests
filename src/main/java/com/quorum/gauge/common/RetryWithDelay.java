@@ -53,7 +53,7 @@ public class RetryWithDelay implements Function<Observable<? extends Throwable>,
                 if (++retryCount < maxRetries) {
                     // When this Observable calls onNext, the original
                     // Observable will be retried
-                    return Observable.timer(retryDelayMillis, TimeUnit.MILLISECONDS)
+                    return Observable.timer(retryCount, TimeUnit.SECONDS)
                         .doOnNext(tick -> Context.storeAccessToken(accessToken));
                 }
 

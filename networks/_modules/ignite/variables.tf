@@ -49,6 +49,11 @@ variable "permission_qip714Block" {
   description = "required for testing permission model"
 }
 
+variable "privacy_precompile" {
+  type        = object({ block = number, enabled = bool })
+  description = "Set the privacyPrecompileBlock fork"
+}
+
 variable "output_dir" {
   default     = "build"
   description = "Target directory that contains generated resources for the network"
