@@ -70,18 +70,6 @@ public class UtilService extends AbstractService {
         return request.flowable().toObservable().blockingFirst().getTransactions();
     }
 
-    public String getNodeInfoName(final QuorumNode node) {
-        Request<?, NodeInfo> nodeInfoRequest = new Request<>(
-            "admin_nodeInfo",
-            null,
-            connectionFactory().getWeb3jService(node),
-            NodeInfo.class
-        );
-
-        NodeInfo nodeInfo = nodeInfoRequest.flowable().toObservable().blockingFirst();
-        return nodeInfo.getName();
-    }
-
     public Observable<Boolean> getRpcModules(QuorumNode node) {
         Request<?, GenericResponse> request = new Request<>(
             "rpc_modules",

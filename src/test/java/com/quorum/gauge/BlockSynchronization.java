@@ -167,14 +167,14 @@ public class BlockSynchronization extends AbstractSpecImplementation {
     }
 
     public void proposeValidatorImpl(Node targetNode, List<Node> nodes, boolean vote) {
-        IstanbulNodeAddress nodeAddressRes = getNodeAddress(QuorumNode.valueOf(targetNode.getName()));
+        IstanbulNodeAddress nodeAddressRes = getNodeAddress(targetNode);
         Response.Error err1 = Optional.ofNullable(nodeAddressRes.getError()).orElse(new Response.Error());
         assertThat(err1.getMessage()).as("istanbul.nodeAddress must succeed").isBlank();
         String nodeAddr = nodeAddressRes.getResult();
         logger.debug("node {} node address: {}", targetNode.getName(), nodeAddr);
         nodes.stream().forEach(n -> {
             logger.debug("istanbul.propose targetNode:{} fromNode:{} vote:{} nodeAddr:{}", targetNode.getName(), n.getName(), vote, nodeAddr);
-            propose(QuorumNode.valueOf(n.getName()), nodeAddr, vote)
+            propose(n, nodeAddr, vote)
                 .doOnNext(res -> {
                     Response.Error err2 = Optional.ofNullable(res.getError()).orElse(new Response.Error());
                     assertThat(err2.getMessage()).as("istanbul.propose must succeed").isBlank();
@@ -182,26 +182,28 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         });
     }
 
-    public IstanbulNodeAddress getNodeAddress(QuorumNode node) {
+    public IstanbulNodeAddress getNodeAddress(Node node) {
         if(isBesuNode(node)) {
-            return besuService.nodeAddress(node).blockingFirst();
+            return besuService.nodeAddress(QuorumNode.valueOf(node.getName())).blockingFirst();
         }
-        return istanbulService.nodeAddress(node).blockingFirst();
+        return istanbulService.nodeAddress(QuorumNode.valueOf(node.getName())).blockingFirst();
     }
 
-    public Observable<IstanbulPropose> propose(QuorumNode node, String nodeAddr, boolean vote) {
+    public Observable<IstanbulPropose> propose(Node node, String nodeAddr, boolean vote) {
         if(isBesuNode(node)) {
-            return besuService.propose(node, nodeAddr, vote);
+            return besuService.propose(QuorumNode.valueOf(node.getName()), nodeAddr, vote);
         }
-        return istanbulService.propose(node, nodeAddr, vote);
+        return istanbulService.propose(QuorumNode.valueOf(node.getName()), nodeAddr, vote);
     }
 
-    public boolean isBesuNode(QuorumNode node) {
-        String nodeInfoName = utilService.getNodeInfoName(node);
-        if (nodeInfoName == null) {
-            return false;
+    public boolean isBesuNode(Node node) {
+        NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
+        String resourceId = Observable.fromIterable(networkResources.get(node.getName()))
+            .filter(id -> infraService.isBesu(id).blockingFirst()).blockingFirst(null);
+        if(resourceId != null) {
+            return true;
         }
-        return nodeInfoName.contains("besu");
+        return false;
     }
 
     @Step("Add new node, named it <newNode>, and join the network <id> as <nodeType>")

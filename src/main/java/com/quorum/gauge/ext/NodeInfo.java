@@ -52,14 +52,5 @@ public class NodeInfo extends Response<LinkedHashMap<Object, Object>> {
 
         return "";
     }
-    public String getName() {
-        final LinkedHashMap<Object, Object> result = this.getResult();
-
-        if ((result == null) || (result.get("name") == null)) {
-            return null;
-        }
-
-        return result.get("name").toString();
-    }
 
 }
