@@ -79,6 +79,11 @@ public class UnsupportedInfrastructureService implements InfrastructureService, 
     }
 
     @Override
+    public Observable<Boolean> isBesu(String resourceId) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public Observable<Boolean> deleteDatadirs(NetworkResources networkResources) {
         throw new UnsupportedOperationException();
     }

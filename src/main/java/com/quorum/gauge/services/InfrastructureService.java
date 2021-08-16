@@ -61,6 +61,8 @@ public interface InfrastructureService {
 
     Observable<Boolean> isGeth(String resourceId);
 
+    Observable<Boolean> isBesu(String resourceId);
+
     Observable<Boolean> deleteDatadirs(NetworkResources networkResources);
 
     Observable<Boolean> stopResource(String resourceId);

@@ -21,6 +21,7 @@ package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNetworkProperty.Node;
 import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.ext.NodeInfo;
 import com.quorum.gauge.ext.PendingTransaction;
 import io.reactivex.Observable;
 import org.springframework.stereotype.Service;
@@ -67,6 +68,18 @@ public class UtilService extends AbstractService {
         );
 
         return request.flowable().toObservable().blockingFirst().getTransactions();
+    }
+
+    public String getNodeInfoName(final QuorumNode node) {
+        Request<?, NodeInfo> nodeInfoRequest = new Request<>(
+            "admin_nodeInfo",
+            null,
+            connectionFactory().getWeb3jService(node),
+            NodeInfo.class
+        );
+
+        NodeInfo nodeInfo = nodeInfoRequest.flowable().toObservable().blockingFirst();
+        return nodeInfo.getName();
     }
 
     public Observable<Boolean> getRpcModules(QuorumNode node) {
