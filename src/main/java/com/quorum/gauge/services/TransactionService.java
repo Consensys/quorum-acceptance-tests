@@ -294,7 +294,7 @@ public class TransactionService extends AbstractService {
         return client.quorumGetPrivatePayload(encryptedPayloadHash).flowable().toObservable();
     }
 
-    // Invoking eth_getPrivateTransaction
+    // Invoking eth_getPrivateTransactionByHash
     public Observable<EthTransaction> getPrivateTransaction(QuorumNode node, String transactionHash) {
         Request<?, EthTransaction> request = new Request<Object, EthTransaction>(
             "eth_getPrivateTransactionByHash",
