@@ -207,7 +207,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     @Step("Execute <contractName>'s `set()` function with new value <newValue> in <source> and it's private for <target>, store transaction hash as <txRef>")
     public void updateNewValue(String contractName, int newValue, QuorumNode source, QuorumNode target, String txRef) {
         TransactionReceipt r = updateNewValue(contractName, PrivacyFlag.StandardPrivate.name(), newValue, source, target);
-        DataStoreFactory.getScenarioDataStore().put(txRef + "_transactionHash", r.getTransactionHash());
+        DataStoreFactory.getScenarioDataStore().put(txRef, r.getTransactionHash());
     }
 
     @Step("Deploy <count> private smart contracts between a default account in <source> and a default account in <target>")

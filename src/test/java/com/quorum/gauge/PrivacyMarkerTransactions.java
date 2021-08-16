@@ -172,7 +172,7 @@ public class PrivacyMarkerTransactions extends AbstractSpecImplementation {
         String txHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), txRef, String.class);
         Optional<Transaction> tx = privacyMarkerTransactionService.getTransaction(node, txHash).blockingFirst().getTransaction();
 
-        DataStoreFactory.getScenarioDataStore().put(ref, tx);
+        DataStoreFactory.getScenarioDataStore().put(ref, tx.orElse(null));
 
         return tx;
     }
@@ -191,7 +191,7 @@ public class PrivacyMarkerTransactions extends AbstractSpecImplementation {
         String txHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), txRef, String.class);
         Optional<Transaction> tx = privacyMarkerTransactionService.getPrivateTransaction(node, txHash).blockingFirst().getTransaction();
 
-        DataStoreFactory.getScenarioDataStore().put(ref, tx);
+        DataStoreFactory.getScenarioDataStore().put(ref, tx.orElse(null));
 
         return tx;
     }
