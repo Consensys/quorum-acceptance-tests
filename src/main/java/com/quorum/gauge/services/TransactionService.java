@@ -294,17 +294,6 @@ public class TransactionService extends AbstractService {
         return client.quorumGetPrivatePayload(encryptedPayloadHash).flowable().toObservable();
     }
 
-    // Invoking eth_getPrivateTransactionByHash
-    public Observable<EthTransaction> getPrivateTransaction(QuorumNode node, String transactionHash) {
-        Request<?, EthTransaction> request = new Request<Object, EthTransaction>(
-            "eth_getPrivateTransactionByHash",
-            Arrays.asList(transactionHash),
-            connectionFactory().getWeb3jService(node),
-            EthTransaction.class
-        );
-        return request.flowable().toObservable();
-    }
-
     // Invoking eth_getLogs
     public Observable<EthLog> getLogsUsingFilter(QuorumNode node, String contractAddress) {
         Web3j client = connectionFactory().getWeb3jConnection(node);
