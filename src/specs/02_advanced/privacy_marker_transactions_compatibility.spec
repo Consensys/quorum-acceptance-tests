@@ -1,12 +1,11 @@
 # Privacy marker transactions in mixed network
 
-  Tags: networks/template::raft-3plus1, pre-condition/no-record-blocknumber, raftdnsenable
+  Tags: privacy-precompile-compatibility, networks/template::raft-4nodes, networks/template::istanbul-4nodes, pre-condition/no-record-blocknumber
 
   Quorum 21.7.1 introduces the privacy precompile contract and privacy marker transactions. Once the
   privacyPrecompileBlock is reached nodes can with `--privacymarker.enable` will create PMTs by default.
   Nodes without `--privacymarker.enable` should create normal private transactions by default but should still be able
   to process any PMTs they are party to.
-
 
 ## PMT-enabled node creates privacy marker transactions
 
