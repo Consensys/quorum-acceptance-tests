@@ -6,8 +6,20 @@ variable "consensus" {
 
 variable "privacy_enhancements" {
   type        = object({ block = number, enabled = bool })
-  default     = { block = 0, enabled = true }
+  default     = { block = 0, enabled = false }
   description = "privacy enhancements state (enabled/disabled) and the block height at which they are enabled"
+}
+
+variable "privacy_precompile" {
+  type        = object({ block = number, enabled = bool })
+  default     = { enabled = false, block = 0 }
+  description = "Set the privacyPrecompileBlock fork"
+}
+
+variable "privacy_marker_transactions" {
+  type        = bool
+  default     = false
+  description = "Enable privacy marker transactions on the node"
 }
 
 variable "network_name" {
@@ -63,8 +75,8 @@ variable "docker_registry" {
 }
 
 variable "additional_quorum_container_vol" {
-  type = map(list(object({container_path = string, host_path = string})))
-  default = {}
+  type        = map(list(object({ container_path = string, host_path = string })))
+  default     = {}
   description = "Additional volume mounts for geth container. Each map key is the node index (0-based)"
 }
 
@@ -155,4 +167,10 @@ Override the value from var.plugins per node
   0 = {}
 }
 EOT
+}
+
+variable "qbftBlock" {
+  type        = object({ block = number, enabled = bool })
+  default     = { block = 0, enabled = false }
+  description = "qbft fork block (enabled/disabled) and the block height at which it is enabled"
 }

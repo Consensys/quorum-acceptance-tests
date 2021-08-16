@@ -27,8 +27,8 @@ locals {
   with_hashicorp_plugin = contains(values(var.plugins)[*].name, "quorum-account-plugin-hashicorp-vault")
 
   additional_geth_args = merge(
-    {for idx in local.node_indices : idx => format("--rpcapi %s --plugins file://%s/plugin-settings.json %s", local.apis, "/data/qdata", local.more_args)},
-    var.override_additional_geth_args)
+    { for idx in local.node_indices : idx => format("--rpcapi %s --plugins file://%s/plugin-settings.json %s", local.apis, "/data/qdata", local.more_args) },
+  var.override_additional_geth_args)
 }
 
 module "helper" {
@@ -62,10 +62,12 @@ module "network" {
 
   consensus            = module.helper.consensus
   privacy_enhancements = var.privacy_enhancements
+  privacy_precompile = var.privacy_precompile
   network_name         = var.network_name
   geth_networking      = module.helper.geth_networking
   tm_networking        = module.helper.tm_networking
   output_dir           = var.output_dir
+  qbftBlock            = var.qbftBlock
 
   override_tm_named_key_allocation  = var.override_tm_named_key_allocation
   override_named_account_allocation = var.override_named_account_allocation
@@ -89,6 +91,7 @@ module "docker" {
   password_file_name = module.network.password_file_name
   geth_datadirs      = var.remote_docker_config == null ? module.network.data_dirs : split(",", join("", null_resource.scp[*].triggers.data_dirs))
   tessera_datadirs   = var.remote_docker_config == null ? module.network.tm_dirs : split(",", join("", null_resource.scp[*].triggers.tm_dirs))
+  privacy_marker_transactions = var.privacy_marker_transactions
 
   # provide additional geth args
   additional_geth_args = local.additional_geth_args

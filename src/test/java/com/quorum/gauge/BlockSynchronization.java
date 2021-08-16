@@ -127,10 +127,8 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         List<Observable<?>> parallelSender = new ArrayList<>();
         // fire 5 public and 5 private txs
         for (Node n : nodes) {
-            parallelSender.add(sendTxs(n, txCountPerNode, threadsPerNode, null)
-                .subscribeOn(Schedulers.io()));
-            parallelSender.add(sendTxs(n, txCountPerNode, threadsPerNode, randomNode(nodes, n))
-                .subscribeOn(Schedulers.io()));
+            parallelSender.add(sendTxs(n, txCountPerNode, threadsPerNode, null));
+            parallelSender.add(sendTxs(n, txCountPerNode, threadsPerNode, randomNode(nodes, n)));
         }
         Observable.zip(parallelSender, oks -> true)
             .doOnComplete(() -> {
@@ -144,11 +142,8 @@ public class BlockSynchronization extends AbstractSpecImplementation {
 
     private Observable<? extends Contract> sendTxs(Node n, int txCountPerNode, int threadsPerNode, Node target) {
         return Observable.range(0, txCountPerNode)
-            .doOnNext(c -> logger.debug("Sending tx {} to {}", c, n))
-            .flatMap(v -> Observable.just(v)
-                    .flatMap(num -> contractService.createSimpleContract(40, n, target))
-                    .subscribeOn(Schedulers.io())
-                , threadsPerNode);
+                .doOnNext(c -> logger.debug("Sending tx {} to {}", c, n))
+                .flatMap(v -> Observable.just(v).flatMap(num -> contractService.createSimpleContract(40, n, target)), threadsPerNode);
     }
 
     private Node randomNode(List<Node> nodes, Node n) {
@@ -307,6 +302,26 @@ public class BlockSynchronization extends AbstractSpecImplementation {
             }
             currentBlockHeight = utilService.getCurrentBlockNumberFrom(node).blockingFirst().getBlockNumber();
             logger.debug("Current block number on host {} is {}", node.getName(), currentBlockHeight);
+            i++;
+            assertThat(i).isLessThanOrEqualTo(MAX_COUNT);
+        }
+    }
+
+
+    @Step("Wait to catch up block <block>")
+    public void waitForNodeToReachBlockNumber(String block) {
+        BigInteger currentBlockHeight = utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber();
+        BigInteger lastBlockHeight = new BigInteger(block);
+        int i = 0;
+        final int MAX_COUNT = 20;
+        while (currentBlockHeight.compareTo(lastBlockHeight) < 0) {
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            currentBlockHeight = utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber();
+            logger.debug("Current block number is {}", currentBlockHeight);
             i++;
             assertThat(i).isLessThanOrEqualTo(MAX_COUNT);
         }

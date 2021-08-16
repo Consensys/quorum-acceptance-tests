@@ -1,6 +1,6 @@
 # Pluggable Architecture with hello-world plugin
 
- Tags: networks/plugins::istanbul, networks/plugins::raft
+ Tags: networks/plugins::istanbul, networks/plugins::qbft, networks/plugins::raft
 
 Plugin, implementing `helloworld` plugin interface, exposes an API which is delegated via JSON RPC
 

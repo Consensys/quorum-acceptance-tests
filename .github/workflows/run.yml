@@ -1,4 +1,4 @@
-name: Run Acceptance Tests
+name: Run Acceptance Tests on standard networks
 on:
   schedule:
     - cron: '0 12 * * *'
@@ -97,15 +97,22 @@ jobs:
         tag:
           - 'basic || basic-raft || (advanced && raft) || networks/typical::raft'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft'
           - 'gcmode && block-sync && networks/template::raft-3plus1'
           - 'gcmode && block-sync && networks/template::istanbul-3plus1'
+          - 'gcmode && block-sync && networks/template::qbft-3plus1'
           - 'learner-peer-management || raftdnsenable && networks/template::raft-3plus1'
+          - 'validator-management && networks/template::qbft-3plus1'
           - 'validator-management && networks/template::istanbul-3plus1'
+          - 'qbft-transition-network && networks/template::qbft-4nodes-transition'
           - 'basic || basic-raft || (advanced && raft) || networks/plugins::raft'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::qbft'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul'
           - 'basic || basic-raft || (advanced && raft) || networks/plugins::raft-account-plugin-hashicorp-vault'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::qbft-account-plugin-hashicorp-vault'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul-account-plugin-hashicorp-vault'
           - 'basic-rpc-security || networks/plugins::raft-rpc-security'
+          - 'basic-rpc-security || networks/plugins::qbft-rpc-security'
           - 'basic-rpc-security || networks/plugins::istanbul-rpc-security'
           - 'migration && networks/template::raft-4nodes'
           - 'migration && networks/template::istanbul-4nodes'
@@ -117,19 +124,15 @@ jobs:
           - 'privacy-enhancements-upgrade || networks/template::istanbul-4nodes-pe'
           - 'multitenancy && networks/plugins::raft-multitenancy'
           - 'basic || basic-raft || (advanced && raft) || networks/typical::raft-simple-mps'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-simple-mps'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul-simple-mps'
           - 'basic || networks/typical::raftmps'
+          - 'basic || networks/typical::qbftmps'
           - 'basic || networks/typical::istanbulmps'
           - 'mps-upgrade-txtrace || networks/template::raft-4nodes-mps'
           - 'mps-upgrade-txtrace || networks/template::istanbul-4nodes-mps'
           - '(basic && !nosupport && !mps && !(spam && !raw) && !eth-api-signed && !privacy-enhancements-disabled && !graphql && !async && !extension && !storage-root && !personal-api-signed) || networks/typical-besu::ibft2'
-        privacy-enhancements:
-          - 'false'
-        include:
-          - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || basic-raft || (advanced && raft) || networks/typical::raft'
-            privacy-enhancements: 'true'
-          - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
-            privacy-enhancements: 'true'
+          - '(basic && !nosupport && !mps && !(spam && !raw) && !eth-api-signed && !privacy-enhancements-disabled && !graphql && !async && !extension && !storage-root && !personal-api-signed) || networks/typical-hybrid::hybrid'
     runs-on: ubuntu-18.04
     steps:
       - name: 'Download docker image'
@@ -156,6 +159,7 @@ jobs:
             local_image="false"
           fi
           dockerEnvFile=${{ runner.temp }}/env.list
+          touch $dockerEnvFile # create empty dockerEnvFile just in case we don't echo anything to it
           # now we check if we should use the custom docker images in this repo
           gitref_path="${{ github.ref }}"
           gitref_path=${gitref_path/refs\/heads\//} # for refs/heads/my-branch
@@ -183,7 +187,6 @@ jobs:
               echo "TF_VAR_docker_registry=[{name=\"docker.pkg.github.com\", username=\"${{ github.repository_owner }}\", password=\"${{ github.token }}\"}]" >> $dockerEnvFile
             fi
           fi
-          echo "TF_VAR_privacy_enhancements={block=0, enabled=${{ matrix.privacy-enhancements}}}" >> $dockerEnvFile
           echo "::set-output name=tag::$tagKey"
           echo "::set-output name=mvnArg::$mvnArg"
           echo "::set-output name=dockerEnv::$dockerEnv"
@@ -205,10 +208,20 @@ jobs:
       - name: 'Failure info'
         if: ${{ failure() }}
         run: |
-            echo "acceptance tests failures"
+            echo "Docker container info"
+            set -x
             docker images
             docker ps -a
-            for containerId in $(docker ps -qa); do echo "container: $containerId"; docker container inspect $containerId; docker container logs $containerId; done
+            set +x
+
+            IFS=$'\n' # set internal field separator so we can iterate over docker ps output
+            for CONTAINER in $(docker ps -a --format {{.Names}})
+            do
+              echo "writing logs for $CONTAINER to ${CONTAINER}.log"
+              docker logs $CONTAINER > ${{ steps.setup.outputs.outputDir }}/${CONTAINER}.log 2>&1
+              echo "writing inspect output for $CONTAINER to ${CONTAINER}-inspect.json"
+              docker container inspect $CONTAINER > ${{ steps.setup.outputs.outputDir }}/${CONTAINER}-inspect.json 2>&1
+            done
       - name: 'Read test report'
         if: always()
         run: |

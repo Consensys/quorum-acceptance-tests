@@ -1,6 +1,6 @@
 # Istanbul BFT consensus - Validator and non-validator behaviour
 
-  Tags: networks/template::istanbul-3plus1, pre-condition/no-record-blocknumber, validator-management
+  Tags: networks/template::istanbul-3plus1, networks/template::qbft-3plus1, pre-condition/no-record-blocknumber, validator-management
 
 This specification describes how validator and non-validator nodes behave in istanbul
  - validator node can seal new blocks
