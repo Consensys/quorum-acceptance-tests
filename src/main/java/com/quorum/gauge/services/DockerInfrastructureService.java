@@ -260,6 +260,15 @@ public class DockerInfrastructureService
                 .map(l -> l.containsKey("QuorumContainer"));
     }
 
+    @Override
+    public Observable<Boolean> isBesu(String resourceId) {
+        return Observable.just(dockerClient.inspectContainerCmd(resourceId).exec())
+            .map(InspectContainerResponse::getConfig)
+            .map(ContainerConfig::getLabels)
+            .map(l -> l.containsKey("BesuContainer"));
+    }
+
+
     /**
      * Datadir in docker network is {@code /data/qdata}
      * @param networkResources

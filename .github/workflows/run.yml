@@ -104,6 +104,8 @@ jobs:
           - 'learner-peer-management || raftdnsenable && networks/template::raft-3plus1'
           - 'validator-management && networks/template::qbft-3plus1'
           - 'validator-management && networks/template::istanbul-3plus1'
+          - 'hybrid-validator-management-manage-besu && networks/typical-hybrid::hybrid-template-q2b1'
+          - 'hybrid-validator-management-manage-quorum && networks/typical-hybrid::hybrid-template-q1b2'
           - 'qbft-transition-network && networks/template::qbft-4nodes-transition'
           - 'basic || basic-raft || (advanced && raft) || networks/plugins::raft'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::qbft'

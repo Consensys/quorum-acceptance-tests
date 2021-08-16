@@ -1,6 +1,6 @@
 # QBFT consensus - Validator and non-validator behaviour
 
-  Tags: networks/typical-hybrid::hybrid-q2b1, pre-condition/no-record-blocknumber, hybrid-validator-management-manage-besu
+  Tags: networks/typical-hybrid::hybrid-template-q2b1, pre-condition/no-record-blocknumber, hybrid-validator-management-manage-besu
 
 This specification describes how validator and non-validator nodes behave in hybrid network
  - validator node can seal new blocks
@@ -21,7 +21,7 @@ New node after being added to the network as non-validator node must not be able
 * Record the current block number, named it as "blockHeightAfterContractsAreMinted"
 * Wait for node "Node4" to catch up to "blockHeightAfterContractsAreMinted"
 * Verify node "Node4" has the block height greater or equal to "blockHeightAfterContractsAreMinted"
-* "Node4" is not able to seal new blocks
+* Besu node "Node4" is not a Validator
 
 ## A new node is allowed to seal blocks after being proposed as a validator
 
@@ -36,7 +36,7 @@ Hence it is authorized to seal new blocks
 * Record the current block number, named it as "blockHeightAfterContractsAreMinted"
 * Wait for node "Node4" to catch up to "blockHeightAfterContractsAreMinted"
 * Verify node "Node4" has the block height greater or equal to "blockHeightAfterContractsAreMinted"
-* "Node4" is able to seal new blocks
+* Besu node "Node4" is a Validator
 
 
 ## A node can still sync up with the network but is not allowed to seal blocks after being proposed as a non-validator

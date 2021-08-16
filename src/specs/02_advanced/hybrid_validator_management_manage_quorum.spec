@@ -1,6 +1,6 @@
 # QBFT consensus - Validator and non-validator behaviour
 
-  Tags: networks/typical-hybrid::hybrid-q1b2, pre-condition/no-record-blocknumber, hybrid-validator-management-manage-quorum
+  Tags: networks/typical-hybrid::hybrid-template-q1b2, pre-condition/no-record-blocknumber, hybrid-validator-management-manage-quorum
 
 This specification describes how validator and non-validator nodes behave in hybrid network
  - validator node can seal new blocks

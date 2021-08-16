@@ -427,6 +427,37 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         assertThat(found).as(expectedLogMsg).isTrue();
     }
 
+    @Step("Besu node <nodeName> is a Validator")
+    public void verifyBesuNodeIsValidatorFromLogs(Node nodeName) {
+        String expectedLogMsg = "Creating proposed block";
+        verifyBesuValidatorOrNotViaLogs(nodeName, expectedLogMsg, true);
+    }
+
+    @Step("Besu node <nodeName> is not a Validator")
+    public void verifyBesuNodeIsNonValidatorFromLogs(Node nodeName) {
+        String expectedLogMsg = "Creating proposed block";
+        verifyBesuValidatorOrNotViaLogs(nodeName, expectedLogMsg, false);
+    }
+
+    private void verifyBesuValidatorOrNotViaLogs(Node nodeName, String expectedLogMsg, boolean logsPresent) {
+        NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
+
+        assertThat(networkResources.get(nodeName.getName())).as(nodeName.getName() + " started").isNotNull();
+        // sometimes istanbul/raft take long time to sync
+        Duration longerDuration = Duration.ofSeconds(networkProperty.getConsensusGracePeriod().getSeconds() * 2);
+        logger.debug("Grepping '{}' in the log stream for {}s ...", expectedLogMsg, longerDuration.getSeconds());
+        Boolean found = Observable.fromIterable(networkResources.get(nodeName.getName()))
+            .filter(id -> infraService.isBesu(id).blockingFirst())
+            .flatMap(id -> infraService.grepLog(id, expectedLogMsg, longerDuration.getSeconds(), TimeUnit.SECONDS))
+            .blockingFirst();
+
+        if(logsPresent) {
+            assertThat(found).as(expectedLogMsg).isTrue();
+            return;
+        }
+        assertThat(found).as(expectedLogMsg).isFalse();
+    }
+
     @Step("Promote learner node <newNode> from node <fromNode>, in the network <networkName>")
     public void promoteLearnerNode(Node newNode, Node fromNode, String id) {
         Integer raftId = mustHaveValue(DataStoreFactory.getScenarioDataStore(), newNode.getName() + "_raftId", Integer.class);
