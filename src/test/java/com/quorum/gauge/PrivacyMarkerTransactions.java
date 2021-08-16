@@ -78,121 +78,139 @@ public class PrivacyMarkerTransactions extends AbstractSpecImplementation {
 
     @Step("<txRef> retrieved from <node> is a public transaction")
     public void isPublicTransaction(String txRef, QuorumNetworkProperty.Node node) {
-        String txHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), txRef, String.class);
-        Transaction tx = privacyMarkerTransactionService.getTransaction(node, txHash).blockingFirst().getTransaction().get();
+        Transaction tx = getTransaction(txRef, node).get();
 
         assertThat(Collections.singleton(tx.getV())).doesNotContain(37L, 38L);
     }
 
     @Step("<txRef> retrieved from <node> is a private transaction")
     public void isPrivateTransaction(String txRef, QuorumNetworkProperty.Node node) {
-        String txHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), txRef, String.class);
-        Transaction tx = privacyMarkerTransactionService.getTransaction(node, txHash).blockingFirst().getTransaction().get();
+        Transaction tx = getTransaction(txRef, node).get();
 
         assertThat(Collections.singleton(tx.getV())).containsAnyOf(37L, 38L);
     }
 
     @Step("recipient of <txRef> retrieved from <node> is the privacy precompile contract")
     public void recipientIsPrivacyPrecompile(String txRef, QuorumNetworkProperty.Node node) {
-        String privacyPrecompileAddress = privacyMarkerTransactionService.getPrivacyPrecompileAddress(node).blockingFirst().getResult();
-        String txHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), txRef, String.class);
-        Transaction tx = privacyMarkerTransactionService.getTransaction(node, txHash).blockingFirst().getTransaction().get();
+        String privacyPrecompileAddress = getPrivacyPrecompileAddress(node);
+        Transaction tx = getTransaction(txRef, node).get();
 
         assertThat(tx.getTo()).isEqualTo(privacyPrecompileAddress);
     }
 
     @Step("recipient of <txRef> retrieved from <node> is not the privacy precompile contract")
     public void recipientIsNotPrivacyPrecompile(String txRef, QuorumNetworkProperty.Node node) {
-        String privacyPrecompileAddress = privacyMarkerTransactionService.getPrivacyPrecompileAddress(node).blockingFirst().getResult();
-        String txHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), txRef, String.class);
-        Transaction tx = privacyMarkerTransactionService.getTransaction(node, txHash).blockingFirst().getTransaction().get();
+        String privacyPrecompileAddress = getPrivacyPrecompileAddress(node);
+        Transaction tx = getTransaction(txRef, node).get();
 
         assertThat(tx.getTo()).isNotEqualTo(privacyPrecompileAddress);
     }
 
     @Step("data of <txRef> retrieved from <node> has been replaced by a Transaction Manager hash")
     public void dataIsTmHash(String txRef, QuorumNetworkProperty.Node node) {
-        String txHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), txRef, String.class);
-        Transaction tx = privacyMarkerTransactionService.getTransaction(node, txHash).blockingFirst().getTransaction().get();
+        Transaction tx = getTransaction(txRef, node).get();
 
         assertThat(Numeric.hexStringToByteArray(tx.getInput())).hasSize(64);
     }
 
     @Step("<txRef>'s PMT and private transaction retrieved from <node> share sender")
     public void senderSharedByPmtAndPvtTx(String txRef, QuorumNetworkProperty.Node node) {
-        String txHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), txRef, String.class);
-        Transaction pmt = privacyMarkerTransactionService.getTransaction(node, txHash).blockingFirst().getTransaction().get();
-        Transaction pvtTx = privacyMarkerTransactionService.getPrivateTransaction(node, txHash).blockingFirst().getTransaction().get();
+        Transaction pmt = getTransaction(txRef, node).get();
+        Transaction pvtTx = getPrivateTransaction(txRef, node).get();
 
         assertThat(pmt.getFrom()).isEqualTo(pvtTx.getFrom());
     }
 
     @Step("<txRef>'s PMT and private transaction retrieved from <node> share nonce")
     public void nonceSharedByPmtAndPvtTx(String txRef, QuorumNetworkProperty.Node node) {
-        String txHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), txRef, String.class);
-        Transaction pmt = privacyMarkerTransactionService.getTransaction(node, txHash).blockingFirst().getTransaction().get();
-        Transaction pvtTx = privacyMarkerTransactionService.getPrivateTransaction(node, txHash).blockingFirst().getTransaction().get();
+        Transaction pmt = getTransaction(txRef, node).get();
+        Transaction pvtTx = getPrivateTransaction(txRef, node).get();
 
         assertThat(pmt.getNonce()).isEqualTo(pvtTx.getNonce());
     }
 
     @Step("<txRef>'s internal transaction retrieved from <node> is not null")
     public void internalTransactionRetrieved(String txRef, QuorumNetworkProperty.Node node) {
-        String txHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), txRef, String.class);
-        Optional<Transaction> tx = privacyMarkerTransactionService.getPrivateTransaction(node, txHash).blockingFirst().getTransaction();
-
-        assertThat(tx).isPresent();
+        assertThat(getPrivateTransaction(txRef, node)).isPresent();
     }
 
     @Step("<txRef>'s internal transaction retrieved from <node> is null")
     public void internalTransactionNotRetrieved(String txRef, QuorumNetworkProperty.Node node) {
-        String txHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), txRef, String.class);
-        Optional<Transaction> tx = privacyMarkerTransactionService.getPrivateTransaction(node, txHash).blockingFirst().getTransaction();
-
-        assertThat(tx).isNotPresent();
+        assertThat(getPrivateTransaction(txRef, node)).isNotPresent();
     }
 
     @Step("<txRef>'s internal transaction retrieved from <node> is a private transaction")
     public void internalTransactionIsPrivate(String txRef, QuorumNetworkProperty.Node node) {
-        String txHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), txRef, String.class);
-        Transaction tx = privacyMarkerTransactionService.getPrivateTransaction(node, txHash).blockingFirst().getTransaction().get();
-
+        Transaction tx = getPrivateTransaction(txRef, node).get();
         assertThat(Collections.singleton(tx.getV())).containsAnyOf(37L, 38L);
     }
 
     @Step("recipient of <txRef>'s internal transaction retrieved from <node> is not the privacy precompile contract")
     public void internalTxRecipientIsNotPrivacyPrecompile(String txRef, QuorumNetworkProperty.Node node) {
         String privacyPrecompileAddress = privacyMarkerTransactionService.getPrivacyPrecompileAddress(node).blockingFirst().getResult();
-        String txHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), txRef, String.class);
-        Transaction tx = privacyMarkerTransactionService.getPrivateTransaction(node, txHash).blockingFirst().getTransaction().get();
-
+        Transaction tx = getPrivateTransaction(txRef, node).get();
         assertThat(tx.getTo()).isNotEqualTo(privacyPrecompileAddress);
     }
 
     @Step("data of <txRef>'s internal transaction retrieved from <node> has been replaced by a Transaction Manager hash")
     public void internalTxDataIsTmHash(String txRef, QuorumNetworkProperty.Node node) {
-        String txHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), txRef, String.class);
-        Transaction tx = privacyMarkerTransactionService.getPrivateTransaction(node, txHash).blockingFirst().getTransaction().get();
-
+        Transaction tx = getPrivateTransaction(txRef, node).get();
         assertThat(Numeric.hexStringToByteArray(tx.getInput())).hasSize(64);
     }
 
-//    private Optional<Transaction> getTransaction(String txRef, QuorumNetworkProperty.Node node) {
-//        String ref = String.format("%s_%s_getTransaction", txRef, node.getName());
-//        Optional<Transaction> alreadyGot = haveValue(DataStoreFactory.getScenarioDataStore(), ref, Transaction.class);
-//        if (alreadyGot.isPresent()) {
-//            System.out.println("already got " + ref);
-//
-//            return alreadyGot;
-//        }
-//
-//        System.out.println("getting " + ref);
-//
-//        String txHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), txRef, String.class);
-//        Optional<Transaction> tx = privacyMarkerTransactionService.getTransaction(node, txHash).blockingFirst().getTransaction();
-//
-//        DataStoreFactory.getScenarioDataStore().put(ref, tx);
-//
-//        return tx;
-//    }
+    private Optional<Transaction> getTransaction(String txRef, QuorumNetworkProperty.Node node) {
+        String ref = String.format("%s_%s_getTransaction", txRef, node.getName());
+        Optional<Transaction> alreadyGot = haveValue(DataStoreFactory.getScenarioDataStore(), ref, Transaction.class);
+        if (alreadyGot.isPresent()) {
+            System.out.println("already got " + ref);
+
+            return alreadyGot;
+        }
+
+        System.out.println("getting " + ref);
+
+        String txHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), txRef, String.class);
+        Optional<Transaction> tx = privacyMarkerTransactionService.getTransaction(node, txHash).blockingFirst().getTransaction();
+
+        DataStoreFactory.getScenarioDataStore().put(ref, tx);
+
+        return tx;
+    }
+
+    private Optional<Transaction> getPrivateTransaction(String txRef, QuorumNetworkProperty.Node node) {
+        String ref = String.format("%s_%s_getPrivateTransaction", txRef, node.getName());
+        Optional<Transaction> alreadyGot = haveValue(DataStoreFactory.getScenarioDataStore(), ref, Transaction.class);
+        if (alreadyGot.isPresent()) {
+            System.out.println("already got " + ref);
+
+            return alreadyGot;
+        }
+
+        System.out.println("getting " + ref);
+
+        String txHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), txRef, String.class);
+        Optional<Transaction> tx = privacyMarkerTransactionService.getPrivateTransaction(node, txHash).blockingFirst().getTransaction();
+
+        DataStoreFactory.getScenarioDataStore().put(ref, tx);
+
+        return tx;
+    }
+
+    private String getPrivacyPrecompileAddress(QuorumNetworkProperty.Node node) {
+        String ref = String.format("%s_getPrivacyPrecompileAddress", node.getName());
+        Optional<String> alreadyGot = haveValue(DataStoreFactory.getScenarioDataStore(), ref, String.class);
+        if (alreadyGot.isPresent()) {
+            System.out.println("already got " + ref);
+
+            return alreadyGot.get();
+        }
+
+        System.out.println("getting " + ref);
+
+        String privacyPrecompileAddress = privacyMarkerTransactionService.getPrivacyPrecompileAddress(node).blockingFirst().getResult();
+
+        DataStoreFactory.getScenarioDataStore().put(ref, privacyPrecompileAddress);
+
+        return privacyPrecompileAddress;
+    }
 }
