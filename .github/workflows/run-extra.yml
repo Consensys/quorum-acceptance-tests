@@ -254,40 +254,49 @@ jobs:
         if: always()
         run: |
           echo "::group::failures"
-          failuresRaw="$(cat ${{ steps.setup.outputs.outputDir }}/failures.txt | jq -r '.[] | @base64')"
-          SAVEIFS=$IFS   # Save current IFS
-          IFS=$'\n'      # Change IFS to new line
-          failures=($failuresRaw) # split to array
-          IFS=$SAVEIFS   # Restore IFS
-          for (( i=0; i<${#failures[@]}; i++ ))
-          do
-            row=${failures[$i]}
-            _jq() {
-                echo ${row} | base64 --decode | jq -r ${1}
-            }
-            echo "$(_jq '.file'): $(_jq '.message')"
-            echo "::error file=$(_jq '.file'),line=$(_jq '.line'),col=$(_jq '.col')::$(_jq '.message')"
-          done
+          if [ -r ${{ steps.setup.outputs.outputDir}}/failures.txt ];
+          then
+            failuresRaw="$(cat ${{ steps.setup.outputs.outputDir }}/failures.txt | jq -r '.[] | @base64')"
+            SAVEIFS=$IFS   # Save current IFS
+            IFS=$'\n'      # Change IFS to new line
+            failures=($failuresRaw) # split to array
+            IFS=$SAVEIFS   # Restore IFS
+            for (( i=0; i<${#failures[@]}; i++ ))
+            do
+              row=${failures[$i]}
+              _jq() {
+                  echo ${row} | base64 --decode | jq -r ${1}
+              }
+              echo "$(_jq '.file'): $(_jq '.message')"
+              echo "::error file=$(_jq '.file'),line=$(_jq '.line'),col=$(_jq '.col')::$(_jq '.message')"
+            done
+          fi
           echo "::endgroup::"
 
           echo "::group::skipped"
-          skippedRaw="$(cat ${{ steps.setup.outputs.outputDir }}/skipped.txt | jq -r '.[] | @base64')"
-          SAVEIFS=$IFS          # Save current IFS
-          IFS=$'\n'             # Change IFS to new line
-          skipped=($skippedRaw) # split to array
-          IFS=$SAVEIFS          # Restore IFS
-          for (( i=0; i<${#skipped[@]}; i++ ))
-          do
-            row=${skipped[$i]}
-            _jq() {
-              echo ${row} | base64 --decode | jq -r ${1}
-            }
-            echo "$(_jq '.message')"
-          done
-          echo "::warning ::$(_jq '.message')"
+          if [ -r ${{ steps.setup.outputs.outputDir}}/skipped.txt ];
+          then
+            skippedRaw="$(cat ${{ steps.setup.outputs.outputDir }}/skipped.txt | jq -r '.[] | @base64')"
+            SAVEIFS=$IFS          # Save current IFS
+            IFS=$'\n'             # Change IFS to new line
+            skipped=($skippedRaw) # split to array
+            IFS=$SAVEIFS          # Restore IFS
+            for (( i=0; i<${#skipped[@]}; i++ ))
+            do
+              row=${skipped[$i]}
+              _jq() {
+                echo ${row} | base64 --decode | jq -r ${1}
+              }
+              echo "$(_jq '.message')"
+              echo "::warning ::$(_jq '.message')"
+            done
+          fi
           echo "::endgroup::"
 
-          cat ${{ steps.setup.outputs.outputDir}}/summary.txt
+          if [ -r ${{ steps.setup.outputs.outputDir}}/summary.txt ];
+          then
+            cat ${{ steps.setup.outputs.outputDir}}/summary.txt;
+          fi
       - name: 'Upload test report'
         if: always()
         uses: actions/upload-artifact@v2
