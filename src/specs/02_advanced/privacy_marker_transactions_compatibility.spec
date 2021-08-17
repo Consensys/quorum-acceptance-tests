@@ -11,7 +11,7 @@
 
   Tags: post-condition/datadir-cleanup, post-condition/network-cleanup
 
-* Start the network with:
+* Start the PMT network with:
     | node  | --privacymarker.enable |
     |-------|------------------------|
     | Node1 | true                   |

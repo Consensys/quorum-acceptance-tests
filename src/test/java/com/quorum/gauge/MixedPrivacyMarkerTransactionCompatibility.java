@@ -40,7 +40,7 @@ public class MixedPrivacyMarkerTransactionCompatibility extends AbstractSpecImpl
     @Autowired
     private InfrastructureService infraService;
 
-    @Step("Start the network with: <table>")
+    @Step("Start the PMT network with: <table>")
     public void startNetwork(Table table) {
         InfrastructureService.NetworkResources networkResources = new InfrastructureService.NetworkResources();
         try {
