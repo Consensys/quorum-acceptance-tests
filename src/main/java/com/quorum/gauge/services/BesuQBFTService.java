@@ -1,6 +1,6 @@
 package com.quorum.gauge.services;
 
-import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.ext.IstanbulNodeAddress;
 import com.quorum.gauge.ext.IstanbulPropose;
 import io.reactivex.Observable;
@@ -22,7 +22,7 @@ public class BesuQBFTService extends AbstractService {
      * @param vote
      * @return
      */
-    public Observable<IstanbulPropose> propose(final QuorumNode node, final String proposedValidatorAddress, boolean vote) {
+    public Observable<IstanbulPropose> propose(final QuorumNetworkProperty.Node node, final String proposedValidatorAddress, boolean vote) {
         logger.debug("Node {} proposing {}", node, proposedValidatorAddress);
 
         return new Request<>(
@@ -38,7 +38,7 @@ public class BesuQBFTService extends AbstractService {
      * @param node
      * @return
      */
-    public Observable<IstanbulNodeAddress> nodeAddress(final QuorumNode node) {
+    public Observable<IstanbulNodeAddress> nodeAddress(final QuorumNetworkProperty.Node node) {
         logger.debug("node address of node {}", node);
         return new Request<>(
             "eth_coinbase",
