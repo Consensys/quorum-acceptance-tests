@@ -1,6 +1,6 @@
 # Block synchronization with gcmode when using Istanbul BFT consensus
 
-  Tags: networks/template::istanbul-3plus1, pre-condition/no-record-blocknumber, gcmode, block-sync
+  Tags: networks/template::istanbul-3plus1, networks/template::qbft-3plus1, pre-condition/no-record-blocknumber, gcmode, block-sync
 
   Geth 1.8.12 introduces `--gcmode=full/archive`. This controls trie pruning which is enabled by default on all `--syncmode`.
   Setting `--gcmode=archive` would retain all historical data.
