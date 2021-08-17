@@ -47,7 +47,10 @@ public class MixedPrivacyMarkerTransactionCompatibility extends AbstractSpecImpl
             Observable.fromIterable(table.getTableRows())
                 .flatMap(r -> infraService.startNode(
                     InfrastructureService.NodeAttributes.forNode(r.getCell("node"))
-                        .withAdditionalGethArgs(GethArgBuilder.newBuilder().privacyMarkerEnable(Boolean.parseBoolean(r.getCell("--privacymarker.enable")))),
+                        .withAdditionalGethArgs(GethArgBuilder.newBuilder()
+                            .privacyMarkerEnable(Boolean.parseBoolean(r.getCell("--privacymarker.enable")))
+                            .allowInsecureUnlock(true)
+                        ),
                     resourceId -> networkResources.add(r.getCell("node"), resourceId)))
                 .doOnNext(ok -> {
                     assertThat(ok).as("Node must start successfully").isTrue();
