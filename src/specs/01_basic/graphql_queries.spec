@@ -30,7 +30,7 @@ contract SimpleStorage {
 
 ## Get private transaction details from graphql query
 
-  Tags: private, smart-contract
+  Tags: private, smart-contract, privacy-precompile-disabled
 
 * Deploy a simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract17"
 * Get isPrivate field for "contract17"'s contract deployment transaction using GraphQL query from "Node1" and it should equal to "true"

@@ -127,10 +127,8 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         List<Observable<?>> parallelSender = new ArrayList<>();
         // fire 5 public and 5 private txs
         for (Node n : nodes) {
-            parallelSender.add(sendTxs(n, txCountPerNode, threadsPerNode, null)
-                .subscribeOn(Schedulers.io()));
-            parallelSender.add(sendTxs(n, txCountPerNode, threadsPerNode, randomNode(nodes, n))
-                .subscribeOn(Schedulers.io()));
+            parallelSender.add(sendTxs(n, txCountPerNode, threadsPerNode, null));
+            parallelSender.add(sendTxs(n, txCountPerNode, threadsPerNode, randomNode(nodes, n)));
         }
         Observable.zip(parallelSender, oks -> true)
             .doOnComplete(() -> {
@@ -144,11 +142,8 @@ public class BlockSynchronization extends AbstractSpecImplementation {
 
     private Observable<? extends Contract> sendTxs(Node n, int txCountPerNode, int threadsPerNode, Node target) {
         return Observable.range(0, txCountPerNode)
-            .doOnNext(c -> logger.debug("Sending tx {} to {}", c, n))
-            .flatMap(v -> Observable.just(v)
-                    .flatMap(num -> contractService.createSimpleContract(40, n, target))
-                    .subscribeOn(Schedulers.io())
-                , threadsPerNode);
+                .doOnNext(c -> logger.debug("Sending tx {} to {}", c, n))
+                .flatMap(v -> Observable.just(v).flatMap(num -> contractService.createSimpleContract(40, n, target)), threadsPerNode);
     }
 
     private Node randomNode(List<Node> nodes, Node n) {

@@ -20,12 +20,18 @@
 package com.quorum.gauge.ext;
 
 import com.quorum.gauge.common.PrivacyFlag;
+import org.web3j.protocol.Web3jService;
+import org.web3j.protocol.core.JsonRpc2_0Web3j;
+import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.exceptions.TransactionException;
 import org.web3j.quorum.Quorum;
 import org.web3j.quorum.methods.request.PrivateTransaction;
 import org.web3j.quorum.tx.ClientTransactionManager;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.util.List;
 
@@ -44,14 +50,29 @@ public class EnhancedClientTransactionManager extends ClientTransactionManager {
 
     private Quorum quorum;
 
+    private Web3jService web3j;
+
     public EnhancedClientTransactionManager(Quorum quorum, String fromAddress, String privateFrom, List<String> privateFor, List<PrivacyFlag> contractFlag, int attempts, int sleepDuration) {
         super(quorum, fromAddress, privateFrom, privateFor, attempts, sleepDuration);
         this.quorum = quorum;
         this.contractFlag = contractFlag;
+
+        try {
+            JsonRpc2_0Web3j q = (JsonRpc2_0Web3j) quorum;
+            Field f = JsonRpc2_0Web3j.class.getDeclaredField("web3jService"); //NoSuchFieldException
+            f.setAccessible(true);
+            this.web3j = (Web3jService) f.get(q); //IllegalAccessException
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public EnhancedClientTransactionManager(Quorum quorum, String fromAddress, String privateFrom, List<String> privateFor, List<PrivacyFlag> contractFlag) {
         this(quorum, fromAddress, privateFrom, privateFor, contractFlag, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS);
+    }
+
+    public EnhancedClientTransactionManager(Quorum quorum, String fromAddress, String privateFrom, List<String> privateFor) {
+        this(quorum, fromAddress, privateFrom, privateFor, List.of(PrivacyFlag.StandardPrivate), DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS);
     }
 
     @Override
@@ -63,6 +84,24 @@ public class EnhancedClientTransactionManager extends ClientTransactionManager {
             tx = new PrivateTransaction(getFromAddress(), null, gasLimit, to, value, data, getPrivateFrom(), getPrivateFor());
         }
         return quorum.ethSendTransaction(tx).send();
+    }
+
+    @Override
+    protected TransactionReceipt executeTransaction(BigInteger gasPrice, BigInteger gasLimit, String to, String data, BigInteger value) throws IOException, TransactionException {
+        final TransactionReceipt receipt = super.executeTransaction(gasPrice, gasLimit, to, data, value);
+
+        return QuorumTransactionManagerService.maybeGetPrivateTransactionReceipt(web3j, receipt)
+            .flatMap(EthGetTransactionReceipt::getTransactionReceipt)
+            .orElse(receipt);
+    }
+
+    @Override
+    protected TransactionReceipt executeTransaction(BigInteger gasPrice, BigInteger gasLimit, String to, String data, BigInteger value, boolean constructor) throws IOException, TransactionException {
+        final TransactionReceipt receipt = super.executeTransaction(gasPrice, gasLimit, to, data, value, constructor);
+
+        return QuorumTransactionManagerService.maybeGetPrivateTransactionReceipt(web3j, receipt)
+            .flatMap(EthGetTransactionReceipt::getTransactionReceipt)
+            .orElse(receipt);
     }
 
     public static class EnhancedPrivateTransaction extends PrivateTransaction {

@@ -1,1 +1,1 @@
-consensus    = "raft"
+consensus = "raft"

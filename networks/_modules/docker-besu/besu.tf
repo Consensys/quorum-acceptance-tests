@@ -8,14 +8,14 @@ locals {
 }
 
 resource "docker_container" "besu" {
-  count = local.number_of_nodes
-  name  = format("%s-node%d", var.network_name, local.tessera_node_indices[count.index])
+  count      = local.number_of_nodes
+  name       = format("%s-node%d", var.network_name, local.tessera_node_indices[count.index])
   depends_on = [docker_container.tessera, docker_image.registry, docker_image.local]
-  image    = var.besu_networking[count.index].image.name
-  hostname = format("node%d", count.index)
-  restart  = "no"
-  must_run = true
-  start    = true
+  image      = var.besu_networking[count.index].image.name
+  hostname   = format("node%d", count.index)
+  restart    = "no"
+  must_run   = true
+  start      = true
   labels {
     label = "BesuContainer"
     value = count.index
