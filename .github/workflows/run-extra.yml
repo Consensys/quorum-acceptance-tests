@@ -159,6 +159,14 @@ jobs:
             privacy-enhancements: true
             privacy-precompile: true
             privacy-marker-transactions: true
+          - tag: 'privacy-precompile-compatibility && networks/template::raft-4nodes'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: false # do not enable pmts as the test will do this on the necessary nodes
+          - tag: 'privacy-precompile-compatibility && networks/template::istanbul-4nodes'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: false # do not enable pmts as the test will do this on the necessary nodes
     runs-on: ubuntu-18.04
     steps:
       - name: 'Download docker image'
