@@ -162,12 +162,8 @@ public class PrivacyMarkerTransactions extends AbstractSpecImplementation {
         String ref = String.format("%s_%s_getTransaction", txRef, node.getName());
         Optional<Transaction> alreadyGot = haveValue(DataStoreFactory.getScenarioDataStore(), ref, Transaction.class);
         if (alreadyGot.isPresent()) {
-            System.out.println("already got " + ref);
-
             return alreadyGot;
         }
-
-        System.out.println("getting " + ref);
 
         String txHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), txRef, String.class);
         Optional<Transaction> tx = privacyMarkerTransactionService.getTransaction(node, txHash).blockingFirst().getTransaction();
@@ -181,12 +177,8 @@ public class PrivacyMarkerTransactions extends AbstractSpecImplementation {
         String ref = String.format("%s_%s_getPrivateTransaction", txRef, node.getName());
         Optional<Transaction> alreadyGot = haveValue(DataStoreFactory.getScenarioDataStore(), ref, Transaction.class);
         if (alreadyGot.isPresent()) {
-            System.out.println("already got " + ref);
-
             return alreadyGot;
         }
-
-        System.out.println("getting " + ref);
 
         String txHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), txRef, String.class);
         Optional<Transaction> tx = privacyMarkerTransactionService.getPrivateTransaction(node, txHash).blockingFirst().getTransaction();
@@ -200,12 +192,8 @@ public class PrivacyMarkerTransactions extends AbstractSpecImplementation {
         String ref = String.format("%s_getPrivacyPrecompileAddress", node.getName());
         Optional<String> alreadyGot = haveValue(DataStoreFactory.getScenarioDataStore(), ref, String.class);
         if (alreadyGot.isPresent()) {
-            System.out.println("already got " + ref);
-
             return alreadyGot.get();
         }
-
-        System.out.println("getting " + ref);
 
         String privacyPrecompileAddress = privacyMarkerTransactionService.getPrivacyPrecompileAddress(node).blockingFirst().getResult();
 
