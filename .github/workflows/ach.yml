@@ -2,12 +2,12 @@ name: Run Acceptance Tests
 on:
     workflow_dispatch:
         inputs:
-            branch:
-                description: 'GoQuorum branch'
-                default: 'develop'
+            quorum-image:
+                description: 'GoQuorum image'
+                default: 'ghcr.io/achraf17/quorum:develop'
             tessera-image:
                 description: 'Tessera image'
-                default: 'ghcr.io/baptiste-b-pegasys/tessera:develop'
+                default: 'ghcr.io/achraf17/tessera:develop'
             force-build-docker:
                 description: 'Set true to build the docker image'
                 default: 'false'
@@ -148,7 +148,7 @@ jobs:
                   gitref_path=${gitref_path/refs\/heads\//} # for refs/heads/my-branch
                   echo "${{ github.token }}" | docker login https://docker.pkg.github.com -u ${{ github.repository_owner }} --password-stdin
                   echo "${{ github.token }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
-                  quorum_docker_image=$(echo "ghcr.io/${{ github.repository_owner }}/quorum-master:${{ github.event.inputs.branch }}" | tr '[:upper:]' '[:lower:]' )
+                  quorum_docker_image=$(echo "${{ github.event.inputs.quorum-image }}" | tr '[:upper:]' '[:lower:]' )
                   tessera_docker_image=$(echo "${{ github.event.inputs.tessera-image }}" | tr '[:upper:]' '[:lower:]')
                   has_quorum_docker_image=$(docker pull $quorum_docker_image >/dev/null 2>&1; echo $?)
                   has_tessera_docker_image=$(docker pull $tessera_docker_image >/dev/null 2>&1; echo $?)
