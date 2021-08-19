@@ -2,9 +2,12 @@ name: Run Acceptance Tests
 on:
   workflow_dispatch:
     inputs:
-      branch:
-        description: 'GoQuorum branch'
-        default: 'develop'
+      runs-on:
+        description: 'Runs on tag'
+        default: 'ubuntu-18.04'
+      goq-image:
+        description: 'GoQuorum image'
+        default: 'ghcr.io/baptiste-b-pegasys/quorum-master:develop'
       tessera-image:
         description: 'Tessera image'
         default: 'ghcr.io/baptiste-b-pegasys/tessera:develop'
@@ -14,7 +17,7 @@ on:
 jobs:
   condition:
     name: Evaluate workflow run conditions
-    runs-on: ubuntu-18.04
+    runs-on: ${{ github.event.inputs.runs-on }}
     outputs:
       should_run: '${{ steps.check.outputs.val }}'
       use_aws: '${{ steps.check.outputs.useAws }}'
@@ -45,7 +48,7 @@ jobs:
     if: needs.condition.outputs.should_run == 'true'
     needs:
       - condition
-    runs-on: ubuntu-18.04
+    runs-on: ${{ github.event.inputs.runs-on }}
     outputs:
       output_dir: '${{ steps.prepare.outputs.output_dir }}'
       output_file: '${{ steps.prepare.outputs.output_file }}'
@@ -126,7 +129,7 @@ jobs:
             privacy-enhancements: 'true'
           - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
             privacy-enhancements: 'true'
-    runs-on: ubuntu-18.04
+    runs-on: ${{ github.event.inputs.runs-on }}
     steps:
       - name: 'Download docker image'
         uses: actions/cache@v2
@@ -148,7 +151,7 @@ jobs:
           gitref_path=${gitref_path/refs\/heads\//} # for refs/heads/my-branch
           echo "${{ github.token }}" | docker login https://docker.pkg.github.com -u ${{ github.repository_owner }} --password-stdin
           echo "${{ github.token }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
-          quorum_docker_image=$(echo "ghcr.io/${{ github.repository_owner }}/quorum-master:${{ github.event.inputs.branch }}" | tr '[:upper:]' '[:lower:]' )
+          quorum_docker_image=$(echo "${{ github.event.inputs.goq-image }}" | tr '[:upper:]' '[:lower:]' )
           tessera_docker_image=$(echo "${{ github.event.inputs.tessera-image }}" | tr '[:upper:]' '[:lower:]')
           has_quorum_docker_image=$(docker pull $quorum_docker_image >/dev/null 2>&1; echo $?)
           has_tessera_docker_image=$(docker pull $tessera_docker_image >/dev/null 2>&1; echo $?)
