@@ -14,8 +14,8 @@ resource "docker_container" "besu" {
   image      = var.besu_networking[count.index].image.name
   hostname   = format("node%d", count.index)
   restart    = "no"
-  must_run   = true
-  start      = true
+  must_run   = local.must_start[count.index]
+  start      = local.must_start[count.index]
   labels {
     label = "BesuContainer"
     value = count.index
@@ -89,8 +89,13 @@ exec /opt/besu/bin/besu \
         --privacy-url="${local.container_tm_q2t_urls[count.index]}" \
         --privacy-public-key-file=${local.container_besu_datadir}/tmkey.pub \
         --privacy-onchain-groups-enabled=false \
-        --rpc-http-api=EEA,WEB3,ETH,MINER,NET,PRIV,PERM,GOQUORUM,IBFT \
-        --rpc-ws-api=EEA,WEB3,ETH,MINER,NET,PRIV,PERM,GOQUORUM,IBFT ;
+%{if var.hybrid_network~}
+        --rpc-http-api=ADMIN,EEA,WEB3,ETH,MINER,NET,PRIV,PERM,GOQUORUM,QBFT \
+        --rpc-ws-api=ADMIN,EEA,WEB3,ETH,MINER,NET,PRIV,PERM,GOQUORUM,QBFT ;
+%{else~}
+        --rpc-http-api=ADMIN,EEA,WEB3,ETH,MINER,NET,PRIV,PERM,GOQUORUM,IBFT \
+        --rpc-ws-api=ADMIN,EEA,WEB3,ETH,MINER,NET,PRIV,PERM,GOQUORUM,IBFT ;
+%{endif~}
 EOF
   }
 }

@@ -45,3 +45,7 @@ output "keystore_files" {
 output "keystore_password_file" {
   value = local.keystore_password_file
 }
+
+output "exclude_initial_nodes" {
+  value = var.exclude_initial_nodes
+}

@@ -1,8 +1,8 @@
-# Istanbul BFT consensus - Validator and non-validator behaviour
+# QBFT consensus - Validator and non-validator behaviour
 
-  Tags: networks/template::istanbul-3plus1, networks/template::qbft-3plus1, pre-condition/no-record-blocknumber, validator-management
+  Tags: networks/typical-hybrid::hybrid-template-q2b1, pre-condition/no-record-blocknumber, hybrid-validator-management-manage-besu
 
-This specification describes how validator and non-validator nodes behave in istanbul
+This specification describes how validator and non-validator nodes behave in hybrid network
  - validator node can seal new blocks
  - non-validator node is not authorized to seal new blocks but can sync up
 
@@ -20,7 +20,7 @@ New node after being added to the network as non-validator node must not be able
 * Deploy a simple smart contract from "Node1", verify it gets mined
 * Record the current block number, named it as "blockHeightAfterContractsAreMinted"
 * Wait for node "Node4" to catch up to "blockHeightAfterContractsAreMinted"
-* "Node4" is not able to seal new blocks
+* Besu node "Node4" is not a Validator
 
 ## A new node is allowed to seal blocks after being proposed as a validator
 
@@ -34,7 +34,7 @@ Hence it is authorized to seal new blocks
 * Deploy a simple smart contract from "Node1", verify it gets mined
 * Record the current block number, named it as "blockHeightAfterContractsAreMinted"
 * Wait for node "Node4" to catch up to "blockHeightAfterContractsAreMinted"
-* "Node4" is able to seal new blocks
+* Besu node "Node4" is a Validator
 
 
 ## A node can still sync up with the network but is not allowed to seal blocks after being proposed as a non-validator
