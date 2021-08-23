@@ -1,10 +1,13 @@
-# Start network with Node3 as a standalone node and after deploying a number of contracts run `mpsdbupgrade` and start it as multitenant
+# Start network with Node3 as a standalone node and after deploying a number of contracts run `mpsdbupgrade` and start it with mps enabled
 
 In this test a number of contracts are being deployed on the two private states configured on Node1 (which is actually
 made of Node1 and Node2 virtual nodes).
 The purpose is to check that as long as we deploy the same contracts and execute the same transactions on an MPS private
 state as well as on a standalone quorum node the private state root of the private state on the mps node will match the
-private state root of the single private state on a standalone quorum node (which is not MPS capable - release 21.4.0)
+private state root of the single private state on a standalone quorum node (mps disabled).
+In addition to the above, we verify that after the upgrade the empty state on the upgraded node matches the empty state
+root on Node1 (which was initialized as MPS) and that existing contracts on the standalone DB are still reachable after
+upgrade.
 
  Tags: mps-db-upgrade, pre-condition/no-record-blocknumber
 
@@ -223,11 +226,20 @@ private state root of the single private state on a standalone quorum node (whic
 * Retrieve the empty state root on "Node3" for "blockNumberAfterMPSDBUpgrade" and name it "Node3_empty_PSR1"
 * Check that private state root "Node1_empty_PSR1" is equal to "Node3_empty_PSR1"
 
+// check existing contracts are still reachable in the upgraded node
 * Invoke a "StateValidation" setC2C3Value with value "30" in master storage contract "smPrivate2" in "Node2"'s default account and it's private for "Node3"
 * "smPrivate2"'s `getC2C3Value()` function execution in "Node1" returns "0"
 * "smPrivate2"'s `getC2C3Value()` function execution in "Node2" returns "60"
 * "smPrivate2"'s `getC2C3Value()` function execution in "Node3" returns "60"
 * "smPrivate2"'s `getC2C3Value()` function execution in "Node4" returns "0"
+
+* Accumulator "accPrivate2"'s `get()` function execution in "Node3" returns "7"
+* Subscribe to accumulator contract "accPrivate2" IncEvent on "Node3"
+* Wait for events poll
+* Check IncEvent list size for accumulator contract "accPrivate2" on "Node3" is "1"
+* Check IncEvent "0" for accumulator contract "accPrivate2" on "Node3" has value "7"
+* Unsubscribe to accumulator contract "accPrivate2" IncEvent on "Node3"
+
 
 * Record the current block number, named it as "blockNumberAfterMPSDBUpgradeAndUpdates"
 * Retrieve private state root on "Node2" for "blockNumberAfterMPSDBUpgradeAndUpdates" and name it "Node2_mpsupgrade_PSR2"
