@@ -91,6 +91,7 @@ jobs:
       - docker-build
     strategy:
       fail-fast: false
+      max-parallel: 2
       matrix:
         # list of tag expression being executed in parallel
         tag:
