@@ -7,7 +7,7 @@ on:
         default: 'ubuntu-18.04'
       goq-image:
         description: 'GoQuorum image'
-        default: 'ghcr.io/baptiste-b-pegasys/quorum-master:develop'
+        default: 'ghcr.io/baptiste-b-pegasys/quorum:develop'
       tessera-image:
         description: 'Tessera image'
         default: 'ghcr.io/baptiste-b-pegasys/tessera:develop'
