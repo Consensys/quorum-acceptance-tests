@@ -5,6 +5,9 @@ on:
       name:
         description: 'Name'
         default: 'default'
+      concurrency:
+        description: 'Concurrency'
+        default: 3
       runs-on:
         description: 'Runs on tag'
         default: 'ubuntu-18.04'
@@ -19,7 +22,7 @@ on:
         default: 'false'
 jobs:
   condition:
-    name: Evaluate workflow run conditions ${{ github.event.inputs.name }}
+    name: Prepare - ${{ github.event.inputs.name }}
     runs-on: ${{ github.event.inputs.runs-on }}
     outputs:
       should_run: '${{ steps.check.outputs.val }}'
@@ -94,7 +97,7 @@ jobs:
       - docker-build
     strategy:
       fail-fast: false
-      max-parallel: 2
+      max-parallel: ${{ github.event.inputs.concurrency }}
       matrix:
         # list of tag expression being executed in parallel
         tag:
@@ -219,7 +222,7 @@ jobs:
       - run-pr-min
     strategy:
       fail-fast: false
-      max-parallel: 2
+      max-parallel: ${{ github.event.inputs.concurrency }}
       matrix:
         # list of tag expression being executed in parallel
         tag:
@@ -383,7 +386,7 @@ jobs:
       - run-master-1
     strategy:
       fail-fast: false
-      max-parallel: 2
+      max-parallel: ${{ github.event.inputs.concurrency }}
       matrix:
         # list of tag expression being executed in parallel
         tag:
@@ -501,7 +504,7 @@ jobs:
       - run-master-2
     strategy:
       fail-fast: false
-      max-parallel: 2
+      max-parallel: ${{ github.event.inputs.concurrency }}
       matrix:
         # list of tag expression being executed in parallel
         tag:
@@ -633,7 +636,7 @@ jobs:
       - run-master-3
     strategy:
       fail-fast: false
-      max-parallel: 2
+      max-parallel: ${{ github.event.inputs.concurrency }}
       matrix:
         # list of tag expression being executed in parallel
         tag:
@@ -756,7 +759,7 @@ jobs:
       - run-master-4
     strategy:
       fail-fast: false
-      max-parallel: 2
+      max-parallel: ${{ github.event.inputs.concurrency }}
       matrix:
         # list of tag expression being executed in parallel
         tag:
@@ -880,7 +883,7 @@ jobs:
       - run-master-5
     strategy:
       fail-fast: false
-      max-parallel: 2
+      max-parallel: ${{ github.event.inputs.concurrency }}
       matrix:
         include:
           # privacy precompile/privacy marker transaction tests
