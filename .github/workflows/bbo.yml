@@ -373,7 +373,7 @@ jobs:
           name: testreport-${{ steps.setup.outputs.tag }}
           path: ${{ steps.setup.outputs.outputDir }}/*.* # only files not directory
 
-  run-master-1:
+  run-master-2:
     # This workflow uses tag expression and its sha256 hash to aggregate test results
     # from each execution. It is important that the job name has tag expression in the
     # suffix and encapsulated within parathensis
