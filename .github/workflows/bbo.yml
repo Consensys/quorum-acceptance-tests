@@ -5,9 +5,6 @@ on:
       name:
         description: 'Name'
         default: 'default'
-      concurrency:
-        description: 'Concurrency'
-        default: 3
       runs-on:
         description: 'Runs on tag'
         default: 'ubuntu-18.04'
@@ -97,7 +94,7 @@ jobs:
       - docker-build
     strategy:
       fail-fast: false
-      max-parallel: ${{ github.event.inputs.concurrency }}
+      max-parallel: 3
       matrix:
         # list of tag expression being executed in parallel
         tag:
@@ -222,7 +219,7 @@ jobs:
       - run-pr-min
     strategy:
       fail-fast: false
-      max-parallel: ${{ github.event.inputs.concurrency }}
+      max-parallel: 3
       matrix:
         # list of tag expression being executed in parallel
         tag:
@@ -386,7 +383,7 @@ jobs:
       - run-master-1
     strategy:
       fail-fast: false
-      max-parallel: ${{ github.event.inputs.concurrency }}
+      max-parallel: 3
       matrix:
         # list of tag expression being executed in parallel
         tag:
@@ -504,7 +501,7 @@ jobs:
       - run-master-2
     strategy:
       fail-fast: false
-      max-parallel: ${{ github.event.inputs.concurrency }}
+      max-parallel: 3
       matrix:
         # list of tag expression being executed in parallel
         tag:
@@ -636,7 +633,7 @@ jobs:
       - run-master-3
     strategy:
       fail-fast: false
-      max-parallel: ${{ github.event.inputs.concurrency }}
+      max-parallel: 3
       matrix:
         # list of tag expression being executed in parallel
         tag:
@@ -759,7 +756,7 @@ jobs:
       - run-master-4
     strategy:
       fail-fast: false
-      max-parallel: ${{ github.event.inputs.concurrency }}
+      max-parallel: 3
       matrix:
         # list of tag expression being executed in parallel
         tag:
@@ -883,7 +880,7 @@ jobs:
       - run-master-5
     strategy:
       fail-fast: false
-      max-parallel: ${{ github.event.inputs.concurrency }}
+      max-parallel: 3
       matrix:
         include:
           # privacy precompile/privacy marker transaction tests
