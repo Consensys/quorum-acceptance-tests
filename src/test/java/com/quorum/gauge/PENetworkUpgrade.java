@@ -290,4 +290,23 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
             }
         }
     }
+
+
+    @Step("Enable multiple private states in tessera <node>")
+    public void enableMPSInTesseraNode(String node) throws InterruptedException {
+        String tesseraId = getComponentContainerId("tessera", node);
+        logger.debug("Changing tessera config to include feature 'enableMultiplePrivateStates' : 'true'");
+        infraService.modifyFile(tesseraId, "/data/tm/config.json",
+            new TesseraFeaturesOverride(Map.of("enableMultiplePrivateStates", "true"))).blockingFirst();
+        infraService.restartResource(tesseraId).blockingFirst();
+    }
+
+    @Step("Run mpsdbupgrade on <node>")
+    public void runGethMPSDBUpgradeOnNode(String node) {
+        String quorumId = getComponentContainerId("quorum", node);
+        infraService.writeFile(quorumId, "/data/qdata/executempsdbupgrade", "true").blockingFirst();
+        infraService.modifyFile(quorumId, "/data/qdata/genesis.json",
+            new GenesisConfigOverride(Map.of("isMPS", true))).blockingFirst();
+        infraService.startResource(quorumId).blockingFirst();
+    }
 }

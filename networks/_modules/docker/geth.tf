@@ -129,6 +129,13 @@ if [ -f /data/qdata/cleanStorage ]; then
   rm -rf /data/qdata/geth /data/qdata/quorum-raft-state /data/qdata/raft-snap /data/qdata/raft-wal /data/qdata/cleanStorage
 fi
 
+if [ -f /data/qdata/executempsdbupgrade ]; then
+  echo "Executing mpsdbupgrade"
+  geth --datadir ${local.container_geth_datadir} mpsdbupgrade
+  rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
+  rm /data/qdata/executempsdbupgrade
+fi
+
 geth --datadir ${local.container_geth_datadir} init ${local.container_geth_datadir}/genesis.json
 
 #exit if geth init fails
