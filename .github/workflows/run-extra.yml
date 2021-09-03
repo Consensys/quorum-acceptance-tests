@@ -1,5 +1,5 @@
 # Exactly the same setup and teardown steps as run.yml, just different test tags
-name: Run Acceptance Tests on extra feature-enabled networks
+name: Extra Acceptance Tests (feature-enabled networks)
 on:
   schedule:
     - cron: '0 12 * * *'

@@ -1,4 +1,4 @@
-name: Run Acceptance Tests on standard networks
+name: Standard Acceptance Tests
 on:
   schedule:
     - cron: '0 12 * * *'
