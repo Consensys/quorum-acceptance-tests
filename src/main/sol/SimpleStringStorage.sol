@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.5.16;
+pragma solidity ^0.5.17;
 
 contract SimpleStringStorage {
     string public storedData;
