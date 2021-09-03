@@ -127,7 +127,6 @@ contract PermissionsImplementation {
       * @param _oAdminRole - address of role manager contract
       * @dev this function will be executed only once as part of the boot up
       */
-    // TODO ricardolyn
     function setPolicy(string calldata _nwAdminOrg, string calldata _nwAdminRole,
         string calldata _oAdminRole) external onlyInterface
     networkBootStatus(false) {
@@ -161,7 +160,8 @@ contract PermissionsImplementation {
       * @param _depth - levels of sub org nesting allowed at parent level
       */
     function init(uint256 _breadth, uint256 _depth) external
-     {
+    onlyInterface
+    networkBootStatus(false) {
         orgManager.setUpOrg(adminOrg, _breadth, _depth);
         roleManager.addRole(adminRole, adminOrg, fullAccess, true, true);
         accountManager.setDefaults(adminRole, orgAdminRole);
