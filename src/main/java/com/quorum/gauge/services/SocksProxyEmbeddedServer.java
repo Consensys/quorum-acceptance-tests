@@ -22,7 +22,6 @@ package com.quorum.gauge.services;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.sshd.client.ClientFactoryManager;
 import org.apache.sshd.client.SshClient;
 import org.apache.sshd.client.keyverifier.AcceptAllServerKeyVerifier;
 import org.apache.sshd.client.session.ClientSession;
@@ -30,6 +29,7 @@ import org.apache.sshd.common.PropertyResolverUtils;
 import org.apache.sshd.common.auth.UserAuthMethodFactory;
 import org.apache.sshd.common.keyprovider.FileKeyPairProvider;
 import org.apache.sshd.common.util.net.SshdSocketAddress;
+import org.apache.sshd.core.CoreModuleProperties;
 import org.apache.sshd.server.forward.AcceptAllForwardingFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,29 +41,28 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Mimic:
- *
+ * <p>
  * {@code ssh -D 5000 -N -o ServerAliveInterval=30 -i <key> <user>@<host> }
  */
 @Service
 @ConditionalOnProperty(prefix = "quorum", name = "socks-proxy.tunnel.enabled", havingValue = "true")
 public class SocksProxyEmbeddedServer implements InitializingBean, DisposableBean {
     private static final Logger logger = LoggerFactory.getLogger(SocksProxyEmbeddedServer.class);
-
+    @Autowired
+    QuorumNetworkProperty networkProperty;
+    QuorumNetworkProperty.SocksProxy.SSHTunneling config;
     private String listenerAddress;
     private int listenerPort;
     private SshClient client;
     private ClientSession session;
     private AtomicBoolean started;
-
-    @Autowired
-    QuorumNetworkProperty networkProperty;
-
-    QuorumNetworkProperty.SocksProxy.SSHTunneling config;
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -71,8 +70,8 @@ public class SocksProxyEmbeddedServer implements InitializingBean, DisposableBea
         client = SshClient.setUpDefaultClient();
         client.setForwardingFilter(AcceptAllForwardingFilter.INSTANCE);
         client.setServerKeyVerifier(AcceptAllServerKeyVerifier.INSTANCE);
-        PropertyResolverUtils.updateProperty(client, ClientFactoryManager.HEARTBEAT_INTERVAL, TimeUnit.SECONDS.toMillis(30));
-        PropertyResolverUtils.updateProperty(client, ClientFactoryManager.HEARTBEAT_REPLY_WAIT, TimeUnit.SECONDS.toMillis(3));
+        CoreModuleProperties.HEARTBEAT_INTERVAL.set(client, Duration.of(30, ChronoUnit.SECONDS));
+        CoreModuleProperties.HEARTBEAT_REPLY_WAIT.set(client, Duration.of(3, ChronoUnit.SECONDS));
         client.setKeyIdentityProvider(new FileKeyPairProvider(Paths.get(resolveTilde(config.getPrivateKeyFile()))));
         client.setUserAuthFactoriesNames(UserAuthMethodFactory.PUBLIC_KEY);
         client.start();
