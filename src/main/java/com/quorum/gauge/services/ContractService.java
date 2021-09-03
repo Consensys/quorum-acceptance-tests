@@ -67,7 +67,6 @@ import java.util.stream.Collectors;
 
 import static com.quorum.gauge.sol.SimpleStorage.FUNC_GET;
 import static java.util.Collections.emptyList;
-import static org.web3j.tx.Contract.deployRemoteCall;
 
 @Service
 public class ContractService extends AbstractService {
@@ -611,10 +610,10 @@ public class ContractService extends AbstractService {
                     privacyService.id(privateFromAlias),
                     privacyService.ids(privateForAliases));
                 return SimpleStorageDelegate.deploy(client,
-                    clientTransactionManager,
-                    BigInteger.valueOf(0),
-                    DEFAULT_GAS_LIMIT,
-                    delegateContractAddress)
+                        clientTransactionManager,
+                        BigInteger.valueOf(0),
+                        DEFAULT_GAS_LIMIT,
+                        delegateContractAddress)
                     .flowable().toObservable();
             });
     }
