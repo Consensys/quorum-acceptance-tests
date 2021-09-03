@@ -162,7 +162,7 @@ public class ExtensionService extends AbstractService {
 
         final PrivateTransaction transactionArgs = new EnhancedPrivateTransaction(
             accountService.getDefaultAccountAddress(node).blockingFirst(),
-            null, null, null, BigInteger.ZERO, null, null, privateFor, singletonList(privacyFlag)
+            null, null, null, BigInteger.ZERO, null, privacyService.id(node), privateFor, singletonList(privacyFlag)
         );
 
         return new Request<>(

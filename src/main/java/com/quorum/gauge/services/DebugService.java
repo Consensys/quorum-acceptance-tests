@@ -56,4 +56,15 @@ public class DebugService extends AbstractService {
         return request.flowable().toObservable();
     }
 
+    public Observable<StringResponse> defaultStateRoot(QuorumNetworkProperty.Node source, String blockHeight) {
+
+        Request<?, StringResponse> request = new Request<>(
+            "debug_defaultStateRoot",
+            Collections.singletonList(blockHeight),
+            connectionFactory().getWeb3jService(source), StringResponse.class
+        );
+
+        return request.flowable().toObservable();
+    }
+
 }

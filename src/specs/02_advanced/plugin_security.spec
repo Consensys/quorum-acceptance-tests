@@ -1,6 +1,6 @@
 # Pluggable Architecture with security plugin
 
- Tags: networks/plugins::qbft-rpc-security, networks/plugins::raft-rpc-security, pre-condition/no-record-blocknumber
+ Tags: networks/plugins::istanbul-rpc-security, networks/plugins::qbft-rpc-security, networks/plugins::raft-rpc-security, pre-condition/no-record-blocknumber
 
 * Configure the authorization server to grant `"Client_1"` access to scopes `"rpc://eth_*,rpc://rpc_modules"` in `"Node1,Node2"`
 * Configure the authorization server to grant `"Operator_A"` access to scopes `"rpc://admin_peers"` in `"Node1,Node2"`

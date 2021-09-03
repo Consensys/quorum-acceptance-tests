@@ -6,8 +6,8 @@ resource "docker_container" "tessera" {
   hostname          = format("tm%d", local.tessera_node_indices[count.index])
   restart           = "no"
   publish_all_ports = false
-  must_run          = true
-  start             = true
+  must_run          = var.start_tessera
+  start             = var.start_tessera
   labels {
     label = "TesseraContainer"
     value = local.tessera_node_indices[count.index]

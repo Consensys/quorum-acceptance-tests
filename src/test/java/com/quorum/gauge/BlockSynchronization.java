@@ -25,15 +25,12 @@ import com.quorum.gauge.common.QuorumNetworkProperty.Node;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.ext.IstanbulNodeAddress;
-import com.quorum.gauge.services.InfrastructureService;
+import com.quorum.gauge.services.*;
 import com.quorum.gauge.services.InfrastructureService.NetworkResources;
 import com.quorum.gauge.services.InfrastructureService.NodeAttributes;
-import com.quorum.gauge.services.IstanbulService;
-import com.quorum.gauge.services.RaftService;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import io.reactivex.Observable;
-import io.reactivex.schedulers.Schedulers;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,10 +124,8 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         List<Observable<?>> parallelSender = new ArrayList<>();
         // fire 5 public and 5 private txs
         for (Node n : nodes) {
-            parallelSender.add(sendTxs(n, txCountPerNode, threadsPerNode, null)
-                .subscribeOn(Schedulers.io()));
-            parallelSender.add(sendTxs(n, txCountPerNode, threadsPerNode, randomNode(nodes, n))
-                .subscribeOn(Schedulers.io()));
+            parallelSender.add(sendTxs(n, txCountPerNode, threadsPerNode, null));
+            parallelSender.add(sendTxs(n, txCountPerNode, threadsPerNode, randomNode(nodes, n)));
         }
         Observable.zip(parallelSender, oks -> true)
             .doOnComplete(() -> {
@@ -144,11 +139,8 @@ public class BlockSynchronization extends AbstractSpecImplementation {
 
     private Observable<? extends Contract> sendTxs(Node n, int txCountPerNode, int threadsPerNode, Node target) {
         return Observable.range(0, txCountPerNode)
-            .doOnNext(c -> logger.debug("Sending tx {} to {}", c, n))
-            .flatMap(v -> Observable.just(v)
-                    .flatMap(num -> contractService.createSimpleContract(40, n, target))
-                    .subscribeOn(Schedulers.io())
-                , threadsPerNode);
+                .doOnNext(c -> logger.debug("Sending tx {} to {}", c, n))
+                .flatMap(v -> Observable.just(v).flatMap(num -> contractService.createSimpleContract(40, n, target)), threadsPerNode);
     }
 
     private Node randomNode(List<Node> nodes, Node n) {
@@ -171,14 +163,14 @@ public class BlockSynchronization extends AbstractSpecImplementation {
     }
 
     public void proposeValidatorImpl(Node targetNode, List<Node> nodes, boolean vote) {
-        IstanbulNodeAddress nodeAddressRes = istanbulService.nodeAddress(QuorumNode.valueOf(targetNode.getName())).blockingFirst();
+        IstanbulNodeAddress nodeAddressRes = istanbulService.nodeAddress(targetNode).blockingFirst();
         Response.Error err1 = Optional.ofNullable(nodeAddressRes.getError()).orElse(new Response.Error());
         assertThat(err1.getMessage()).as("istanbul.nodeAddress must succeed").isBlank();
         String nodeAddr = nodeAddressRes.getResult();
         logger.debug("node {} node address: {}", targetNode.getName(), nodeAddr);
         nodes.stream().forEach(n -> {
             logger.debug("istanbul.propose targetNode:{} fromNode:{} vote:{} nodeAddr:{}", targetNode.getName(), n.getName(), vote, nodeAddr);
-            istanbulService.propose(QuorumNode.valueOf(n.getName()), nodeAddr, vote)
+            istanbulService.propose(n, nodeAddr, vote)
                 .doOnNext(res -> {
                     Response.Error err2 = Optional.ofNullable(res.getError()).orElse(new Response.Error());
                     assertThat(err2.getMessage()).as("istanbul.propose must succeed").isBlank();
@@ -213,6 +205,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
                     .blockingSubscribe();
                 break;
             case "istanbul":
+            case "qbft":
                 // this node is non-validator node, just start it up
                 infraService.startNode(
                     NodeAttributes.forNode(newNode.getName())
@@ -399,6 +392,37 @@ public class BlockSynchronization extends AbstractSpecImplementation {
             .blockingFirst();
 
         assertThat(found).as(expectedLogMsg).isTrue();
+    }
+
+    @Step("Besu node <nodeName> is a Validator")
+    public void verifyBesuNodeIsValidatorFromLogs(Node nodeName) {
+        String expectedLogMsg = "Creating proposed block";
+        verifyBesuValidatorOrNotViaLogs(nodeName, expectedLogMsg, true);
+    }
+
+    @Step("Besu node <nodeName> is not a Validator")
+    public void verifyBesuNodeIsNonValidatorFromLogs(Node nodeName) {
+        String expectedLogMsg = "Creating proposed block";
+        verifyBesuValidatorOrNotViaLogs(nodeName, expectedLogMsg, false);
+    }
+
+    private void verifyBesuValidatorOrNotViaLogs(Node nodeName, String expectedLogMsg, boolean logsPresent) {
+        NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
+
+        assertThat(networkResources.get(nodeName.getName())).as(nodeName.getName() + " started").isNotNull();
+        // sometimes istanbul/raft take long time to sync
+        Duration longerDuration = Duration.ofSeconds(networkProperty.getConsensusGracePeriod().getSeconds() * 2);
+        logger.debug("Grepping '{}' in the log stream for {}s ...", expectedLogMsg, longerDuration.getSeconds());
+        Boolean found = Observable.fromIterable(networkResources.get(nodeName.getName()))
+            .filter(id -> infraService.isBesu(id).blockingFirst())
+            .flatMap(id -> infraService.grepLog(id, expectedLogMsg, longerDuration.getSeconds(), TimeUnit.SECONDS))
+            .blockingFirst();
+
+        if(logsPresent) {
+            assertThat(found).as(expectedLogMsg).isTrue();
+            return;
+        }
+        assertThat(found).as(expectedLogMsg).isFalse();
     }
 
     @Step("Promote learner node <newNode> from node <fromNode>, in the network <networkName>")

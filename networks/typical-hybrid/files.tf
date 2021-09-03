@@ -50,6 +50,11 @@ resource "local_file" "dockerwaitmain" {
 # These are properties being used by DockerWait Spring Boot application.
 # 'docker' profile is activated in order to allow the application perform health checking on the containers.
 
+# template network we don't need to do health check
+%{if var.template_network == true~}
+wait.disable = true
+%{endif~}
+
 spring.profiles.active = ${var.network_name},docker
 spring.config.additional-location = file:${module.network.generated_dir}/
 
@@ -62,8 +67,11 @@ resource "local_file" "gauge_env" {
   content  = <<EOT
 
 # These are environment variables being used by Gauge while running the tests.
-
+%{if var.template_network == true~}
+SPRING_PROFILES_ACTIVE = ${var.network_name},docker%{if var.remote_docker_config != null~},proxy%{endif}
+%{else~}
 SPRING_PROFILES_ACTIVE = ${var.network_name}%{if var.remote_docker_config != null~},proxy%{endif}
+%{endif~}
 SPRING_CONFIG_ADDITIONALLOCATION = file:${module.network.generated_dir}/
 
 EOT

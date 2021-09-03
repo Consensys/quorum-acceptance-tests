@@ -31,15 +31,18 @@ locals {
   // this can be overrriden by the variable
   named_accounts_alloc = { for id in local.node_indices : id => [
   "Default"] }
-  tm_named_keys_all        = flatten(values(local.tm_named_keys_alloc))
-  node_initial_paticipants = { for id in local.node_indices : id => "true" }
-  istanbul_validators      = { for id in local.node_indices : id => "true" }
-  hybrid_network           = var.hybrid_network
+  tm_named_keys_all = flatten(values(local.tm_named_keys_alloc))
+  node_initial_paticipants = merge(
+    { for id in local.node_indices : id => "true" }, // default to true for all
+    { for id in var.exclude_initial_nodes : id => "false" }
+  )
+  istanbul_validators = { for id in local.node_indices : id => "true" }
+  hybrid_network      = var.hybrid_network
 
   key_data       = var.hybrid_network ? var.hybrid_key_data : quorum_transaction_manager_keypair.tm.*.key_data
   public_key_b64 = var.hybrid_network ? var.hybrid_public_key_b64 : quorum_transaction_manager_keypair.tm.*.public_key_b64
 
-  total_node_indices     = var.hybrid_network ? [for id in range(local.number_of_nodes) : sum([id, local.number_of_quorum_nodes])] : range(local.number_of_nodes)
+  total_node_indices = var.hybrid_network ? [for id in range(local.number_of_nodes) : sum([id, local.number_of_quorum_nodes])] : range(local.number_of_nodes)
 }
 
 resource "random_string" "network-name" {

@@ -32,6 +32,7 @@ import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -104,6 +105,14 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
     @Step("Contract `C1`(<contractName>)'s `get()` function execution in <node> returns <expectedValue>")
     public void readC1Contract(String contractName, QuorumNode node, int expectedValue) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
+
+        // if a transactionHash has been stored then wait until node has executed it
+        // TODO this is a temporary fix for particularly flaky tests where state is being read before it has been
+        // updated - we should probably rework all tests to check that the state is ready before getting
+        Optional<String> transactionHash = Optional.ofNullable(DataStoreFactory.getScenarioDataStore().get("transactionHash"))
+            .map(Object::toString);
+        transactionHash.ifPresent(h -> transactionService.waitForTransactionReceipt(node, h));
+
         int actualValue = nestedContractService.readC1Value(node, c.getContractAddress());
 
         assertThat(actualValue).isEqualTo(expectedValue);
