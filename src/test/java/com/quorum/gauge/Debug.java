@@ -58,6 +58,15 @@ public class Debug extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(psrName, result);
     }
 
+    @Step("Retrieve the empty state root on <node> for <blockHeight> and name it <psrName>")
+    public void emptyStateRoot(String node, String blockHeight, String psrName) {
+        final String blockNumber = "0x" + mustHaveValue(DataStoreFactory.getScenarioDataStore(), blockHeight, BigInteger.class).toString(16);
+        final Observable<StringResponse> stringResponseObservable = debugService.defaultStateRoot(networkProperty.getNode(node), blockNumber);
+        String result = stringResponseObservable.blockingFirst().getResult();
+        DataStoreFactory.getSpecDataStore().put(psrName, result);
+        DataStoreFactory.getScenarioDataStore().put(psrName, result);
+    }
+
     @Step("Check that private state root <psr1> is equal to <psr2>")
     public void psrsAreEqual(String psr1, String psr2){
         String psr1Val = mustHaveValue(psr1, String.class);

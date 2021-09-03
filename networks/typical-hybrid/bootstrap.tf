@@ -1,5 +1,5 @@
 locals {
-  besu_addr   = [for idx in local.besu_node_indices : quorum_bootstrap_node_key.besu-nodekeys-generator[idx].istanbul_address if lookup(local.istanbul_validators, idx, "false") == "true"]
+  besu_addr   = [for idx in local.besu_node_indices : quorum_bootstrap_node_key.besu-nodekeys-generator[idx].istanbul_address if lookup(local.istanbul_validators, idx + local.number_of_quorum_nodes, "false") == "true"]
   quorum_addr = [for idx in local.quorum_node_indices : quorum_bootstrap_node_key.quorum-nodekeys-generator[idx].istanbul_address if lookup(local.istanbul_validators, idx, "false") == "true"]
 
   besu_alloc   = formatlist("\"%s\" : { \"balance\": \"%s\" }", quorum_bootstrap_keystore.besu-accountkeys-generator[*].account[0].address, quorum_bootstrap_keystore.besu-accountkeys-generator[*].account[0].balance)
@@ -109,11 +109,15 @@ quorum:
   nodes:
 %{for i in data.null_data_source.meta[*].inputs.idx~}
     ${format("Node%d:", i + 1)}
-      istanbul-validator-id: ${quorum_bootstrap_istanbul_extradata.hybrid.istanbul_addresses[i]}
+%{if i < local.number_of_quorum_nodes~}
+      istanbul-validator-id: ${quorum_bootstrap_node_key.quorum-nodekeys-generator[i].istanbul_address}
+%{else~}
+      istanbul-validator-id: ${quorum_bootstrap_node_key.besu-nodekeys-generator[i - local.number_of_quorum_nodes].istanbul_address}
+%{endif~}
       enode-url: ${local.enode_urls[i]}
       account-aliases:
 %{for idx, k in local.named_accounts_alloc[i]~}
-%{if i < local.number_of_quorum_nodes ~}
+%{if i < local.number_of_quorum_nodes~}
         ${k}: "${element(quorum_bootstrap_keystore.quorum-accountkeys-generator[i].account.*.address, idx)}"
 %{else~}
         ${k}: "${element(quorum_bootstrap_keystore.besu-accountkeys-generator[i - local.number_of_quorum_nodes].account.*.address, idx)}"

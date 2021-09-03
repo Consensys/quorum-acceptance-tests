@@ -12,7 +12,12 @@ locals {
 
   node_indices             = range(local.number_of_nodes) // 0-based node index
   tessera_node_indices     = var.hybrid_network ? [for id in range(local.number_of_nodes) : sum([id, local.quorum_nodes])] : range(local.number_of_nodes)
-  node_initial_paticipants = { for id in local.node_indices : id => "true" } // default to true for all
+
+  node_initial_paticipants = merge(
+  { for id in local.node_indices : id => "true" }, // default to true for all
+  { for id in var.exclude_initial_nodes : id => "false" }
+  )
+  must_start = [for idx in local.node_indices : tobool(lookup(local.node_initial_paticipants, idx, "false")) && tobool(var.start_besu)]
 
   tm_env = [for k, v in var.tm_env : "${k}=${v}"]
 }

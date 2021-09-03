@@ -21,6 +21,7 @@ package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNetworkProperty.Node;
 import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.ext.NodeInfo;
 import com.quorum.gauge.ext.PendingTransaction;
 import io.reactivex.Observable;
 import org.springframework.stereotype.Service;
