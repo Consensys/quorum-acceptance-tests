@@ -1,4 +1,5 @@
-pragma solidity ^0.5.17;
+// SPDX-License-Identifier: Apache-2.0
+pragma solidity ^0.5.16;
 
 import "./PermissionsUpgradable.sol";
 /** @title Node manager contract
@@ -95,7 +96,7 @@ contract NodeManager {
 
     /** @notice fetches the node details given an enode id
       * @param _enodeId full enode id
-      * @return org id
+      * @return orgId
       * @return enode id
       * @return status of the node
       */
@@ -112,7 +113,7 @@ contract NodeManager {
 
     /** @notice fetches the node details given the index of the enode
       * @param _nodeIndex node index
-      * @return org id
+      * @return orgId
       * @return enode id
       * @return ip of the node
       * @return port of the node

@@ -1,4 +1,5 @@
-pragma solidity ^0.5.17;
+// SPDX-License-Identifier: Apache-2.0
+pragma solidity ^0.5.16;
 
 import "./PermissionsUpgradable.sol";
 
@@ -75,7 +76,7 @@ contract AccountManager {
     /** @notice returns the account details for a given account
       * @param _account account id
       * @return account id
-      * @return org id of the account
+      * @return orgId of the account
       * @return role linked to the account
       * @return status of the account
       * @return bool indicating if the account is an org admin
@@ -94,7 +95,7 @@ contract AccountManager {
     /** @notice returns the account details a given account index
       * @param  _aIndex account index
       * @return account id
-      * @return org id of the account
+      * @return orgId of the account
       * @return role linked to the account
       * @return status of the account
       * @return bool indicating if the account is an org admin
@@ -158,8 +159,8 @@ contract AccountManager {
         the time of adding a new account as org admin account. at org
         level there can be one org admin account only
       * @param _orgId - org id
-      * @return bool to indicate if voter update is required or not
-      * @return _adminRole - indicates of the role is an admin role
+      * @return voterUpdate bool to indicate if voter update is required or not
+      * @return account
       */
     function removeExistingAdmin(string calldata _orgId) external
     onlyImplementation
@@ -181,7 +182,7 @@ contract AccountManager {
     /** @notice function to add an account as network admin or org admin.
       * @param _orgId - org id
       * @param _account - account id
-      * @return bool to indicate if voter update is required or not
+      * @return voterUpdate bool to indicate if voter update is required or not
       */
     function addNewAdmin(string calldata _orgId, address _account) external
     onlyImplementation
@@ -257,7 +258,6 @@ contract AccountManager {
       * @param _account - account id
       * @param _orgId - org id
       * @return bool true if the account does not exists or exists and belongs
-      * @return passed org
       */
     function validateAccount(address _account, string calldata _orgId) external
     view returns (bool){
@@ -283,7 +283,7 @@ contract AccountManager {
 
     /** @notice returns the role id linked to the passed account
       * @param _account account id
-      * @return role id
+      * @return roleId
       */
     function getAccountRole(address _account) public view returns (string memory) {
         if (accountIndex[_account] == 0) {

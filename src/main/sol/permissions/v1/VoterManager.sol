@@ -1,4 +1,5 @@
-pragma solidity ^0.5.17;
+// SPDX-License-Identifier: Apache-2.0
+pragma solidity ^0.5.16;
 
 import "./PermissionsUpgradable.sol";
 
@@ -91,7 +92,7 @@ contract VoterManager {
         if (VoterOrgIndex[keccak256(abi.encode(_orgId))] == 0) {
             orgNum++;
             VoterOrgIndex[keccak256(abi.encode(_orgId))] = orgNum;
-            uint256 id = orgVoterList.length++;
+            uint256 id = orgVoterList.length+1;
             orgVoterList[id].orgId = _orgId;
             orgVoterList[id].voterCount = 1;
             orgVoterList[id].validVoterCount = 1;
