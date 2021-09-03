@@ -1,4 +1,5 @@
-pragma solidity ^0.5.17;
+// SPDX-License-Identifier: Apache-2.0
+pragma solidity ^0.5.0;
 
 import "./PermissionsUpgradable.sol";
 
@@ -75,7 +76,7 @@ contract AccountManager {
     /** @notice returns the account details for a given account
       * @param _account account id
       * @return account id
-      * @return org id of the account
+      * @return orgId of the account
       * @return role linked to the account
       * @return status of the account
       * @return bool indicating if the account is an org admin
@@ -93,7 +94,7 @@ contract AccountManager {
 
     /** @notice returns the account details for a given account if account is valid/active
       * @param _account account id
-      * @return org id of the account
+      * @return orgId of the account
       * @return role linked to the account
       */
     function getAccountOrgRole(address _account) external view
@@ -108,7 +109,7 @@ contract AccountManager {
     /** @notice returns the account details a given account index
       * @param  _aIndex account index
       * @return account id
-      * @return org id of the account
+      * @return orgId of the account
       * @return role linked to the account
       * @return status of the account
       * @return bool indicating if the account is an org admin
@@ -297,7 +298,7 @@ contract AccountManager {
 
     /** @notice returns the role id linked to the passed account
       * @param _account account id
-      * @return role id
+      * @return roleId
       */
     function getAccountRole(address _account) public view returns (string memory) {
         if (accountIndex[_account] == 0) {

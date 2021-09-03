@@ -1,4 +1,5 @@
-pragma solidity ^0.5.17;
+// SPDX-License-Identifier: Apache-2.0
+pragma solidity ^0.5.0;
 
 import "./PermissionsUpgradable.sol";
 /** @title Role manager contract
@@ -126,11 +127,12 @@ contract RoleManager {
     /** @notice returns the role details for a passed role id and org
       * @param _roleId - unique identifier for the role being added
       * @param _orgId - org id to which the role belongs
-      * @return role id
-      * @return org id
-      * @return access type
-      * @return bool to indicate if the role is a voter role
-      * @return bool to indicate if the role is active
+      * @return roleId
+      * @return orgId
+      * @return accessType
+      * @return voter bool to indicate if the role is a voter role
+      * @return admin bool to indicate if the role is active
+      * @return active
       */
     function getRoleDetails(string calldata _roleId, string calldata _orgId)
     external view returns (string memory roleId, string memory orgId,
@@ -146,11 +148,11 @@ contract RoleManager {
 
     /** @notice returns the role details for a passed role index
       * @param _rIndex - unique identifier for the role being added
-      * @return role id
-      * @return org id
-      * @return access type
-      * @return bool to indicate if the role is a voter role
-      * @return bool to indicate if the role is active
+      * @return roleId
+      * @return orgId
+      * @return accessType
+      * @return voter bool to indicate if the role is a voter role
+      * @return admin bool to indicate if the role is active
       */
     function getRoleDetailsFromIndex(uint256 _rIndex) external view returns
     (string memory roleId, string memory orgId, uint256 accessType,

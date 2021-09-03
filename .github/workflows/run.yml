@@ -1,4 +1,4 @@
-name: Run Acceptance Tests on standard networks
+name: Standard Acceptance Tests
 on:
   schedule:
     - cron: '0 12 * * *'
@@ -247,7 +247,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: testreport-${{ steps.setup.outputs.tag }}
-          path: ${{ steps.setup.outputs.outputDir }}/*.* # only files not directory
+          path: ${{ steps.setup.outputs.outputDir }}/*.txt # only files not directory
       - name: 'Destroy infrastructure resources if ever created'
         if: always() && needs.condition.outputs.use_aws == 'true'
         # we don't care about containers running on the remote VM
