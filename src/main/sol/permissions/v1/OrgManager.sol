@@ -328,7 +328,7 @@ contract OrgManager {
         }
         orgNum++;
         OrgIndex[oid] = orgNum;
-        uint256 id = orgList.length+1;
+        uint256 id = orgList.length++;
         if (_level == 1) {
             orgList[id].level = _level;
             orgList[id].pindex = 0;
@@ -345,7 +345,7 @@ contract OrgManager {
             orgList[id].level = orgList[parentIndex].level + 1;
             orgList[id].pindex = parentIndex;
             orgList[id].ultParent = orgList[parentIndex].ultParent;
-            uint256 subOrgId = orgList[parentIndex].subOrgIndexList.length+1;
+            uint256 subOrgId = orgList[parentIndex].subOrgIndexList.length++;
             orgList[parentIndex].subOrgIndexList[subOrgId] = id;
             orgList[id].fullOrgId = string(abi.encodePacked(_pOrgId, ".", _orgId));
         }

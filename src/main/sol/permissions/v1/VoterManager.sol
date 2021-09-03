@@ -92,7 +92,7 @@ contract VoterManager {
         if (VoterOrgIndex[keccak256(abi.encode(_orgId))] == 0) {
             orgNum++;
             VoterOrgIndex[keccak256(abi.encode(_orgId))] = orgNum;
-            uint256 id = orgVoterList.length+1;
+            uint256 id = orgVoterList.length++;
             orgVoterList[id].orgId = _orgId;
             orgVoterList[id].voterCount = 1;
             orgVoterList[id].validVoterCount = 1;
