@@ -1,6 +1,6 @@
 # Validate a subset of recipients that are mandatory for a specific private contract
 
- Tags: privacy, non-party, privacy-enhancements, mandatory-recipients, extension
+ Tags: mandatory-recipients
 
 Private smart contract can have a subset of participants that are mandated to be included in all transactions
 for a particular contract
