@@ -29,11 +29,11 @@ on:
       goq-image:
         required: false
         description: 'GoQuorum image'
-        default: 'ghcr.io/baptiste-b-pegasys/quorum:develop'
+        default: 'ghcr.io/vgloic/quorum-dev-replace-crypto-secp256k1'
       tessera-image:
         required: false
         description: 'Tessera image'
-        default: 'ghcr.io/baptiste-b-pegasys/tessera:develop'
+        default: 'quorumengineering/tessera:develop'
       force-build-docker:
         required: false
         description: 'Set true to build the docker image'
