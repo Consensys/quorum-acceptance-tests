@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Objects;
 
 import static com.quorum.gauge.services.AbstractService.DEFAULT_MAX_RETRY;
 import static com.quorum.gauge.services.AbstractService.DEFAULT_SLEEP_DURATION_IN_MILLIS;
@@ -47,6 +48,8 @@ import static com.quorum.gauge.services.AbstractService.DEFAULT_SLEEP_DURATION_I
 public class EnhancedClientTransactionManager extends ClientTransactionManager {
 
     private List<PrivacyFlag> contractFlag;
+
+    private List<String> mandatoryFor;
 
     private Quorum quorum;
 
@@ -67,6 +70,11 @@ public class EnhancedClientTransactionManager extends ClientTransactionManager {
         }
     }
 
+    public EnhancedClientTransactionManager(Quorum quorum, String fromAddress, String privateFrom, List<String> privateFor, List<String> mandatoryFor, List<PrivacyFlag> contractFlag) {
+        this(quorum, fromAddress, privateFrom, privateFor, contractFlag, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS);
+        this.mandatoryFor = mandatoryFor;
+    }
+
     public EnhancedClientTransactionManager(Quorum quorum, String fromAddress, String privateFrom, List<String> privateFor, List<PrivacyFlag> contractFlag) {
         this(quorum, fromAddress, privateFrom, privateFor, contractFlag, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS);
     }
@@ -79,7 +87,11 @@ public class EnhancedClientTransactionManager extends ClientTransactionManager {
     public EthSendTransaction sendTransaction(BigInteger gasPrice, BigInteger gasLimit, String to, String data, BigInteger value) throws IOException {
         PrivateTransaction tx;
         if (contractFlag != null) {
-            tx = new EnhancedPrivateTransaction(getFromAddress(), null, gasLimit, to, value, data, getPrivateFrom(), getPrivateFor(), contractFlag);
+            if (Objects.nonNull(mandatoryFor)) {
+                tx = new EnhancedPrivateTransaction(getFromAddress(), null, gasLimit, to, value, data, getPrivateFrom(), getPrivateFor(), mandatoryFor, contractFlag);
+            } else {
+                tx = new EnhancedPrivateTransaction(getFromAddress(), null, gasLimit, to, value, data, getPrivateFrom(), getPrivateFor(), contractFlag);
+            }
         } else {
             tx = new PrivateTransaction(getFromAddress(), null, gasLimit, to, value, data, getPrivateFrom(), getPrivateFor());
         }
@@ -108,6 +120,8 @@ public class EnhancedClientTransactionManager extends ClientTransactionManager {
 
         private int privacyFlag;
 
+        private List<String> mandatoryFor;
+
         public EnhancedPrivateTransaction(String from, BigInteger nonce, BigInteger gasLimit, String to, BigInteger value, String data, String privateFrom, List<String> privateFor, List<PrivacyFlag> flags) {
             super(from, nonce, gasLimit, to, value, data, privateFrom, privateFor);
             int flag = 0;
@@ -117,12 +131,17 @@ public class EnhancedClientTransactionManager extends ClientTransactionManager {
             this.privacyFlag = flag;
         }
 
+        public EnhancedPrivateTransaction(String from, BigInteger nonce, BigInteger gasLimit, String to, BigInteger value, String data, String privateFrom, List<String> privateFor, List<String> mandatoryFor, List<PrivacyFlag> flags) {
+            this(from, nonce, gasLimit, to, value, data, privateFrom, privateFor, flags);
+            this.mandatoryFor = mandatoryFor;
+        }
+
         public int getPrivacyFlag() {
             return privacyFlag;
         }
 
-        public void setPrivacyFlag(int privacyFlag) {
-            this.privacyFlag = privacyFlag;
+        public List<String> getMandatoryFor() {
+            return mandatoryFor;
         }
     }
 }
