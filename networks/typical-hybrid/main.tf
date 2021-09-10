@@ -30,7 +30,10 @@ locals {
   more_args = join(" ", [
     "--allow-insecure-unlock" # since 1.9.7 upgrade
   ])
-  istanbul_validators           = { for id in local.tessera_node_indices : id => "true" }
+  istanbul_validators = merge(
+    { for id in local.tessera_node_indices : id => "true" }, // default to true for all
+    { for id in var.exclude_initial_nodes : id => "false" }
+  )
   besu_node_initial_paticipants = { for id in local.besu_node_indices : id => "true" }
   quorum_initial_paticipants    = { for id in local.quorum_node_indices : id => "true" }
 
@@ -177,6 +180,7 @@ module "network" {
   hybrid_public_key_b64         = slice(quorum_transaction_manager_keypair.tm.*.public_key_b64, 0, local.number_of_quorum_nodes)
   hybrid_tmkeys                 = slice(data.null_data_source.meta[*].inputs.tmKeys, 0, local.number_of_quorum_nodes)
   permission_qip714Block        = { block = 0, enabled = false }
+  exclude_initial_nodes         = var.exclude_initial_quorum_nodes
 }
 
 module "network-besu" {
@@ -199,6 +203,7 @@ module "network-besu" {
   hybrid_public_key_b64         = slice(quorum_transaction_manager_keypair.tm.*.public_key_b64, local.number_of_quorum_nodes, local.number_of_tessera_nodes)
   hybrid_tmkeys                 = data.null_data_source.meta[*].inputs.tmKeys
   number_of_quorum_nodes        = local.number_of_quorum_nodes
+  exclude_initial_nodes         = var.exclude_initial_besu_nodes
 }
 
 module "docker" {
@@ -211,12 +216,12 @@ module "docker" {
   ethstats_ip     = module.helper.ethstat_ip
   ethstats_secret = module.helper.ethstats_secret
 
-  network_name       = module.network.network_name
-  network_id         = random_integer.hybrid_network_id.result
-  node_keys_hex      = quorum_bootstrap_node_key.quorum-nodekeys-generator[*].node_key_hex
-  password_file_name = module.network.password_file_name
-  geth_datadirs      = var.remote_docker_config == null ? module.network.data_dirs : split(",", join("", null_resource.scp[*].triggers.data_dirs))
-  tessera_datadirs   = var.remote_docker_config == null ? module.network.tm_dirs : split(",", join("", null_resource.scp[*].triggers.quorum_tm_dirs))
+  network_name                = module.network.network_name
+  network_id                  = random_integer.hybrid_network_id.result
+  node_keys_hex               = quorum_bootstrap_node_key.quorum-nodekeys-generator[*].node_key_hex
+  password_file_name          = module.network.password_file_name
+  geth_datadirs               = var.remote_docker_config == null ? module.network.data_dirs : split(",", join("", null_resource.scp[*].triggers.data_dirs))
+  tessera_datadirs            = var.remote_docker_config == null ? module.network.tm_dirs : split(",", join("", null_resource.scp[*].triggers.quorum_tm_dirs))
   privacy_marker_transactions = var.privacy_marker_transactions
 
   additional_geth_args             = { for idx in local.quorum_node_indices : idx => local.more_args }
@@ -224,6 +229,9 @@ module "docker" {
   additional_tessera_container_vol = var.additional_tessera_container_vol
   tessera_app_container_path       = var.tessera_app_container_path
   accounts_count                   = module.network.accounts_count
+  start_quorum                     = var.start_quorum
+  start_tessera                    = var.start_tessera
+  exclude_initial_nodes            = module.network.exclude_initial_nodes
 }
 
 module "docker-besu" {
@@ -251,6 +259,11 @@ module "docker-besu" {
 
   hybrid_network         = local.hybrid_network
   number_of_quorum_nodes = local.number_of_quorum_nodes
+
+  start_besu            = var.start_besu
+  start_ethsigner       = var.start_ethsigner
+  start_tessera         = var.start_tessera
+  exclude_initial_nodes = module.network-besu.exclude_initial_nodes
 }
 
 # randomize the docker network cidr

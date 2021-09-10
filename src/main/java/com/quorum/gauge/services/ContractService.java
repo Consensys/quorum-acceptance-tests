@@ -610,10 +610,10 @@ public class ContractService extends AbstractService {
                     privacyService.id(privateFromAlias),
                     privacyService.ids(privateForAliases));
                 return SimpleStorageDelegate.deploy(client,
-                    clientTransactionManager,
-                    BigInteger.valueOf(0),
-                    DEFAULT_GAS_LIMIT,
-                    delegateContractAddress)
+                        clientTransactionManager,
+                        BigInteger.valueOf(0),
+                        DEFAULT_GAS_LIMIT,
+                        delegateContractAddress)
                     .flowable().toObservable();
             });
     }

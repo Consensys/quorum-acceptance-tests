@@ -10,8 +10,8 @@ resource "docker_container" "ethsigner" {
   image      = var.ethsigner_networking[count.index].image.name
   hostname   = format("ethsigner_node%d", count.index)
   restart    = "no"
-  must_run   = true
-  start      = true
+  must_run   = var.start_ethsigner
+  start      = var.start_ethsigner
   labels {
     label = "ethsignerContainer"
     value = count.index

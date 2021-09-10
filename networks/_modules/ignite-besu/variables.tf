@@ -82,26 +82,31 @@ variable "hybrid_node_key" {
 }
 
 variable "hybrid_configuration_filename" {
-  default = ""
+  default     = ""
   description = "Configuration filename for hybrid network"
 }
 
 variable "hybrid_tmkeys" {
-  default = []
+  default     = []
   description = "tmkeys to be used for hybrid network"
 }
 
 variable "hybrid_public_key_b64" {
-  default = []
+  default     = []
   description = "tessera public key in base64 encoding for hybrid network"
 }
 
 variable "hybrid_key_data" {
-  default = []
+  default     = []
   description = "tessera key data for hybrid network"
 }
 
 variable "number_of_quorum_nodes" {
-  default = 0
+  default     = 0
   description = "Number of quorum nodes in the hybrid network"
+}
+
+variable "exclude_initial_nodes" {
+  default     = []
+  description = "Exclude nodes (0-based index) from initial list of participants. E.g: [3, 4, 5] to exclude Node4, Node5, and Node6 from the initial participants of the network"
 }

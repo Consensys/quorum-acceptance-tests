@@ -1,4 +1,4 @@
-name: Run Acceptance Tests on standard networks
+name: Standard Acceptance Tests
 on:
   schedule:
     - cron: '0 12 * * *'
@@ -104,6 +104,8 @@ jobs:
           - 'learner-peer-management || raftdnsenable && networks/template::raft-3plus1'
           - 'validator-management && networks/template::qbft-3plus1'
           - 'validator-management && networks/template::istanbul-3plus1'
+          - 'hybrid-validator-management-manage-besu && networks/typical-hybrid::hybrid-template-q2b1'
+          - 'hybrid-validator-management-manage-quorum && networks/typical-hybrid::hybrid-template-q1b2'
           - 'qbft-transition-network && networks/template::qbft-4nodes-transition'
           - 'basic || basic-raft || (advanced && raft) || networks/plugins::raft'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::qbft'
@@ -245,7 +247,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: testreport-${{ steps.setup.outputs.tag }}
-          path: ${{ steps.setup.outputs.outputDir }}/*.* # only files not directory
+          path: ${{ steps.setup.outputs.outputDir }}/*.txt # only files not directory
       - name: 'Destroy infrastructure resources if ever created'
         if: always() && needs.condition.outputs.use_aws == 'true'
         # we don't care about containers running on the remote VM

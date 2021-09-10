@@ -1,4 +1,5 @@
-pragma solidity ^0.5.17;
+// SPDX-License-Identifier: Apache-2.0
+pragma solidity ^0.5.0;
 
 import "./PermissionsUpgradable.sol";
 /** @title Organization manager contract
@@ -184,7 +185,7 @@ contract OrgManager {
 
     /** @notice returns org info for a given org index
       * @param _orgIndex org index
-      * @return org id
+      * @return orgId
       * @return parent org id
       * @return ultimate parent id
       * @return level in the org tree
@@ -198,7 +199,7 @@ contract OrgManager {
 
     /** @notice returns org info for a given org id
       * @param _orgId org id
-      * @return org id
+      * @return orgId
       * @return parent org id
       * @return ultimate parent id
       * @return level in the org tree

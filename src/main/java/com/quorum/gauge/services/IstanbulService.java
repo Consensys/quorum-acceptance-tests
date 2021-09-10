@@ -19,6 +19,7 @@
 
 package com.quorum.gauge.services;
 
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.ext.IstanbulNodeAddress;
 import com.quorum.gauge.ext.IstanbulPropose;
@@ -26,6 +27,7 @@ import com.quorum.gauge.ext.MinerStartStop;
 import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.Request;
 
@@ -36,6 +38,12 @@ import java.util.Collections;
 public class IstanbulService extends AbstractService {
 
     private static final Logger logger = LoggerFactory.getLogger(IstanbulService.class);
+
+    @Autowired
+    private InfrastructureService infraService;
+
+    @Autowired
+    private BesuQBFTService besuService;
 
     public Observable<MinerStartStop> stopMining(final QuorumNode node) {
         logger.debug("Request {} to stop mining", node);
@@ -59,8 +67,13 @@ public class IstanbulService extends AbstractService {
         ).flowable().toObservable();
     }
 
-    public Observable<IstanbulPropose> propose(final QuorumNode node, final String proposedValidatorAddress, boolean vote) {
+    public Observable<IstanbulPropose> propose(final QuorumNetworkProperty.Node node, final String proposedValidatorAddress, boolean vote) {
         logger.debug("Node {} proposing {}", node, proposedValidatorAddress);
+
+        // Check if the node is a besu node, if yes call besu specific propose validator RPC call
+        if(isBesuNode(node)) {
+            return besuService.propose(node, proposedValidatorAddress, vote);
+        }
 
         return new Request<>(
             "istanbul_propose",
@@ -70,14 +83,26 @@ public class IstanbulService extends AbstractService {
         ).flowable().toObservable();
     }
 
-    public Observable<IstanbulNodeAddress> nodeAddress(final QuorumNode node) {
+    public Observable<IstanbulNodeAddress> nodeAddress(final QuorumNetworkProperty.Node node) {
         logger.debug("node address of node {}", node);
+        // Check if it is a besu node, if yes get the nodeAddress from besu
+        if(isBesuNode(node)) {
+            return besuService.nodeAddress(node);
+        }
+
         return new Request<>(
             "istanbul_nodeAddress",
             Arrays.asList(),
             connectionFactory().getWeb3jService(node),
             IstanbulNodeAddress.class
         ).flowable().toObservable();
+    }
+
+    public boolean isBesuNode(QuorumNetworkProperty.Node node) {
+        QuorumNetworkProperty.DockerInfrastructureProperty.DockerContainerProperty property = networkProperty().getDockerInfrastructure().getNodes().get(node.getName());
+        String containerId = property.getQuorumContainerId();
+
+        return infraService.isBesu(containerId).blockingFirst();
     }
 
 }
