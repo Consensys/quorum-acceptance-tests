@@ -202,12 +202,6 @@ jobs:
             echo "::error file=$(_jq '.file'),line=$(_jq '.line'),col=$(_jq '.col')::$(_jq '.message')"
           done
           cat ${{ steps.setup.outputs.outputDir}}/summary.txt
-      - name: 'Upload test report'
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: testreport-${{ steps.setup.outputs.tag }}
-          path: ${{ steps.setup.outputs.outputDir }}/*.* # only files not directory
   
   run-master-1:
     # This workflow uses tag expression and its sha256 hash to aggregate test results
@@ -366,12 +360,6 @@ jobs:
             echo "::error file=$(_jq '.file'),line=$(_jq '.line'),col=$(_jq '.col')::$(_jq '.message')"
           done
           cat ${{ steps.setup.outputs.outputDir}}/summary.txt
-      - name: 'Upload test report'
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: testreport-${{ steps.setup.outputs.tag }}
-          path: ${{ steps.setup.outputs.outputDir }}/*.* # only files not directory
 
   run-master-2:
     # This workflow uses tag expression and its sha256 hash to aggregate test results
@@ -484,12 +472,6 @@ jobs:
             echo "::error file=$(_jq '.file'),line=$(_jq '.line'),col=$(_jq '.col')::$(_jq '.message')"
           done
           cat ${{ steps.setup.outputs.outputDir}}/summary.txt
-      - name: 'Upload test report'
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: testreport-${{ steps.setup.outputs.tag }}
-          path: ${{ steps.setup.outputs.outputDir }}/*.* # only files not directory
 
   run-master-3:
     # This workflow uses tag expression and its sha256 hash to aggregate test results
@@ -616,12 +598,6 @@ jobs:
             echo "::error file=$(_jq '.file'),line=$(_jq '.line'),col=$(_jq '.col')::$(_jq '.message')"
           done
           cat ${{ steps.setup.outputs.outputDir}}/summary.txt
-      - name: 'Upload test report'
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: testreport-${{ steps.setup.outputs.tag }}
-          path: ${{ steps.setup.outputs.outputDir }}/*.* # only files not directory
 
   run-master-4:
     # This workflow uses tag expression and its sha256 hash to aggregate test results
@@ -739,12 +715,6 @@ jobs:
             echo "::error file=$(_jq '.file'),line=$(_jq '.line'),col=$(_jq '.col')::$(_jq '.message')"
           done
           cat ${{ steps.setup.outputs.outputDir}}/summary.txt
-      - name: 'Upload test report'
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: testreport-${{ steps.setup.outputs.tag }}
-          path: ${{ steps.setup.outputs.outputDir }}/*.* # only files not directory
 
   run-master-5:
     # This workflow uses tag expression and its sha256 hash to aggregate test results
@@ -863,12 +833,6 @@ jobs:
             echo "::error file=$(_jq '.file'),line=$(_jq '.line'),col=$(_jq '.col')::$(_jq '.message')"
           done
           cat ${{ steps.setup.outputs.outputDir}}/summary.txt
-      - name: 'Upload test report'
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: testreport-${{ steps.setup.outputs.tag }}
-          path: ${{ steps.setup.outputs.outputDir }}/*.* # only files not directory
 
   run-extend:
     # This workflow uses tag expression and its sha256 hash to aggregate test results
@@ -1024,9 +988,3 @@ jobs:
             echo "::error file=$(_jq '.file'),line=$(_jq '.line'),col=$(_jq '.col')::$(_jq '.message')"
           done
           cat ${{ steps.setup.outputs.outputDir}}/summary.txt
-      - name: 'Upload test report'
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: testreport-${{ steps.setup.outputs.tag }}
-          path: ${{ steps.setup.outputs.outputDir }}/*.* # only files not directory
