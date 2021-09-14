@@ -133,6 +133,8 @@ jobs:
           - 'basic || networks/typical::istanbulmps'
           - 'mps-upgrade-txtrace || networks/template::raft-4nodes-mps'
           - 'mps-upgrade-txtrace || networks/template::istanbul-4nodes-mps'
+          - 'mps-mixed-network-psr-check || networks/template::raft-4nodes-mps-mixed'
+          - 'mps-mixed-network-psr-check || networks/template::istanbul-4nodes-mps-mixed'
           - '(basic && !nosupport && !mps && !(spam && !raw) && !eth-api-signed && !privacy-enhancements-disabled && !graphql && !async && !extension && !storage-root && !personal-api-signed) || networks/typical-besu::ibft2'
           - '(basic && !nosupport && !mps && !(spam && !raw) && !eth-api-signed && !privacy-enhancements-disabled && !graphql && !async && !extension && !storage-root && !personal-api-signed) || networks/typical-hybrid::hybrid'
     runs-on: ubuntu-18.04
@@ -227,21 +229,50 @@ jobs:
       - name: 'Read test report'
         if: always()
         run: |
-          failuresRaw="$(cat ${{ steps.setup.outputs.outputDir }}/failures.txt | jq -r '.[] | @base64')"
-          SAVEIFS=$IFS   # Save current IFS
-          IFS=$'\n'      # Change IFS to new line
-          failures=($failuresRaw) # split to array
-          IFS=$SAVEIFS   # Restore IFS
-          for (( i=0; i<${#failures[@]}; i++ ))
-          do
-            row=${failures[$i]}
-            _jq() {
+          echo "::group::failures"
+          if [ -r ${{ steps.setup.outputs.outputDir}}/failures.txt ];
+          then
+            failuresRaw="$(cat ${{ steps.setup.outputs.outputDir }}/failures.txt | jq -r '.[] | @base64')"
+            SAVEIFS=$IFS   # Save current IFS
+            IFS=$'\n'      # Change IFS to new line
+            failures=($failuresRaw) # split to array
+            IFS=$SAVEIFS   # Restore IFS
+            for (( i=0; i<${#failures[@]}; i++ ))
+            do
+              row=${failures[$i]}
+              _jq() {
+                  echo ${row} | base64 --decode | jq -r ${1}
+              }
+              echo "$(_jq '.file'): $(_jq '.message')"
+              echo "::error file=$(_jq '.file'),line=$(_jq '.line'),col=$(_jq '.col')::$(_jq '.message')"
+            done
+          fi
+          echo "::endgroup::"
+
+          echo "::group::skipped"
+          if [ -r ${{ steps.setup.outputs.outputDir}}/skipped.txt ];
+          then
+            skippedRaw="$(cat ${{ steps.setup.outputs.outputDir }}/skipped.txt | jq -r '.[] | @base64')"
+            SAVEIFS=$IFS          # Save current IFS
+            IFS=$'\n'             # Change IFS to new line
+            skipped=($skippedRaw) # split to array
+            IFS=$SAVEIFS          # Restore IFS
+            for (( i=0; i<${#skipped[@]}; i++ ))
+            do
+              row=${skipped[$i]}
+              _jq() {
                 echo ${row} | base64 --decode | jq -r ${1}
-            }
-            echo "$(_jq '.file'): $(_jq '.message')"
-            echo "::error file=$(_jq '.file'),line=$(_jq '.line'),col=$(_jq '.col')::$(_jq '.message')"
-          done
-          cat ${{ steps.setup.outputs.outputDir}}/summary.txt
+              }
+              echo "$(_jq '.message')"
+              echo "::warning ::$(_jq '.message')"
+            done
+          fi
+          echo "::endgroup::"
+
+          if [ -r ${{ steps.setup.outputs.outputDir}}/summary.txt ];
+          then
+            cat ${{ steps.setup.outputs.outputDir}}/summary.txt;
+          fi
       - name: 'Upload test report'
         if: always()
         uses: actions/upload-artifact@v2
