@@ -97,11 +97,11 @@ jobs:
         # list of tag expression being executed in parallel
         include:
           # privacy enhancements tests
-          - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || basic-raft || (advanced && raft) || networks/typical::raft'
+          - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || mandatory-recipients || basic-raft || (advanced && raft) || networks/typical::raft'
             privacy-enhancements: true
             privacy-precompile: false
             privacy-marker-transactions: false
-          - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
+          - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || mandatory-recipients || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
             privacy-enhancements: true
             privacy-precompile: false
             privacy-marker-transactions: false
@@ -147,15 +147,15 @@ jobs:
             privacy-precompile: true
             privacy-marker-transactions: true
           # privacy enhancements + privacy precompile/privacy marker transaction tests
-          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || privacy-precompile-enabled || basic-raft || (advanced && raft) || networks/typical::raft'
+          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || mandatory-recipients || privacy-precompile-enabled || basic-raft || (advanced && raft) || networks/typical::raft'
             privacy-enhancements: true
             privacy-precompile: true
             privacy-marker-transactions: true
-          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
+          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || mandatory-recipients || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
             privacy-enhancements: true
             privacy-precompile: true
             privacy-marker-transactions: true
-          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/typical::qbft'
+          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || mandatory-recipients || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/typical::qbft'
             privacy-enhancements: true
             privacy-precompile: true
             privacy-marker-transactions: true
