@@ -75,6 +75,9 @@ public abstract class AbstractSpecImplementation {
     protected TransactionService transactionService;
 
     @Autowired
+    protected PrivacyMarkerTransactionService privacyMarkerTransactionService;
+
+    @Autowired
     protected AccountService accountService;
 
     @Autowired

@@ -74,6 +74,24 @@ public class NestedContractService extends AbstractService {
         });
     }
 
+    public Observable<? extends Contract> createC1ContractWithMandatoryRecipients(int initialValue, QuorumNode source, List<QuorumNode> target, List<QuorumNode> mandatoryFor, List<PrivacyFlag> flags) {
+        Quorum client = connectionFactory().getConnection(source);
+        return accountService.getDefaultAccountAddress(source).flatMap(address -> {
+            ClientTransactionManager clientTransactionManager = new EnhancedClientTransactionManager(
+                client,
+                address,
+                null,
+                target.stream().map(n -> privacyService.id(n)).collect(Collectors.toList()),
+                mandatoryFor.stream().map(n -> privacyService.id(n)).collect(Collectors.toList()),
+                flags);
+            return C1.deploy(client,
+                clientTransactionManager,
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT,
+                BigInteger.valueOf(initialValue)).flowable().toObservable();
+        });
+    }
+
     public Observable<? extends Contract> createPublicC1Contract(int initialValue, QuorumNode source) {
         Quorum client = connectionFactory().getConnection(source);
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
@@ -102,6 +120,24 @@ public class NestedContractService extends AbstractService {
                 address,
                 null,
                 target.stream().map(n -> privacyService.id(n)).collect(Collectors.toList()),
+                flags);
+            return C2.deploy(client,
+                clientTransactionManager,
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT,
+                c1Address).flowable().toObservable();
+        });
+    }
+
+    public Observable<? extends Contract> createC2ContractWithMandatoryRecipients(String c1Address, QuorumNode source, List<QuorumNode> target, List<QuorumNode> mandatoryFor, List<PrivacyFlag> flags) {
+        Quorum client = connectionFactory().getConnection(source);
+        return accountService.getDefaultAccountAddress(source).flatMap(address -> {
+            ClientTransactionManager clientTransactionManager = new EnhancedClientTransactionManager(
+                client,
+                address,
+                null,
+                target.stream().map(n -> privacyService.id(n)).collect(Collectors.toList()),
+                mandatoryFor.stream().map(n -> privacyService.id(n)).collect(Collectors.toList()),
                 flags);
             return C2.deploy(client,
                 clientTransactionManager,
