@@ -120,4 +120,13 @@ public class GethArgBuilder {
         }
         return this;
     }
+
+    public GethArgBuilder privacyMarkerEnable(boolean yes) {
+        if (yes) {
+            args.put("--privacymarker.enable", "");
+        } else {
+            args.remove("--privacymarker.enable");
+        }
+        return this;
+    }
 }

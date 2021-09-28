@@ -99,7 +99,7 @@ public class GraphQL extends AbstractSpecImplementation {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         String transactionHash = c.getTransactionReceipt().orElseThrow(() -> new RuntimeException("no transaction receipt for contract")).getTransactionHash();
 
-        Transaction privateTx = transactionService.getPrivateTransaction(node, transactionHash)
+        Transaction privateTx = privacyMarkerTransactionService.getPrivateTransaction(node, transactionHash)
             .blockingFirst()
             .getTransaction()
             .orElseThrow(() -> new RuntimeException("no internal transaction for transaction"));
