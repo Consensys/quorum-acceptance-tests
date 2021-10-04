@@ -325,7 +325,8 @@ public class DockerInfrastructureService
     }
 
     /**
-     * Wait for container to be in "healthy" status, timeout is 3 * 30 seconds
+     * Wait for container to be in "healthy" status
+     * Timeout is 3 * 30 seconds
      * 
      *
      * @param resourceId containder Id
