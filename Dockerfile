@@ -5,7 +5,6 @@ ARG GAUGE_VERSION=1.3.3
 # To have a consistent run, this must be the same as gauge-java.version in pom.xml
 ARG GAUGE_JAVA_VERSION=0.7.15
 ARG JDK_VERSION=14
-ARG JDK_VERSION=14
 LABEL maintainer="info@goquorum.com" \
     TERRAFORM_VERSION="${TERRAFORM_VERSION}" \
     SOLC_VERSION=""${SOLC_VERSION} \
