@@ -57,6 +57,9 @@ contract SimpleStorage {
  Tags: raw
 
 * Execute "contract31"'s `set()` function with new value "5" signed with "eth_signTransaction" using "Node1"'s default account and it's private for "Node4"
+* Record the current block number, named it as "blockHeightAfterValueIsUpdated"
 * "contract31"'s `get()` function execution in "Node1" returns "5"
 * "contract31"'s `get()` function execution in "Node4" returns "5"
+* Wait for node "Node4" to catch up to "blockHeightAfterValueIsUpdated"
 * "contract31"'s `get()` function execution in "Node3" returns "0"
+* Wait for node "Node3" to catch up to "blockHeightAfterValueIsUpdated"
