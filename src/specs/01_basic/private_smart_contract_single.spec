@@ -62,6 +62,9 @@ contract SimpleStorage {
  Tags: private, privacy
 
 * Execute "contract17"'s `set()` function with new value "5" in "Node1" and it's private for "Node4"
+* Record the current block number, named it as "blockHeightAfterValueIsUpdated"
 * "contract17"'s `get()` function execution in "Node1" returns "5"
+* Wait for node "Node4" to catch up to "blockHeightAfterValueIsUpdated"
 * "contract17"'s `get()` function execution in "Node4" returns "5"
+* Wait for node "Node3" to catch up to "blockHeightAfterValueIsUpdated"
 * "contract17"'s `get()` function execution in "Node3" returns "0"
