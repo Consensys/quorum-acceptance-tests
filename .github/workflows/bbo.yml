@@ -46,7 +46,7 @@ jobs:
           echo "::set-output name=val::$val"
           echo "::set-output name=useAws::$useAws"
           echo "::set-output name=infra::$infraName"
-    docker-build:
+  docker-build:
     name: 'Build Docker image'
     if: needs.condition.outputs.should_run == 'true'
     needs:
