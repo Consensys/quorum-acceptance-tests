@@ -67,9 +67,12 @@ contract C2  {
  Tags: private
 
 * Execute contract `C2`("contractC2_1")'s `set()` function with new value "5" in "Node1" and it's private for "Node4"
+* Record the current block number, named it as "blockHeightAfterValueIsUpdated"
 * Contract `C1`("contractC1_1")'s `get()` function execution in "Node1" returns "5"
-* Contract `C1`("contractC1_1")'s `get()` function execution in "Node4" returns "5"
-* Contract `C1`("contractC1_1")'s `get()` function execution in "Node3" returns "0"
 * Contract `C2`("contractC2_1")'s `get()` function execution in "Node1" returns "5"
+* Wait for node "Node4" to catch up to "blockHeightAfterValueIsUpdated"
+* Contract `C1`("contractC1_1")'s `get()` function execution in "Node4" returns "5"
 * Contract `C2`("contractC2_1")'s `get()` function execution in "Node4" returns "5"
+* Wait for node "Node3" to catch up to "blockHeightAfterValueIsUpdated"
+* Contract `C1`("contractC1_1")'s `get()` function execution in "Node3" returns "0"
 * Contract `C2`("contractC2_1")'s `get()` function execution in "Node3" returns "0"
