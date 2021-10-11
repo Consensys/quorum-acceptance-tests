@@ -325,10 +325,12 @@ public class DockerInfrastructureService
     }
 
     /**
-     * It's possible that container is still starting up even true is returned
+     * Wait for container to be in "healthy" status
+     * Timeout is 3 * 30 seconds
+     * 
      *
      * @param resourceId containder Id
-     * @return true if container is not dead
+     * @return true if container is in "healthy" status
      */
     @Override
     public Observable<Boolean> wait(String resourceId) {
@@ -345,7 +347,7 @@ public class DockerInfrastructureService
                            Thread.sleep(3000);
                        }
                    }
-                   return true;
+                   return false;
                });
     }
 

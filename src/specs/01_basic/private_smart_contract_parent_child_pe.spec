@@ -90,7 +90,10 @@ the two resulting contracts have the same transaction as their ACOTH
 * "smPrivate2"'s `getC2C3Value()` function execution in "Node2" returns "0"
 * "smPrivate2"'s `getC2C3Value()` function execution in "Node4" returns "10"
 * Invoke a <privacyType> setC2C3Value with value "15" in master storage contract "smPrivate2" in "Node1"'s default account and it's private for "Node4"
+* Record the current block number, named it as "blockHeightAfterValueIsUpdated"
 * "smPrivate2"'s `getC2C3Value()` function execution in "Node1" returns "30"
+* Wait for node "Node2" to catch up to "blockHeightAfterValueIsUpdated"
 * "smPrivate2"'s `getC2C3Value()` function execution in "Node2" returns "0"
+* Wait for node "Node3" to catch up to "blockHeightAfterValueIsUpdated"
 * "smPrivate2"'s `getC2C3Value()` function execution in "Node4" returns "30"
 
