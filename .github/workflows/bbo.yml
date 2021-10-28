@@ -109,12 +109,113 @@ jobs:
           - 'basic || networks/typical::raftmps'
           - 'basic || networks/typical::istanbulmps'
           - 'basic || networks/typical::qbftmps'
+
+          - 'basic || basic-raft || (advanced && raft) || networks/plugins::raft'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::qbft'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul'
+          - 'basic || basic-raft || (advanced && raft) || networks/plugins::raft-account-plugin-hashicorp-vault'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::qbft-account-plugin-hashicorp-vault'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul-account-plugin-hashicorp-vault'
+          - 'basic-rpc-security || networks/plugins::raft-rpc-security'
+          - 'basic-rpc-security || networks/plugins::qbft-rpc-security'
+          - 'basic-rpc-security || networks/plugins::istanbul-rpc-security'
+
+          - 'migration && networks/template::raft-4nodes'
+          - 'migration && networks/template::istanbul-4nodes'
+          - 'migration && networks/template::raft-4nodes-ancientdb'
+          - 'migration && networks/template::istanbul-4nodes-ancientdb'
+          - 'permissions-v1 && networks/template::raft-3plus1'
+          - 'permissions-v2 && networks/template::raft-3plus1'
+          - 'privacy-enhancements-upgrade || networks/template::raft-4nodes-pe'
+          - 'privacy-enhancements-upgrade || networks/template::istanbul-4nodes-pe'
+          - 'multitenancy && networks/plugins::raft-multitenancy'
+
+          - 'basic || basic-raft || (advanced && raft) || networks/typical::raft-simple-mps'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-simple-mps'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul-simple-mps'
+          - 'basic || networks/typical::raftmps'
+          - 'basic || networks/typical::qbftmps'
+          - 'basic || networks/typical::istanbulmps'
+          - 'mps-upgrade-txtrace || networks/template::raft-4nodes-mps'
+          - 'mps-upgrade-txtrace || networks/template::istanbul-4nodes-mps'
+          - '(basic && !nosupport && !mps && !(spam && !raw) && !eth-api-signed && !privacy-enhancements-disabled && !graphql && !async && !extension && !storage-root && !personal-api-signed) || networks/typical-besu::ibft2'
+          - '(basic && !nosupport && !mps && !(spam && !raw) && !eth-api-signed && !privacy-enhancements-disabled && !graphql && !async && !extension && !storage-root && !personal-api-signed) || networks/typical-hybrid::hybrid'
+
+          - 'gcmode && block-sync && networks/template::raft-3plus1'
+          - 'gcmode && block-sync && networks/template::istanbul-3plus1'
+          - 'gcmode && block-sync && networks/template::qbft-3plus1'
+          - 'learner-peer-management || raftdnsenable && networks/template::raft-3plus1'
+          - 'validator-management && networks/template::qbft-3plus1'
+          - 'validator-management && networks/template::istanbul-3plus1'
+          - 'qbft-transition-network && networks/template::qbft-4nodes-transition'
         privacy-enhancements:
           - 'false'
         privacy-precompile:
           - 'false'
         privacy-marker-transactions:
           - 'false'
+        include:
+          - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || basic-raft || (advanced && raft) || networks/typical::raft'
+            privacy-enhancements: 'true'
+            privacy-precompile: 'false'
+            privacy-marker-transactions: 'false'
+          - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
+            privacy-enhancements: 'true'
+            privacy-precompile: 'false'
+            privacy-marker-transactions: 'false'
+          - tag: 'basic || basic-raft || (advanced && raft) || networks/typical::raft'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: false
+          - tag: 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: false
+          - tag: 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: false
+          - tag: '(multitenancy || privacy-precompile-enabled) && networks/plugins::raft-multitenancy'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: true
+          - tag: '(basic && !privacy-precompile-disabled) || basic-raft || (advanced && raft) || networks/typical::raft-simple-mps'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: true
+          - tag: '(basic && !privacy-precompile-disabled) || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul-simple-mps'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: true
+          - tag: '(basic && !privacy-precompile-disabled) || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-simple-mps'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: true
+          - tag: '(basic && !privacy-precompile-disabled) || networks/typical::raftmps'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: true
+          - tag: '(basic && !privacy-precompile-disabled) || networks/typical::istanbulmps'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: true
+          - tag: '(basic && !privacy-precompile-disabled) || networks/typical::qbftmps'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: true
+          # privacy enhancements + privacy precompile/privacy marker transaction tests
+          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || privacy-precompile-enabled || basic-raft || (advanced && raft) || networks/typical::raft'
+            privacy-enhancements: true
+            privacy-precompile: true
+            privacy-marker-transactions: true
+          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
+            privacy-enhancements: true
+            privacy-precompile: true
+            privacy-marker-transactions: true
+          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/typical::qbft'
+            privacy-enhancements: true
+            privacy-precompile: true
+            privacy-marker-transactions: true
     runs-on: ${{ github.event.inputs.runs-on }}
 
     steps:
