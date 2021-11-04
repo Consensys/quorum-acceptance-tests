@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM alpine:edge
 
 ARG TERRAFORM_VERSION=0.14.7
 ARG GAUGE_VERSION=1.3.3
