@@ -18,39 +18,8 @@ on:
         description: 'Set true to build the docker image'
         default: 'false'
 jobs:
-  condition:
-    name: Prepare - ${{ github.event.inputs.name }}
-    runs-on: ${{ github.event.inputs.runs-on }}
-    outputs:
-      should_run: '${{ steps.check.outputs.val }}'
-      use_aws: '${{ steps.check.outputs.useAws }}'
-      infra: '${{ steps.check.outputs.infra }}'
-    steps:
-      - name: Check
-        id: check
-        run: |
-          val="false"
-          if [ \( "${{ github.event_name }}" == "schedule" -a "${{ secrets.SCHEDULE_RUN }}" != "disable" \) -o "${{ github.event_name }}" != "schedule" ]; then
-            val="true"
-          fi
-          if [ "$val" == "false" ]; then
-            echo "::warning ::Runs are conditionally skipped"
-          fi
-          useAws="true"
-          infraName="AWS"
-          if [ "${{ secrets.AWS_ACCESS_KEY_ID }}" == "" ] || [ "${{ github.event_name }}" == "pull_request" ] || [ "${{ secrets.DISABLE_AWS }}" == "true" ]; then
-            useAws="false"
-            infraName="GithubActionsVM"
-          fi
-          echo "::warning ::Networks are provisioned using $infraName infrastructure"
-          echo "::set-output name=val::$val"
-          echo "::set-output name=useAws::$useAws"
-          echo "::set-output name=infra::$infraName"
   docker-build:
     name: 'Build Docker image'
-    if: needs.condition.outputs.should_run == 'true'
-    needs:
-      - condition
     runs-on: ${{ github.event.inputs.runs-on }}
     outputs:
       output_dir: '${{ steps.prepare.outputs.output_dir }}'
@@ -67,15 +36,6 @@ jobs:
           echo "::set-output name=output_file::$output_dir/acctests.tar.gz"
           echo "::set-output name=image_file::acctests.tar"
           echo "::set-output name=image_name::quorumengineering/acctests:gh"
-      - name: 'Cache docker image'
-        id: cache-image
-        uses: actions/cache@v2
-        with:
-          path: ${{ steps.prepare.outputs.output_dir }}
-          key: ${{ github.sha }}
-      - name: 'Check out project files'
-        if: github.event.inputs.force-build-docker == 'true' || steps.cache-image.outputs.cache-hit != 'true'
-        uses: actions/checkout@v2
       - name: 'Build docker image'
         if: github.event.inputs.force-build-docker == 'true' || steps.cache-image.outputs.cache-hit != 'true'
         id: build
@@ -83,17 +43,16 @@ jobs:
           docker build -t ${{ steps.prepare.outputs.image_name }} .
           docker save ${{ steps.prepare.outputs.image_name }} > ${{ steps.prepare.outputs.image_file }}
           tar cfvz ${{ steps.prepare.outputs.output_file }} ${{ steps.prepare.outputs.image_file }}
-  run-pr-min:
+  run-ats:
     # This workflow uses tag expression and its sha256 hash to aggregate test results
     # from each execution. It is important that the job name has tag expression in the
     # suffix and encapsulated within parathensis
     name: Tests tagged with (${{ matrix.tag }})
-    if: needs.condition.outputs.should_run == 'true'
+    if: always()
     needs:
-      - condition
       - docker-build
     strategy:
-      fail-fast: false
+      fail-fast: true
       max-parallel: 5
       matrix:
         # list of tag expression being executed in parallel
@@ -217,7 +176,6 @@ jobs:
             privacy-precompile: true
             privacy-marker-transactions: true
     runs-on: ${{ github.event.inputs.runs-on }}
-
     steps:
       - name: 'Download docker image'
         uses: actions/cache@v2
@@ -266,13 +224,14 @@ jobs:
 
           echo "TF_VAR_privacy_enhancements={block=0, enabled=${{ matrix.privacy-enhancements }}}" >> $dockerEnvFile
           echo "TF_VAR_privacy_precompile={block=0, enabled=${{ matrix.privacy-precompile }}}" >> $dockerEnvFile
-          echo "TF_VAR_privacy_marker_transactions=${{ matrix.privacy-marker-transactions }}" >> $dockerEnvFile
+          echo "TF_VAR_privacy_marker_transactions=${{ matr
+          ix.privacy-marker-transactions }}" >> $dockerEnvFile
           echo "::set-output name=tag::$tagKey"
           echo "::set-output name=mvnArg::$mvnArg"
           echo "::set-output name=dockerEnv::$dockerEnv"
           echo "::set-output name=outputDir::${{ runner.temp }}"
           echo "::set-output name=dockerEnvFile::$dockerEnvFile"
-      - name: 'Run tests using ${{ needs.condition.outputs.infra }}'
+      - name: 'Run tests'
         run: |
           # we don't remove the container after run as we need to clean up the infra if used
           docker run \
@@ -350,8 +309,7 @@ jobs:
             cat ${{ steps.setup.outputs.outputDir}}/summary.txt;
           fi
       - name: 'Destroy infrastructure resources if ever created'
-        if: always() && needs.condition.outputs.use_aws == 'true'
-        # we don't care about containers running on the remote VM
+        if: always()
         run: |
           docker commit acctests-run quorumengineering/acctests:after
           docker run --rm ${{ steps.setup.outputs.dockerEnv }} \
