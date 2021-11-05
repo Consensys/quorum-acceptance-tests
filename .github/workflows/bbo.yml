@@ -36,6 +36,15 @@ jobs:
           echo "::set-output name=output_file::$output_dir/acctests.tar.gz"
           echo "::set-output name=image_file::acctests.tar"
           echo "::set-output name=image_name::quorumengineering/acctests:gh"
+      - name: 'Cache docker image'
+        id: cache-image
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.prepare.outputs.output_dir }}
+          key: ${{ github.sha }}
+      - name: 'Check out project files'
+        if: steps.cache-image.outputs.cache-hit != 'true'
+        uses: actions/checkout@v2
       - name: 'Build docker image'
         if: github.event.inputs.force-build-docker == 'true' || steps.cache-image.outputs.cache-hit != 'true'
         id: build
