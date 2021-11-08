@@ -53,6 +53,9 @@ jobs:
           docker save ${{ steps.prepare.outputs.image_name }} > ${{ steps.prepare.outputs.image_file }}
           tar cfvz ${{ steps.prepare.outputs.output_file }} ${{ steps.prepare.outputs.image_file }}
   clean-docker-1:
+    if: always()
+    needs:
+      - docker-build
     steps:
      - name: 'Clean'
        run: |
@@ -69,7 +72,7 @@ jobs:
     name: Tests tagged with (${{ matrix.tag }})
     if: always()
     needs:
-      - docker-build
+      - clean-docker-1
     strategy:
       fail-fast: true
       max-parallel: 6
@@ -321,6 +324,9 @@ jobs:
           fi
 
   clean-docker-2:
+    if: always()
+    needs:
+      - run-ats-1
     steps:
      - name: 'Clean'
        run: |
@@ -340,7 +346,7 @@ jobs:
     name: Tests tagged with (${{ matrix.tag }})
     if: always()
     needs:
-      - docker-build
+      - clean-docker-2
     strategy:
       fail-fast: true
       max-parallel: 6
@@ -569,7 +575,10 @@ jobs:
             cat ${{ steps.setup.outputs.outputDir}}/summary.txt;
           fi
 
-  clean-docker-1:
+  clean-docker-3:
+    if: always()
+    needs:
+      - run-ats-2
     steps:
      - name: 'Clean'
        run: |
@@ -589,7 +598,7 @@ jobs:
     name: Tests tagged with (${{ matrix.tag }})
     if: always()
     needs:
-      - docker-build
+      - clean-docker-3
     strategy:
       fail-fast: true
       max-parallel: 6
