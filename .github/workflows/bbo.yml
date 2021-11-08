@@ -207,10 +207,6 @@ jobs:
           gitref_path="${{ github.ref }}"
           gitref_path=${gitref_path/refs\/heads\//} # for refs/heads/my-branch
 
-          echo "${{ github.token }}" | docker login https://docker.pkg.github.com -u ${{ github.repository_owner }} --password-stdin
-          echo "${{ github.token }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
-          #quorum_docker_image=$(echo "docker.pkg.github.com/${{ github.repository }}/quorum-$gitref_path:develop" | tr '[:upper:]' '[:lower:]' )
-          #tessera_docker_image=$(echo "docker.pkg.github.com/${{ github.repository }}/tessera-$gitref_path:develop" | tr '[:upper:]' '[:lower:]')
           quorum_docker_image=$(echo "${{ github.event.inputs.goq-image }}" | tr '[:upper:]' '[:lower:]' )
           tessera_docker_image=$(echo "${{ github.event.inputs.tessera-image }}" | tr '[:upper:]' '[:lower:]')
           has_quorum_docker_image=$(docker pull $quorum_docker_image >/dev/null 2>&1; echo $?)
@@ -226,9 +222,6 @@ jobs:
             echo "::warning ::Using $tessera_docker_image"
             echo "TF_VAR_tessera_docker_image={name=\"$tessera_docker_image\", local=$local_image}" >> $dockerEnvFile
             docker pull $tessera_docker_image
-          fi
-          if [ $has_quorum_docker_image -eq 0 ] || [ $has_tessera_docker_image -eq 0 ]; then
-            echo "TF_VAR_docker_registry=[{name=\"docker.pkg.github.com\", username=\"${{ github.repository_owner }}\", password=\"${{ github.token }}\"}]" >> $dockerEnvFile
           fi
 
           echo "TF_VAR_privacy_enhancements={block=0, enabled=${{ matrix.privacy-enhancements }}}" >> $dockerEnvFile
@@ -316,14 +309,3 @@ jobs:
           then
             cat ${{ steps.setup.outputs.outputDir}}/summary.txt;
           fi
-      - name: 'Destroy infrastructure resources if ever created'
-        if: always()
-        run: |
-          docker commit acctests-run quorumengineering/acctests:after
-          docker run --rm ${{ steps.setup.outputs.dockerEnv }} \
-              -v ${{ steps.setup.outputs.outputDir }}:${{ steps.setup.outputs.outputDir  }} \
-              quorumengineering/acctests:after \
-                exec:exec@infra.terraform-destroy \
-                -Pauto \
-                -Dinfra.folder="${{ env.INFRA_FOLDER }}" \
-                -Dinfra.profile="${{ env.INFRA_PROFILE }}"
