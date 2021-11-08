@@ -52,20 +52,7 @@ jobs:
           docker build -t ${{ steps.prepare.outputs.image_name }} .
           docker save ${{ steps.prepare.outputs.image_name }} > ${{ steps.prepare.outputs.image_file }}
           tar cfvz ${{ steps.prepare.outputs.output_file }} ${{ steps.prepare.outputs.image_file }}
-  clean-docker-1:
-    name: 'Clean Docker 1'
-    if: always()
-    needs:
-      - docker-build
-    steps:
-     - name: 'Clean'
-       run: |
-         docker ps -a
-         docker images
-         docker volume ls
-         docker network ls
-         docker system prune -f
-         docker volume prune -f
+
   run-ats-1:
     # This workflow uses tag expression and its sha256 hash to aggregate test results
     # from each execution. It is important that the job name has tag expression in the
@@ -73,7 +60,7 @@ jobs:
     name: Tests tagged with (${{ matrix.tag }})
     if: always()
     needs:
-      - clean-docker-1
+      - docker-build
     strategy:
       fail-fast: true
       max-parallel: 6
@@ -326,7 +313,7 @@ jobs:
 
   clean-docker-2:
     name: 'Clean Docker 2'
-    if: always()
+    runs-on: ${{ github.event.inputs.runs-on }}
     needs:
       - run-ats-1
     steps:
@@ -579,7 +566,7 @@ jobs:
 
   clean-docker-3:
     name: 'Clean Docker 3'
-    if: always()
+    runs-on: ${{ github.event.inputs.runs-on }}
     needs:
       - run-ats-2
     steps:
