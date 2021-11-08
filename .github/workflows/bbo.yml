@@ -311,21 +311,6 @@ jobs:
             cat ${{ steps.setup.outputs.outputDir}}/summary.txt;
           fi
 
-  clean-docker-2:
-    name: 'Clean Docker 2'
-    runs-on: ${{ github.event.inputs.runs-on }}
-    needs:
-      - run-ats-1
-    steps:
-     - name: 'Clean'
-       run: |
-         docker ps -a
-         docker images
-         docker volume ls
-         docker network ls
-         docker system prune -f
-         docker volume prune -f
-
 # PART 2
 
   run-ats-2:
@@ -335,7 +320,7 @@ jobs:
     name: Tests tagged with (${{ matrix.tag }})
     if: always()
     needs:
-      - clean-docker-2
+      - run-ats-1
     strategy:
       fail-fast: true
       max-parallel: 6
@@ -564,21 +549,6 @@ jobs:
             cat ${{ steps.setup.outputs.outputDir}}/summary.txt;
           fi
 
-  clean-docker-3:
-    name: 'Clean Docker 3'
-    runs-on: ${{ github.event.inputs.runs-on }}
-    needs:
-      - run-ats-2
-    steps:
-     - name: 'Clean'
-       run: |
-         docker ps -a
-         docker images
-         docker volume ls
-         docker network ls
-         docker system prune -f
-         docker volume prune -f
-
 # PART 3
 
   run-ats-3:
@@ -588,7 +558,7 @@ jobs:
     name: Tests tagged with (${{ matrix.tag }})
     if: always()
     needs:
-      - clean-docker-3
+      - run-ats-2
     strategy:
       fail-fast: true
       max-parallel: 6
