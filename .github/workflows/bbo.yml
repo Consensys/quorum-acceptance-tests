@@ -53,6 +53,7 @@ jobs:
           docker save ${{ steps.prepare.outputs.image_name }} > ${{ steps.prepare.outputs.image_file }}
           tar cfvz ${{ steps.prepare.outputs.output_file }} ${{ steps.prepare.outputs.image_file }}
   clean-docker-1:
+    name: 'Clean Docker 1'
     if: always()
     needs:
       - docker-build
@@ -324,6 +325,7 @@ jobs:
           fi
 
   clean-docker-2:
+    name: 'Clean Docker 2'
     if: always()
     needs:
       - run-ats-1
@@ -576,6 +578,7 @@ jobs:
           fi
 
   clean-docker-3:
+    name: 'Clean Docker 3'
     if: always()
     needs:
       - run-ats-2
