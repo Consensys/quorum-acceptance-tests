@@ -320,6 +320,7 @@ jobs:
     name: Tests tagged with (${{ matrix.tag }})
     if: always()
     needs:
+      - docker-build
       - run-ats-1
     strategy:
       fail-fast: true
@@ -558,6 +559,7 @@ jobs:
     name: Tests tagged with (${{ matrix.tag }})
     if: always()
     needs:
+      - docker-build
       - run-ats-2
     strategy:
       fail-fast: true
