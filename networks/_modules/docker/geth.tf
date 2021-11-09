@@ -170,7 +170,7 @@ exec geth \
 %{endif~}
   --unlock ${join(",", range(var.accounts_count[count.index]))} \
   --password ${local.container_geth_datadir}/${var.password_file_name} \
-  ${(var.consensus == "istanbul" || var.consensus == "qbft") ? "--istanbul.blockperiod 1 --syncmode full --mine --minerthreads 1" : format("--raft --raftport %d", var.geth_networking[count.index].port.raft)} ${lookup(var.additional_geth_args, count.index, "")} $ADDITIONAL_GETH_ARGS
+  ${(var.consensus == "istanbul" || var.consensus == "qbft") ? "--istanbul.blockperiod 1 --syncmode full --mine --miner.threads 1" : format("--raft --raftport %d", var.geth_networking[count.index].port.raft)} ${lookup(var.additional_geth_args, count.index, "")} $ADDITIONAL_GETH_ARGS
 EOF
   }
 }
