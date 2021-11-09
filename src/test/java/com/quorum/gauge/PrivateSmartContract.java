@@ -21,7 +21,10 @@ package com.quorum.gauge;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.quorum.gauge.common.*;
+import com.quorum.gauge.common.PrivacyFlag;
+import com.quorum.gauge.common.QuorumNode;
+import com.quorum.gauge.common.RawDeployedContractTarget;
+import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.common.config.WalletData;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.ext.EthGetQuorumPayload;
@@ -186,14 +189,14 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     }
 
     @Step("Execute <contractName>'s `set()` function with privacy type <flag> to set new value to <newValue> in <source> and it's private for <target>")
-    public void updateNewValue(String contractName, String flag, int newValue, QuorumNode source, QuorumNode target) {
+    public TransactionReceipt updateNewValue(String contractName, String flag, int newValue, QuorumNode source, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         TransactionReceipt receipt = contractService.updateSimpleContract(source, target, c.getContractAddress(), newValue, Arrays.stream(flag.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())).blockingFirst();
 
         assertThat(receipt.getTransactionHash()).isNotBlank();
         assertThat(receipt.getBlockNumber()).isNotEqualTo(currentBlockNumber());
 
-        transactionService.waitForTransactionReceipt(target, receipt.getTransactionHash());
+        return transactionService.waitForTransactionReceipt(target, receipt.getTransactionHash());
     }
 
     @Step("Execute <contractName>'s `set()` function with new value <newValue> in <source> and it's private for <target>")
@@ -201,6 +204,11 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         updateNewValue(contractName, PrivacyFlag.StandardPrivate.name(), newValue, source, target);
     }
 
+    @Step("Execute <contractName>'s `set()` function with new value <newValue> in <source> and it's private for <target>, store transaction hash as <txRef>")
+    public void updateNewValue(String contractName, int newValue, QuorumNode source, QuorumNode target, String txRef) {
+        TransactionReceipt r = updateNewValue(contractName, PrivacyFlag.StandardPrivate.name(), newValue, source, target);
+        DataStoreFactory.getScenarioDataStore().put(txRef, r.getTransactionHash());
+    }
 
     @Step("Deploy <count> private smart contracts between a default account in <source> and a default account in <target>")
     public void createMultiple(int count, QuorumNode source, QuorumNode target) {

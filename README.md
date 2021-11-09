@@ -15,9 +15,8 @@
 Development environment requires the following:
 
 - JDK 14+
-- Maven 3.6.x
 - [Gauge](https://gauge.org/get_started)
-- Run `mvn compile` to initiate the project with generated Java sources from Solidity source
+- Run `./mvnw compile` to initiate the project with generated Java sources from Solidity source
 
 With built-in provisioning feature:
 - [Docker Engine](https://docs.docker.com/engine/) or [Docker Desktop](https://www.docker.com/products/docker-desktop)
@@ -45,23 +44,23 @@ With built-in provisioning feature:
 
 - Run basic tests for raft consensus: 
     ```
-    mvn clean test -Pauto -Dtags="basic || basic-raft || networks/typical::raft"
+    ./mvnw clean test -Pauto -Dtags="basic || basic-raft || networks/typical::raft"
     ```
 - Run basic tests for istanbul consensus:
     ```
-    mvn clean test -Pauto -Dtags="basic || basic-istanbul || networks/typical::istanbul"
+    ./mvnw clean test -Pauto -Dtags="basic || basic-istanbul || networks/typical::istanbul"
     ```
 - Force destroy the network after running tests:
     ```
-    mvn clean test -Pauto -Dtags="basic || basic-raft || networks/typical::raft" -Dnetwork.forceDestroy=true
+    ./mvnw clean test -Pauto -Dtags="basic || basic-raft || networks/typical::raft" -Dnetwork.forceDestroy=true
     ```
 - Start the network without running tests:
     ```
-    mvn process-test-resources -Pauto -Dnetwork.target="networks/typical::raft"
+    ./mvnw process-test-resources -Pauto -Dnetwork.target="networks/typical::raft"
     ```
 - Destroy the network:
     ```
-    mvn exec:exec@network.terraform-destroy -Pauto -Dnetwork.folder="networks/typical" -Dnetwork.profile=raft
+    ./mvnw exec:exec@network.terraform-destroy -Pauto -Dnetwork.folder="networks/typical" -Dnetwork.profile=raft
     ```
 
 Below is the summary of various parameters:
@@ -118,7 +117,7 @@ If you need to use your custom images, please follow the below guides:
 ### With existing `quorum-examples` network
 
 ```
-SPRING_PROFILES_ACTIVE=local.7nodes mvn clean test -Dtags="basic || basic-raft || networks/typical::raft"
+SPRING_PROFILES_ACTIVE=local.7nodes ./mvnw clean test -Dtags="basic || basic-raft || networks/typical::raft"
 ```
 
 ## Remote Docker
@@ -133,7 +132,7 @@ E.g.: To start `networks/typical` with remote Docker infrastructure:
 - Make sure you have the right AWS credentials in your environment
 - Run: 
     ```
-    mvn process-test-resources -Pauto -Dnetwork.target="networks/typical::raft" -Dinfra.target="networks/_infra/aws-ec2::us-east-1"
+    ./mvnw process-test-resources -Pauto -Dnetwork.target="networks/typical::raft" -Dinfra.target="networks/_infra/aws-ec2::us-east-1"
     ```
 
 ## Logging

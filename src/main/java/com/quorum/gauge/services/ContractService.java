@@ -63,6 +63,7 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.quorum.gauge.sol.SimpleStorage.FUNC_GET;
@@ -154,6 +155,33 @@ public class ContractService extends AbstractService {
         });
     }
 
+    public Observable<? extends Contract> createSimpleContract(int initialValue, QuorumNode source, String ethAccount, List<QuorumNode> targets, BigInteger gas, List<PrivacyFlag> flags, List<QuorumNode> mandatoryFor) {
+        Quorum client = connectionFactory().getConnection(source);
+        final List<String> privateFor;
+        if (null != targets) {
+            privateFor = targets.stream().filter(q -> q != null).map(q -> privacyService.id(q)).collect(Collectors.toList());
+        } else {
+            privateFor = null;
+        }
+
+        final List<String> mandatoryRecipients = mandatoryFor.stream().map(privacyService::id).collect(Collectors.toList());
+
+        return accountService.getAccountAddress(networkProperty().getNode(source.name()), ethAccount).flatMap(address -> {
+            EnhancedClientTransactionManager clientTransactionManager = new EnhancedClientTransactionManager(
+                client,
+                address,
+                null,
+                privateFor,
+                mandatoryRecipients,
+                flags);
+            return SimpleStorage.deploy(client,
+                clientTransactionManager,
+                BigInteger.valueOf(0),
+                gas,
+                BigInteger.valueOf(initialValue)).flowable().toObservable();
+        });
+    }
+
     /**
      * Need to use EthCall to manipulate the error as webj3 doesn't
      *
@@ -217,14 +245,19 @@ public class ContractService extends AbstractService {
         }
     }
 
+    public Observable<TransactionReceipt> updateSimpleContractWithMandatoryRecipients(final QuorumNode source, List<QuorumNode> target,
+                                                               final String contractAddress, final int newValue, List<PrivacyFlag> flags, List<QuorumNode> mandatoryFor) {
+        return this.updateSimpleContractWithGasLimit(source, target, contractAddress, DEFAULT_GAS_LIMIT, newValue, flags, mandatoryFor);
+    }
+
     public Observable<TransactionReceipt> updateSimpleContract(final QuorumNode source, List<QuorumNode> target,
                                                                final String contractAddress, final int newValue, List<PrivacyFlag> flags) {
-        return this.updateSimpleContractWithGasLimit(source, target, contractAddress, DEFAULT_GAS_LIMIT, newValue, flags);
+        return this.updateSimpleContractWithGasLimit(source, target, contractAddress, DEFAULT_GAS_LIMIT, newValue, flags, null);
     }
 
     public Observable<TransactionReceipt> updateSimpleContract(final QuorumNode source, final QuorumNode target,
                                                                final String contractAddress, final int newValue, List<PrivacyFlag> flags) {
-        return this.updateSimpleContractWithGasLimit(source, Arrays.asList(target), contractAddress, DEFAULT_GAS_LIMIT, newValue, flags);
+        return this.updateSimpleContractWithGasLimit(source, Arrays.asList(target), contractAddress, DEFAULT_GAS_LIMIT, newValue, flags, null);
     }
 
     public Observable<TransactionReceipt> updateSimpleContractWithGasLimit(final QuorumNode source,
@@ -233,12 +266,32 @@ public class ContractService extends AbstractService {
                                                                            final BigInteger gasLimit,
                                                                            final int newValue,
                                                                            final List<PrivacyFlag> flags) {
+        return this.updateSimpleContractWithGasLimit(source, target, contractAddress, gasLimit, newValue, flags, emptyList());
+    }
+
+    public Observable<TransactionReceipt> updateSimpleContractWithGasLimit(final QuorumNode source,
+                                                                           final List<QuorumNode> target,
+                                                                           final String contractAddress,
+                                                                           final BigInteger gasLimit,
+                                                                           final int newValue,
+                                                                           final List<PrivacyFlag> flags,
+                                                                           final List<QuorumNode> mandatoryFor) {
         final Quorum client = connectionFactory().getConnection(source);
         final BigInteger value = BigInteger.valueOf(newValue);
         final List<String> privateFor = target.stream().map(q -> privacyService.id(q)).collect(Collectors.toList());
 
+        if (Objects.isNull(mandatoryFor)) {
+            return accountService.getDefaultAccountAddress(source)
+                .map(address -> new EnhancedClientTransactionManager(client, address, null, privateFor, flags))
+                .flatMap(txManager -> SimpleStorage.load(
+                    contractAddress, client, txManager, BigInteger.ZERO, gasLimit).set(value).flowable().toObservable()
+                );
+        }
+
+        final List<String> mandatoryRecipients = mandatoryFor.stream().map(q -> privacyService.id(q)).collect(Collectors.toList());
+
         return accountService.getDefaultAccountAddress(source)
-            .map(address -> new EnhancedClientTransactionManager(client, address, null, privateFor, flags))
+            .map(address -> new EnhancedClientTransactionManager(client, address, null, privateFor, mandatoryRecipients, flags))
             .flatMap(txManager -> SimpleStorage.load(
                 contractAddress, client, txManager, BigInteger.ZERO, gasLimit).set(value).flowable().toObservable()
             );

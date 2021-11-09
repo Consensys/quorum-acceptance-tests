@@ -97,11 +97,11 @@ jobs:
         # list of tag expression being executed in parallel
         include:
           # privacy enhancements tests
-          - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || basic-raft || (advanced && raft) || networks/typical::raft'
+          - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || mandatory-recipients || basic-raft || (advanced && raft) || networks/typical::raft'
             privacy-enhancements: true
             privacy-precompile: false
             privacy-marker-transactions: false
-          - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
+          - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || mandatory-recipients || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
             privacy-enhancements: true
             privacy-precompile: false
             privacy-marker-transactions: false
@@ -147,18 +147,26 @@ jobs:
             privacy-precompile: true
             privacy-marker-transactions: true
           # privacy enhancements + privacy precompile/privacy marker transaction tests
-          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || privacy-precompile-enabled || basic-raft || (advanced && raft) || networks/typical::raft'
+          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || mandatory-recipients || privacy-precompile-enabled || basic-raft || (advanced && raft) || networks/typical::raft'
             privacy-enhancements: true
             privacy-precompile: true
             privacy-marker-transactions: true
-          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
+          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || mandatory-recipients || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
             privacy-enhancements: true
             privacy-precompile: true
             privacy-marker-transactions: true
-          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/typical::qbft'
+          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || mandatory-recipients || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/typical::qbft'
             privacy-enhancements: true
             privacy-precompile: true
             privacy-marker-transactions: true
+          - tag: 'privacy-precompile-compatibility && networks/template::raft-4nodes'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: false # do not enable pmts as the test will do this on the necessary nodes
+          - tag: 'privacy-precompile-compatibility && networks/template::istanbul-4nodes'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: false # do not enable pmts as the test will do this on the necessary nodes
     runs-on: ubuntu-18.04
     steps:
       - name: 'Download docker image'
@@ -253,21 +261,50 @@ jobs:
       - name: 'Read test report'
         if: always()
         run: |
-          failuresRaw="$(cat ${{ steps.setup.outputs.outputDir }}/failures.txt | jq -r '.[] | @base64')"
-          SAVEIFS=$IFS   # Save current IFS
-          IFS=$'\n'      # Change IFS to new line
-          failures=($failuresRaw) # split to array
-          IFS=$SAVEIFS   # Restore IFS
-          for (( i=0; i<${#failures[@]}; i++ ))
-          do
-            row=${failures[$i]}
-            _jq() {
+          echo "::group::failures"
+          if [ -r ${{ steps.setup.outputs.outputDir}}/failures.txt ];
+          then
+            failuresRaw="$(cat ${{ steps.setup.outputs.outputDir }}/failures.txt | jq -r '.[] | @base64')"
+            SAVEIFS=$IFS   # Save current IFS
+            IFS=$'\n'      # Change IFS to new line
+            failures=($failuresRaw) # split to array
+            IFS=$SAVEIFS   # Restore IFS
+            for (( i=0; i<${#failures[@]}; i++ ))
+            do
+              row=${failures[$i]}
+              _jq() {
+                  echo ${row} | base64 --decode | jq -r ${1}
+              }
+              echo "$(_jq '.file'): $(_jq '.message')"
+              echo "::error file=$(_jq '.file'),line=$(_jq '.line'),col=$(_jq '.col')::$(_jq '.message')"
+            done
+          fi
+          echo "::endgroup::"
+
+          echo "::group::skipped"
+          if [ -r ${{ steps.setup.outputs.outputDir}}/skipped.txt ];
+          then
+            skippedRaw="$(cat ${{ steps.setup.outputs.outputDir }}/skipped.txt | jq -r '.[] | @base64')"
+            SAVEIFS=$IFS          # Save current IFS
+            IFS=$'\n'             # Change IFS to new line
+            skipped=($skippedRaw) # split to array
+            IFS=$SAVEIFS          # Restore IFS
+            for (( i=0; i<${#skipped[@]}; i++ ))
+            do
+              row=${skipped[$i]}
+              _jq() {
                 echo ${row} | base64 --decode | jq -r ${1}
-            }
-            echo "$(_jq '.file'): $(_jq '.message')"
-            echo "::error file=$(_jq '.file'),line=$(_jq '.line'),col=$(_jq '.col')::$(_jq '.message')"
-          done
-          cat ${{ steps.setup.outputs.outputDir}}/summary.txt
+              }
+              echo "$(_jq '.message')"
+              echo "::warning ::$(_jq '.message')"
+            done
+          fi
+          echo "::endgroup::"
+
+          if [ -r ${{ steps.setup.outputs.outputDir}}/summary.txt ];
+          then
+            cat ${{ steps.setup.outputs.outputDir}}/summary.txt;
+          fi
       - name: 'Upload test report'
         if: always()
         uses: actions/upload-artifact@v2

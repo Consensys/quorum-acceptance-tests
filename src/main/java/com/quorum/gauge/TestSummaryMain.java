@@ -66,6 +66,7 @@ public class TestSummaryMain {
             XmlMapper xmlMapper = new XmlMapper();
             TestSuites suites = xmlMapper.readValue(xmlFile, TestSuites.class);
             List<FailureSummary> failures = new ArrayList<>();
+            List<SkippedSummary> skipped = new ArrayList<>();
             for (TestSuite ts : suites.getTestsuite()) {
                 Summary spec = new Summary();
                 Summary scenario = new Summary();
@@ -102,6 +103,9 @@ public class TestSummaryMain {
                             s = "FAILED";
                         }
                         if (tc.getSkipped() != null) {
+                            SkippedSummary ss = new SkippedSummary();
+                            ss.setMessage(String.format("Scenario: %s\nStep: %s", tc.getName(), tc.getSkipped().getMessage()).replaceAll("\\n", "%0A"));
+                            skipped.add(ss);
                             scenario.addSkipped(1);
                             s = "SKIPPED";
                         }
@@ -118,6 +122,13 @@ public class TestSummaryMain {
                     .writerWithDefaultPrettyPrinter()
                     .writeValue(failureTee, failures);
             failureTee.flush();
+
+            TeeOutputStream skippedTee = new TeeOutputStream(new FileOutputStream(new File(outputDir, "skipped.txt"), false), System.out);
+            new ObjectMapper()
+                .disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET) // avoid Jackson to close the output streams
+                .writerWithDefaultPrettyPrinter()
+                .writeValue(skippedTee, skipped);
+            skippedTee.flush();
         }
         if (!outputDir.exists()) {
             outputDir.mkdirs();
@@ -140,8 +151,10 @@ public class TestSummaryMain {
                 .writeValue(scenarioTee, aggregatedScenarioSummary);
         scenarioTee.flush();
         System.out.println("\n");
-        if (aggregatedSpecSummary.getFailed() > 0) {
+        if (aggregatedSpecSummary.getFailed() > 0 || aggregatedSpecSummary.getPassed() == 0 || aggregatedScenarioSummary.getPassed() == 0) {
             // delegate failing Gauge execution here
+            // fail Gauge execution if there are test failures or no tests pass (e.g. if all tests were skipped or no tests were executed by given tags)
+            System.err.println("ERROR: There are test failures or no tests were run to completion");
             System.exit(1);
         }
     }
@@ -189,6 +202,18 @@ public class TestSummaryMain {
 
         public int getSkipped() {
             return skipped;
+        }
+    }
+
+    private static class SkippedSummary {
+        private String message;
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
         }
     }
 

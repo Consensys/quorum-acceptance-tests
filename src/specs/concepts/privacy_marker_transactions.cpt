@@ -1,0 +1,23 @@
+This is a concept file with following syntax for each concept.
+# <txRef> retrieved from <node> is a privacy marker transaction
+* <txRef> retrieved from <node> is a public transaction
+* recipient of <txRef> retrieved from <node> is the privacy precompile contract
+* data of <txRef> retrieved from <node> has been replaced by a Transaction Manager hash
+
+# <txRef>'s private transaction can be retrieved from <node>
+* <txRef>'s internal transaction retrieved from <node> is not null
+* <txRef>'s internal transaction retrieved from <node> is a private transaction
+* recipient of <txRef>'s internal transaction retrieved from <node> is not the privacy precompile contract
+* data of <txRef>'s internal transaction retrieved from <node> has been replaced by a Transaction Manager hash
+
+# <txRef>'s PMT and private transaction retrieved from <node> share sender and nonce
+* <txRef>'s PMT and private transaction retrieved from <node> share sender
+* <txRef>'s PMT and private transaction retrieved from <node> share nonce
+
+# <txRef>'s private transaction cannot be retrieved from <node>
+* <txRef>'s internal transaction retrieved from <node> is null
+
+# <txRef> retrieved from <node> is a normal private transaction, not a privacy marker transaction
+* <txRef> retrieved from <node> is a private transaction
+* recipient of <txRef> retrieved from <node> is not the privacy precompile contract
+* data of <txRef> retrieved from <node> has been replaced by a Transaction Manager hash
