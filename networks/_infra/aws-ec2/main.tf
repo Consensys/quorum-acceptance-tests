@@ -44,7 +44,7 @@ data "aws_ami" "this" {
 }
 
 data "http" "myip" {
-  url = "https://bot.whatismyipaddress.com"
+  url = "https://ifconfig.co/"
 }
 
 resource "tls_private_key" "ssh" {
