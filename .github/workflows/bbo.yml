@@ -62,7 +62,7 @@ jobs:
     needs:
       - docker-build
     strategy:
-      fail-fast: true
+      fail-fast: false
       max-parallel: 6
       matrix:
         # list of tag expression being executed in parallel
@@ -323,7 +323,7 @@ jobs:
       - docker-build
       - run-ats-1
     strategy:
-      fail-fast: true
+      fail-fast: false
       max-parallel: 6
       matrix:
         # list of tag expression being executed in parallel
@@ -562,7 +562,7 @@ jobs:
       - docker-build
       - run-ats-2
     strategy:
-      fail-fast: true
+      fail-fast: false
       max-parallel: 6
       matrix:
         # list of tag expression being executed in parallel
