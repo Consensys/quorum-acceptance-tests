@@ -8,6 +8,7 @@ import com.quorum.gauge.common.QuorumNetworkProperty.Node;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.common.config.WalletData;
 import com.quorum.gauge.core.AbstractSpecImplementation;
+import com.quorum.gauge.ext.EthChainId;
 import com.quorum.gauge.services.ExtensionService;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.Table;
@@ -100,8 +101,8 @@ public class MultiTenancy extends AbstractSpecImplementation {
     @Step("`<clientName>` can request for RPC modules available in `<node>`")
     public void canCallRPCModule(String clientName, QuorumNode node) {
         assertThat(oAuth2Service.requestAccessToken(clientName,
-            Collections.singletonList(node.name()),
-            Stream.of("rpc://rpc_modules").collect(Collectors.toList()))
+                Collections.singletonList(node.name()),
+                Stream.of("rpc://rpc_modules").collect(Collectors.toList()))
             .flatMap((r) -> utilService.getRpcModules(node).onExceptionResumeNext(Observable.just(Boolean.FALSE)))
             .doOnTerminate(Context::removeAccessToken).blockingFirst()
         ).isEqualTo(true);
@@ -110,8 +111,8 @@ public class MultiTenancy extends AbstractSpecImplementation {
     @Step("`<clientName>` can __NOT__ request for RPC modules available in `<node>`")
     public void canNotCallRPCModule(String clientName, QuorumNode node) {
         assertThat(oAuth2Service.requestAccessToken(clientName,
-            Collections.singletonList(node.name()),
-            Stream.of("rpc://rpc_modules").collect(Collectors.toList()))
+                Collections.singletonList(node.name()),
+                Stream.of("rpc://rpc_modules").collect(Collectors.toList()))
             .flatMap((r) -> utilService.getRpcModules(node).onExceptionResumeNext(Observable.just(Boolean.FALSE)))
             .doOnTerminate(Context::removeAccessToken).blockingFirst()
         ).isEqualTo(false);
@@ -358,9 +359,11 @@ public class MultiTenancy extends AbstractSpecImplementation {
     }
 
     @Step("`<clientName>` deploys a <contractId> public contract, named <contractName>, by sending a transaction to `<node>`")
-    public void deployPublicContract(String clientName, String contractId, String contractName, QuorumNode node) {
+    public void deployPublicContract(String clientName, String contractId, String contractName, QuorumNetworkProperty.Node node) {
+
         Contract contract = requestAccessToken(clientName)
-            .flatMap(t -> rawContractService.createRawSimplePublicContract(42, networkProperty.getWallets().get("Wallet1"), node))
+            .flatMap(accessToken -> rpcService.call(node, "eth_chainId", Collections.emptyList(), EthChainId.class))
+            .flatMap(ethChainId -> rawContractService.createRawSimplePublicContract(42, networkProperty.getWallets().get("Wallet1"), node, ethChainId.getChainId()))
             .doOnTerminate(Context::removeAccessToken)
             .doOnNext(c -> {
                 if (c == null || !c.getTransactionReceipt().isPresent()) {
@@ -388,10 +391,12 @@ public class MultiTenancy extends AbstractSpecImplementation {
     }
 
     @Step("`<clientName>` writes a new value <newValue> to <contractName> successfully by sending a transaction to `<node>`")
-    public void setSimpleContractValue(String clientName, int newValue, String contractName, QuorumNode node) {
+    public void setSimpleContractValue(String clientName, int newValue, String contractName, QuorumNetworkProperty.Node node) {
+        long chainId = rpcService.call(node, "eth_chainId", Collections.emptyList(), EthChainId.class).blockingFirst().getChainId();
+
         Contract contract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
         assertThat(requestAccessToken(clientName)
-            .flatMap(t -> rawContractService.updateRawSimplePublicContract(node, networkProperty.getWallets().get("Wallet1"), contract.getContractAddress(), newValue))
+            .flatMap(t -> rawContractService.updateRawSimplePublicContract(node, networkProperty.getWallets().get("Wallet1"), contract.getContractAddress(), newValue, chainId))
             .map(Optional::of)
             .onErrorResumeNext(o -> {
                 return Observable.just(Optional.empty());
