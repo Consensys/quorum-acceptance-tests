@@ -19,6 +19,7 @@
 
 package com.quorum.gauge.services;
 
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.common.RawDeployedContractTarget;
 import com.quorum.gauge.common.RetryWithDelay;
@@ -92,13 +93,13 @@ public class RawContractService extends AbstractService {
     @Autowired
     OkHttpClient httpClient;
 
-    public Observable<? extends Contract> createRawSimplePublicContract(int initialValue, WalletData wallet, QuorumNode source) {
-        Web3j web3j = connectionFactory().getWeb3jConnection(source);
+    public Observable<? extends Contract> createRawSimplePublicContract(int initialValue, WalletData wallet, QuorumNetworkProperty.Node node, long chainId) {
+        Web3j web3j = connectionFactory().getWeb3jConnection(node);
 
         try {
             Credentials credentials = WalletUtils.loadCredentials(wallet.getWalletPass(), wallet.getWalletPath());
 
-            RawTransactionManager qrtxm = rawTransactionManager(web3j, credentials);
+            RawTransactionManager qrtxm = rawTransactionManager(web3j, credentials, chainId);
 
             return SimpleStorage.deploy(web3j,
                     qrtxm,
@@ -115,13 +116,13 @@ public class RawContractService extends AbstractService {
         }
     }
 
-    public Observable<TransactionReceipt> updateRawSimplePublicContract(QuorumNode source, WalletData wallet, String contractAddress, int newValue) {
-        Web3j web3j = connectionFactory().getWeb3jConnection(source);
+    public Observable<TransactionReceipt> updateRawSimplePublicContract(QuorumNetworkProperty.Node node, WalletData wallet, String contractAddress, int newValue, final long chainId) {
+        Web3j web3j = connectionFactory().getWeb3jConnection(node);
 
         try {
             Credentials credentials = WalletUtils.loadCredentials(wallet.getWalletPass(), wallet.getWalletPath());
 
-            RawTransactionManager qrtxm = rawTransactionManager(web3j, credentials);
+            RawTransactionManager qrtxm = rawTransactionManager(web3j, credentials, chainId);
 
             return SimpleStorage.load(contractAddress, web3j,
                     qrtxm,

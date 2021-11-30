@@ -40,3 +40,8 @@ env/travis-*/
 env/run-local/user.properties
 **/ephemeral-*.pem
 networks/_infra/**/terraform.*.tfvars
+/.classpath
+/.project
+/.vscode/
+/.settings/
+/.factorypath

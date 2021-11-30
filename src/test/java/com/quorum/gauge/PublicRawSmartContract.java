@@ -19,9 +19,11 @@
 
 package com.quorum.gauge;
 
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.common.config.WalletData;
 import com.quorum.gauge.core.AbstractSpecImplementation;
+import com.quorum.gauge.ext.EthChainId;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import org.assertj.core.api.AssertionsForClassTypes;
@@ -29,23 +31,31 @@ import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 
+import java.util.Collections;
+
 @Service
 public class PublicRawSmartContract extends AbstractSpecImplementation {
 
     @Step("Deploy `SimpleStorage` public smart contract with initial value <initialValue> signed by external wallet <wallet> on node <node>, name this contract as <contractName>")
-    public void deployClientReceiptSmartContract(Integer initialValue, WalletData wallet, QuorumNode node, String contractName) {
-        Contract c = rawContractService.createRawSimplePublicContract(initialValue, wallet, node).blockingFirst();
+    public void deployClientReceiptSmartContract(Integer initialValue, WalletData wallet, QuorumNetworkProperty.Node node, String contractName) {
+        long chainId = rpcService.call(node, "eth_chainId", Collections.emptyList(), EthChainId.class).blockingFirst().getChainId();
+
+        Contract c = rawContractService.createRawSimplePublicContract(initialValue, wallet, node, chainId).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, c);
         DataStoreFactory.getScenarioDataStore().put(contractName, c);
     }
 
     @Step("Execute <contractName>'s `set()` function with new value <newValue> signed by external wallet <wallet> in <source>")
-    public void updateNewValue(String contractName, int newValue, WalletData wallet, QuorumNode source) {
+    public void updateNewValue(String contractName, int newValue, WalletData wallet, QuorumNetworkProperty.Node node) {
+        long chainId = rpcService.call(node, "eth_chainId", Collections.emptyList(), EthChainId.class).blockingFirst().getChainId();
+
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
-        TransactionReceipt receipt = rawContractService.updateRawSimplePublicContract(source, wallet, c.getContractAddress(), newValue).blockingFirst();
+        TransactionReceipt receipt = rawContractService.updateRawSimplePublicContract(node, wallet, c.getContractAddress(), newValue, chainId).blockingFirst();
 
         AssertionsForClassTypes.assertThat(receipt.getTransactionHash()).isNotBlank();
         AssertionsForClassTypes.assertThat(receipt.getBlockNumber()).isNotEqualTo(currentBlockNumber());
     }
 }
+
+
