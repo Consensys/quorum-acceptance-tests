@@ -96,8 +96,8 @@ public abstract class AbstractService {
         return new org.web3j.tx.ClientTransactionManager(web3j, fromAddress, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS);
     }
 
-    public RawTransactionManager rawTransactionManager(Web3j web3j, Credentials credentials) {
-        return new RawTransactionManager(web3j, credentials, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS);
+    public RawTransactionManager rawTransactionManager(Web3j web3j, Credentials credentials, final long chainId) {
+        return new RawTransactionManager(web3j, credentials, chainId, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS);
     }
 
     public TransactionManager quorumTransactionManager(Quorum web3j,
