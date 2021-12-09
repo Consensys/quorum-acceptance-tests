@@ -21,7 +21,7 @@ package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.PrivacyFlag;
 import com.quorum.gauge.common.QuorumNetworkProperty;
-import com.quorum.gauge.ext.EnhancedClientTransactionManager;
+import com.quorum.gauge.ext.PrivateClientTransactionManager;
 import com.quorum.gauge.sol.Accumulator;
 import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
@@ -78,7 +78,7 @@ public class AccumulatorService extends AbstractService {
         }
 
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
-            EnhancedClientTransactionManager clientTransactionManager = new EnhancedClientTransactionManager(
+            PrivateClientTransactionManager clientTransactionManager = new PrivateClientTransactionManager(
                 client,
                 address,
                 null,
@@ -104,7 +104,7 @@ public class AccumulatorService extends AbstractService {
         final List<String> privateFor = target.stream().map(q -> privacyService.id(q)).collect(Collectors.toList());
 
         return accountService.getDefaultAccountAddress(source).flatMap(acctAddress -> {
-            EnhancedClientTransactionManager txManager = new EnhancedClientTransactionManager(
+            PrivateClientTransactionManager txManager = new PrivateClientTransactionManager(
                 client, acctAddress, null, privateFor, flags, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
             );
             Accumulator accumulator = Accumulator.load(

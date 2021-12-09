@@ -20,6 +20,7 @@
 package com.quorum.gauge;
 
 import com.quorum.gauge.common.PrivacyFlag;
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.services.AbstractService;
@@ -42,7 +43,7 @@ public class StorageMasterSmartContract extends AbstractSpecImplementation {
     private static final Logger logger = LoggerFactory.getLogger(StorageMasterSmartContract.class);
 
     @Step("Deploy a public storage master contract in <source>'s default account, named this contract as <contractName>")
-    public void setupStorageMasterPublicContract(QuorumNode source, String contractName) {
+    public void setupStorageMasterPublicContract(QuorumNetworkProperty.Node source, String contractName) {
         saveCurrentBlockNumber();
         logger.debug("Setting up public storage master contract from {}", source);
         Contract contract = storageMasterService.createStorageMasterPublicContract(
@@ -53,7 +54,7 @@ public class StorageMasterSmartContract extends AbstractSpecImplementation {
     }
 
     @Step("Deploy a simple storage from master storage contract <storageMaster> in <source>'s default account, named this contract as <contractName>")
-    public void setupSimpleStorageFromStorageMasterPublicContract(String storageMaster, QuorumNode source, String contractName) {
+    public void setupSimpleStorageFromStorageMasterPublicContract(String storageMaster, QuorumNetworkProperty.Node source, String contractName) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), storageMaster, Contract.class);
         saveCurrentBlockNumber();
         logger.debug("Setting up simple storage from public storage master contract from {}", source);

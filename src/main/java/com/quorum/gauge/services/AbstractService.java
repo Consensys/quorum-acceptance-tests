@@ -21,14 +21,15 @@ package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.Context;
 import com.quorum.gauge.common.QuorumNetworkProperty;
-import com.quorum.gauge.ext.EnhancedClientTransactionManager;
-import com.quorum.gauge.ext.OpenQuorumTransactionManager;
+import com.quorum.gauge.ext.PrivateClientTransactionManager;
+import com.quorum.gauge.ext.PublicClientTransactionManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.quorum.Quorum;
 import org.web3j.quorum.enclave.Enclave;
 import org.web3j.quorum.tx.ClientTransactionManager;
+import org.web3j.quorum.tx.QuorumTransactionManager;
 import org.web3j.tx.RawTransactionManager;
 import org.web3j.tx.TransactionManager;
 import org.web3j.tx.gas.ContractGasProvider;
@@ -89,11 +90,11 @@ public abstract class AbstractService {
     }
 
     public ClientTransactionManager clientTransactionManager(Web3j web3j, String fromAddress, String privateFrom, List<String> privateFor) {
-        return new EnhancedClientTransactionManager((Quorum) web3j, fromAddress, privateFrom, privateFor);
+        return new PrivateClientTransactionManager((Quorum) web3j, fromAddress, privateFrom, privateFor);
     }
 
-    public org.web3j.tx.ClientTransactionManager vanillaClientTransactionManager(Web3j web3j, String fromAddress) {
-        return new org.web3j.tx.ClientTransactionManager(web3j, fromAddress, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS);
+    public org.web3j.tx.ClientTransactionManager vanillaClientTransactionManager(Web3j web3j, String fromAddress, long chainId) {
+        return new PublicClientTransactionManager(web3j, fromAddress, chainId);
     }
 
     public RawTransactionManager rawTransactionManager(Web3j web3j, Credentials credentials, final long chainId) {
@@ -107,6 +108,6 @@ public abstract class AbstractService {
                                                        Enclave enclave) {
 
 
-        return new OpenQuorumTransactionManager(web3j, credentials, privateFrom, privateFor, enclave, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS);
+        return new QuorumTransactionManager(web3j, credentials, privateFrom, privateFor, enclave);
     }
 }
