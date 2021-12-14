@@ -2,7 +2,7 @@ package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.PrivacyFlag;
 import com.quorum.gauge.common.QuorumNetworkProperty;
-import com.quorum.gauge.ext.EnhancedClientTransactionManager.EnhancedPrivateTransaction;
+import com.quorum.gauge.ext.EnhancedPrivateTransaction;
 import com.quorum.gauge.ext.contractextension.*;
 import io.reactivex.Observable;
 import org.springframework.beans.factory.annotation.Autowired;

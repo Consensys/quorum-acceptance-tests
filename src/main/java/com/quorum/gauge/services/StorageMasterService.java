@@ -20,8 +20,10 @@
 package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.PrivacyFlag;
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
-import com.quorum.gauge.ext.EnhancedClientTransactionManager;
+import com.quorum.gauge.ext.EthChainId;
+import com.quorum.gauge.ext.PrivateClientTransactionManager;
 import com.quorum.gauge.sol.SimpleStorage;
 import com.quorum.gauge.sol.StorageMaster;
 import io.reactivex.Observable;
@@ -37,12 +39,16 @@ import org.web3j.tx.TransactionManager;
 import org.web3j.tx.exceptions.ContractCallException;
 
 import java.math.BigInteger;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class StorageMasterService extends AbstractService {
     private static final Logger logger = LoggerFactory.getLogger(StorageMasterService.class);
+
+    @Autowired
+    protected RPCService rpcService;
 
     @Autowired
     PrivacyService privacyService;
@@ -60,8 +66,8 @@ public class StorageMasterService extends AbstractService {
         }
 
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
-            EnhancedClientTransactionManager clientTransactionManager
-                = new EnhancedClientTransactionManager(client, address, null, privateFor, flags);
+            PrivateClientTransactionManager clientTransactionManager
+                = new PrivateClientTransactionManager(client, address, null, privateFor, flags);
             return StorageMaster.deploy(client,
                 clientTransactionManager,
                 BigInteger.valueOf(0),
@@ -79,8 +85,8 @@ public class StorageMasterService extends AbstractService {
         final List<String> privateFor = target.stream().map(q -> privacyService.id(q)).collect(Collectors.toList());
 
         return accountService.getDefaultAccountAddress(source).flatMap(acctAddress -> {
-            EnhancedClientTransactionManager txManager
-                = new EnhancedClientTransactionManager(client, acctAddress, null, privateFor, flags);
+            PrivateClientTransactionManager txManager
+                = new PrivateClientTransactionManager(client, acctAddress, null, privateFor, flags);
             return createSSFromSM(txManager, client, contractAddress, gasLimit, newValue);
         });
     }
@@ -122,8 +128,8 @@ public class StorageMasterService extends AbstractService {
         final List<String> privateFor = target.stream().map(q -> privacyService.id(q)).collect(Collectors.toList());
 
         return accountService.getDefaultAccountAddress(source).flatMap(acctAdress -> {
-            EnhancedClientTransactionManager txManager
-                = new EnhancedClientTransactionManager(client, acctAdress, null, privateFor, flags);
+            PrivateClientTransactionManager txManager
+                = new PrivateClientTransactionManager(client, acctAdress, null, privateFor, flags);
             StorageMaster storageMaster = StorageMaster.load(contractAddress, client, txManager, BigInteger.ZERO, gasLimit);
             return storageMaster.createSimpleStorageC2C3(value).flowable().toObservable();
         });
@@ -140,19 +146,21 @@ public class StorageMasterService extends AbstractService {
         final List<String> privateFor = target.stream().map(q -> privacyService.id(q)).collect(Collectors.toList());
 
         return accountService.getDefaultAccountAddress(source).flatMap(acctAddress -> {
-            EnhancedClientTransactionManager txManager
-                = new EnhancedClientTransactionManager(client, acctAddress, null, privateFor, flags);
+            PrivateClientTransactionManager txManager
+                = new PrivateClientTransactionManager(client, acctAddress, null, privateFor, flags);
             StorageMaster storageMaster = StorageMaster.load(
                 contractAddress, client, txManager, BigInteger.ZERO, gasLimit);
             return storageMaster.setC2C3Value(value).flowable().toObservable();
         });
     }
 
-    public Observable<? extends Contract> createStorageMasterPublicContract(QuorumNode source, BigInteger gas) {
-        Quorum client = connectionFactory().getConnection(source);
+    public Observable<? extends Contract> createStorageMasterPublicContract(QuorumNetworkProperty.Node node, BigInteger gas) {
+        long chainId = rpcService.call(node, "eth_chainId", Collections.emptyList(), EthChainId.class).blockingFirst().getChainId();
 
-        return accountService.getDefaultAccountAddress(source).flatMap(address -> {
-            org.web3j.tx.ClientTransactionManager txManager = vanillaClientTransactionManager(client, address);
+        Quorum client = connectionFactory().getConnection(node);
+
+        return accountService.getDefaultAccountAddress(node).flatMap(address -> {
+            org.web3j.tx.ClientTransactionManager txManager = vanillaClientTransactionManager(client, address, chainId);
             return StorageMaster.deploy(client,
                 txManager,
                 BigInteger.valueOf(0),
@@ -160,13 +168,15 @@ public class StorageMasterService extends AbstractService {
         });
     }
 
-    public Observable<? extends Contract> createSimpleStorageFromStorageMasterPublic(final QuorumNode source,
+    public Observable<? extends Contract> createSimpleStorageFromStorageMasterPublic(final QuorumNetworkProperty.Node node,
                                                                                      final String contractAddress,
                                                                                      final BigInteger gasLimit,
                                                                                      final int newValue) {
-        final Quorum client = connectionFactory().getConnection(source);
-        return accountService.getDefaultAccountAddress(source).flatMap(acctAddress -> {
-            org.web3j.tx.ClientTransactionManager txManager = vanillaClientTransactionManager(client, acctAddress);
+        final Quorum client = connectionFactory().getConnection(node);
+        long chainId = rpcService.call(node, "eth_chainId", Collections.emptyList(), EthChainId.class).blockingFirst().getChainId();
+
+        return accountService.getDefaultAccountAddress(node).flatMap(acctAddress -> {
+            org.web3j.tx.ClientTransactionManager txManager = vanillaClientTransactionManager(client, acctAddress, chainId);
             return createSSFromSM(txManager, client, contractAddress, gasLimit, newValue);
         });
     }

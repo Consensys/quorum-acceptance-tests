@@ -20,6 +20,7 @@
 package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNetworkProperty;
+import com.quorum.gauge.ext.EthChainId;
 import com.quorum.gauge.sol.*;
 import io.reactivex.Observable;
 import org.slf4j.Logger;
@@ -31,16 +32,22 @@ import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 import org.web3j.tx.TransactionManager;
 
+import java.util.Collections;
+
 @Service
 public class PermissionsContractService extends AbstractService {
     private static final Logger logger = LoggerFactory.getLogger(PermissionsContractService.class);
+    @Autowired
+    protected RPCService rpcService;
 
     @Autowired
     AccountService accountService;
 
     private org.web3j.tx.ClientTransactionManager getTxManager(QuorumNetworkProperty.Node node, Web3j client){
+        long chainId = client.ethChainId().getId();
+
         String fromAddress = accountService.getDefaultAccountAddress(node).blockingFirst();
-        return vanillaClientTransactionManager(client, fromAddress);
+        return vanillaClientTransactionManager(client, fromAddress, chainId);
     }
 
     public Observable<? extends Contract> createPermissionsGenericContracts(QuorumNetworkProperty.Node node, String contractName, String upgrContractAddress, String version) {

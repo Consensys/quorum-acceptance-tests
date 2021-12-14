@@ -39,13 +39,7 @@ import java.util.Objects;
 import static com.quorum.gauge.services.AbstractService.DEFAULT_MAX_RETRY;
 import static com.quorum.gauge.services.AbstractService.DEFAULT_SLEEP_DURATION_IN_MILLIS;
 
-/**
- * Support additional privacy constructs
- *
- * @see org.web3j.quorum.tx.ClientTransactionManager
- * @see PrivateContractFlag
- */
-public class EnhancedClientTransactionManager extends ClientTransactionManager {
+public class PrivateClientTransactionManager extends ClientTransactionManager {
 
     private List<PrivacyFlag> contractFlag;
 
@@ -55,7 +49,8 @@ public class EnhancedClientTransactionManager extends ClientTransactionManager {
 
     private Web3jService web3j;
 
-    public EnhancedClientTransactionManager(Quorum quorum, String fromAddress, String privateFrom, List<String> privateFor, List<PrivacyFlag> contractFlag, int attempts, int sleepDuration) {
+    public PrivateClientTransactionManager(
+        Quorum quorum, String fromAddress, String privateFrom, List<String> privateFor, List<PrivacyFlag> contractFlag, int attempts, int sleepDuration) {
         super(quorum, fromAddress, privateFrom, privateFor, attempts, sleepDuration);
         this.quorum = quorum;
         this.contractFlag = contractFlag;
@@ -70,16 +65,16 @@ public class EnhancedClientTransactionManager extends ClientTransactionManager {
         }
     }
 
-    public EnhancedClientTransactionManager(Quorum quorum, String fromAddress, String privateFrom, List<String> privateFor, List<String> mandatoryFor, List<PrivacyFlag> contractFlag) {
+    public PrivateClientTransactionManager(Quorum quorum, String fromAddress, String privateFrom, List<String> privateFor, List<String> mandatoryFor, List<PrivacyFlag> contractFlag) {
         this(quorum, fromAddress, privateFrom, privateFor, contractFlag, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS);
         this.mandatoryFor = mandatoryFor;
     }
 
-    public EnhancedClientTransactionManager(Quorum quorum, String fromAddress, String privateFrom, List<String> privateFor, List<PrivacyFlag> contractFlag) {
+    public PrivateClientTransactionManager(Quorum quorum, String fromAddress, String privateFrom, List<String> privateFor, List<PrivacyFlag> contractFlag) {
         this(quorum, fromAddress, privateFrom, privateFor, contractFlag, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS);
     }
 
-    public EnhancedClientTransactionManager(Quorum quorum, String fromAddress, String privateFrom, List<String> privateFor) {
+    public PrivateClientTransactionManager(Quorum quorum, String fromAddress, String privateFrom, List<String> privateFor) {
         this(quorum, fromAddress, privateFrom, privateFor, List.of(PrivacyFlag.StandardPrivate), DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS);
     }
 
@@ -116,32 +111,5 @@ public class EnhancedClientTransactionManager extends ClientTransactionManager {
             .orElse(receipt);
     }
 
-    public static class EnhancedPrivateTransaction extends PrivateTransaction {
 
-        private int privacyFlag;
-
-        private List<String> mandatoryFor;
-
-        public EnhancedPrivateTransaction(String from, BigInteger nonce, BigInteger gasLimit, String to, BigInteger value, String data, String privateFrom, List<String> privateFor, List<PrivacyFlag> flags) {
-            super(from, nonce, gasLimit, to, value, data, privateFrom, privateFor);
-            int flag = 0;
-            for (PrivacyFlag f : flags) {
-                flag = flag | f.intValue();
-            }
-            this.privacyFlag = flag;
-        }
-
-        public EnhancedPrivateTransaction(String from, BigInteger nonce, BigInteger gasLimit, String to, BigInteger value, String data, String privateFrom, List<String> privateFor, List<String> mandatoryFor, List<PrivacyFlag> flags) {
-            this(from, nonce, gasLimit, to, value, data, privateFrom, privateFor, flags);
-            this.mandatoryFor = mandatoryFor;
-        }
-
-        public int getPrivacyFlag() {
-            return privacyFlag;
-        }
-
-        public List<String> getMandatoryFor() {
-            return mandatoryFor;
-        }
-    }
 }
