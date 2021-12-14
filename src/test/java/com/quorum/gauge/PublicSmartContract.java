@@ -47,7 +47,7 @@ public class PublicSmartContract extends AbstractSpecImplementation {
     private static final Logger logger = LoggerFactory.getLogger(PublicSmartContract.class);
 
     @Step("Deploy `ClientReceipt` smart contract from a default account in <node>, named this contract as <contractName>")
-    public void deployClientReceiptSmartContract(QuorumNode node, String contractName) {
+    public void deployClientReceiptSmartContract(QuorumNetworkProperty.Node node, String contractName) {
         Contract c = contractService.createClientReceiptSmartContract(node).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, c);
@@ -108,7 +108,7 @@ public class PublicSmartContract extends AbstractSpecImplementation {
     }
 
     @Step("Execute <contractName>'s `deposit()` function <count> times with arbitrary id and value from <node>")
-    public void excuteDesposit(String contractName, int count, QuorumNode node) {
+    public void excuteDesposit(String contractName, int count, QuorumNetworkProperty.Node node) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
         List<Observable<TransactionReceipt>> observables = new ArrayList<>();
         Scheduler scheduler = threadLocalDelegateScheduler(count);
@@ -128,15 +128,15 @@ public class PublicSmartContract extends AbstractSpecImplementation {
         Scheduler scheduler = threadLocalDelegateScheduler(expectedTxCount);
         for (TransactionReceipt r : originalReceipts) {
             receiptsInNode.add(transactionService.getTransactionReceipt(node, r.getTransactionHash())
-                    .map(tr -> {
-                        if (tr.getTransactionReceipt().isPresent()) {
-                            return tr.getTransactionReceipt().get();
-                        } else {
-                            throw new RuntimeException("retry");
-                        }
-                    })
-                    .retryWhen(new RetryWithDelay(20, 3000))
-                    .subscribeOn(scheduler));
+                .map(tr -> {
+                    if (tr.getTransactionReceipt().isPresent()) {
+                        return tr.getTransactionReceipt().get();
+                    } else {
+                        throw new RuntimeException("retry");
+                    }
+                })
+                .retryWhen(new RetryWithDelay(20, 3000))
+                .subscribeOn(scheduler));
         }
 
         AtomicInteger actualTxCount = new AtomicInteger();
@@ -165,18 +165,18 @@ public class PublicSmartContract extends AbstractSpecImplementation {
         BigInteger currentBlockHeight = currentBlockNumber();
         int targetBlockHeight = currentBlockHeight.intValue() + (count - currentBlockHeight.intValue() % count) + bloomConfirmations + delta;
         List<Observable<? extends Contract>> contractObservables = new ArrayList<>();
+
         for (int i = 0; i < 100; i++) {
-            QuorumNode node = QuorumNode.values()[i % numberOfQuorumNodes()];
-            contractObservables.add(contractService.createClientReceiptSmartContract(node).subscribeOn(Schedulers.io()));
+            contractObservables.add(contractService.createClientReceiptSmartContract(networkProperty.getNodes().values().stream().findFirst().get()).subscribeOn(Schedulers.io()));
         }
         while (currentBlockHeight.intValue() < targetBlockHeight) {
             // as this test will take time to complete so this log is important
             // to tell Travis not to kill the CI
             logger.warn("[Travis] Current block height = {}, targetBlockHeight = {}", currentBlockHeight.intValue(), targetBlockHeight);
             currentBlockHeight = Observable.zip(contractObservables, args -> args.length)
-                    .flatMap(i -> utilService.getCurrentBlockNumber())
-                    .blockingFirst()
-                    .getBlockNumber();
+                .flatMap(i -> utilService.getCurrentBlockNumber())
+                .blockingFirst()
+                .getBlockNumber();
         }
     }
 
@@ -188,8 +188,7 @@ public class PublicSmartContract extends AbstractSpecImplementation {
         int targetBlockHeight = currentBlockHeight.intValue() + (count - currentBlockHeight.intValue() % count) + bloomConfirmations + delta;
         List<Observable<? extends Contract>> contractObservables = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
-            QuorumNode n = QuorumNode.valueOf(node.getName());
-            contractObservables.add(contractService.createClientReceiptSmartContract(n).subscribeOn(Schedulers.io()));
+            contractObservables.add(contractService.createClientReceiptSmartContract(node).subscribeOn(Schedulers.io()));
         }
         while (currentBlockHeight.intValue() < targetBlockHeight) {
             // as this test will take time to complete so this log is important

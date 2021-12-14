@@ -24,7 +24,8 @@ import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.common.RawDeployedContractTarget;
 import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.common.config.WalletData;
-import com.quorum.gauge.ext.OpenQuorumTransactionManager;
+import com.quorum.gauge.ext.PrivateClientTransactionManager;
+import com.quorum.gauge.ext.PrivateRawTransactionManager;
 import com.quorum.gauge.ext.filltx.FillTransactionResponse;
 import com.quorum.gauge.ext.filltx.PrivateFillTransaction;
 import com.quorum.gauge.sol.ClientReceipt;
@@ -44,6 +45,7 @@ import org.web3j.abi.datatypes.Function;
 import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.RawTransaction;
+import org.web3j.crypto.TransactionEncoder;
 import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
@@ -102,10 +104,10 @@ public class RawContractService extends AbstractService {
             RawTransactionManager qrtxm = rawTransactionManager(web3j, credentials, chainId);
 
             return SimpleStorage.deploy(web3j,
-                    qrtxm,
-                    BigInteger.valueOf(0),
-                    DEFAULT_GAS_LIMIT,
-                    BigInteger.valueOf(initialValue)).flowable().toObservable();
+                qrtxm,
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT,
+                BigInteger.valueOf(initialValue)).flowable().toObservable();
 
         } catch (IOException e) {
             logger.error("RawTransaction- public", e);
@@ -125,9 +127,9 @@ public class RawContractService extends AbstractService {
             RawTransactionManager qrtxm = rawTransactionManager(web3j, credentials, chainId);
 
             return SimpleStorage.load(contractAddress, web3j,
-                    qrtxm,
-                    BigInteger.valueOf(0),
-                    DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue)).flowable().toObservable();
+                qrtxm,
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue)).flowable().toObservable();
 
         } catch (IOException e) {
             logger.error("RawTransaction- public", e);
@@ -150,10 +152,10 @@ public class RawContractService extends AbstractService {
                 privacyService.ids(targetNamedKeys),
                 enclave)))
             .flatMap(qrtxm -> SimpleStorage.deploy(client,
-                qrtxm,
-                BigInteger.valueOf(0),
-                DEFAULT_GAS_LIMIT,
-                BigInteger.valueOf(initialValue))
+                    qrtxm,
+                    BigInteger.valueOf(0),
+                    DEFAULT_GAS_LIMIT,
+                    BigInteger.valueOf(initialValue))
                 .flowable().toObservable());
     }
 
@@ -169,9 +171,9 @@ public class RawContractService extends AbstractService {
                 privacyService.ids(targetNamedKeys),
                 enclave)))
             .flatMap(qrtxm -> SimpleStorage.load(contractAddress, client,
-                qrtxm,
-                BigInteger.valueOf(0),
-                DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue))
+                    qrtxm,
+                    BigInteger.valueOf(0),
+                    DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue))
                 .flowable().toObservable());
     }
 
@@ -183,16 +185,16 @@ public class RawContractService extends AbstractService {
             Credentials credentials = WalletUtils.loadCredentials(wallet.getWalletPass(), wallet.getWalletPath());
 
             TransactionManager qrtxm = quorumTransactionManager(client,
-                    credentials,
-                    privacyService.id(source),
-                    List.of(privacyService.id(target)),
-                    enclave);
+                credentials,
+                privacyService.id(source),
+                List.of(privacyService.id(target)),
+                enclave);
 
             return SimpleStorage.deploy(client,
-                    qrtxm,
-                    BigInteger.valueOf(0),
-                    DEFAULT_GAS_LIMIT,
-                    BigInteger.valueOf(initialValue)).flowable().toObservable();
+                qrtxm,
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT,
+                BigInteger.valueOf(initialValue)).flowable().toObservable();
 
         } catch (IOException e) {
             logger.error("RawTransaction - private", e);
@@ -211,15 +213,15 @@ public class RawContractService extends AbstractService {
             Credentials credentials = WalletUtils.loadCredentials(wallet.getWalletPass(), wallet.getWalletPath());
 
             TransactionManager qrtxm = quorumTransactionManager(client,
-                    credentials,
-                    privacyService.id(source),
-                    List.of(privacyService.id(target)),
-                    enclave);
+                credentials,
+                privacyService.id(source),
+                List.of(privacyService.id(target)),
+                enclave);
 
             return SimpleStorage.load(contractAddress, client,
-                    qrtxm,
-                    BigInteger.valueOf(0),
-                    DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue)).flowable().toObservable();
+                qrtxm,
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue)).flowable().toObservable();
 
         } catch (IOException e) {
             logger.error("RawTransaction - private", e);
@@ -277,18 +279,18 @@ public class RawContractService extends AbstractService {
     public Observable<FillTransactionResponse> fillTransaction(QuorumNode from, QuorumNode to, int initValue) {
         String data = base64ToHex(base64SimpleStorageConstructorBytecode(initValue));
         return Observable.zip(
-            accountService.getDefaultAccountAddress(from).subscribeOn(Schedulers.io()),
-            accountService.getDefaultAccountAddress(to).subscribeOn(Schedulers.io()),
-            (fromAddress, toAddress) -> new PrivateTransaction(
-                fromAddress,
-                null,
-                DEFAULT_GAS_LIMIT,
-                toAddress,
-                BigInteger.ZERO,
-                data,
-                null,
-                Arrays.asList(privacyService.id(to))
-            ))
+                accountService.getDefaultAccountAddress(from).subscribeOn(Schedulers.io()),
+                accountService.getDefaultAccountAddress(to).subscribeOn(Schedulers.io()),
+                (fromAddress, toAddress) -> new PrivateTransaction(
+                    fromAddress,
+                    null,
+                    DEFAULT_GAS_LIMIT,
+                    toAddress,
+                    BigInteger.ZERO,
+                    data,
+                    null,
+                    Arrays.asList(privacyService.id(to))
+                ))
             .flatMap(tx -> {
                 Request<?, FillTransactionResponse> request = new Request<>(
                     "eth_fillTransaction",
@@ -360,9 +362,9 @@ public class RawContractService extends AbstractService {
         return Numeric.toHexString(raw);
     }
 
-    private Enclave buildEnclave(QuorumNode source, Quorum client){
+    private Enclave buildEnclave(QuorumNode source, Quorum client) {
         String thirdPartyURL = privacyService.thirdPartyUrl(source);
-        if (thirdPartyURL.endsWith("ipc")){
+        if (thirdPartyURL.endsWith("ipc")) {
             EnclaveService enclaveService = new EnclaveService("http://localhost", 12345, getIPCHttpClient(thirdPartyURL));
             return new Constellation(enclaveService, client);
         } else {
@@ -373,15 +375,15 @@ public class RawContractService extends AbstractService {
         }
     }
 
-    private Map<String,OkHttpClient> ipcClients = new ConcurrentHashMap<>();
+    private Map<String, OkHttpClient> ipcClients = new ConcurrentHashMap<>();
 
     private OkHttpClient getIPCHttpClient(String thirdPartyURL) {
-        if (ipcClients.containsKey(thirdPartyURL)){
-            return  ipcClients.get(thirdPartyURL);
+        if (ipcClients.containsKey(thirdPartyURL)) {
+            return ipcClients.get(thirdPartyURL);
         }
         OkHttpClient client = new OkHttpClient.Builder()
-                                .socketFactory(new UnixDomainSocketFactory(new File(thirdPartyURL)))
-                                .build();
+            .socketFactory(new UnixDomainSocketFactory(new File(thirdPartyURL)))
+            .build();
 
         ipcClients.put(thirdPartyURL, client);
 
@@ -400,9 +402,9 @@ public class RawContractService extends AbstractService {
                 privacyService.ids(targetNamedKeys),
                 enclave)))
             .flatMap(qrtxm -> ClientReceipt.deploy(client,
-                qrtxm,
-                BigInteger.valueOf(0),
-                DEFAULT_GAS_LIMIT)
+                    qrtxm,
+                    BigInteger.valueOf(0),
+                    DEFAULT_GAS_LIMIT)
                 .flowable().toObservable());
     }
 
@@ -418,9 +420,9 @@ public class RawContractService extends AbstractService {
                 privacyService.ids(targetNamedKeys),
                 enclave)))
             .flatMap(qrtxm -> ClientReceipt.load(contractAddress, client,
-                qrtxm,
-                BigInteger.valueOf(0),
-                DEFAULT_GAS_LIMIT).deposit(new byte[32], BigInteger.ZERO)
+                    qrtxm,
+                    BigInteger.valueOf(0),
+                    DEFAULT_GAS_LIMIT).deposit(new byte[32], BigInteger.ZERO)
                 .flowable().toObservable());
     }
 
@@ -437,11 +439,11 @@ public class RawContractService extends AbstractService {
                 privacyService.ids(targetNamedKeys),
                 enclave)))
             .flatMap(qrtxm -> SimpleStorageDelegate.deploy(client,
-                qrtxm,
-                BigInteger.valueOf(0),
-                DEFAULT_GAS_LIMIT,
-                delegateContractAddress)
-                    .flowable().toObservable());
+                    qrtxm,
+                    BigInteger.valueOf(0),
+                    DEFAULT_GAS_LIMIT,
+                    delegateContractAddress)
+                .flowable().toObservable());
     }
 
     public Observable<TransactionReceipt> updateRawSimpleDelegatePrivateContract(int newValue, String contractAddress, WalletData wallet, QuorumNode source, String sourceNamedKey, List<String> targetNamedKeys) {
@@ -457,10 +459,10 @@ public class RawContractService extends AbstractService {
                 privacyService.ids(targetNamedKeys),
                 enclave)))
             .flatMap(qrtxm -> SimpleStorageDelegate.load(contractAddress, client,
-                qrtxm,
-                BigInteger.valueOf(0),
-                DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue))
-                    .flowable().toObservable());
+                    qrtxm,
+                    BigInteger.valueOf(0),
+                    DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(newValue))
+                .flowable().toObservable());
     }
 
 
@@ -477,10 +479,10 @@ public class RawContractService extends AbstractService {
                 privacyService.ids(targetNamedKeys),
                 enclave)))
             .flatMap(qrtxm -> SneakyWrapper.deploy(client,
-                qrtxm,
-                BigInteger.valueOf(0),
-                DEFAULT_GAS_LIMIT,
-                delegateContractAddress)
+                    qrtxm,
+                    BigInteger.valueOf(0),
+                    DEFAULT_GAS_LIMIT,
+                    delegateContractAddress)
                 .flowable().toObservable());
     }
 
@@ -496,9 +498,9 @@ public class RawContractService extends AbstractService {
                 privacyService.ids(targetNamedKeys),
                 enclave)))
             .flatMap(qrtxm -> SneakyWrapper.load(contractAddress, client,
-                qrtxm,
-                BigInteger.valueOf(0),
-                DEFAULT_GAS_LIMIT).setDelegate(newValue)
+                    qrtxm,
+                    BigInteger.valueOf(0),
+                    DEFAULT_GAS_LIMIT).setDelegate(newValue)
                 .flowable().toObservable());
     }
 
@@ -509,23 +511,15 @@ public class RawContractService extends AbstractService {
 
         return Observable.fromCallable(() -> wallet)
             .flatMap(walletData -> Observable.fromCallable(() -> WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath())))
-            .flatMap(cred -> Observable.just(new OpenQuorumTransactionManager(client,
-                cred,
+            .flatMap(cred -> Observable.just(new PrivateClientTransactionManager(client,
+                cred.getAddress(),
                 privacyService.id(source, sourceNamedKey),
-                targetNamedKeys.stream().map(privacyService::id).collect(Collectors.toList()),
-                enclave,
-                // for this specific case do not wait for the transaction receipt (as we will only get a receipt after we send the next transaction)
-                1,
-                DEFAULT_SLEEP_DURATION_IN_MILLIS){
-                @Override
-                protected BigInteger getNonce() throws IOException {
-                    return super.getNonce().add(BigInteger.valueOf(nonceShift));
-                }
-            }))
+                targetNamedKeys.stream().map(privacyService::id).collect(Collectors.toList())
+            )))
             .flatMap(qrtxm -> SneakyWrapper.load(contractAddress, client,
-                qrtxm,
-                BigInteger.valueOf(0),
-                DEFAULT_GAS_LIMIT).getFromDelegate()
+                    qrtxm,
+                    BigInteger.valueOf(0),
+                    DEFAULT_GAS_LIMIT).getFromDelegate()
                 .flowable().toObservable());
     }
 
@@ -560,13 +554,13 @@ public class RawContractService extends AbstractService {
             List<Observable<RawDeployedContractTarget>> allObservableContracts = new ArrayList<>();
 
             int counter = 0;
-            for (QuorumNode targetNode :targetNodes) {
-                OpenQuorumTransactionManager oqrtxm = new OpenQuorumTransactionManager(
+            for (QuorumNode targetNode : targetNodes) {
+                PrivateRawTransactionManager oqrtxm = new PrivateRawTransactionManager(
                     client,
                     credentials,
-                    credentials.getAddress(),
+                    privacyService.id(source),
                     Arrays.asList(privacyService.id(targetNode)),
-                    enclave
+                    List.of()
                 );
                 RawPrivateContract[] rawPrivateContracts = new RawPrivateContract[count];
                 for (int j = 0; j < count; j++) {

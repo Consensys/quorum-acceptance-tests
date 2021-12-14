@@ -23,7 +23,8 @@ import com.quorum.gauge.common.PrivacyFlag;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNetworkProperty.Node;
 import com.quorum.gauge.common.QuorumNode;
-import com.quorum.gauge.ext.EnhancedClientTransactionManager;
+import com.quorum.gauge.ext.EthChainId;
+import com.quorum.gauge.ext.PrivateClientTransactionManager;
 import com.quorum.gauge.ext.EthSendTransactionAsync;
 import com.quorum.gauge.ext.EthStorageRoot;
 import com.quorum.gauge.ext.PrivateTransactionAsync;
@@ -74,6 +75,9 @@ public class ContractService extends AbstractService {
     private static final Logger logger = LoggerFactory.getLogger(ContractService.class);
 
     @Autowired
+    protected RPCService rpcService;
+
+    @Autowired
     PrivacyService privacyService;
 
     @Autowired
@@ -102,7 +106,7 @@ public class ContractService extends AbstractService {
         Quorum client = connectionFactory().getConnection(source);
         List<PrivacyFlag> finalFlags = flags;
         return accountService.getAccountAddress(source, ethAccount).flatMap(address -> {
-            EnhancedClientTransactionManager clientTransactionManager = new EnhancedClientTransactionManager(
+            PrivateClientTransactionManager clientTransactionManager = new PrivateClientTransactionManager(
                 client,
                 address,
                 privacyService.id(privateFromAliases),
@@ -141,7 +145,7 @@ public class ContractService extends AbstractService {
         }
 
         return accountService.getAccountAddress(networkProperty().getNode(source.name()), ethAccount).flatMap(address -> {
-            EnhancedClientTransactionManager clientTransactionManager = new EnhancedClientTransactionManager(
+            PrivateClientTransactionManager clientTransactionManager = new PrivateClientTransactionManager(
                 client,
                 address,
                 null,
@@ -167,7 +171,7 @@ public class ContractService extends AbstractService {
         final List<String> mandatoryRecipients = mandatoryFor.stream().map(privacyService::id).collect(Collectors.toList());
 
         return accountService.getAccountAddress(networkProperty().getNode(source.name()), ethAccount).flatMap(address -> {
-            EnhancedClientTransactionManager clientTransactionManager = new EnhancedClientTransactionManager(
+            PrivateClientTransactionManager clientTransactionManager = new PrivateClientTransactionManager(
                 client,
                 address,
                 null,
@@ -282,7 +286,7 @@ public class ContractService extends AbstractService {
 
         if (Objects.isNull(mandatoryFor)) {
             return accountService.getDefaultAccountAddress(source)
-                .map(address -> new EnhancedClientTransactionManager(client, address, null, privateFor, flags))
+                .map(address -> new PrivateClientTransactionManager(client, address, null, privateFor, flags))
                 .flatMap(txManager -> SimpleStorage.load(
                     contractAddress, client, txManager, BigInteger.ZERO, gasLimit).set(value).flowable().toObservable()
                 );
@@ -291,7 +295,7 @@ public class ContractService extends AbstractService {
         final List<String> mandatoryRecipients = mandatoryFor.stream().map(q -> privacyService.id(q)).collect(Collectors.toList());
 
         return accountService.getDefaultAccountAddress(source)
-            .map(address -> new EnhancedClientTransactionManager(client, address, null, privateFor, mandatoryRecipients, flags))
+            .map(address -> new PrivateClientTransactionManager(client, address, null, privateFor, mandatoryRecipients, flags))
             .flatMap(txManager -> SimpleStorage.load(
                 contractAddress, client, txManager, BigInteger.ZERO, gasLimit).set(value).flowable().toObservable()
             );
@@ -304,7 +308,7 @@ public class ContractService extends AbstractService {
         final BigInteger value = BigInteger.valueOf(newValue);
 
         return accountService.getAccountAddress(source, ethAccount)
-            .map(address -> new EnhancedClientTransactionManager(
+            .map(address -> new PrivateClientTransactionManager(
                 client,
                 address,
                 privacyService.id(privateFromAlias),
@@ -323,7 +327,7 @@ public class ContractService extends AbstractService {
         final BigInteger value = BigInteger.valueOf(newValue);
 
         return accountService.getAccountAddress(source, ethAccount)
-            .map(address -> new EnhancedClientTransactionManager(
+            .map(address -> new PrivateClientTransactionManager(
                 client,
                 address,
                 null,
@@ -340,7 +344,7 @@ public class ContractService extends AbstractService {
         final BigInteger value = BigInteger.valueOf(newValue);
 
         return accountService.getAccountAddress(source, ethAccount)
-            .map(address -> new EnhancedClientTransactionManager(
+            .map(address -> new PrivateClientTransactionManager(
                 client,
                 address,
                 privacyService.id(privateFromAlias),
@@ -361,11 +365,13 @@ public class ContractService extends AbstractService {
         return request.flowable().toObservable();
     }
 
-    public Observable<? extends Contract> createClientReceiptSmartContract(QuorumNode node) {
+    public Observable<? extends Contract> createClientReceiptSmartContract(Node node) {
+        long chainId = rpcService.call(node, "eth_chainId", Collections.emptyList(), EthChainId.class).blockingFirst().getChainId();
+
         Web3j client = connectionFactory().getWeb3jConnection(node);
         return accountService.getDefaultAccountAddress(node)
             .flatMap(address -> {
-                org.web3j.tx.ClientTransactionManager txManager = vanillaClientTransactionManager(client, address);
+                org.web3j.tx.ClientTransactionManager txManager = vanillaClientTransactionManager(client, address, chainId);
                 return ClientReceipt.deploy(
                     client,
                     txManager,
@@ -432,19 +438,20 @@ public class ContractService extends AbstractService {
     }
 
     public Observable<TransactionReceipt> setGenericStoreContractSetValue(QuorumNetworkProperty.Node node, String contractAddress, String contractName, String methodName, int value, boolean isPrivate, QuorumNode target, PrivacyFlag privacyType) {
+
         Quorum client = connectionFactory().getConnection(node);
 
         String fromAddress = accountService.getDefaultAccountAddress(node).blockingFirst();
         TransactionManager txManager;
         if (isPrivate) {
-            txManager = new EnhancedClientTransactionManager(
+            txManager = new PrivateClientTransactionManager(
                 client,
                 fromAddress,
                 null,
                 Arrays.asList(privacyService.id(target)),
                 Arrays.asList(privacyType));
         } else {
-            txManager = new EnhancedClientTransactionManager(
+            txManager = new PrivateClientTransactionManager(
                 client,
                 fromAddress,
                 null,
@@ -508,16 +515,16 @@ public class ContractService extends AbstractService {
 
         String fromAddress = accountService.getDefaultAccountAddress(node).blockingFirst();
 
-        EnhancedClientTransactionManager transactionManager;
+        PrivateClientTransactionManager transactionManager;
         if (isPrivate) {
-            transactionManager = new EnhancedClientTransactionManager(
+            transactionManager = new PrivateClientTransactionManager(
                 client,
                 fromAddress,
                 null,
                 Arrays.asList(privacyService.id(target)),
                 List.of(privacyType));
         } else {
-            transactionManager = new EnhancedClientTransactionManager(
+            transactionManager = new PrivateClientTransactionManager(
                 client,
                 fromAddress,
                 null,
@@ -579,11 +586,12 @@ public class ContractService extends AbstractService {
         });
     }
 
-    public Observable<TransactionReceipt> updateClientReceipt(QuorumNode node, String contractAddress, BigInteger value) {
+    public Observable<TransactionReceipt> updateClientReceipt(Node node, String contractAddress, BigInteger value) {
+        long chainId = rpcService.call(node, "eth_chainId", Collections.emptyList(), EthChainId.class).blockingFirst().getChainId();
         Web3j client = connectionFactory().getWeb3jConnection(node);
         return accountService.getDefaultAccountAddress(node)
             .flatMap(address -> {
-                org.web3j.tx.ClientTransactionManager txManager = vanillaClientTransactionManager(client, address);
+                org.web3j.tx.ClientTransactionManager txManager = vanillaClientTransactionManager(client, address, chainId);
                 return ClientReceipt.load(contractAddress, client, txManager, BigInteger.valueOf(0), DEFAULT_GAS_LIMIT)
                     .deposit(new byte[32], value).flowable().toObservable();
             });
