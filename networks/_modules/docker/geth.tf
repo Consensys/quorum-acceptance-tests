@@ -148,10 +148,11 @@ exec geth \
   --verbosity 5 \
   --networkid ${var.network_id} \
   --nodekeyhex ${var.node_keys_hex[count.index]} \
-  --rpc \
-  --rpcaddr 0.0.0.0 \
-  --rpcport ${var.geth_networking[count.index].port.http.internal} \
-  --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,quorumPermission,quorumExtension,${(var.consensus == "istanbul" || var.consensus == "qbft" ? "istanbul" : "raft")} \
+  --rpc.allow-unprotected-txs \
+  --http \
+  --http.addr 0.0.0.0 \
+  --http.port ${var.geth_networking[count.index].port.http.internal} \
+  --http.api admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,quorumPermission,quorumExtension,${(var.consensus == "istanbul" || var.consensus == "qbft" ? "istanbul" : "raft")} \
 %{if var.privacy_marker_transactions~}
   --privacymarker.enable \
 %{endif~}

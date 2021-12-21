@@ -7,7 +7,6 @@ ARG GAUGE_JAVA_VERSION=0.7.15
 ARG JDK_VERSION=14
 LABEL maintainer="info@goquorum.com" \
     TERRAFORM_VERSION="${TERRAFORM_VERSION}" \
-    SOLC_VERSION=""${SOLC_VERSION} \
     GAUGE_VERSION="${GAUGE_VERSION}" \
     JDK_VERSION="openjdk-${JDK_VERSION}"
 WORKDIR /workspace
@@ -15,6 +14,7 @@ ENV JAVA_HOME="/usr/lib/jvm/default-jvm" \
     PATH="/workspace/bin:${JAVA_HOME}/bin:${PATH}"
 # require BASH for gauge to work as gauge-java plugin runs a shell script (launch.sh) which requires #!/bin/bash
 COPY pom.xml manifest.json ./
+COPY ./releases.json /root/.web3j/solc/releases.json
 RUN apk -q --no-cache --update add tar bash \
     && mkdir -p /tmp/downloads bin \
     && (pids=""; \
