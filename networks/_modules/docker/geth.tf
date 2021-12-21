@@ -148,7 +148,6 @@ exec geth \
   --verbosity 5 \
   --networkid ${var.network_id} \
   --nodekeyhex ${var.node_keys_hex[count.index]} \
-  --rpc.allow-unprotected-txs \
   --http \
   --http.addr 0.0.0.0 \
   --http.port ${var.geth_networking[count.index].port.http.internal} \
