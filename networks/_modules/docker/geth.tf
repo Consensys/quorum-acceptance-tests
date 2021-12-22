@@ -136,10 +136,28 @@ if [ -f /data/qdata/executempsdbupgrade ]; then
   rm /data/qdata/executempsdbupgrade
 fi
 
+VERSION=$(geth version | grep Quorum | cut -d ':' -f2 | xargs echo -n)
+
 geth --datadir ${local.container_geth_datadir} init ${local.container_geth_datadir}/genesis.json
 
 #exit if geth init fails
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
+
+echo $VERSION
+if [[ $VERSION == '2.5.0' ]]; then
+  echo "Using --rpc flags"
+  HTTP_ARGS="--rpc \
+  --rpcaddr 0.0.0.0 \
+  --rpcport ${var.geth_networking[count.index].port.http.internal} \
+  --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,quorumPermission,quorumExtension,${(var.consensus == "istanbul" || var.consensus == "qbft" ? "istanbul" : "raft")} "
+else
+  echo "Using --http flags"
+  HTTP_ARGS="--http \
+  --http.addr 0.0.0.0 \
+  --http.port ${var.geth_networking[count.index].port.http.internal} \
+  --http.api admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,quorumPermission,quorumExtension,${(var.consensus == "istanbul" || var.consensus == "qbft" ? "istanbul" : "raft")} "
+fi
+
 
 exec geth \
   --identity Node${count.index + 1} \
@@ -148,10 +166,7 @@ exec geth \
   --verbosity 5 \
   --networkid ${var.network_id} \
   --nodekeyhex ${var.node_keys_hex[count.index]} \
-  --rpc \
-  --rpcaddr 0.0.0.0 \
-  --rpcport ${var.geth_networking[count.index].port.http.internal} \
-  --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,quorumPermission,quorumExtension,${(var.consensus == "istanbul" || var.consensus == "qbft" ? "istanbul" : "raft")} \
+  $HTTP_ARGS \
 %{if var.privacy_marker_transactions~}
   --privacymarker.enable \
 %{endif~}

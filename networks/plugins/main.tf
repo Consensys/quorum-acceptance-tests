@@ -27,7 +27,7 @@ locals {
   with_hashicorp_plugin = contains(values(var.plugins)[*].name, "quorum-account-plugin-hashicorp-vault")
 
   additional_geth_args = merge(
-    { for idx in local.node_indices : idx => format("--rpcapi %s --plugins file://%s/plugin-settings.json %s", local.apis, "/data/qdata", local.more_args) },
+    { for idx in local.node_indices : idx => format("--http.api %s --plugins file://%s/plugin-settings.json %s", local.apis, "/data/qdata", local.more_args) },
   var.override_additional_geth_args)
 }
 
