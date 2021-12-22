@@ -442,6 +442,7 @@ jobs:
             if (pr != "") {
               pr = `for ${pr.substr(1)}`
             }
+            console.log("Built pr message :", pr)
             // build the message
             var job_blocks = []
             var is_wf_success = true
@@ -475,6 +476,7 @@ jobs:
                     }
                 })
             }
+            console.log("Built job_blocks :", job_blocks)
             var workflow_status = "w_cancelled"
             if (is_wf_success) {
               workflow_status = "w_success"
@@ -527,6 +529,7 @@ jobs:
             var slack_msg = {
                 blocks: [].concat(header_blocks, job_blocks)
             }
+            console.log("Built slack_msg : ", slack_msg)
             return slack_msg
       - name: 'Prepare Slack message with partial info'
         id: short_status
@@ -537,6 +540,7 @@ jobs:
             ////////////////////////////////////
             // retrieve workflow run data
             ////////////////////////////////////
+            console.log("retrieve workflow run data")
             const wf_run = await github.actions.getWorkflowRun({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
