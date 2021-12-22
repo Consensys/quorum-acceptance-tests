@@ -180,30 +180,6 @@
                 </configuration>
             </plugin>
             <plugin>
-                <!--
-                    This is a workaround solution:
-                    - `web3j-maven-plugin` has runtime dependency on `solcJ-all` jar which is stored
-                      in ethereum maven repo which is hosted in Bintray
-                    - As Bintray is going to be sunset, we store `solcJ-all` jar locally to avoid
-                      downloading from Bintray
-                -->
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-install-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>install-solJ-all</id>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>install-file</goal>
-                        </goals>
-                        <configuration>
-                            <file>${basedir}/extra/solcJ-all-0.4.25.jar</file>
-                            <pomFile>${basedir}/extra/solcJ-all-0.4.25.pom</pomFile>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>com.thoughtworks.gauge.maven</groupId>
                 <artifactId>gauge-maven-plugin</artifactId>
                 <executions>
