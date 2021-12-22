@@ -153,7 +153,7 @@ variable "override_additional_geth_args" {
   description = <<-EOT
 Override the value from var.additional_geth_args per node
 {
-  0 = "--rpcapi admin"
+  0 = "--http.api admin"
 }
 EOT
 }
