@@ -40,8 +40,8 @@
 
  Tags: privacy-enhancements-upgrade, pre-condition/no-record-blocknumber
 
-        | q_from_version | q_to_version | t_from_version  | t_to_version |
-        | v2.5.0         | develop       | 0.10.5         | develop       |
+        | q_from_version | q_upgd_version | q_to_version | t_from_version | t_upgd_version  | t_to_version |
+        | v2.5.0         | 21.10.0        | develop      | 0.10.5         | 21.10.0         | develop      |
 
 * Start the network with:
     | node  | quorum           | tessera          |
@@ -61,7 +61,7 @@
 * Deploy a "StandardPrivate" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract14"
 * "contract14" is deployed "successfully" in "Node1,Node4"
  Upgrade quorum in Node1 to a version that supports privacy enhancements while privacy enhancements are disabled
-* Stop and start "Node1" using quorum version <q_to_version> and tessera version <t_from_version>
+* Stop and start "Node1" using quorum version <q_upgd_version> and tessera version <t_from_version>
  StandardPrivate transactions work as epected
 * Deploy a "StandardPrivate" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract15"
 * "contract15" is deployed "successfully" in "Node1,Node4"
@@ -94,7 +94,7 @@
 * Grep "quorum" in "Node1" for "Cannot start quorum with privacy enhancements enabled while the transaction manager does not support it"
 * Check that "quorum" in "Node1" is "down"
  Upgrade quorum and tessera in Node1 to the privacy enhancements enabled versions (only tessera needs to be updated but it is easier to use the step that does both)
-* Stop and start "Node1" using quorum version <q_to_version> and tessera version <t_to_version>
+* Stop and start "Node1" using quorum version <q_upgd_version> and tessera version <t_upgd_version>
 * Deploy a "StandardPrivate" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4", named this contract as "contract16"
 * "contract16" is deployed "successfully" in "Node1,Node4"
  Node1 will reject any attempt to send privacy enhanced transactions as privacy enhancements are not yet enabled in tessera
@@ -103,7 +103,7 @@
 * Wait for tessera to discover "4" keys in "Node1"
  A PartyProtection contract will not be deployed on Node1 as the tessera process on Node1 will detect that the tessera process on Node4 does not support privacy enhancements
 * Deploying a "PartyProtection" simple smart contract with initial value "42" in "Node1"'s default account and it's private for "Node4" fails with message "Transactions with enhanced privacy is not currently supported on recipient"
-* Stop and start "Node4" using quorum version <q_to_version> and tessera version <t_to_version>
+* Stop and start "Node4" using quorum version <q_upgd_version> and tessera version <t_upgd_version>
  Node4 is now privacy enhancements capable but privacy enhancements are not enabled (geth init hasnt been run with a genesis file containing privacyEnhancementsBlock)
  Node1 is not able to connect to Node4 (as they have different values for PrivacyEnhancementsBlock)
 * Grep "quorum" in "Node4" for "Fork ID rejected - local incompatible or needs update"
@@ -174,6 +174,7 @@
 * "contract20"'s `get()` function execution in "Node2" returns "0"
 * "contract20"'s `get()` function execution in "Node3" returns "0"
 * "contract20"'s `get()` function execution in "Node4" returns "42"
+
  PP transaction from Node4 updates all party nodes state
 * Fire and forget execution of "PartyProtection" simple contract("contract20")'s `set()` function with new value "55" in "Node4" and it's private for "Node1"
 * Transaction Receipt is "successfully" available in "Node1,Node4" for "contract20"
@@ -209,7 +210,7 @@
 
 * Record the current block number, named it as "catchUpBlockNumber"
 
-* Stop and start "Node2" using quorum version <q_to_version> and tessera version <t_to_version>
+* Stop and start "Node2" using quorum version <q_upgd_version> and tessera version <t_upgd_version>
 * Wait for "quorum" state in "Node2" to be "up"
  Node2 is now privacy enhancements capable but privacy enhancements are not enabled (geth init hasnt been run with a genesis file containing privacyEnhancementsBlock)
  Node1 is not able to connect to Node2 (as they have different values for PrivacyEnhancementsBlock)
@@ -320,6 +321,61 @@ PartyProtection
 * Transaction Hash is returned for "rawContract2"
 * Transaction Receipt is present in "Node1" for "rawContract2" from external wallet "Wallet1"
 * Transaction Receipt is present in "Node4" for "rawContract2" from external wallet "Wallet1"
+* "rawContract2"'s `get()` function execution in "Node1" returns "25"
+* "rawContract2"'s `get()` function execution in "Node4" returns "25"
+* "rawContract2"'s `get()` function execution in "Node3" returns "0"
+
+ Upgrade node 3
+* Stop and start "Node3" using quorum version <q_upgd_version> and tessera version <t_upgd_version>
+* Wait for "quorum" state in "Node3" to be "up"
+
+ Upgrade node 1
+* Stop and start "Node1" using quorum version <q_to_version> and tessera version <t_to_version>
+* Wait for "quorum" state in "Node1" to be "up"
+
+ Upgrade node 2
+* Stop and start "Node2" using quorum version <q_to_version> and tessera version <t_to_version>
+* Wait for "quorum" state in "Node2" to be "up"
+
+ Upgrade node 3
+* Stop and start "Node3" using quorum version <q_to_version> and tessera version <t_to_version>
+* Wait for "quorum" state in "Node3" to be "up"
+
+ Upgrade node 4
+* Stop and start "Node4" using quorum version <q_to_version> and tessera version <t_to_version>
+* Wait for "quorum" state in "Node4" to be "up"
+
+ Run all previous validations
+* "contract19"'s `get()` function execution in "Node1" returns "9"
+* "contract19"'s `get()` function execution in "Node2" returns "9"
+* "contract19"'s `get()` function execution in "Node3" returns "0"
+* "contract19"'s `get()` function execution in "Node4" returns "9"
+
+* "contract20"'s `get()` function execution in "Node1" returns "57"
+* "contract20"'s `get()` function execution in "Node2" returns "57"
+* "contract20"'s `get()` function execution in "Node3" returns "0"
+* "contract20"'s `get()` function execution in "Node4" returns "57"
+
+* "contract21"'s `get()` function execution in "Node1" returns "0"
+* "contract21"'s `get()` function execution in "Node2" returns "42"
+* "contract21"'s `get()` function execution in "Node3" returns "42"
+* "contract21"'s `get()` function execution in "Node4" returns "0"
+
+* "contract22"'s `get()` function execution in "Node1" returns "0"
+* "contract22"'s `get()` function execution in "Node2" returns "43"
+* "contract22"'s `get()` function execution in "Node3" returns "43"
+* "contract22"'s `get()` function execution in "Node4" returns "0"
+
+* "contract25"'s `get()` function execution in "Node1" returns "47"
+* "contract25"'s `get()` function execution in "Node2" returns "47"
+* "contract25"'s `get()` function execution in "Node3" returns "0"
+* "contract25"'s `get()` function execution in "Node4" returns "47"
+
+* "contract26"'s `get()` function execution in "Node1" returns "37"
+* "contract26"'s `get()` function execution in "Node2" returns "37"
+* "contract26"'s `get()` function execution in "Node3" returns "0"
+* "contract26"'s `get()` function execution in "Node4" returns "37"
+
 * "rawContract2"'s `get()` function execution in "Node1" returns "25"
 * "rawContract2"'s `get()` function execution in "Node4" returns "25"
 * "rawContract2"'s `get()` function execution in "Node3" returns "0"
