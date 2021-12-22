@@ -358,6 +358,7 @@ jobs:
             console.log(wf_run.data)
             console.log("get jobs for workflow run:", wf_run.data.jobs_url)
             const jobs_response = await github.request(wf_run.data.jobs_url)
+            console.log("Got jobs_response")
             ////////////////////////////////////
             // build slack notification message
             ////////////////////////////////////
@@ -399,8 +400,10 @@ jobs:
                 }
             }
             const commit = "${{ github.sha }}".substr(0, 6)
+            console.log("Preparing message for :", commit)
             var pr = ""
             for (p of wf_run.data.pull_requests) {
+              console.log("Fetching pr info from ", p.url)
               const pull_response = await github.request(p.url)
               pr += `,<${pull_response.data.html_url}|PR #${p.number}>`
             }
