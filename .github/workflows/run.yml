@@ -432,7 +432,7 @@ jobs:
                 var tag = j.name.replace(/[^\(]+\((.+)\)/g, "$1") // take only the tag which is in the curly brackets
                 var hash = sha256(tag)
                 console.log("Tag: " + tag + ", Hash: " + hash)
-                console.log("Looking in" reports)
+                console.log("Looking in", reports)
                 var job_summary = reports[hash]
                 var job_summary_text = ""
                 if (job_summary != undefined) {
