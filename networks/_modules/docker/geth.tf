@@ -143,24 +143,24 @@ geth --datadir ${local.container_geth_datadir} init ${local.container_geth_datad
 #exit if geth init fails
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
-echo $VERSION
+
 if [[ $VERSION == '2.5.0' ]]; then
-  echo "Using --rpc flags"
   HTTP_ARGS="--rpc \
   --rpcaddr 0.0.0.0 \
   --rpcport ${var.geth_networking[count.index].port.http.internal} \
   --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,quorumPermission,quorumExtension,${(var.consensus == "istanbul" || var.consensus == "qbft" ? "istanbul" : "raft")} "
+
+  export ADDITIONAL_GETH_ARGS="${lookup(var.additional_geth_args, count.index, "")} $ADDITIONAL_GETH_ARGS" | sed 's/--allow-insecure-unlock//g'
 else
-  echo "Using --http flags"
   HTTP_ARGS="--http \
   --http.addr 0.0.0.0 \
   --http.port ${var.geth_networking[count.index].port.http.internal} \
   --http.api admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,quorumPermission,quorumExtension,${(var.consensus == "istanbul" || var.consensus == "qbft" ? "istanbul" : "raft")} "
+
+  export ADDITIONAL_GETH_ARGS="${lookup(var.additional_geth_args, count.index, "")} $ADDITIONAL_GETH_ARGS"
 fi
 
-
-exec geth \
-  --identity Node${count.index + 1} \
+ARGS="--identity Node${count.index + 1} \
   --datadir ${local.container_geth_datadir} \
   --nodiscover \
   --verbosity 5 \
@@ -185,7 +185,13 @@ exec geth \
 %{endif~}
   --unlock ${join(",", range(var.accounts_count[count.index]))} \
   --password ${local.container_geth_datadir}/${var.password_file_name} \
-  ${(var.consensus == "istanbul" || var.consensus == "qbft") ? "--istanbul.blockperiod 1 --syncmode full --mine --miner.threads 1" : format("--raft --raftport %d", var.geth_networking[count.index].port.raft)} ${lookup(var.additional_geth_args, count.index, "")} $ADDITIONAL_GETH_ARGS
+  ${(var.consensus == "istanbul" || var.consensus == "qbft") ? "--istanbul.blockperiod 1 --syncmode full --mine --miner.threads 1" : format("--raft --raftport %d", var.geth_networking[count.index].port.raft)} \
+  $ADDITIONAL_GETH_ARGS"
+
+echo "Running Geth with ARGS"
+echo $ARGS
+exec geth $ARGS
+
 EOF
   }
 }
