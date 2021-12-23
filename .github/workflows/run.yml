@@ -410,10 +410,12 @@ jobs:
             if (pr != "") {
               pr = `for ${pr.substr(1)}`
             }
+            console.log("Built pr message :", pr)
             // build the message
             var job_blocks = []
             var is_wf_success = true
             var is_wf_failure = false
+            console.log("Iterating jobs :", jobs_response.data.jobs)
             for (j of jobs_response.data.jobs) {
                 console.log(j.name, ":", j.status, j.conclusion, j.started_at, j.completed_at)
                 // ignore the current job running this script
