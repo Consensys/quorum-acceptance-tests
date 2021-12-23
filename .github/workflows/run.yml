@@ -417,7 +417,6 @@ jobs:
             var is_wf_failure = false
             console.log("Iterating jobs ", jobs_response.data.jobs.length)
             for (j of jobs_response.data.jobs) {
-                console.log("iternating job", j)
                 console.log(j.name, ":", j.status, j.conclusion, j.started_at, j.completed_at)
                 // ignore the current job running this script
                 if (j.status != "completed") {
@@ -433,6 +432,7 @@ jobs:
                 var tag = j.name.replace(/[^\(]+\((.+)\)/g, "$1") // take only the tag which is in the curly brackets
                 var hash = sha256(tag)
                 console.log("Tag: " + tag + ", Hash: " + hash)
+                console.log("Looking in" reports)
                 var job_summary = reports[hash]
                 var job_summary_text = ""
                 if (job_summary != undefined) {
