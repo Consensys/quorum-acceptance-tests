@@ -330,19 +330,19 @@ PartyProtection
 * Wait for "quorum" state in "Node3" to be "up"
 
  Upgrade node 1
-* Stop and start "Node1" using quorum version <q_to_version> and tessera version <t_to_version>
+* Stop and start "Node1" using quorum version <q_to_version> and tessera version <t_upgd_version>
 * Wait for "quorum" state in "Node1" to be "up"
 
  Upgrade node 2
-* Stop and start "Node2" using quorum version <q_to_version> and tessera version <t_to_version>
+* Stop and start "Node2" using quorum version <q_to_version> and tessera version <t_upgd_version>
 * Wait for "quorum" state in "Node2" to be "up"
 
  Upgrade node 3
-* Stop and start "Node3" using quorum version <q_to_version> and tessera version <t_to_version>
+* Stop and start "Node3" using quorum version <q_to_version> and tessera version <t_upgd_version>
 * Wait for "quorum" state in "Node3" to be "up"
 
  Upgrade node 4
-* Stop and start "Node4" using quorum version <q_to_version> and tessera version <t_to_version>
+* Stop and start "Node4" using quorum version <q_to_version> and tessera version <t_upgd_version>
 * Wait for "quorum" state in "Node4" to be "up"
 
  Run all previous validations
