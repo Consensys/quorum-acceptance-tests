@@ -352,6 +352,7 @@ jobs:
         # - a map: sha256(tag) => summary
         run: |
           # combine all json files into one
+          tree
           all="all.json"
           for f in `ls -d testreport-*`; do
             hash=${f#testreport-}

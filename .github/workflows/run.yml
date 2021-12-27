@@ -319,6 +319,7 @@ jobs:
         # - an aggregated summary
         # - a map: sha256(tag) => summary
         run: |
+          tree
           # combine all json files into one
           all="all.json"
           for f in `ls -d testreport-*`; do
