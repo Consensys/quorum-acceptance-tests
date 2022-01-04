@@ -1,6 +1,6 @@
 # Multiple private raw smart contracts between nodes signed externally
 
- Tags: basic, spam, raw
+ Tags: basic, spam, raw, bla
 
 ## Send transactions from one node to others
 
