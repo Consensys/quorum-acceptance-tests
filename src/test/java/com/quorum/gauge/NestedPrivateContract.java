@@ -19,7 +19,7 @@
 
 package com.quorum.gauge;
 
-import com.quorum.gauge.common.PrivacyFlag;
+
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.thoughtworks.gauge.Gauge;
@@ -58,7 +58,7 @@ public class NestedPrivateContract extends AbstractSpecImplementation {
             initialValue,
             source,
             Arrays.asList(target),
-            Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())
+            privacyService.parsePrivacyFlag(privacyFlags)
         ).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
@@ -83,7 +83,7 @@ public class NestedPrivateContract extends AbstractSpecImplementation {
             c1.getContractAddress(),
             source,
             Arrays.asList(target),
-            Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())
+            privacyService.parsePrivacyFlag(privacyFlags)
         ).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
@@ -99,7 +99,7 @@ public class NestedPrivateContract extends AbstractSpecImplementation {
             Arrays.stream(target.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
             c1.getContractAddress(),
             BigInteger.valueOf(newValue),
-            Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())).blockingFirst();
+            privacyService.parsePrivacyFlag(privacyFlags)).blockingFirst();
         Gauge.writeMessage("Transaction Hash %s", receipt.getTransactionHash());
         DataStoreFactory.getScenarioDataStore().put("transactionHash", receipt.getTransactionHash());
     }

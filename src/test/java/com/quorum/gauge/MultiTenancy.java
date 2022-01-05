@@ -2,7 +2,7 @@ package com.quorum.gauge;
 
 import com.google.common.primitives.Ints;
 import com.quorum.gauge.common.Context;
-import com.quorum.gauge.common.PrivacyFlag;
+
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNetworkProperty.Node;
 import com.quorum.gauge.common.QuorumNode;
@@ -25,6 +25,7 @@ import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.core.Response;
 import org.web3j.protocol.core.methods.response.*;
 import org.web3j.protocol.exceptions.TransactionException;
+import org.web3j.quorum.PrivacyFlag;
 import org.web3j.tx.Contract;
 
 import java.math.BigInteger;
@@ -125,7 +126,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
         Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
         accessToken.ifPresent(Context::storeAccessToken);
 
-        Contract contract = contractService.createSimpleContract(42, node, ethAccount, privateFrom, privateForList, List.of(privacyFlag))
+        Contract contract = contractService.createSimpleContract(42, node, ethAccount, privateFrom, privateForList, privacyFlag)
             .doOnTerminate(Context::removeAccessToken)
             .blockingFirst();
 
@@ -159,7 +160,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
         oAuth2Service.requestAccessToken(clientName, Collections.singletonList(node.getName()), assignedScopes.get(clientName))
             .doOnNext(s -> {
                 switch (contractId) {
-                    case "SimpleStorage":
+                    case "STANDARD_PRIVATE":
                         assertThat(contractService.readSimpleContractValue(node, c.getContractAddress()).blockingFirst()).isNotZero();
                         break;
                     default:
@@ -176,7 +177,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
         Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
         assertThatThrownBy(() -> requestAccessToken(clientName)
             .doOnNext(s -> {
-                if ("SimpleStorage".equals(contractId)) {
+                if ("STANDARD_PRIVATE".equals(contractId)) {
                     contractService.readSimpleContractValue(node, c.getContractAddress()).blockingSubscribe();
                 } else {
                     throw new RuntimeException("unknown contract " + contractId + " with name " + contractName);
@@ -550,7 +551,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
 
                 Node source = networkProperty.getNode(node.name());
                 switch (realContractId) {
-                    case "SimpleStorage":
+                    case "STANDARD_PRIVATE":
                         if (wallet == null) {
                             return contractService.createSimpleContract(42, source, ethAccount, privateFrom, privateForList, null);
                         } else {

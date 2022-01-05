@@ -19,7 +19,7 @@
 
 package com.quorum.gauge;
 
-import com.quorum.gauge.common.PrivacyFlag;
+
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.core.AbstractSpecImplementation;
@@ -75,7 +75,7 @@ public class AccumulatorSmartContract extends AbstractSpecImplementation {
             networkProperty.getNode(source),
             privateForList,
             AbstractService.DEFAULT_GAS_LIMIT, initVal,
-            Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())
+            privacyService.parsePrivacyFlag(privacyFlags)
         ).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
@@ -162,7 +162,7 @@ public class AccumulatorSmartContract extends AbstractSpecImplementation {
         TransactionReceipt receipt = accumulatorService.incAccumulatorPrivate(
             networkProperty.getNode(source), privateForList, c.getContractAddress(), AbstractService.DEFAULT_GAS_LIMIT,
             value,
-            Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())
+            privacyService.parsePrivacyFlag(privacyFlags)
         ).blockingFirst();
         DataStoreFactory.getSpecDataStore().put(txReference, receipt.getTransactionHash());
         DataStoreFactory.getScenarioDataStore().put(txReference, receipt.getTransactionHash());
@@ -180,7 +180,7 @@ public class AccumulatorSmartContract extends AbstractSpecImplementation {
             () -> accumulatorService.incAccumulatorPrivate(
             networkProperty.getNode(source), privateForList, c.getContractAddress(), AbstractService.DEFAULT_GAS_LIMIT,
             value,
-            Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList()))
+            privacyService.parsePrivacyFlag(privacyFlags))
                 .blockingFirst()
         ).as("Expected exception thrown")
             .hasMessageContaining(error);

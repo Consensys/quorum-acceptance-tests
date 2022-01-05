@@ -23,6 +23,7 @@ import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.web3j.quorum.PrivacyFlag;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -97,5 +98,16 @@ public class PrivacyService extends AbstractService {
             throw new IllegalArgumentException("Node " + node + " not found in config");
         }
         return nodeConfig;
+    }
+
+    public PrivacyFlag parsePrivacyFlag(String privacyFlag) {
+        var str = privacyFlag
+            .replaceAll("StandardPrivate", "STANDARD_PRIVATE")
+            .replaceAll("PartyProtection", "PARTY_PROTECTION")
+            .replaceAll("MandatoryRecipients", "MANDATORY_FOR")
+            .replaceAll("StateValidation", "PRIVATE_STATE_VALIDATION")
+            .toUpperCase()           ;
+
+        return PrivacyFlag.valueOf(str);
     }
 }

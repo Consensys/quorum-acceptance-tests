@@ -37,6 +37,7 @@ import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.Response;
 import org.web3j.protocol.core.methods.response.EthBlockNumber;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.quorum.PrivacyFlag;
 import org.web3j.quorum.methods.response.permissioning.*;
 import org.web3j.tx.Contract;
 
@@ -675,7 +676,15 @@ public class Permissions extends AbstractSpecImplementation {
     public void setupStorecAsPublicDependentContractUntilBlockHeightReached(String contractName, int initialValue, QuorumNetworkProperty.Node node, int qip714block) {
         int curBlockHeight = utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber().intValue();
         while (curBlockHeight < qip714block) {
-            Contract c = contractService.createGenericStoreContract(node, contractName, initialValue, null, false, null, PrivacyFlag.StandardPrivate).blockingFirst();
+            Contract c = contractService.createGenericStoreContract(
+                node,
+                contractName,
+                initialValue,
+                null,
+                false,
+                null,
+                PrivacyFlag.STANDARD_PRIVATE
+            ).blockingFirst();
             assertThat(c).isNotNull();
             curBlockHeight = utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber().intValue();
             logger.debug("curBlockHeight:{} height:{}", curBlockHeight, qip714block);

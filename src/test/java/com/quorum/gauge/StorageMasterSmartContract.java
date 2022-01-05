@@ -19,7 +19,7 @@
 
 package com.quorum.gauge;
 
-import com.quorum.gauge.common.PrivacyFlag;
+
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
@@ -32,9 +32,7 @@ import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -73,7 +71,7 @@ public class StorageMasterSmartContract extends AbstractSpecImplementation {
             source,
             Collections.singletonList(target),
             AbstractService.DEFAULT_GAS_LIMIT,
-            Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())
+            privacyService.parsePrivacyFlag(privacyFlags)
         ).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
@@ -88,7 +86,7 @@ public class StorageMasterSmartContract extends AbstractSpecImplementation {
         Contract ssChild = storageMasterService.createSimpleStorageFromStorageMaster(
             source, Collections.singletonList(target), c.getContractAddress(), AbstractService.DEFAULT_GAS_LIMIT,
             10,
-            Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())
+            privacyService.parsePrivacyFlag(privacyFlags)
         ).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, ssChild);
@@ -103,7 +101,7 @@ public class StorageMasterSmartContract extends AbstractSpecImplementation {
         TransactionReceipt receipt = storageMasterService.createSimpleStorageC2C3FromStorageMaster(
             source, Collections.singletonList(target), c.getContractAddress(), AbstractService.DEFAULT_GAS_LIMIT,
             value,
-            Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())
+            privacyService.parsePrivacyFlag(privacyFlags)
         ).blockingFirst();
 
         assertThat(receipt.isStatusOK()).isTrue();
@@ -117,7 +115,7 @@ public class StorageMasterSmartContract extends AbstractSpecImplementation {
         TransactionReceipt receipt = storageMasterService.setC2C3ValueFromStorageMaster(
             source, Collections.singletonList(target), c.getContractAddress(), AbstractService.DEFAULT_GAS_LIMIT,
             value,
-            Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())
+            privacyService.parsePrivacyFlag(privacyFlags)
         ).blockingFirst();
     }
 
