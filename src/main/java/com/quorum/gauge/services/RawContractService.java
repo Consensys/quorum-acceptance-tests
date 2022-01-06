@@ -25,7 +25,6 @@ import com.quorum.gauge.common.RawDeployedContractTarget;
 import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.common.config.WalletData;
 import com.quorum.gauge.ext.PrivateClientTransactionManager;
-import com.quorum.gauge.ext.PrivateRawTransactionManager;
 import com.quorum.gauge.ext.filltx.FillTransactionResponse;
 import com.quorum.gauge.ext.filltx.PrivateFillTransaction;
 import com.quorum.gauge.sol.ClientReceipt;
@@ -62,6 +61,10 @@ import org.web3j.quorum.enclave.SendResponse;
 import org.web3j.quorum.enclave.Tessera;
 import org.web3j.quorum.enclave.protocol.EnclaveService;
 import org.web3j.quorum.methods.request.PrivateTransaction;
+import org.web3j.rlp.RlpDecoder;
+import org.web3j.rlp.RlpEncoder;
+import org.web3j.rlp.RlpList;
+import org.web3j.rlp.RlpString;
 import org.web3j.tx.Contract;
 import org.web3j.tx.RawTransactionManager;
 import org.web3j.tx.ReadonlyTransactionManager;
@@ -555,13 +558,6 @@ public class RawContractService extends AbstractService {
 
             int counter = 0;
             for (QuorumNode targetNode : targetNodes) {
-                PrivateRawTransactionManager oqrtxm = new PrivateRawTransactionManager(
-                    client,
-                    credentials,
-                    privacyService.id(source),
-                    Arrays.asList(privacyService.id(targetNode)),
-                    List.of()
-                );
                 RawPrivateContract[] rawPrivateContracts = new RawPrivateContract[count];
                 for (int j = 0; j < count; j++) {
                     int arbitraryValue = new Random().nextInt(50) + 1;
@@ -580,7 +576,7 @@ public class RawContractService extends AbstractService {
                         tmHash
                     );
                     counter++;
-                    rawPrivateContracts[j] = new RawPrivateContract(oqrtxm.sign(tx), arbitraryValue, targetNode);
+                    rawPrivateContracts[j] = new RawPrivateContract(sign(tx, credentials), arbitraryValue, targetNode);
                 }
                 allObservableContracts.add(Observable.fromArray(rawPrivateContracts)
                     .flatMap(raw -> sendRawPrivateTransaction(source, raw.rawTransaction, targetNode)
@@ -607,5 +603,45 @@ public class RawContractService extends AbstractService {
             this.value = value;
             this.node = node;
         }
+    }
+
+    public String sign(final RawTransaction rawTransaction, Credentials credentials) {
+
+        byte[] signedMessage = TransactionEncoder.signMessage(rawTransaction, credentials);
+
+            signedMessage = setPrivate(signedMessage);
+
+        return Numeric.toHexString(signedMessage);
+    }
+
+    private byte[] setPrivate(final byte[] signedMessage) {
+        // If the byte array RLP decodes to a list of size >= 1 containing a list of size >= 3
+        // then find the 3rd element from the last. If the element is a RlpString of size 1 then
+        // it should be the V component from the SignatureData structure -> mark the transaction as private.
+        // If any of of the above checks fails then return the original byte array.
+        var rlpWrappingList = RlpDecoder.decode(signedMessage);
+        var result = signedMessage;
+        if (!rlpWrappingList.getValues().isEmpty()) {
+            var rlpList = rlpWrappingList.getValues().get(0);
+            if (rlpList instanceof RlpList) {
+                var rlpListSize = ((RlpList) rlpList).getValues().size();
+                if (rlpListSize > 3) {
+                    var vField = ((RlpList) rlpList).getValues().get(rlpListSize - 3);
+                    if (vField instanceof RlpString) {
+                        if (1 == ((RlpString) vField).getBytes().length) {
+                            var first = ((RlpString) vField).getBytes()[0];
+
+                            if (first == 28) {
+                                ((RlpString) vField).getBytes()[0] = 38;
+                            } else {
+                                ((RlpString) vField).getBytes()[0] = 37;
+                            }
+                            result = RlpEncoder.encode(rlpList);
+                        }
+                    }
+                }
+            }
+        }
+        return result;
     }
 }
