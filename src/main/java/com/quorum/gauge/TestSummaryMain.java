@@ -54,7 +54,7 @@ public class TestSummaryMain {
             System.err.println("Missing args");
             System.exit(1);
         }
-        String jobId = args[0];
+        String jobId = args[0].strip();
         File xmlFile = new File(args[1]);
         File outputDir = xmlFile.getParentFile();
         if (args.length > 2) {
