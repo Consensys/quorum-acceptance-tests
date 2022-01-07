@@ -1,4 +1,5 @@
-![Run Acceptance Tests](https://github.com/ConsenSys/quorum-acceptance-tests/workflows/Run%20Acceptance%20Tests/badge.svg?branch=master)
+![Standard Acceptance Tests](https://github.com/ConsenSys/quorum-acceptance-tests/workflows/Standard%20Acceptance%20Tests/badge.svg?branch=master) 
+![Extra Acceptance Tests](https://github.com/ConsenSys/quorum-acceptance-tests/workflows/Extra%20Acceptance%20Tests%20(feature-enabled%20networks)/badge.svg?branch=master) 
 
 # Quick Start
 
