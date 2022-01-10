@@ -471,13 +471,15 @@ jobs:
                 if (job_summary != undefined) {
                   job_summary_text = `:sunny: ${job_summary.passed}   :thunder_cloud_and_rain: ${job_summary.failed}   :umbrella_with_rain_drops: ${job_summary.skipped}   `
                 }
-                job_blocks.push({
-                    type: "section",
-                    text: {
-                      type: "mrkdwn",
-                      text: `${status_icon_func(j.conclusion)} <${j.html_url}|${j.name}>\n${job_summary_text}:hourglass: ${date_diff_func(new Date(j.started_at), new Date(j.completed_at))}`
-                    }
-                })
+                if (j.conclusion == "failure") {
+                  job_blocks.push({
+                      type: "section",
+                      text: {
+                        type: "mrkdwn",
+                        text: `${status_icon_func(j.conclusion)} <${j.html_url}|${j.name}>\n${job_summary_text}:hourglass: ${date_diff_func(new Date(j.started_at), new Date(j.completed_at))}`
+                      }
+                  })
+                }
             }
             console.log("Built job_blocks :", job_blocks)
             var workflow_status = "w_cancelled"

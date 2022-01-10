@@ -356,7 +356,6 @@ jobs:
                 repo: context.repo.repo,
                 run_id: ${{ github.run_id }}
             })
-            console.log(wf_run.data)
             console.log("get jobs for workflow run:", wf_run.data.jobs_url)
             const jobs_response = await github.request(wf_run.data.jobs_url)
             console.log("Got jobs_response")
@@ -439,13 +438,15 @@ jobs:
                 if (job_summary != undefined) {
                   job_summary_text = `:sunny: ${job_summary.passed}   :thunder_cloud_and_rain: ${job_summary.failed}   :umbrella_with_rain_drops: ${job_summary.skipped}   `
                 }
-                job_blocks.push({
-                    type: "section",
-                    text: {
-                      type: "mrkdwn",
-                      text: `${status_icon_func(j.conclusion)} <${j.html_url}|${j.name}>\n${job_summary_text}:hourglass: ${date_diff_func(new Date(j.started_at), new Date(j.completed_at))}`
-                    }
-                })
+                if (j.conclusion == "failure") {
+                  job_blocks.push({
+                      type: "section",
+                      text: {
+                        type: "mrkdwn",
+                        text: `${status_icon_func(j.conclusion)} <${j.html_url}|${j.name}>\n${job_summary_text}:hourglass: ${date_diff_func(new Date(j.started_at), new Date(j.completed_at))}`
+                      }
+                  })
+                }
             }
             var workflow_status = "w_cancelled"
             if (is_wf_success) {
@@ -498,52 +499,6 @@ jobs:
             ]
             var slack_msg = {
                 blocks: [].concat(header_blocks, job_blocks)
-            }
-            return slack_msg
-      - name: 'Prepare Slack message with partial info'
-        id: short_status
-        if: failure()
-        uses: actions/github-script@0.8.0
-        with:
-          script: |
-            ////////////////////////////////////
-            // retrieve workflow run data
-            ////////////////////////////////////
-            const wf_run = await github.actions.getWorkflowRun({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                run_id: ${{ github.run_id }}
-            })
-            var date_diff_func = function(start, end) {
-                var duration = end - start
-                // format the duration
-                var delta = duration / 1000
-                var days = Math.floor(delta / 86400)
-                delta -= days * 86400
-                var hours = Math.floor(delta / 3600) % 24
-                delta -= hours * 3600
-                var minutes = Math.floor(delta / 60) % 60
-                delta -= minutes * 60
-                var seconds = Math.floor(delta % 60)
-                var format_func = function(v, text, check) {
-                    if (v <= 0 && check) {
-                        return ""
-                    } else {
-                        return v + text
-                    }
-                }
-                return format_func(days, "d", true) + format_func(hours, "h", true) + format_func(minutes, "m", true) + format_func(seconds, "s", false)
-            }
-            var slack_msg = {
-                blocks: [
-                  {
-                      type: "section",
-                      text: {
-                          type: "mrkdwn",
-                          text: `:skull_and_crossbones: *${{ github.workflow }}* <${wf_run.data.html_url}|#${{ github.run_number }}>\n:stopwatch: ${date_diff_func(new Date(wf_run.data.created_at), new Date(wf_run.data.updated_at))}`
-                      }
-                  }
-                ]
             }
             return slack_msg
       - name: 'Send to Slack'
