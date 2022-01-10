@@ -31,7 +31,7 @@ RUN apk -q --no-cache --update add tar bash \
 
 COPY . .
 
-RUN ./mvnw de.qaware.maven:go-offline-maven-plugin:resolve-dependencies -DdownloadSources -DdownloadJavadoc
+RUN ./mvnw -q compile de.qaware.maven:go-offline-maven-plugin:resolve-dependencies
 
 ENTRYPOINT ["./mvnw", "-o", "-B", "-DskipToolsCheck"]
 CMD ["test", "-Dtags=basic"]
