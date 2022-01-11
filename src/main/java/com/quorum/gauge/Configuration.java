@@ -38,6 +38,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -67,9 +68,11 @@ public class Configuration {
     }
 
     private static void configureTimeoutsAndSSL(OkHttpClient.Builder builder){
-        builder.readTimeout(5, TimeUnit.MINUTES);
-        builder.writeTimeout(5, TimeUnit.MINUTES);
-        builder.connectTimeout(5, TimeUnit.MINUTES);
+        builder.readTimeout(10, TimeUnit.MINUTES);
+        builder.writeTimeout(10, TimeUnit.MINUTES);
+        builder.connectTimeout(10, TimeUnit.MINUTES);
+        builder.callTimeout(1, TimeUnit.MINUTES);
+
         // configure to ignore SSL
         try {
             // Create a trust manager that does not validate certificate chains
