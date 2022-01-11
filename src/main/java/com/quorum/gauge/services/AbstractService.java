@@ -108,6 +108,6 @@ public abstract class AbstractService {
                                                        Enclave enclave) {
 
 
-        return new QuorumTransactionManager(web3j, credentials, privateFrom, privateFor, enclave);
+        return new QuorumTransactionManager(web3j, credentials, privateFrom, privateFor, enclave, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS);
     }
 }
