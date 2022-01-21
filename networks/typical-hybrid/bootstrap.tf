@@ -69,6 +69,14 @@ resource "quorum_bootstrap_keystore" "besu-accountkeys-generator" {
   }
 }
 
+resource "null_resource" "besu-accountkeys-permission" {
+  count    = local.number_of_besu_nodes
+  provisioner "local-exec" {
+    command = "chmod 644 ${format("%s/%s", local.ethsigner_dirs[count.index], local.keystore_folder)}/*"
+  }
+  depends_on = [    quorum_bootstrap_keystore.besu-accountkeys-generator,  ]
+}
+
 resource "quorum_bootstrap_keystore" "quorum-accountkeys-generator" {
   count                = local.number_of_quorum_nodes
   keystore_dir         = format("%s/%s%s/keystore", quorum_bootstrap_network.this.network_dir_abs, local.quorum_node_dir_prefix, count.index)

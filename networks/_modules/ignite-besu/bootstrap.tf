@@ -49,6 +49,14 @@ resource "quorum_bootstrap_keystore" "accountkeys-generator" {
   }
 }
 
+resource "null_resource" "accountkeys-permission" {
+  count    = local.number_of_nodes
+  provisioner "local-exec" {
+    command = "chmod 644 ${format("%s/%s", local.ethsigner_dirs[count.index], local.keystore_folder)}/*"
+  }
+  depends_on = [    quorum_bootstrap_keystore.accountkeys-generator,  ]
+}
+
 resource "local_file" "keystore_password" {
   count    = local.number_of_nodes
   filename = format("%s/%s", local.ethsigner_dirs[count.index], local.keystore_password_file)
