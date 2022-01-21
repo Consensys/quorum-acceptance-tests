@@ -67,14 +67,9 @@ resource "quorum_bootstrap_keystore" "besu-accountkeys-generator" {
       balance    = "1000000000000000000000000000"
     }
   }
-}
-
-resource "null_resource" "besu-accountkeys-permission" {
-  count    = local.number_of_besu_nodes
   provisioner "local-exec" {
     command = "chmod 644 ${format("%s/%s", local.ethsigner_dirs[count.index], local.keystore_folder)}/*"
   }
-  depends_on = [    quorum_bootstrap_keystore.besu-accountkeys-generator,  ]
 }
 
 resource "quorum_bootstrap_keystore" "quorum-accountkeys-generator" {
