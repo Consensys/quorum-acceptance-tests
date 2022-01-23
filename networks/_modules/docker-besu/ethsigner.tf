@@ -51,9 +51,6 @@ resource "docker_container" "ethsigner" {
     <<RUN
 echo "EthSigner${count.index + 1}"
 
-apt-get update
-apt-get install -y netcat
-
 /opt/ethsigner/bin/ethsigner \
   --chain-id=${var.chainId} \
   --http-listen-host=0.0.0.0 \

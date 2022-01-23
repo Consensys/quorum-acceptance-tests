@@ -67,6 +67,9 @@ resource "quorum_bootstrap_keystore" "besu-accountkeys-generator" {
       balance    = "1000000000000000000000000000"
     }
   }
+  provisioner "local-exec" {
+    command = "chmod 644 ${format("%s/%s", local.ethsigner_dirs[count.index], local.keystore_folder)}/*"
+  }
 }
 
 resource "quorum_bootstrap_keystore" "quorum-accountkeys-generator" {
