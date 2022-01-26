@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.Request;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 @Service
@@ -67,4 +68,14 @@ public class DebugService extends AbstractService {
         return request.flowable().toObservable();
     }
 
+    public Observable<JsonResponse> dumpAddress(QuorumNetworkProperty.Node source, String address, String blockNumber) {
+
+        Request<?, JsonResponse> request = new Request<>(
+            "debug_dumpAddress",
+            Arrays.asList(address, blockNumber),
+            connectionFactory().getWeb3jService(source), JsonResponse.class
+        );
+
+        return request.flowable().toObservable();
+    }
 }

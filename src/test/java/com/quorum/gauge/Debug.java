@@ -58,6 +58,17 @@ public class Debug extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(psrName, result);
     }
 
+    @Step("Check on <node> that account <account> does not exist at <blockHeight>")
+    public void accountDoesNotExistAtBlockHeight(String node, String account, String blockHeight) {
+        final String blockNumber = "0x" + mustHaveValue(DataStoreFactory.getScenarioDataStore(), blockHeight, BigInteger.class).toString(16);
+        final Observable<JsonResponse> jsonResponse = debugService.dumpAddress(networkProperty.getNode(node), account, blockNumber);
+        JsonResponse result = jsonResponse.blockingFirst();
+
+        assertThat(result.getResult()).isNull();
+        assertThat(result.hasError()).isTrue();
+        assertThat(result.getError().getMessage()).contains("error retrieving state");
+    }
+
     @Step("Retrieve the empty state root on <node> for <blockHeight> and name it <psrName>")
     public void emptyStateRoot(String node, String blockHeight, String psrName) {
         final String blockNumber = "0x" + mustHaveValue(DataStoreFactory.getScenarioDataStore(), blockHeight, BigInteger.class).toString(16);
