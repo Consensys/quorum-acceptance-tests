@@ -25,6 +25,12 @@ variable "privacy_marker_transactions" {
   description = "Enable privacy marker transactions on the node"
 }
 
+variable "private_trie_cache" {
+  type        = bool
+  default     = true
+  description = "Enable private trie cache"
+}
+
 variable "output_dir" {
   default = "/tmp"
 }

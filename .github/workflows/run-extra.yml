@@ -101,72 +101,177 @@ jobs:
             privacy-enhancements: true
             privacy-precompile: false
             privacy-marker-transactions: false
+            private-trie-cache: false
           - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || mandatory-recipients || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
             privacy-enhancements: true
             privacy-precompile: false
             privacy-marker-transactions: false
+            private-trie-cache: false
           # privacy precompile/privacy marker transaction tests
           - tag: 'basic || basic-raft || (advanced && raft) || networks/typical::raft'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: false
+            private-trie-cache: false
           - tag: 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: false
+            private-trie-cache: false
           - tag: 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: false
+            private-trie-cache: false
           - tag: '(multitenancy || privacy-precompile-enabled) && networks/plugins::raft-multitenancy'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: true
+            private-trie-cache: false
           - tag: '(basic && !privacy-precompile-disabled) || basic-raft || (advanced && raft) || networks/typical::raft-simple-mps'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: true
+            private-trie-cache: false
           - tag: '(basic && !privacy-precompile-disabled) || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul-simple-mps'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: true
+            private-trie-cache: false
           - tag: '(basic && !privacy-precompile-disabled) || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-simple-mps'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: true
+            private-trie-cache: false
           - tag: '(basic && !privacy-precompile-disabled) || networks/typical::raftmps'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: true
+            private-trie-cache: false
           - tag: '(basic && !privacy-precompile-disabled) || networks/typical::istanbulmps'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: true
+            private-trie-cache: false
           - tag: '(basic && !privacy-precompile-disabled) || networks/typical::qbftmps'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: true
+            private-trie-cache: false
           # privacy enhancements + privacy precompile/privacy marker transaction tests
           - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || mandatory-recipients || privacy-precompile-enabled || basic-raft || (advanced && raft) || networks/typical::raft'
             privacy-enhancements: true
             privacy-precompile: true
             privacy-marker-transactions: true
+            private-trie-cache: false
           - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || mandatory-recipients || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
             privacy-enhancements: true
             privacy-precompile: true
             privacy-marker-transactions: true
+            private-trie-cache: false
           - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || mandatory-recipients || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/typical::qbft'
             privacy-enhancements: true
             privacy-precompile: true
             privacy-marker-transactions: true
+            private-trie-cache: false
           - tag: 'privacy-precompile-compatibility && networks/template::raft-4nodes'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: false # do not enable pmts as the test will do this on the necessary nodes
+            private-trie-cache: false
           - tag: 'privacy-precompile-compatibility && networks/template::istanbul-4nodes'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: false # do not enable pmts as the test will do this on the necessary nodes
+            private-trie-cache: false
+          # privacy enhancements tests
+          - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || mandatory-recipients || basic-raft || (advanced && raft) || networks/typical::raft'
+            privacy-enhancements: true
+            privacy-precompile: false
+            privacy-marker-transactions: false
+            private-trie-cache: false
+          - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || mandatory-recipients || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
+            privacy-enhancements: true
+            privacy-precompile: false
+            privacy-marker-transactions: false
+            private-trie-cache: true
+          # privacy precompile/privacy marker transaction tests
+          - tag: 'basic || basic-raft || (advanced && raft) || networks/typical::raft'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: false
+            private-trie-cache: true
+          - tag: 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: false
+            private-trie-cache: true
+          - tag: 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: false
+            private-trie-cache: true
+          - tag: '(multitenancy || privacy-precompile-enabled) && networks/plugins::raft-multitenancy'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: true
+            private-trie-cache: true
+          - tag: '(basic && !privacy-precompile-disabled) || basic-raft || (advanced && raft) || networks/typical::raft-simple-mps'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: true
+            private-trie-cache: true
+          - tag: '(basic && !privacy-precompile-disabled) || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul-simple-mps'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: true
+            private-trie-cache: true
+          - tag: '(basic && !privacy-precompile-disabled) || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-simple-mps'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: true
+            private-trie-cache: true
+          - tag: '(basic && !privacy-precompile-disabled) || networks/typical::raftmps'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: true
+            private-trie-cache: true
+          - tag: '(basic && !privacy-precompile-disabled) || networks/typical::istanbulmps'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: true
+            private-trie-cache: true
+          - tag: '(basic && !privacy-precompile-disabled) || networks/typical::qbftmps'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: true
+            private-trie-cache: true
+          # privacy enhancements + privacy precompile/privacy marker transaction tests
+          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || mandatory-recipients || privacy-precompile-enabled || basic-raft || (advanced && raft) || networks/typical::raft'
+            privacy-enhancements: true
+            privacy-precompile: true
+            privacy-marker-transactions: true
+            private-trie-cache: true
+          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || mandatory-recipients || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
+            privacy-enhancements: true
+            privacy-precompile: true
+            privacy-marker-transactions: true
+            private-trie-cache: true
+          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || mandatory-recipients || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/typical::qbft'
+            privacy-enhancements: true
+            privacy-precompile: true
+            privacy-marker-transactions: true
+            private-trie-cache: true
+          - tag: 'privacy-precompile-compatibility && networks/template::raft-4nodes'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: false # do not enable pmts as the test will do this on the necessary nodes
+            private-trie-cache: true
+          - tag: 'privacy-precompile-compatibility && networks/template::istanbul-4nodes'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: false # do not enable pmts as the test will do this on the necessary nodes
+            private-trie-cache: true
     runs-on: ubuntu-18.04
     steps:
       - name: 'Download docker image'
@@ -223,6 +328,7 @@ jobs:
           echo "TF_VAR_privacy_enhancements={block=0, enabled=${{ matrix.privacy-enhancements}}}" >> $dockerEnvFile
           echo "TF_VAR_privacy_precompile={block=0, enabled=${{ matrix.privacy-precompile}}}" >> $dockerEnvFile
           echo "TF_VAR_privacy_marker_transactions=${{ matrix.privacy-marker-transactions}}" >> $dockerEnvFile
+          echo "TF_VAR_private_trie_cache=${{ matrix.private-trie-cache}}" >> $dockerEnvFile
           echo "::set-output name=tag::$tagKey"
           echo "::set-output name=mvnArg::$mvnArg"
           echo "::set-output name=dockerEnv::$dockerEnv"
