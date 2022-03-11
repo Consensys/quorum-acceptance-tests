@@ -17,7 +17,6 @@ locals {
   # support qlight - clients do not use tessera. ql-clients, ql-servers, and non-server full nodes all use unique CLI flags.
   qlight_client_indices = keys(var.qlight_clients)
   qlight_server_indices = var.qlight_server_indices
-  full_node_count = local.number_of_nodes - length(local.qlight_client_indices)
   full_node_indices = setsubtract(range(local.number_of_nodes), local.qlight_client_indices)
 
   unchangeable_geth_env = {

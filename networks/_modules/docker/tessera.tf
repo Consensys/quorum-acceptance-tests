@@ -1,5 +1,5 @@
 resource "docker_container" "tessera" {
-  count             = local.full_node_count
+  count             = length(local.full_node_indices)
   name              = format("%s-tm%d", var.network_name, local.full_node_indices[count.index])
   depends_on        = [docker_image.local, docker_image.registry]
   image             = var.tm_networking[local.full_node_indices[count.index]].image.name
