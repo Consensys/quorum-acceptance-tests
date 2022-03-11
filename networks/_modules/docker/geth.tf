@@ -4,29 +4,29 @@ locals {
 }
 
 resource "docker_container" "geth" {
-  count      = length(local.full_node_indices)
-  name       = format("%s-node%d", var.network_name, local.full_node_indices[count.index])
+  count      = local.number_of_nodes
+  name       = format("%s-node%d", var.network_name, count.index)
   depends_on = [docker_container.ethstats, docker_image.registry, docker_image.local]
-  image      = var.geth_networking[local.full_node_indices[count.index]].image.name
-  hostname   = format("node%d", local.full_node_indices[count.index])
+  image      = var.geth_networking[count.index].image.name
+  hostname   = format("node%d", count.index)
   restart    = "no"
-  must_run   = local.must_start[local.full_node_indices[count.index]]
-  start      = local.must_start[local.full_node_indices[count.index]]
+  must_run   = local.must_start[count.index]
+  start      = local.must_start[count.index]
   labels {
     label = "QuorumContainer"
-    value = local.full_node_indices[count.index]
+    value = count.index
   }
   ports {
-    internal = var.geth_networking[local.full_node_indices[count.index]].port.p2p
+    internal = var.geth_networking[count.index].port.p2p
   }
   ports {
-    internal = var.geth_networking[local.full_node_indices[count.index]].port.qlight
+    internal = var.geth_networking[count.index].port.qlight
   }
   ports {
-    internal = var.geth_networking[local.full_node_indices[count.index]].port.raft
+    internal = var.geth_networking[count.index].port.raft
   }
   dynamic "ports" {
-    for_each = concat(local.publish_http_ports[local.full_node_indices[count.index]], local.publish_ws_ports[local.full_node_indices[count.index]])
+    for_each = concat(local.publish_http_ports[count.index], local.publish_ws_ports[count.index])
     content {
       internal = ports.value["internal"]
       external = ports.value["external"]
@@ -34,18 +34,18 @@ resource "docker_container" "geth" {
   }
   volumes {
     container_path = "/data"
-    volume_name    = docker_volume.shared_volume[local.full_node_indices[count.index]].name
+    volume_name    = docker_volume.shared_volume[count.index].name
   }
   volumes {
     container_path = local.container_geth_datadir_mounted
-    host_path      = var.geth_datadirs[local.full_node_indices[count.index]]
+    host_path      = var.geth_datadirs[count.index]
   }
   volumes {
     container_path = local.container_plugin_acctdir
-    host_path      = length(local_file.plugin_acct_dir_files) != 0 ? dirname(local_file.plugin_acct_dir_files[local.full_node_indices[count.index]].filename) : dirname(local_file.plugin_acct_fallback_dir_files[local.full_node_indices[count.index]].filename)
+    host_path      = length(local_file.plugin_acct_dir_files) != 0 ? dirname(local_file.plugin_acct_dir_files[count.index].filename) : dirname(local_file.plugin_acct_fallback_dir_files[count.index].filename)
   }
   dynamic "volumes" {
-    for_each = lookup(var.additional_geth_container_vol, local.full_node_indices[count.index], [])
+    for_each = lookup(var.additional_geth_container_vol, count.index, [])
     content {
       container_path = volumes.value["container_path"]
       host_path      = volumes.value["host_path"]
@@ -53,12 +53,12 @@ resource "docker_container" "geth" {
   }
   networks_advanced {
     name         = docker_network.quorum.name
-    ipv4_address = var.geth_networking[local.full_node_indices[count.index]].ip.private
-    aliases      = [format("node%d", local.full_node_indices[count.index])]
+    ipv4_address = var.geth_networking[count.index].ip.private
+    aliases      = [format("node%d", count.index)]
   }
-  env = local.geth_env
+  env = contains(local.qlight_client_indices, count.index) ? local.qlight_env : local.geth_env
   healthcheck {
-    test         = ["CMD", "nc", "-vz", "localhost", var.geth_networking[local.full_node_indices[count.index]].port.http.internal]
+    test         = ["CMD", "nc", "-vz", "localhost", var.geth_networking[count.index].port.http.internal]
     interval     = "3s"
     retries      = 10
     timeout      = "3s"
@@ -68,7 +68,7 @@ resource "docker_container" "geth" {
     "/bin/sh",
     "-c",
     <<RUN
-#Quorum${local.full_node_indices[count.index] + 1}
+#Quorum${count.index + 1}
 
 echo "Original files in datadir (ls ${local.container_geth_datadir})"
 ls ${local.container_geth_datadir}
@@ -92,7 +92,11 @@ echo "Deleting any files in ${local.container_plugin_acctdir}"
 rm ${local.container_plugin_acctdir}/*
 echo "ls ${local.container_plugin_acctdir}"
 ls ${local.container_plugin_acctdir}
+
+%{if contains(local.full_node_indices, count.index)~}
 ${local.container_geth_datadir_mounted}/wait-for-tessera.sh
+%{endif~}
+
 exec ${local.container_geth_datadir_mounted}/start-geth.sh
 RUN
   ]
@@ -102,7 +106,8 @@ RUN
     content    = <<EOF
 #!/bin/sh
 
-URL="${var.tm_networking[local.full_node_indices[count.index]].ip.private}:${var.tm_networking[local.full_node_indices[count.index]].port.p2p}/upcheck"
+%{if contains(local.full_node_indices, count.index)~}
+URL="${var.tm_networking[count.index].ip.private}:${var.tm_networking[count.index].port.p2p}/upcheck"
 
 UDS_WAIT=10
 for i in $(seq 1 100)
@@ -116,6 +121,7 @@ do
     sleep $UDS_WAIT
   fi
 done
+%{endif~}
 EOF
   }
 
@@ -148,49 +154,58 @@ rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 if [[ $VERSION == '2.5.0' ]]; then
   HTTP_ARGS="--rpc \
   --rpcaddr 0.0.0.0 \
-  --rpcport ${var.geth_networking[local.full_node_indices[count.index]].port.http.internal} \
+  --rpcport ${var.geth_networking[count.index].port.http.internal} \
   --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,quorumPermission,quorumExtension,${(var.consensus == "istanbul" || var.consensus == "qbft" ? "istanbul" : "raft")} "
 
-  export ADDITIONAL_GETH_ARGS="${lookup(var.additional_geth_args, local.full_node_indices[count.index], "")} $ADDITIONAL_GETH_ARGS" | sed 's/--allow-insecure-unlock//g'
+  export ADDITIONAL_GETH_ARGS="${lookup(var.additional_geth_args, count.index, "")} $ADDITIONAL_GETH_ARGS" | sed 's/--allow-insecure-unlock//g'
 else
   HTTP_ARGS="--http \
   --http.addr 0.0.0.0 \
-  --http.port ${var.geth_networking[local.full_node_indices[count.index]].port.http.internal} \
+  --http.port ${var.geth_networking[count.index].port.http.internal} \
   --http.api admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,quorumPermission,quorumExtension,${(var.consensus == "istanbul" || var.consensus == "qbft" ? "istanbul" : "raft")} "
 
-  export ADDITIONAL_GETH_ARGS="${lookup(var.additional_geth_args, local.full_node_indices[count.index], "")} $ADDITIONAL_GETH_ARGS"
+  export ADDITIONAL_GETH_ARGS="${lookup(var.additional_geth_args, count.index, "")} $ADDITIONAL_GETH_ARGS"
 fi
 
-ARGS="--identity Node${local.full_node_indices[count.index] + 1} \
+if ${contains(local.qlight_server_indices, count.index)}; then
+  QLIGHT_ARGS="--qlight.server \
+  --qlight.server.p2p.port ${var.geth_networking[count.index].port.qlight}"
+elif ${contains(local.qlight_client_indices, count.index)}; then
+  QLIGHT_ARGS="--qlight.client \
+  --qlight.client.PSI PS1 \
+  --qlight.client.serverNode \"enode://3d9ca5956b38557aba991e31cf510d4df641dce9cc26bfeb7de082f0c07abb6ede3a58410c8f249dabeecee4ad3979929ac4c7c496ad20b8cfdd061b7401b4f5@127.0.0.1:23003?discport=0&raftport=50404\" \
+  --qlight.client.serverNodeRPC \"http://127.0.0.1:22003/?PSI=PS1\""
+fi
+
+ARGS="--identity Node${count.index + 1} \
   --datadir ${local.container_geth_datadir} \
   --nodiscover \
   --verbosity 5 \
   --networkid ${var.network_id} \
-  --nodekeyhex ${var.node_keys_hex[local.full_node_indices[count.index]]} \
+  --nodekeyhex ${var.node_keys_hex[count.index]} \
   $HTTP_ARGS \
 %{if var.privacy_marker_transactions~}
   --privacymarker.enable \
 %{endif~}
-%{if var.geth_networking[local.full_node_indices[count.index]].port.ws != null~}
+%{if var.geth_networking[count.index].port.ws != null~}
   --ws \
   --wsaddr 0.0.0.0 \
-  --wsport ${var.geth_networking[local.full_node_indices[count.index]].port.ws.internal} \
+  --wsport ${var.geth_networking[count.index].port.ws.internal} \
   --wsapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,${var.consensus} \
 %{endif~}
-%{if var.geth_networking[local.full_node_indices[count.index]].graphql~}
+%{if var.geth_networking[count.index].graphql~}
   --graphql \
 %{endif~}
-  --port ${var.geth_networking[local.full_node_indices[count.index]].port.p2p} \
+  --port ${var.geth_networking[count.index].port.p2p} \
 %{if var.enable_ethstats~}
-  --ethstats "Node${local.full_node_indices[count.index] + 1}:${var.ethstats_secret}@${var.ethstats_ip}:${var.ethstats.container.port}" \
+  --ethstats "Node${count.index + 1}:${var.ethstats_secret}@${var.ethstats_ip}:${var.ethstats.container.port}" \
 %{endif~}
-%{if contains(local.qlight_server_indices, local.full_node_indices[count.index])~}
-  --qlight.server \
-  --qlight.server.p2p.port ${var.geth_networking[local.full_node_indices[count.index]].port.qlight}
-%{endif~}
-  --unlock ${join(",", range(var.accounts_count[local.full_node_indices[count.index]]))} \
+  --unlock ${join(",", range(var.accounts_count[count.index]))} \
   --password ${local.container_geth_datadir}/${var.password_file_name} \
-  ${(var.consensus == "istanbul" || var.consensus == "qbft") ? "--istanbul.blockperiod 1 --syncmode full --mine --miner.threads 1" : format("--raft --raftport %d", var.geth_networking[local.full_node_indices[count.index]].port.raft)} \
+%{if contains(local.full_node_indices, count.index)~}
+  ${(var.consensus == "istanbul" || var.consensus == "qbft") ? "--istanbul.blockperiod 1 --syncmode full --mine --miner.threads 1" : format("--raft --raftport %d", var.geth_networking[count.index].port.raft)} \
+%{endif~}
+  $QLIGHT_ARGS \
   $ADDITIONAL_GETH_ARGS"
 
 echo "Running Geth with ARGS"
