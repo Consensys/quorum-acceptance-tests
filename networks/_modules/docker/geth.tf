@@ -93,9 +93,12 @@ rm ${local.container_plugin_acctdir}/*
 echo "ls ${local.container_plugin_acctdir}"
 ls ${local.container_plugin_acctdir}
 
-%{if contains(local.full_node_indices, count.index)~}
-${local.container_geth_datadir_mounted}/wait-for-tessera.sh
-%{endif~}
+if ${contains(local.full_node_indices, count.index)}; then
+  echo "waiting for tessera"
+  ${local.container_geth_datadir_mounted}/wait-for-tessera.sh
+else
+  echo "not waiting for tessera"
+fi
 
 exec ${local.container_geth_datadir_mounted}/start-geth.sh
 RUN
@@ -106,22 +109,26 @@ RUN
     content    = <<EOF
 #!/bin/sh
 
-%{if contains(local.full_node_indices, count.index)~}
-URL="${var.tm_networking[count.index].ip.private}:${var.tm_networking[count.index].port.p2p}/upcheck"
+if ${contains(local.full_node_indices, count.index)}; then
+  echo "waiting for tessera"
+  URL="${var.tm_networking[count.index].ip.private}:${var.tm_networking[count.index].port.p2p}/upcheck"
 
-UDS_WAIT=10
-for i in $(seq 1 100)
-do
-  result=$(wget --timeout $UDS_WAIT -qO- --proxy off $URL)
-  echo "$result"
-  if [ -S $PRIVATE_CONFIG ] && [ "I'm up!" = "$result" ]; then
-    break
-  else
-    echo "Sleep $UDS_WAIT seconds. Waiting for TxManager."
-    sleep $UDS_WAIT
-  fi
-done
-%{endif~}
+  UDS_WAIT=10
+  for i in $(seq 1 100)
+  do
+    result=$(wget --timeout $UDS_WAIT -qO- --proxy off $URL)
+    echo "$result"
+    if [ -S $PRIVATE_CONFIG ] && [ "I'm up!" = "$result" ]; then
+      break
+    else
+      echo "Sleep $UDS_WAIT seconds. Waiting for TxManager."
+      sleep $UDS_WAIT
+    fi
+  done
+else
+  echo "not waiting for tessera"
+fi
+
 EOF
   }
 
@@ -171,10 +178,10 @@ if ${contains(local.qlight_server_indices, count.index)}; then
   QLIGHT_ARGS="--qlight.server \
   --qlight.server.p2p.port ${var.geth_networking[count.index].port.qlight}"
 elif ${contains(local.qlight_client_indices, count.index)}; then
+  # TODO(cjh) make enode and rpc addr dynamic not hardcoded
   QLIGHT_ARGS="--qlight.client \
-  --qlight.client.PSI PS1 \
   --qlight.client.serverNode \"enode://3d9ca5956b38557aba991e31cf510d4df641dce9cc26bfeb7de082f0c07abb6ede3a58410c8f249dabeecee4ad3979929ac4c7c496ad20b8cfdd061b7401b4f5@127.0.0.1:23003?discport=0&raftport=50404\" \
-  --qlight.client.serverNodeRPC \"http://127.0.0.1:22003/?PSI=PS1\""
+  --qlight.client.serverNodeRPC \"http://127.0.0.1:22003\""
 fi
 
 ARGS="--identity Node${count.index + 1} \

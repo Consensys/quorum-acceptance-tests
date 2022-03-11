@@ -23,3 +23,22 @@ output "tessera_containers" {
   value       = docker_container.tessera[*].id
   description = "List of container ids"
 }
+
+
+
+### DEBUG ###
+output "debug_qlight_client_indices" {
+  value = local.qlight_client_indices
+}
+
+output "debug_qlight_server_indices" {
+  value = local.qlight_server_indices
+}
+
+output "debug_full_node_indices" {
+  value = local.full_node_indices
+}
+
+output "debug_all_node_indices" {
+  value = range(local.number_of_nodes)
+}

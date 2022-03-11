@@ -15,9 +15,9 @@ locals {
   must_start = [for idx in local.node_indices : tobool(lookup(local.quorum_initial_paticipants, idx, "false")) && tobool(var.start_quorum)]
 
   # support qlight - clients do not use tessera. ql-clients, ql-servers, and non-server full nodes all use unique CLI flags.
-  qlight_client_indices = keys(var.qlight_clients)
+  qlight_client_indices = [for k in keys(var.qlight_clients) : parseint(k, 10)] # map keys are string type, so convert to int
   qlight_server_indices = var.qlight_server_indices
-  full_node_indices = setsubtract(range(local.number_of_nodes), local.qlight_client_indices)
+  full_node_indices = tolist(setsubtract(range(local.number_of_nodes), local.qlight_client_indices)) # note: order of the resulting list is not guaranteed as we are converting from a set
 
   unchangeable_geth_env = {
     PRIVATE_CONFIG = local.container_tm_ipc_file
