@@ -27,6 +27,10 @@ output "tessera_containers" {
 
 
 ### DEBUG ###
+output "debug_qlight_clients" {
+  value = var.qlight_clients
+}
+
 output "debug_qlight_client_indices" {
   value = local.qlight_client_indices
 }

@@ -155,3 +155,15 @@ variable "qlight_server_indices" {
   default = []
   description = "List of which nodes are qlight servers (by 0-based index)"
 }
+
+variable "enode_urls" {
+  type = list(string)
+  default = []
+  description = "List of enode urls (surrounded by escaped double quotes)"
+}
+
+variable "node_rpc_urls" {
+  type = list(string)
+  default = []
+  description = "List of RPC urls (surrounded by escaped double quotes)"
+}

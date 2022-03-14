@@ -174,15 +174,19 @@ else
   export ADDITIONAL_GETH_ARGS="${lookup(var.additional_geth_args, count.index, "")} $ADDITIONAL_GETH_ARGS"
 fi
 
-if ${contains(local.qlight_server_indices, count.index)}; then
-  QLIGHT_ARGS="--qlight.server \
+%{if contains(local.qlight_server_indices, count.index)~}
+echo "CHRISSY qlight server"
+QLIGHT_ARGS="--qlight.server \
   --qlight.server.p2p.port ${var.geth_networking[count.index].port.qlight}"
-elif ${contains(local.qlight_client_indices, count.index)}; then
-  # TODO(cjh) make enode and rpc addr dynamic not hardcoded
-  QLIGHT_ARGS="--qlight.client \
-  --qlight.client.serverNode \"enode://3d9ca5956b38557aba991e31cf510d4df641dce9cc26bfeb7de082f0c07abb6ede3a58410c8f249dabeecee4ad3979929ac4c7c496ad20b8cfdd061b7401b4f5@127.0.0.1:23003?discport=0&raftport=50404\" \
-  --qlight.client.serverNodeRPC \"http://127.0.0.1:22003\""
-fi
+%{endif}
+
+%{if contains(local.qlight_client_indices, count.index)~}
+echo "CHRISSY qlight client"
+QLIGHT_ARGS="--qlight.client \
+  --qlight.client.serverNode ${var.enode_urls[var.qlight_clients[format("%d", count.index)].ql_server_idx]} \
+  --qlight.client.serverNodeRPC ${var.node_rpc_urls[var.qlight_clients[format("%d", count.index)].ql_server_idx]}"
+%{endif}
+
 
 ARGS="--identity Node${count.index + 1} \
   --datadir ${local.container_geth_datadir} \
