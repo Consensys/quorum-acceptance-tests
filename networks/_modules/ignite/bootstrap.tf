@@ -62,8 +62,8 @@ resource "quorum_bootstrap_network" "this" {
 }
 
 resource "quorum_bootstrap_keystore" "accountkeys-generator" {
-  count                = local.hybrid_network ? 0 : local.number_of_nodes
-  keystore_dir         = format("%s/%s%s/keystore", quorum_bootstrap_network.this.network_dir_abs, local.node_dir_prefix, count.index)
+  count                = local.hybrid_network ? 0 : local.number_of_nodes - length(var.qlight_client_indices)
+  keystore_dir         = format("%s/%s%s/keystore", quorum_bootstrap_network.this.network_dir_abs, local.node_dir_prefix, local.non_qlight_client_node_indices[count.index])
   use_light_weight_kdf = true
 
   dynamic "account" {

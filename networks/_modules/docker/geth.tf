@@ -182,10 +182,9 @@ QLIGHT_ARGS="--qlight.server \
 
 %{if contains(local.qlight_client_indices, count.index)~}
 echo "CHRISSY qlight client"
-QLIGHT_ARGS="--qlight.client \
-  --qlight.client.serverNode ${var.enode_urls[var.qlight_clients[format("%d", count.index)].ql_server_idx]} \
-  --qlight.client.serverNodeRPC ${var.node_rpc_urls[var.qlight_clients[format("%d", count.index)].ql_server_idx]}"
+QLIGHT_ARGS="--qlight.client --qlight.client.serverNode ${var.enode_urls[var.qlight_clients[format("%d", count.index)].ql_server_idx]} --qlight.client.serverNodeRPC ${var.node_rpc_urls[var.qlight_clients[format("%d", count.index)].ql_server_idx]}"
 %{endif}
+echo "CHRISSY QLIGHT_ARGS=$QLIGHT_ARGS"
 
 
 ARGS="--identity Node${count.index + 1} \
@@ -211,7 +210,9 @@ ARGS="--identity Node${count.index + 1} \
 %{if var.enable_ethstats~}
   --ethstats "Node${count.index + 1}:${var.ethstats_secret}@${var.ethstats_ip}:${var.ethstats.container.port}" \
 %{endif~}
+%{if !contains(local.qlight_client_indices, count.index)~}
   --unlock ${join(",", range(var.accounts_count[count.index]))} \
+%{endif}
   --password ${local.container_geth_datadir}/${var.password_file_name} \
 %{if contains(local.full_node_indices, count.index)~}
   ${(var.consensus == "istanbul" || var.consensus == "qbft") ? "--istanbul.blockperiod 1 --syncmode full --mine --miner.threads 1" : format("--raft --raftport %d", var.geth_networking[count.index].port.raft)} \

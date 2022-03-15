@@ -18,6 +18,7 @@ locals {
   genesis_file              = "genesis.json"
   number_of_nodes           = length(var.geth_networking)
   node_indices              = range(local.number_of_nodes) // 0-based node index
+  non_qlight_client_node_indices    = [for idx in local.node_indices : idx if !contains(var.qlight_client_indices, idx)] // nodes in the consensus (e.g. not a qlight client node)
   hybrid_network            = var.hybrid_network
   // by default we allocate one named key per TM: K0, K1 ... Kn
   // this can be overrriden by the variable
@@ -101,7 +102,9 @@ quorum:
 %{endfor~}
       account-aliases:
 %{for k, name in b.ethKeys~}
+%{if i < length(quorum_bootstrap_keystore.accountkeys-generator)~}
         ${name}: "${element(quorum_bootstrap_keystore.accountkeys-generator[i].account.*.address, index(local.named_accounts_alloc[i], name))}"
+%{endif}
 %{endfor~}
 %{endfor~}
 %{endfor~}

@@ -37,3 +37,35 @@ output "exclude_initial_nodes" {
 output "accounts_count" {
   value = { for id in local.node_indices : id => length(local.named_accounts_alloc[id]) }
 }
+
+output "enode_urls" {
+  value = local.enode_urls
+}
+
+output "node_rpc_urls" {
+  value = [for u in data.null_data_source.meta[*].inputs.nodeUrl : "\"${u}\""]
+}
+
+output "debug_istanbul_validators" {
+  value = local.istanbul_validators
+}
+
+output "debug_non_qlight_client_node_indices" {
+  value = local.non_qlight_client_node_indices
+}
+
+
+
+
+
+output "debug_tm_named_keys_all" {
+  value = local.tm_named_keys_all
+}
+
+output "debug_public_key_b64" {
+  value = local.public_key_b64
+}
+
+output "debug_vnodes" {
+  value = local.vnodes
+}

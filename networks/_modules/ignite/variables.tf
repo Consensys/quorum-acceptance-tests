@@ -174,3 +174,7 @@ variable "hybrid_key_data" {
   default = []
   description = "tessera key data for hybrid network"
 }
+
+variable "qlight_client_indices" {
+  type = list(number)
+}
