@@ -56,7 +56,7 @@ resource "docker_container" "geth" {
     ipv4_address = var.geth_networking[count.index].ip.private
     aliases      = [format("node%d", count.index)]
   }
-  env = contains(local.qlight_client_indices, count.index) ? local.qlight_env : local.geth_env
+  env = contains(local.qlight_client_indices, count.index) ? local.qlight_client_env : local.geth_env
   healthcheck {
     test         = ["CMD", "nc", "-vz", "localhost", var.geth_networking[count.index].port.http.internal]
     interval     = "3s"
@@ -174,7 +174,7 @@ else
   export ADDITIONAL_GETH_ARGS="${lookup(var.additional_geth_args, count.index, "")} $ADDITIONAL_GETH_ARGS"
 fi
 
-%{if contains(local.qlight_server_indices, count.index)~}
+%{if contains(var.qlight_server_indices, count.index)~}
 echo "CHRISSY qlight server"
 QLIGHT_ARGS="--qlight.server \
   --qlight.server.p2p.port ${var.geth_networking[count.index].port.qlight}"

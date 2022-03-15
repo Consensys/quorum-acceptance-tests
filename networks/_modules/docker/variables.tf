@@ -146,24 +146,20 @@ variable "accounts_count" {
 
 variable "qlight_clients" {
   type = map(object({ ql_server_idx = number }))
-  default = {}
   description = "Map of which nodes are qlight clients (by 0-based index) and additional config including the index of their corresponding server node"
 }
 
 variable "qlight_server_indices" {
   type = list(number)
-  default = []
   description = "List of which nodes are qlight servers (by 0-based index)"
 }
 
 variable "enode_urls" {
   type = list(string)
-  default = []
-  description = "List of enode urls (surrounded by escaped double quotes)"
+  description = "List of enode urls"
 }
 
 variable "node_rpc_urls" {
   type = list(string)
-  default = []
-  description = "List of RPC urls (surrounded by escaped double quotes)"
+  description = "List of RPC urls"
 }

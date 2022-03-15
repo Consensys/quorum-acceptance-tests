@@ -39,11 +39,11 @@ output "accounts_count" {
 }
 
 output "enode_urls" {
-  value = local.enode_urls
+  value = local.quote_trimmed_enode_urls
 }
 
 output "node_rpc_urls" {
-  value = [for u in data.null_data_source.meta[*].inputs.nodeUrl : "\"${u}\""]
+  value = data.null_data_source.meta[*].inputs.nodeUrl
 }
 
 output "debug_istanbul_validators" {
@@ -54,9 +54,13 @@ output "debug_non_qlight_client_node_indices" {
   value = local.non_qlight_client_node_indices
 }
 
+output "debug_quote_trimmed_enode_urls" {
+  value = local.quote_trimmed_enode_urls
+}
 
-
-
+output "debug_enode_urls" {
+  value = local.enode_urls
+}
 
 output "debug_tm_named_keys_all" {
   value = local.tm_named_keys_all

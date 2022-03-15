@@ -23,7 +23,7 @@ locals {
     PRIVATE_CONFIG = local.container_tm_ipc_file
   }
   geth_env = [for k, v in merge(var.additional_geth_env, local.unchangeable_geth_env) : "${k}=${v}"]
-  qlight_env = [for k, v in var.additional_geth_env : "${k}=${v}"]
+  qlight_client_env = [for k, v in var.additional_geth_env : "${k}=${v}"]
   tm_env   = [for k, v in var.tm_env : "${k}=${v}"]
 }
 

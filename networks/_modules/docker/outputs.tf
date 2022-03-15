@@ -36,7 +36,7 @@ output "debug_qlight_client_indices" {
 }
 
 output "debug_qlight_server_indices" {
-  value = local.qlight_server_indices
+  value = var.qlight_server_indices
 }
 
 output "debug_full_node_indices" {

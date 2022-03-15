@@ -19,6 +19,8 @@ locals {
     "--allow-insecure-unlock",
     "--revertreason"
   ])
+
+  qlight_client_indices = [for k in keys(var.qlight_clients) : parseint(k, 10)] # map keys are string type, so convert to int
 }
 
 module "helper" {
@@ -32,6 +34,7 @@ module "helper" {
       port = {
         raft = 50400,
         p2p  = 21000,
+        qlight = 30305,
         http = 8545,
         ws   = -1
       }
@@ -50,7 +53,6 @@ module "helper" {
       port = {
         thirdparty = 9080,
         p2p        = 9000,
-        q2t        = 9081,
         q2t        = 9081
       }
     }
@@ -81,6 +83,8 @@ module "network" {
 
   additional_tessera_config = var.additional_tessera_config
   additional_genesis_config = var.additional_genesis_config
+
+  qlight_client_indices = local.qlight_client_indices
 }
 
 module "docker" {
@@ -106,4 +110,9 @@ module "docker" {
   additional_tessera_container_vol = var.additional_tessera_container_vol
   tessera_app_container_path       = var.tessera_app_container_path
   accounts_count                   = module.network.accounts_count
+
+  qlight_clients = var.qlight_clients
+  qlight_server_indices = var.qlight_server_indices
+  enode_urls = module.network.enode_urls
+  node_rpc_urls = module.network.node_rpc_urls
 }
