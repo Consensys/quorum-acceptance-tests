@@ -1,5 +1,4 @@
-consensus = "istanbul"
-qbftBlock = { block = 0, enabled = true }
+consensus = "qbft"
 plugins = {
   helloworld = {
     name       = "quorum-plugin-hello-world-go"

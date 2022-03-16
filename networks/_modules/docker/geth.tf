@@ -77,11 +77,12 @@ if [ "$ALWAYS_REFRESH" == "true" ]; then
   rm -rf ${local.container_geth_datadir}
 fi
 
-if [ ! -f "${local.container_geth_datadir}/genesis.json" ]; then
+if [ ! -f "${local.container_geth_datadir}/legacy-genesis.json" ] || [! -f "${local.container_geth_datadir}/latest-genesis.json"]; then
   echo "Genesis file missing. Copying mounted datadir to ${local.container_geth_datadir}"
   rm -r ${local.container_geth_datadir}
   cp -r ${local.container_geth_datadir_mounted} ${local.container_geth_datadir}
 fi
+
 echo "Current files in datadir (ls ${local.container_geth_datadir})"
 ls ${local.container_geth_datadir}
 
@@ -138,10 +139,19 @@ fi
 
 VERSION=$(geth version | grep Quorum | cut -d ':' -f2 | xargs echo -n)
 
-geth --datadir ${local.container_geth_datadir} init ${local.container_geth_datadir}/genesis.json
+if [ $VERSION == '2.5.0' ] || [ $VERSION == '21.10.0' ]; then
+  echo "Initializing geth with legacy genesis"
+  cat ${local.container_geth_datadir}/legacy-genesis.json
+  geth --datadir ${local.container_geth_datadir} init ${local.container_geth_datadir}/legacy-genesis.json
+else
+  echo "Initializing geth with latest genesis"
+  cat ${local.container_geth_datadir}/latest-genesis.json
+  geth --datadir ${local.container_geth_datadir} init ${local.container_geth_datadir}/latest-genesis.json
+fi
 
 #exit if geth init fails
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
+
 
 
 if [[ $VERSION == '2.5.0' ]]; then
@@ -158,6 +168,10 @@ else
   --http.api admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,quorumPermission,quorumExtension,${(var.consensus == "istanbul" || var.consensus == "qbft" ? "istanbul" : "raft")} "
 
   export ADDITIONAL_GETH_ARGS="${lookup(var.additional_geth_args, count.index, "")} $ADDITIONAL_GETH_ARGS"
+fi
+
+if [ $VERSION == '2.5.0' ] || [ $VERSION == '21.10.0' ]; then
+  export ADDITIONAL_GETH_ARGS="${(var.consensus == "istanbul" || var.consensus == "qbft") ? "--istanbul.blockperiod 1 " : ""} $ADDITIONAL_GETH_ARGS"
 fi
 
 ARGS="--identity Node${count.index + 1} \
@@ -185,8 +199,13 @@ ARGS="--identity Node${count.index + 1} \
 %{endif~}
   --unlock ${join(",", range(var.accounts_count[count.index]))} \
   --password ${local.container_geth_datadir}/${var.password_file_name} \
-  ${(var.consensus == "istanbul" || var.consensus == "qbft") ? "--istanbul.blockperiod 1 --syncmode full --mine --miner.threads 1" : format("--raft --raftport %d", var.geth_networking[count.index].port.raft)} \
+%{if var.consensus == "raft"~}
+  ${format("--raft --raftport %d", var.geth_networking[count.index].port.raft)} \
+%{else~}
+  --syncmode full --mine --miner.threads 1 \
+%{endif~}
   $ADDITIONAL_GETH_ARGS"
+
 
 echo "Running Geth with ARGS"
 echo $ARGS

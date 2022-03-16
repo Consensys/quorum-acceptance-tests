@@ -64,7 +64,7 @@ locals {
     }
   ]
   geth_consensus_args = [for idx in local.quorum_node_indices :
-    (var.consensus == "istanbul" || var.consensus == "qbft" ? "--istanbul.blockperiod 1 --syncmode full --mine --miner.threads 1" : "--raft --raftport ${local.geth_networking[idx].port.raft}")
+    (var.consensus == "raft" ? "--raft --raftport ${local.geth_networking[idx].port.raft}" : "")
   ]
 }
 

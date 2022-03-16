@@ -103,7 +103,9 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
         BigInteger privacyEnhancementsBlock = recordedBlockNumber.add(new BigInteger(decrement));
         logger.debug("Recorded block height  {}", recordedBlockNumber);
         logger.debug("Changing genesis file privacyEnhancementsBlock to {}", privacyEnhancementsBlock);
-        infraService.modifyFile(quorumId, "/data/qdata/genesis.json",
+        infraService.modifyFile(quorumId, "/data/qdata/legacy-genesis.json",
+            new GenesisConfigOverride(Map.of("privacyEnhancementsBlock", privacyEnhancementsBlock))).blockingFirst();
+        infraService.modifyFile(quorumId, "/data/qdata/latest-genesis.json",
             new GenesisConfigOverride(Map.of("privacyEnhancementsBlock", privacyEnhancementsBlock))).blockingFirst();
         infraService.startResource(quorumId).blockingFirst();
     }
@@ -305,7 +307,9 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
     public void runGethMPSDBUpgradeOnNode(String node) {
         String quorumId = getComponentContainerId("quorum", node);
         infraService.writeFile(quorumId, "/data/qdata/executempsdbupgrade", "true").blockingFirst();
-        infraService.modifyFile(quorumId, "/data/qdata/genesis.json",
+        infraService.modifyFile(quorumId, "/data/qdata/legacy-genesis.json",
+            new GenesisConfigOverride(Map.of("isMPS", true))).blockingFirst();
+        infraService.modifyFile(quorumId, "/data/qdata/latest-genesis.json",
             new GenesisConfigOverride(Map.of("isMPS", true))).blockingFirst();
         infraService.startResource(quorumId).blockingFirst();
     }
