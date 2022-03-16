@@ -154,9 +154,9 @@ variable "qlight_server_indices" {
   description = "List of which nodes are qlight servers (by 0-based index)"
 }
 
-variable "enode_urls" {
+variable "qlight_p2p_urls" {
   type = list(string)
-  description = "List of enode urls"
+  description = "List of qlight p2p node urls"
 }
 
 variable "node_rpc_urls" {

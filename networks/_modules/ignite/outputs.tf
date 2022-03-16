@@ -38,8 +38,8 @@ output "accounts_count" {
   value = { for id in local.node_indices : id => length(local.named_accounts_alloc[id]) }
 }
 
-output "enode_urls" {
-  value = local.quote_trimmed_enode_urls
+output "qlight_p2p_urls" {
+  value = local.qlight_p2p_urls
 }
 
 output "node_rpc_urls" {
@@ -52,10 +52,6 @@ output "debug_istanbul_validators" {
 
 output "debug_non_qlight_client_node_indices" {
   value = local.non_qlight_client_node_indices
-}
-
-output "debug_quote_trimmed_enode_urls" {
-  value = local.quote_trimmed_enode_urls
 }
 
 output "debug_enode_urls" {

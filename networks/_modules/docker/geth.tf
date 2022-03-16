@@ -1,6 +1,8 @@
 locals {
   publish_http_ports = [for idx in local.node_indices : [var.geth_networking[idx].port.http]]
   publish_ws_ports = var.geth_networking[0].port.ws == null ? [for idx in local.node_indices : []] : [for idx in local.node_indices : [var.geth_networking[idx].port.ws]]
+
+  internal_node_rpc_urls = [for idx in local.node_indices : format("http://%s:%d", var.geth_networking[idx].ip.private, var.geth_networking[idx].port.http.internal)]
 }
 
 resource "docker_container" "geth" {
@@ -182,7 +184,9 @@ QLIGHT_ARGS="--qlight.server \
 
 %{if contains(local.qlight_client_indices, count.index)~}
 echo "CHRISSY qlight client"
-QLIGHT_ARGS="--qlight.client --qlight.client.serverNode ${var.enode_urls[var.qlight_clients[format("%d", count.index)].ql_server_idx]} --qlight.client.serverNodeRPC ${var.node_rpc_urls[var.qlight_clients[format("%d", count.index)].ql_server_idx]}"
+QLIGHT_ARGS="--qlight.client \
+  --qlight.client.serverNode ${var.qlight_p2p_urls[var.qlight_clients[format("%d", count.index)].ql_server_idx]} \
+  --qlight.client.serverNodeRPC ${local.internal_node_rpc_urls[var.qlight_clients[format("%d", count.index)].ql_server_idx]}"
 %{endif}
 echo "CHRISSY QLIGHT_ARGS=$QLIGHT_ARGS"
 
@@ -190,7 +194,7 @@ echo "CHRISSY QLIGHT_ARGS=$QLIGHT_ARGS"
 ARGS="--identity Node${count.index + 1} \
   --datadir ${local.container_geth_datadir} \
   --nodiscover \
-  --verbosity 5 \
+  --verbosity 3 \
   --networkid ${var.network_id} \
   --nodekeyhex ${var.node_keys_hex[count.index]} \
   $HTTP_ARGS \

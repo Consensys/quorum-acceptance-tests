@@ -9,6 +9,7 @@ variable "geth_networking" {
       http = object({ internal = number, external = number })
       ws   = object({ internal = number, external = number })
       p2p  = number
+      qlight = number
       raft = number
     })
     graphql = bool

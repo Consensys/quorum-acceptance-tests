@@ -1,6 +1,6 @@
 locals {
   enode_urls = formatlist("\"enode://%s@%s:%d?discport=0&raftport=%d\"", quorum_bootstrap_node_key.nodekeys-generator[*].hex_node_id, var.geth_networking[*].ip.private, var.geth_networking[*].port.p2p, var.geth_networking[*].port.raft)
-  quote_trimmed_enode_urls = [for u in local.enode_urls : trim(u, "\"")]
+  qlight_p2p_urls = formatlist("enode://%s@%s:%d?discport=0&raftport=%d", quorum_bootstrap_node_key.nodekeys-generator[*].hex_node_id, var.geth_networking[*].ip.private, var.geth_networking[*].port.qlight, var.geth_networking[*].port.raft)
 
   # metadata for network subjected to initial participants input
   network = {
