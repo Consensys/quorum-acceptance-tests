@@ -103,9 +103,9 @@ quorum:
 %{endfor~}
       account-aliases:
 %{for k, name in b.ethKeys~}
-%{if contains(var.qlight_client_indices, i)}
+%{if contains(var.qlight_client_indices, parseint(i,10))~}
         ${name}: "${element(quorum_bootstrap_keystore.accountkeys-generator[var.qlight_clients[i].ql_server_idx].account.*.address, index(local.named_accounts_alloc[i], name))}"
-%{else}
+%{else~}
         ${name}: "${element(quorum_bootstrap_keystore.accountkeys-generator[i].account.*.address, index(local.named_accounts_alloc[i], name))}"
 %{endif}
 %{endfor~}
