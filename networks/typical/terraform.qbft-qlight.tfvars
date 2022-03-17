@@ -5,7 +5,7 @@
 number_of_nodes     = 6
 consensus           = "istanbul"
 qbftBlock           = { block = 0, enabled = true }
-quorum_docker_image = { name = "quorumengineering/quorum:qlight", local = true }
+quorum_docker_image = { name = "chounsom/qrm:develop", local = false }
 
 qlight_clients = {
     4 = { ql_server_idx = 0 },
