@@ -69,3 +69,15 @@ output "debug_public_key_b64" {
 output "debug_vnodes" {
   value = local.vnodes
 }
+
+output "debug_quorum_bootstrap_keystore_accountkeys_generator" {
+  value = quorum_bootstrap_keystore.accountkeys-generator
+}
+
+output "debug_accounts" {
+  value = quorum_bootstrap_keystore.accountkeys-generator[*].account.*.address
+}
+
+output "debug_named_accounts_alloc" {
+  value = local.named_accounts_alloc
+}

@@ -179,3 +179,8 @@ variable "hybrid_key_data" {
 variable "qlight_client_indices" {
   type = list(number)
 }
+
+variable "qlight_clients" {
+  type = map(object({ ql_server_idx = number }))
+  description = "Map of which nodes are qlight clients (by 0-based index) and additional config including the index of their corresponding server node"
+}

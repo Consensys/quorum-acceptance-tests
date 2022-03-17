@@ -85,6 +85,7 @@ module "network" {
   additional_genesis_config = var.additional_genesis_config
 
   qlight_client_indices = local.qlight_client_indices
+  qlight_clients = var.qlight_clients
 }
 
 module "docker" {
