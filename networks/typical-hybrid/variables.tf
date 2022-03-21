@@ -22,7 +22,7 @@ variable "privacy_marker_transactions" {
 
 variable "private_trie_cache" {
   type        = bool
-  default     = true
+  default     = false
   description = "Enable private trie cache"
 }
 
