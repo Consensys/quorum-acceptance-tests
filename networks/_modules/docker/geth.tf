@@ -171,8 +171,7 @@ ARGS="--identity Node${count.index + 1} \
   --privacymarker.enable \
 %{endif~}
 %{if var.private_trie_cache~}
-%{else}
-  --privatetriecache.enable=false \
+  --privatetriecache.enable \
 %{endif~}
 %{if var.geth_networking[count.index].port.ws != null~}
   --ws \
