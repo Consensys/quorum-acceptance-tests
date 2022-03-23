@@ -28,6 +28,7 @@ import com.quorum.gauge.services.InfrastructureService.NetworkResources;
 import com.quorum.gauge.services.RaftService;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import io.reactivex.Observable;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.slf4j.Logger;
@@ -198,18 +199,24 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
             .doOnNext(ok -> {
                 assertThat(ok).as(node + " must be restarted successfully").isTrue();
             })
-            .retryUntil(() -> {
-                    var currentBlockHeight = utilService.getCurrentBlockNumberFrom(networkProperty.getNode(node)).blockingFirst().getBlockNumber();
-                    logger.debug(node + " currentBlockHeight is " + currentBlockHeight);
-                    return beforeRestartBlockHeight.add(BigInteger.ONE).compareTo(currentBlockHeight) < 0;
-                }
-            )
             .blockingSubscribe();
+
+        Observable.fromCallable(() -> {
+                var currentBlockHeight = utilService.getCurrentBlockNumberFrom(networkProperty.getNode(node)).blockingFirst().getBlockNumber();
+                logger.debug(node + " currentBlockHeight is " + currentBlockHeight);
+                return currentBlockHeight.compareTo(beforeRestartBlockHeight) > 0;
+            }).doOnNext(ok -> {
+                assertThat(ok).as(node + " must be restarted successfully").isTrue();
+            })
+            .retry()
+            .blockingSubscribe();
+        ;
+
     }
 
     private BigInteger getCurrentBlockNumberOrDefault(final String node) {
         try {
-             return utilService.getCurrentBlockNumberFrom(networkProperty.getNode(node)).blockingFirst().getBlockNumber();
+            return utilService.getCurrentBlockNumberFrom(networkProperty.getNode(node)).blockingFirst().getBlockNumber();
         } catch (Exception ignored) {
             // if the node is currently down just wait for a few blocks
             return BigInteger.TEN;

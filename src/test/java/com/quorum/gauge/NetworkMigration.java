@@ -69,11 +69,20 @@ public class NetworkMigration extends AbstractSpecImplementation {
                     .doOnNext(ok -> {
                         assertThat(ok).as("Node must start successfully").isTrue();
                     })
-                    .doOnComplete(() -> {
-                        logger.debug("Waiting for network to be up completely...");
-                        Thread.sleep(networkProperty.getConsensusGracePeriod().toMillis());
-                    })
                     .blockingSubscribe();
+
+            Observable.fromIterable(table.getTableRows())
+                .flatMap(r -> {
+                    var currentBlockHeight = utilService.getCurrentBlockNumberFrom(networkProperty.getNode(r.getCell("node"))).blockingFirst().getBlockNumber();
+                    logger.debug(r.getCell("node") + " currentBlockHeight is " + currentBlockHeight);
+                    return Observable.just(currentBlockHeight.compareTo(BigInteger.ONE) > 0);
+                })
+                .doOnNext(ok -> {
+                    assertThat(ok).as("Node must have blocks").isTrue();
+                })
+                .retry()
+                .blockingSubscribe();
+
         } finally {
             DataStoreFactory.getScenarioDataStore().put("networkResources", networkResources);
         }
@@ -124,13 +133,18 @@ public class NetworkMigration extends AbstractSpecImplementation {
                     .doOnNext(ok -> {
                         assertThat(ok).as(node + " must be restarted successfully").isTrue();
                     })
-                    .retryUntil(() -> {
-                            var currentBlockHeight = utilService.getCurrentBlockNumberFrom(networkProperty.getNode(node)).blockingFirst().getBlockNumber();
-                            logger.debug(node + " currentBlockHeight is " + currentBlockHeight);
-                            return beforeRestartBlockHeight.compareTo(currentBlockHeight) < 0;
-                        }
-                    )
                     .blockingSubscribe();
+
+            Observable.fromCallable(() -> {
+                    var currentBlockHeight = utilService.getCurrentBlockNumberFrom(networkProperty.getNode(node)).blockingFirst().getBlockNumber();
+                    logger.debug(node + " currentBlockHeight is " + currentBlockHeight);
+                    return currentBlockHeight.compareTo(beforeRestartBlockHeight) > 0;
+                }).doOnNext(ok -> {
+                    assertThat(ok).as(node + " must be restarted successfully").isTrue();
+                })
+                .retry()
+                .blockingSubscribe();
+            
         } finally {
             DataStoreFactory.getScenarioDataStore().put("networkResources", existingNetworkResources);
         }
