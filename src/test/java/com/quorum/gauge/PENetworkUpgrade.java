@@ -170,7 +170,7 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
         String containerId = getComponentContainerId(component, node);
         String containerState = infraService.wait(containerId).blockingFirst() ? "up" : "down";
         int count = 20;
-        while (!containerState.equals(state) && count > 0){
+        while (!containerState.equals(state) && count > 0) {
             try {
                 Thread.sleep(3000);
             } catch (InterruptedException e) {
@@ -184,23 +184,36 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
 
     @Step("Stop and start <node> using quorum version <qVersionKey> and tessera version <tVersionKey>")
     public void stopAndStartNodes(String node, String qVersionKey, String tVersionKey) {
+        final BigInteger beforeRestartBlockHeight = getCurrentBlockNumberOrDefault(node);
+
         NetworkResources existingNetworkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
         infraService.deleteResources(existingNetworkResources.get(node)).blockingSubscribe();
         existingNetworkResources.remove(node);
 
         infraService.startNode(
-            InfrastructureService.NodeAttributes.forNode(node)
-                .withQuorumVersionKey(qVersionKey)
-                .withTesseraVersionKey(tVersionKey),
-            resourceId -> existingNetworkResources.add(node, resourceId))
+                InfrastructureService.NodeAttributes.forNode(node)
+                    .withQuorumVersionKey(qVersionKey)
+                    .withTesseraVersionKey(tVersionKey),
+                resourceId -> existingNetworkResources.add(node, resourceId))
             .doOnNext(ok -> {
                 assertThat(ok).as(node + " must be restarted successfully").isTrue();
             })
-            .doOnComplete(() -> {
-                logger.debug("Waiting for {} to be up completely...", node);
-                Thread.sleep(networkProperty.getConsensusGracePeriod().toMillis());
-            })
+            .retryUntil(() -> {
+                    var currentBlockHeight = utilService.getCurrentBlockNumberFrom(networkProperty.getNode(node)).blockingFirst().getBlockNumber();
+                    logger.debug(node + " currentBlockHeight is " + currentBlockHeight);
+                    return beforeRestartBlockHeight.add(BigInteger.ONE).compareTo(currentBlockHeight) < 0;
+                }
+            )
             .blockingSubscribe();
+    }
+
+    private BigInteger getCurrentBlockNumberOrDefault(final String node) {
+        try {
+             return utilService.getCurrentBlockNumberFrom(networkProperty.getNode(node)).blockingFirst().getBlockNumber();
+        } catch (Exception ignored) {
+            // if the node is currently down just wait for a few blocks
+            return BigInteger.TEN;
+        }
     }
 
     @Step("Clear quorum data in <node>")
