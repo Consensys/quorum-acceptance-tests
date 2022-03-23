@@ -216,6 +216,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
             default:
                 throw new UnsupportedOperationException(networkProperty.getConsensus() + " not supported yet");
         }
+
         // update static-nodes.json and permissioned-nodes.json from all the nodes
         // including the new node we just started
         Observable.fromIterable(networkResources.allResourceIds())
@@ -227,11 +228,12 @@ public class BlockSynchronization extends AbstractSpecImplementation {
             .flatMap(gethContainerId -> infraService.modifyFile(gethContainerId,
                 "/data/qdata/permissioned-nodes.json",
                 InfrastructureService.JSONListModifier.with(newNode.getEnodeUrl())))
-            .doOnComplete(() -> {
-                Duration duration = networkProperty.getConsensusGracePeriod();
-                logger.debug("Waiting {}s while network reflects new modification ...", duration.getSeconds());
-                Thread.sleep(duration.toMillis());
-            })
+            .retryUntil(() -> {
+                    var currentBlockHeight = utilService.getCurrentBlockNumberFrom(newNode).blockingFirst().getBlockNumber();
+                    logger.debug(newNode + " currentBlockHeight is " + currentBlockHeight);
+                    return BigInteger.ONE.compareTo(currentBlockHeight) < 0;
+                }
+            )
             .blockingSubscribe();
     }
 

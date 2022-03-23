@@ -111,6 +111,8 @@ public class NetworkMigration extends AbstractSpecImplementation {
 
     @Step("Stop and start <component> in <node> using <versionKey>")
     public void stopAndStartNodes(String component, String node, String versionKey) {
+        final BigInteger beforeRestartBlockHeight = getCurrentBlockNumberOrDefault(node);
+
         NetworkResources existingNetworkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
         infraService.deleteResources(existingNetworkResources.get(node)).blockingSubscribe();
         existingNetworkResources.remove(node);
@@ -122,13 +124,24 @@ public class NetworkMigration extends AbstractSpecImplementation {
                     .doOnNext(ok -> {
                         assertThat(ok).as(node + " must be restarted successfully").isTrue();
                     })
-                    .doOnComplete(() -> {
-                        logger.debug("Waiting for {} to be up completely...", node);
-                        Thread.sleep(networkProperty.getConsensusGracePeriod().toMillis());
-                    })
+                    .retryUntil(() -> {
+                            var currentBlockHeight = utilService.getCurrentBlockNumberFrom(networkProperty.getNode(node)).blockingFirst().getBlockNumber();
+                            logger.debug(node + " currentBlockHeight is " + currentBlockHeight);
+                            return beforeRestartBlockHeight.compareTo(currentBlockHeight) < 0;
+                        }
+                    )
                     .blockingSubscribe();
         } finally {
             DataStoreFactory.getScenarioDataStore().put("networkResources", existingNetworkResources);
+        }
+    }
+
+    private BigInteger getCurrentBlockNumberOrDefault(final String node) {
+        try {
+            return utilService.getCurrentBlockNumberFrom(networkProperty.getNode(node)).blockingFirst().getBlockNumber();
+        } catch (Exception ignored) {
+            // if the node is currently down just wait for a few blocks
+            return BigInteger.TEN;
         }
     }
 
