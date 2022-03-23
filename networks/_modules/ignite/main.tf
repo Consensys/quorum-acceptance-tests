@@ -103,11 +103,11 @@ quorum:
 %{endfor~}
       account-aliases:
 %{for k, name in b.ethKeys~}
-%{if contains(var.qlight_client_indices, parseint(i,10))~}
-        ${name}: "${element(quorum_bootstrap_keystore.accountkeys-generator[var.qlight_clients[i].ql_server_idx].account.*.address, index(local.named_accounts_alloc[i], name))}"
+%{if lookup(var.qlight_clients, i, null) != null~}
+        ${name}: "${element(quorum_bootstrap_keystore.accountkeys-generator[index(local.non_qlight_client_node_indices, var.qlight_clients[i].ql_server_idx)].account.*.address, index(local.named_accounts_alloc[index(local.non_qlight_client_node_indices, var.qlight_clients[i].ql_server_idx)], name))}"
 %{else~}
-        ${name}: "${element(quorum_bootstrap_keystore.accountkeys-generator[i].account.*.address, index(local.named_accounts_alloc[i], name))}"
-%{endif}
+        ${name}: "${element(quorum_bootstrap_keystore.accountkeys-generator[index(local.non_qlight_client_node_indices, parseint(i, 10))].account.*.address, index(local.named_accounts_alloc[i], name))}"
+%{endif~}
 %{endfor~}
 %{endfor~}
 %{endfor~}
