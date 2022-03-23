@@ -422,7 +422,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
             return currentBlockHeight.compareTo(BigInteger.ONE) > 0;
         }).doOnNext(ok -> {
             assertThat(ok).as(nodeName + " must be restarted successfully").isTrue();
-        }).observeOn(Schedulers.io()).retry((x) -> {
+        }).observeOn(Schedulers.io()).retry(10, (x) -> {
             Thread.sleep(Duration.ofSeconds(10).toMillis());
             return true;
         }).blockingSubscribe();
@@ -463,7 +463,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
                 return Observable.just(currentBlockHeight.compareTo(BigInteger.ONE) > 0);
             }).doOnNext(ok -> {
                 assertThat(ok).as("Node must start successfully").isTrue();
-            }).observeOn(Schedulers.io()).retry((x) -> {
+            }).observeOn(Schedulers.io()).retry(10, (x) -> {
                 Thread.sleep(Duration.ofSeconds(10).toMillis());
                 return true;
             }).blockingSubscribe();

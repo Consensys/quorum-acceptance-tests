@@ -198,7 +198,7 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
             return currentBlockHeight.compareTo(beforeRestartBlockHeight) > 0;
         }).doOnNext(ok -> {
             assertThat(ok).as(node + " must be restarted successfully").isTrue();
-        }).observeOn(Schedulers.io()).retry((x) -> {
+        }).observeOn(Schedulers.io()).retry(10, (x) -> {
             Thread.sleep(Duration.ofSeconds(10).toMillis());
             return true;
         }).blockingSubscribe();
