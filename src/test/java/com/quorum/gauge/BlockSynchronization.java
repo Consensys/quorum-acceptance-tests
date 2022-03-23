@@ -31,6 +31,7 @@ import com.quorum.gauge.services.InfrastructureService.NodeAttributes;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import io.reactivex.Observable;
+import io.reactivex.schedulers.Schedulers;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -416,14 +417,15 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         }).blockingSubscribe();
 
         Observable.fromCallable(() -> {
-                var currentBlockHeight = utilService.getCurrentBlockNumberFrom(nodeName).blockingFirst().getBlockNumber();
-                logger.debug(nodeName + " currentBlockHeight is " + currentBlockHeight);
-                return currentBlockHeight.compareTo(BigInteger.ONE) > 0;
-            }).doOnNext(ok -> {
-                assertThat(ok).as(nodeName + " must be restarted successfully").isTrue();
-            })
-            .retry()
-            .blockingSubscribe();
+            var currentBlockHeight = utilService.getCurrentBlockNumberFrom(nodeName).blockingFirst().getBlockNumber();
+            logger.debug(nodeName + " currentBlockHeight is " + currentBlockHeight);
+            return currentBlockHeight.compareTo(BigInteger.ONE) > 0;
+        }).doOnNext(ok -> {
+            assertThat(ok).as(nodeName + " must be restarted successfully").isTrue();
+        }).observeOn(Schedulers.io()).retry((x) -> {
+            Thread.sleep(Duration.ofSeconds(10).toMillis());
+            return true;
+        }).blockingSubscribe();
     }
 
     @Step("Save block height <latestBlockHeightName> as <newBlockHeightName>")
@@ -461,7 +463,10 @@ public class BlockSynchronization extends AbstractSpecImplementation {
                 return Observable.just(currentBlockHeight.compareTo(BigInteger.ONE) > 0);
             }).doOnNext(ok -> {
                 assertThat(ok).as("Node must start successfully").isTrue();
-            }).retry().blockingSubscribe();
+            }).observeOn(Schedulers.io()).retry((x) -> {
+                Thread.sleep(Duration.ofSeconds(10).toMillis());
+                return true;
+            }).blockingSubscribe();
 
         } finally {
             DataStoreFactory.getScenarioDataStore().put("networkResources", networkResources);

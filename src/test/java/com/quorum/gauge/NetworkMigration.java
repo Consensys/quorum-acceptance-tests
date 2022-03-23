@@ -37,6 +37,7 @@ import org.web3j.protocol.core.methods.response.EthBlockNumber;
 import org.web3j.tx.Contract;
 
 import java.math.BigInteger;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -60,28 +61,20 @@ public class NetworkMigration extends AbstractSpecImplementation {
     public void startNetwork(Table table) {
         NetworkResources networkResources = new NetworkResources();
         try {
-            Observable.fromIterable(table.getTableRows())
-                    .flatMap(r -> infraService.startNode(
-                            InfrastructureService.NodeAttributes.forNode(r.getCell("node"))
-                                    .withQuorumVersionKey(r.getCell("quorum"))
-                                    .withTesseraVersionKey(r.getCell("tessera")),
-                            resourceId -> networkResources.add(r.getCell("node"), resourceId)))
-                    .doOnNext(ok -> {
-                        assertThat(ok).as("Node must start successfully").isTrue();
-                    })
-                    .blockingSubscribe();
+            Observable.fromIterable(table.getTableRows()).flatMap(r -> infraService.startNode(InfrastructureService.NodeAttributes.forNode(r.getCell("node")).withQuorumVersionKey(r.getCell("quorum")).withTesseraVersionKey(r.getCell("tessera")), resourceId -> networkResources.add(r.getCell("node"), resourceId))).doOnNext(ok -> {
+                assertThat(ok).as("Node must start successfully").isTrue();
+            }).blockingSubscribe();
 
-            Observable.fromIterable(table.getTableRows())
-                .flatMap(r -> {
-                    var currentBlockHeight = utilService.getCurrentBlockNumberFrom(networkProperty.getNode(r.getCell("node"))).blockingFirst().getBlockNumber();
-                    logger.debug(r.getCell("node") + " currentBlockHeight is " + currentBlockHeight);
-                    return Observable.just(currentBlockHeight.compareTo(BigInteger.ONE) > 0);
-                })
-                .doOnNext(ok -> {
-                    assertThat(ok).as("Node must have blocks").isTrue();
-                })
-                .retry()
-                .blockingSubscribe();
+            Observable.fromIterable(table.getTableRows()).flatMap(r -> {
+                var currentBlockHeight = utilService.getCurrentBlockNumberFrom(networkProperty.getNode(r.getCell("node"))).blockingFirst().getBlockNumber();
+                logger.debug(r.getCell("node") + " currentBlockHeight is " + currentBlockHeight);
+                return Observable.just(currentBlockHeight.compareTo(BigInteger.ONE) > 0);
+            }).doOnNext(ok -> {
+                assertThat(ok).as("Node must have blocks").isTrue();
+            }).observeOn(Schedulers.io()).retry((x) -> {
+                Thread.sleep(Duration.ofSeconds(10).toMillis());
+                return true;
+            }).blockingSubscribe();
 
         } finally {
             DataStoreFactory.getScenarioDataStore().put("networkResources", networkResources);
@@ -91,6 +84,7 @@ public class NetworkMigration extends AbstractSpecImplementation {
     /**
      * When restarting the network, we destroy the currrent containers and recreate new ones with new images
      * Datadir will not be deleted as it lives in the volume
+     *
      * @param table
      */
     @Step("Restart the network with: <table>")
@@ -99,20 +93,12 @@ public class NetworkMigration extends AbstractSpecImplementation {
         infraService.deleteNetwork(existingNetworkResources).blockingSubscribe();
         NetworkResources networkResources = new NetworkResources();
         try {
-            Observable.fromIterable(table.getTableRows())
-                    .flatMap(r -> infraService.startNode(
-                            InfrastructureService.NodeAttributes.forNode(r.getCell("node"))
-                                    .withQuorumVersionKey(r.getCell("quorum"))
-                                    .withTesseraVersionKey(r.getCell("tessera")),
-                            resourceId -> networkResources.add(r.getCell("node"), resourceId)))
-                    .doOnNext(ok -> {
-                        assertThat(ok).as("Node must be restarted successfully").isTrue();
-                    })
-                    .doOnComplete(() -> {
-                        logger.debug("Waiting for network to be up completely...");
-                        Thread.sleep(networkProperty.getConsensusGracePeriod().toMillis());
-                    })
-                    .blockingSubscribe();
+            Observable.fromIterable(table.getTableRows()).flatMap(r -> infraService.startNode(InfrastructureService.NodeAttributes.forNode(r.getCell("node")).withQuorumVersionKey(r.getCell("quorum")).withTesseraVersionKey(r.getCell("tessera")), resourceId -> networkResources.add(r.getCell("node"), resourceId))).doOnNext(ok -> {
+                assertThat(ok).as("Node must be restarted successfully").isTrue();
+            }).doOnComplete(() -> {
+                logger.debug("Waiting for network to be up completely...");
+                Thread.sleep(networkProperty.getConsensusGracePeriod().toMillis());
+            }).blockingSubscribe();
         } finally {
             DataStoreFactory.getScenarioDataStore().put("networkResources", networkResources);
         }
@@ -126,25 +112,21 @@ public class NetworkMigration extends AbstractSpecImplementation {
         infraService.deleteResources(existingNetworkResources.get(node)).blockingSubscribe();
         existingNetworkResources.remove(node);
         try {
-            infraService.startNode(
-                    InfrastructureService.NodeAttributes.forNode(node)
-                            .withQuorumVersionKey(versionKey),
-                    resourceId -> existingNetworkResources.add(node, resourceId))
-                    .doOnNext(ok -> {
-                        assertThat(ok).as(node + " must be restarted successfully").isTrue();
-                    })
-                    .blockingSubscribe();
+            infraService.startNode(InfrastructureService.NodeAttributes.forNode(node).withQuorumVersionKey(versionKey), resourceId -> existingNetworkResources.add(node, resourceId)).doOnNext(ok -> {
+                assertThat(ok).as(node + " must be restarted successfully").isTrue();
+            }).blockingSubscribe();
 
             Observable.fromCallable(() -> {
-                    var currentBlockHeight = utilService.getCurrentBlockNumberFrom(networkProperty.getNode(node)).blockingFirst().getBlockNumber();
-                    logger.debug(node + " currentBlockHeight is " + currentBlockHeight);
-                    return currentBlockHeight.compareTo(beforeRestartBlockHeight) > 0;
-                }).doOnNext(ok -> {
-                    assertThat(ok).as(node + " must be restarted successfully").isTrue();
-                })
-                .retry()
-                .blockingSubscribe();
-            
+                var currentBlockHeight = utilService.getCurrentBlockNumberFrom(networkProperty.getNode(node)).blockingFirst().getBlockNumber();
+                logger.debug(node + " currentBlockHeight is " + currentBlockHeight + " previously it was " + beforeRestartBlockHeight);
+                return currentBlockHeight.compareTo(beforeRestartBlockHeight) > 0;
+            }).doOnNext(ok -> {
+                assertThat(ok).as(node + " must be restarted successfully").isTrue();
+            }).observeOn(Schedulers.io()).retry((x) -> {
+                Thread.sleep(Duration.ofSeconds(10).toMillis());
+                return true;
+            }).blockingSubscribe();
+
         } finally {
             DataStoreFactory.getScenarioDataStore().put("networkResources", existingNetworkResources);
         }
@@ -165,11 +147,11 @@ public class NetworkMigration extends AbstractSpecImplementation {
     }
 
     @Step("Use SimpleStorage smart contract, populate network with <publicTxCount> public transactions randomly between <nodesStr> with <number> of threads per node")
-    public void deploySimpleStoragePublicContract(int publicTxCount, String nodesStr,int threadsPerNode) {
+    public void deploySimpleStoragePublicContract(int publicTxCount, String nodesStr, int threadsPerNode) {
         List<String> nodes = Arrays.stream(nodesStr.split(",")).map(String::trim).collect(Collectors.toList());
         // build calls for public transactions
         // fire to each node in parallel, max <threadsPerNode>> threads for each node
-        int txCountPerNode = (int) Math.round(Math.ceil((double)publicTxCount / nodes.size()));
+        int txCountPerNode = (int) Math.round(Math.ceil((double) publicTxCount / nodes.size()));
         if (txCountPerNode < threadsPerNode) {
             threadsPerNode = txCountPerNode;
         }
@@ -181,12 +163,7 @@ public class NetworkMigration extends AbstractSpecImplementation {
     }
 
     private Observable<? extends Contract> sendTxs(QuorumNode n, int txCountPerNode, int threadsPerNode) {
-        return Observable.range(0, txCountPerNode)
-                .doOnNext(c -> logger.debug("Sending tx {} to {}", c, n))
-                .flatMap(v -> Observable.just(v)
-                        .flatMap(num -> contractService.createSimpleContract(40, n, null))
-                        .subscribeOn(Schedulers.io())
-                        , threadsPerNode);
+        return Observable.range(0, txCountPerNode).doOnNext(c -> logger.debug("Sending tx {} to {}", c, n)).flatMap(v -> Observable.just(v).flatMap(num -> contractService.createSimpleContract(40, n, null)).subscribeOn(Schedulers.io()), threadsPerNode);
     }
 
     private QuorumNode randomNode(List<String> nodes, QuorumNode n) {
@@ -198,13 +175,10 @@ public class NetworkMigration extends AbstractSpecImplementation {
     @Step("Verify block number in <nodes> in sync with <name>")
     public void verifyBlockNumberInSync(String nodes, String name) {
         BigInteger expectedBlockNumber = mustHaveValue(DataStoreFactory.getScenarioDataStore(), name, BigInteger.class);
-        Observable.fromIterable(Arrays.stream(nodes.split(",")).map(String::trim).collect(Collectors.toList()))
-                .map(networkProperty::getNode)
-                .doOnNext(n -> {
-                    EthBlockNumber b = utilService.getCurrentBlockNumberFrom(n).blockingFirst();
-                    assertThat(b.getBlockNumber()).as("Block number from node " + n).isGreaterThanOrEqualTo(expectedBlockNumber);
-                })
-                .blockingSubscribe();
+        Observable.fromIterable(Arrays.stream(nodes.split(",")).map(String::trim).collect(Collectors.toList())).map(networkProperty::getNode).doOnNext(n -> {
+            EthBlockNumber b = utilService.getCurrentBlockNumberFrom(n).blockingFirst();
+            assertThat(b.getBlockNumber()).as("Block number from node " + n).isGreaterThanOrEqualTo(expectedBlockNumber);
+        }).blockingSubscribe();
     }
 
     @Step("Network is running")

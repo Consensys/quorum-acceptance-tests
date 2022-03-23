@@ -29,6 +29,7 @@ import com.quorum.gauge.services.RaftService;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import io.reactivex.Observable;
+import io.reactivex.schedulers.Schedulers;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.slf4j.Logger;
@@ -38,6 +39,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.time.Duration;
 import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
@@ -58,9 +60,7 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
     private String getComponentContainerId(String component, String node) {
         NetworkResources existingNetworkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
         final Vector<String> nodeResources = existingNetworkResources.get(node);
-        return nodeResources.stream()
-            .filter(id -> isComponent(component, id))
-            .findFirst().orElseThrow(() -> new RuntimeException("Unable to find rquested component"));
+        return nodeResources.stream().filter(id -> isComponent(component, id)).findFirst().orElseThrow(() -> new RuntimeException("Unable to find rquested component"));
     }
 
     private boolean isComponent(String component, String resId) {
@@ -104,10 +104,8 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
         BigInteger privacyEnhancementsBlock = recordedBlockNumber.add(new BigInteger(decrement));
         logger.debug("Recorded block height  {}", recordedBlockNumber);
         logger.debug("Changing genesis file privacyEnhancementsBlock to {}", privacyEnhancementsBlock);
-        infraService.modifyFile(quorumId, "/data/qdata/legacy-genesis.json",
-            new GenesisConfigOverride(Map.of("privacyEnhancementsBlock", privacyEnhancementsBlock))).blockingFirst();
-        infraService.modifyFile(quorumId, "/data/qdata/latest-genesis.json",
-            new GenesisConfigOverride(Map.of("privacyEnhancementsBlock", privacyEnhancementsBlock))).blockingFirst();
+        infraService.modifyFile(quorumId, "/data/qdata/legacy-genesis.json", new GenesisConfigOverride(Map.of("privacyEnhancementsBlock", privacyEnhancementsBlock))).blockingFirst();
+        infraService.modifyFile(quorumId, "/data/qdata/latest-genesis.json", new GenesisConfigOverride(Map.of("privacyEnhancementsBlock", privacyEnhancementsBlock))).blockingFirst();
         infraService.startResource(quorumId).blockingFirst();
     }
 
@@ -115,8 +113,7 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
     public void enablePrivacyEnhancementsInTesseraNode(String node) {
         String tesseraId = getComponentContainerId("tessera", node);
         logger.debug("Changing tessera config to include feature 'enablePrivacyEnhancements' : 'true'");
-        infraService.modifyFile(tesseraId, "/data/tm/config.json",
-            new TesseraFeaturesOverride(Map.of("enablePrivacyEnhancements", "true"))).blockingFirst();
+        infraService.modifyFile(tesseraId, "/data/tm/config.json", new TesseraFeaturesOverride(Map.of("enablePrivacyEnhancements", "true"))).blockingFirst();
         infraService.restartResource(tesseraId).blockingFirst();
     }
 
@@ -191,25 +188,20 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
         infraService.deleteResources(existingNetworkResources.get(node)).blockingSubscribe();
         existingNetworkResources.remove(node);
 
-        infraService.startNode(
-                InfrastructureService.NodeAttributes.forNode(node)
-                    .withQuorumVersionKey(qVersionKey)
-                    .withTesseraVersionKey(tVersionKey),
-                resourceId -> existingNetworkResources.add(node, resourceId))
-            .doOnNext(ok -> {
-                assertThat(ok).as(node + " must be restarted successfully").isTrue();
-            })
-            .blockingSubscribe();
+        infraService.startNode(InfrastructureService.NodeAttributes.forNode(node).withQuorumVersionKey(qVersionKey).withTesseraVersionKey(tVersionKey), resourceId -> existingNetworkResources.add(node, resourceId)).doOnNext(ok -> {
+            assertThat(ok).as(node + " must be restarted successfully").isTrue();
+        }).blockingSubscribe();
 
         Observable.fromCallable(() -> {
-                var currentBlockHeight = utilService.getCurrentBlockNumberFrom(networkProperty.getNode(node)).blockingFirst().getBlockNumber();
-                logger.debug(node + " currentBlockHeight is " + currentBlockHeight);
-                return currentBlockHeight.compareTo(beforeRestartBlockHeight) > 0;
-            }).doOnNext(ok -> {
-                assertThat(ok).as(node + " must be restarted successfully").isTrue();
-            })
-            .retry()
-            .blockingSubscribe();
+            var currentBlockHeight = utilService.getCurrentBlockNumberFrom(networkProperty.getNode(node)).blockingFirst().getBlockNumber();
+            logger.debug(node + " currentBlockHeight is " + currentBlockHeight + " previously it was " + beforeRestartBlockHeight);
+            return currentBlockHeight.compareTo(beforeRestartBlockHeight) > 0;
+        }).doOnNext(ok -> {
+            assertThat(ok).as(node + " must be restarted successfully").isTrue();
+        }).observeOn(Schedulers.io()).retry((x) -> {
+            Thread.sleep(Duration.ofSeconds(10).toMillis());
+            return true;
+        }).blockingSubscribe();
         ;
 
     }
@@ -318,8 +310,7 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
     public void enableMPSInTesseraNode(String node) throws InterruptedException {
         String tesseraId = getComponentContainerId("tessera", node);
         logger.debug("Changing tessera config to include feature 'enableMultiplePrivateStates' : 'true'");
-        infraService.modifyFile(tesseraId, "/data/tm/config.json",
-            new TesseraFeaturesOverride(Map.of("enableMultiplePrivateStates", "true"))).blockingFirst();
+        infraService.modifyFile(tesseraId, "/data/tm/config.json", new TesseraFeaturesOverride(Map.of("enableMultiplePrivateStates", "true"))).blockingFirst();
         infraService.restartResource(tesseraId).blockingFirst();
     }
 
@@ -327,10 +318,8 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
     public void runGethMPSDBUpgradeOnNode(String node) {
         String quorumId = getComponentContainerId("quorum", node);
         infraService.writeFile(quorumId, "/data/qdata/executempsdbupgrade", "true").blockingFirst();
-        infraService.modifyFile(quorumId, "/data/qdata/legacy-genesis.json",
-            new GenesisConfigOverride(Map.of("isMPS", true))).blockingFirst();
-        infraService.modifyFile(quorumId, "/data/qdata/latest-genesis.json",
-            new GenesisConfigOverride(Map.of("isMPS", true))).blockingFirst();
+        infraService.modifyFile(quorumId, "/data/qdata/legacy-genesis.json", new GenesisConfigOverride(Map.of("isMPS", true))).blockingFirst();
+        infraService.modifyFile(quorumId, "/data/qdata/latest-genesis.json", new GenesisConfigOverride(Map.of("isMPS", true))).blockingFirst();
         infraService.startResource(quorumId).blockingFirst();
     }
 }
