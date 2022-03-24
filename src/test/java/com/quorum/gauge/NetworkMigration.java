@@ -19,6 +19,7 @@
 
 package com.quorum.gauge;
 
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.services.ContractService;
@@ -37,7 +38,6 @@ import org.web3j.protocol.core.methods.response.EthBlockNumber;
 import org.web3j.tx.Contract;
 
 import java.math.BigInteger;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -65,16 +65,11 @@ public class NetworkMigration extends AbstractSpecImplementation {
                 assertThat(ok).as("Node must start successfully").isTrue();
             }).blockingSubscribe();
 
-            Observable.fromIterable(table.getTableRows()).flatMap(r -> {
-                var currentBlockHeight = utilService.getCurrentBlockNumberFrom(networkProperty.getNode(r.getCell("node"))).blockingFirst().getBlockNumber();
-                logger.debug(r.getCell("node") + " currentBlockHeight is " + currentBlockHeight);
-                return Observable.just(currentBlockHeight.compareTo(BigInteger.ONE) > 0);
-            }).doOnNext(ok -> {
-                assertThat(ok).as("Node must have blocks").isTrue();
-            }).observeOn(Schedulers.io()).retry(10, (x) -> {
-                Thread.sleep(Duration.ofSeconds(10).toMillis());
-                return true;
-            }).blockingSubscribe();
+            var nodes = table.getTableRows().stream()
+                .map(r -> networkProperty.getNode(r.getCell("node")))
+                    .toArray(QuorumNetworkProperty.Node[]::new);
+
+            utilService.waitForNodesToReach(networkProperty.getConsensusBlockHeight(), nodes);
 
         } finally {
             DataStoreFactory.getScenarioDataStore().put("networkResources", networkResources);
@@ -116,16 +111,7 @@ public class NetworkMigration extends AbstractSpecImplementation {
                 assertThat(ok).as(node + " must be restarted successfully").isTrue();
             }).blockingSubscribe();
 
-            Observable.fromCallable(() -> {
-                var currentBlockHeight = utilService.getCurrentBlockNumberFrom(networkProperty.getNode(node)).blockingFirst().getBlockNumber();
-                logger.debug(node + " currentBlockHeight is " + currentBlockHeight + " previously it was " + beforeRestartBlockHeight);
-                return currentBlockHeight.compareTo(beforeRestartBlockHeight) > 0;
-            }).doOnNext(ok -> {
-                assertThat(ok).as(node + " must be restarted successfully").isTrue();
-            }).observeOn(Schedulers.io()).retry(10, (x) -> {
-                Thread.sleep(Duration.ofSeconds(10).toMillis());
-                return true;
-            }).blockingSubscribe();
+            utilService.waitForNodesToReach(beforeRestartBlockHeight, networkProperty.getNode(node));
 
         } finally {
             DataStoreFactory.getScenarioDataStore().put("networkResources", existingNetworkResources);

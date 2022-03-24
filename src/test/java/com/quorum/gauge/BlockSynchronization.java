@@ -21,6 +21,7 @@ package com.quorum.gauge;
 
 import com.quorum.gauge.common.GethArgBuilder;
 import com.quorum.gauge.common.NodeType;
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNetworkProperty.Node;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
@@ -31,7 +32,6 @@ import com.quorum.gauge.services.InfrastructureService.NodeAttributes;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import io.reactivex.Observable;
-import io.reactivex.schedulers.Schedulers;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -310,7 +310,10 @@ public class BlockSynchronization extends AbstractSpecImplementation {
             logger.debug("Waiting {}s for network to be up completely...", duration.toSeconds());
             Thread.sleep(duration.toMillis());
         }).blockingSubscribe();
-        logger.debug("started all nodes");
+
+        utilService.waitForNodesToReach(networkProperty.getConsensusBlockHeight(), networkProperty.getNodes().values().toArray(QuorumNetworkProperty.Node[]::new));
+
+        logger.info("started all nodes");
     }
 
     @Step("Verify block heights in all nodes are greater or equals to <blockHeightName> in the network <id>")
@@ -416,16 +419,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
             assertThat(ok).as("Node must be up").isTrue();
         }).blockingSubscribe();
 
-        Observable.fromCallable(() -> {
-            var currentBlockHeight = utilService.getCurrentBlockNumberFrom(nodeName).blockingFirst().getBlockNumber();
-            logger.debug(nodeName + " currentBlockHeight is " + currentBlockHeight);
-            return currentBlockHeight.compareTo(BigInteger.ONE) > 0;
-        }).doOnNext(ok -> {
-            assertThat(ok).as(nodeName + " must be restarted successfully").isTrue();
-        }).observeOn(Schedulers.io()).retry(10, (x) -> {
-            Thread.sleep(Duration.ofSeconds(10).toMillis());
-            return true;
-        }).blockingSubscribe();
+        utilService.waitForNodesToReach(networkProperty.getConsensusBlockHeight(), nodeName);
     }
 
     @Step("Save block height <latestBlockHeightName> as <newBlockHeightName>")
@@ -457,17 +451,9 @@ public class BlockSynchronization extends AbstractSpecImplementation {
                 assertThat(ok).as("Node must start successfully").isTrue();
             }).blockingSubscribe();
 
-            Observable.fromIterable(nodes).flatMap(nodeName -> {
-                var currentBlockHeight = utilService.getCurrentBlockNumberFrom(nodeName).blockingFirst().getBlockNumber();
-                logger.debug(nodeName + " currentBlockHeight is " + currentBlockHeight);
-                return Observable.just(currentBlockHeight.compareTo(BigInteger.ONE) > 0);
-            }).doOnNext(ok -> {
-                assertThat(ok).as("Node must start successfully").isTrue();
-            }).observeOn(Schedulers.io()).retry(10, (x) -> {
-                Thread.sleep(Duration.ofSeconds(10).toMillis());
-                return true;
-            }).blockingSubscribe();
+           utilService.waitForNodesToReach(networkProperty.getConsensusBlockHeight(), nodes.toArray(Node[]::new));
 
+            logger.debug("Start Network finished");
         } finally {
             DataStoreFactory.getScenarioDataStore().put("networkResources", networkResources);
         }

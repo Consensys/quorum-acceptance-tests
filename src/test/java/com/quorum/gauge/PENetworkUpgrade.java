@@ -192,17 +192,7 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
             assertThat(ok).as(node + " must be restarted successfully").isTrue();
         }).blockingSubscribe();
 
-        Observable.fromCallable(() -> {
-            var currentBlockHeight = utilService.getCurrentBlockNumberFrom(networkProperty.getNode(node)).blockingFirst().getBlockNumber();
-            logger.debug(node + " currentBlockHeight is " + currentBlockHeight + " previously it was " + beforeRestartBlockHeight);
-            return currentBlockHeight.compareTo(beforeRestartBlockHeight) > 0;
-        }).doOnNext(ok -> {
-            assertThat(ok).as(node + " must be restarted successfully").isTrue();
-        }).observeOn(Schedulers.io()).retry(10, (x) -> {
-            Thread.sleep(Duration.ofSeconds(10).toMillis());
-            return true;
-        }).blockingSubscribe();
-        ;
+        utilService.waitForNodesToReach(beforeRestartBlockHeight, networkProperty.getNode(node));
 
     }
 

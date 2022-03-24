@@ -21,9 +21,11 @@ package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNetworkProperty.Node;
 import com.quorum.gauge.common.QuorumNode;
-import com.quorum.gauge.ext.NodeInfo;
 import com.quorum.gauge.ext.PendingTransaction;
 import io.reactivex.Observable;
+import io.reactivex.schedulers.Schedulers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
@@ -35,11 +37,15 @@ import org.web3j.protocol.core.methods.response.NetPeerCount;
 import org.web3j.protocol.core.methods.response.Transaction;
 
 import java.math.BigInteger;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 @Service
 public class UtilService extends AbstractService {
+    private static final Logger logger = LoggerFactory.getLogger(UtilService.class);
 
     public Observable<EthBlockNumber> getCurrentBlockNumber() {
         return getCurrentBlockNumberFrom(QuorumNode.Node1);
@@ -49,6 +55,18 @@ public class UtilService extends AbstractService {
         return getCurrentBlockNumberFrom(QuorumNode.valueOf(node.getName()));
     }
 
+    public void waitForNodesToReach( final BigInteger consensusBlockPeriod, final Node... nodes) {
+        Observable.fromArray(nodes).flatMap(nodeName -> {
+            var currentBlockHeight = getCurrentBlockNumberFrom(nodeName).blockingFirst().getBlockNumber();
+            logger.debug(nodeName.getName() + " currentBlockHeight is " + currentBlockHeight);
+            return Observable.just(currentBlockHeight.compareTo(consensusBlockPeriod) >= 0);
+        }).doOnNext(ok -> {
+            assertThat(ok).as("Node must start successfully").isTrue();
+        }).observeOn(Schedulers.io()).retry(60, (x) -> {
+            Thread.sleep(Duration.ofSeconds(1).toMillis());
+            return true;
+        }).blockingSubscribe();
+    }
     public Observable<EthBlockNumber> getCurrentBlockNumberFrom(QuorumNode node) {
         Web3j client = connectionFactory().getWeb3jConnection(node);
         return client.ethBlockNumber().flowable().toObservable();
