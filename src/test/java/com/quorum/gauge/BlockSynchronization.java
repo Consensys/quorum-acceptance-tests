@@ -313,7 +313,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
 
         utilService.waitForNodesToReach(networkProperty.getConsensusBlockHeight(), networkProperty.getNodes().values().toArray(QuorumNetworkProperty.Node[]::new));
 
-        logger.info("started all nodes");
+        logger.debug("started all nodes");
     }
 
     @Step("Verify block heights in all nodes are greater or equals to <blockHeightName> in the network <id>")

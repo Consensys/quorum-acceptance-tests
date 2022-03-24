@@ -139,7 +139,7 @@ fi
 
 VERSION=$(geth version | grep Quorum | cut -d ':' -f2 | xargs echo -n)
 
-if [ $VERSION == '2.5.0' ] || [ $VERSION == '21.10.0' ]; then
+if [ $VERSION == '2.5.0' ] || [ $VERSION == '21.10.0' ] || [ $VERSION == '21.4.0' ]; then
   echo "Initializing geth with legacy genesis"
   cat ${local.container_geth_datadir}/legacy-genesis.json
   geth --datadir ${local.container_geth_datadir} init ${local.container_geth_datadir}/legacy-genesis.json
