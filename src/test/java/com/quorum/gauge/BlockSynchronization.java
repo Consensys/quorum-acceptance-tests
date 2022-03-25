@@ -45,7 +45,9 @@ import org.web3j.tx.Contract;
 import java.math.BigInteger;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -298,20 +300,36 @@ public class BlockSynchronization extends AbstractSpecImplementation {
     }
 
     @Step("Start all nodes in the network <id>")
-    public void startAllNodes(String id) {
+    public void startAllNodes(String id) throws InterruptedException {
         NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
         // start all nodes
-        Observable.fromIterable(networkResources.allResourceIds()).flatMap(infraService::startResource).blockingSubscribe();
-        // wait for them to be healthy
-        Observable.fromIterable(networkResources.allResourceIds()).flatMap(infraService::wait).doOnNext(ok -> {
-            assertThat(ok).as("Node must be up").isTrue();
-        }).doOnComplete(() -> {
-            Duration duration = networkProperty.getConsensusGracePeriod();
-            logger.debug("Waiting {}s for network to be up completely...", duration.toSeconds());
-            Thread.sleep(duration.toMillis());
-        }).blockingSubscribe();
 
-        utilService.waitForNodesToReach(networkProperty.getConsensusBlockHeight(), networkProperty.getNodes().values().toArray(QuorumNetworkProperty.Node[]::new));
+        Observable.fromIterable(networkResources.allResourceIds()).flatMap(infraService::startResource).blockingSubscribe();
+
+        var gethContainers = networkResources.allResourceIds().stream().filter(containerId -> infraService.isGeth(containerId).blockingFirst()).collect(Collectors.toList());
+
+        Observable.fromIterable(gethContainers).flatMap(infraService::wait).blockingSubscribe();
+
+        var nodes = gethContainers
+            .stream()
+            .map(containerId -> {
+                var nodeName = infraService.getName(containerId).blockingFirst()
+                    .replace("/run-local-", "")
+                    .replace("-clone", "")
+                    .replace("node0", "Node1")
+                    .replace("node1", "Node2")
+                    .replace("node2", "Node3")
+                    .replace("node3", "Node4")
+                    .replace("node4", "Node5")
+                    .replace("node5", "Node6")
+                    .replace("node6", "Node7")
+                    .replace("node7", "Node8")
+                    .replace("node8", "Node9");
+
+                return networkProperty.getNode(nodeName);
+            }).toArray(Node[]::new);
+
+        utilService.waitForNodesToReach(networkProperty.getConsensusBlockHeight(), nodes);
 
         logger.debug("started all nodes");
     }
@@ -451,7 +469,7 @@ public class BlockSynchronization extends AbstractSpecImplementation {
                 assertThat(ok).as("Node must start successfully").isTrue();
             }).blockingSubscribe();
 
-           utilService.waitForNodesToReach(networkProperty.getConsensusBlockHeight(), nodes.toArray(Node[]::new));
+            utilService.waitForNodesToReach(networkProperty.getConsensusBlockHeight(), nodes.toArray(Node[]::new));
 
             logger.debug("Start Network finished");
         } finally {

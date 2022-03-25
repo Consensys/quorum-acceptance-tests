@@ -55,18 +55,20 @@ public class UtilService extends AbstractService {
         return getCurrentBlockNumberFrom(QuorumNode.valueOf(node.getName()));
     }
 
-    public void waitForNodesToReach( final BigInteger consensusBlockPeriod, final Node... nodes) {
+    public void waitForNodesToReach(final BigInteger targetBlockHeight, final Node... nodes) {
         Observable.fromArray(nodes).flatMap(nodeName -> {
             var currentBlockHeight = getCurrentBlockNumberFrom(nodeName).blockingFirst().getBlockNumber();
-            logger.debug(nodeName.getName() + " currentBlockHeight is " + currentBlockHeight);
-            return Observable.just(currentBlockHeight.compareTo(consensusBlockPeriod) >= 0);
+            logger.debug(nodeName.getName() + " currentBlockHeight is " + currentBlockHeight + " target height is " + targetBlockHeight + " (" + (currentBlockHeight.compareTo(targetBlockHeight) > 0) + ")");
+            return Observable.just(currentBlockHeight.compareTo(targetBlockHeight) > 0);
         }).doOnNext(ok -> {
             assertThat(ok).as("Node must start successfully").isTrue();
         }).observeOn(Schedulers.io()).retry(60, (x) -> {
             Thread.sleep(Duration.ofSeconds(1).toMillis());
             return true;
         }).blockingSubscribe();
+        logger.info("All nodes can be reached");
     }
+
     public Observable<EthBlockNumber> getCurrentBlockNumberFrom(QuorumNode node) {
         Web3j client = connectionFactory().getWeb3jConnection(node);
         return client.ethBlockNumber().flowable().toObservable();
@@ -79,10 +81,10 @@ public class UtilService extends AbstractService {
 
     public List<Transaction> getPendingTransactions(QuorumNode node) {
         Request<?, PendingTransaction> request = new Request<>(
-                "eth_pendingTransactions",
-                null,
-                connectionFactory().getWeb3jService(node),
-                PendingTransaction.class
+            "eth_pendingTransactions",
+            null,
+            connectionFactory().getWeb3jService(node),
+            PendingTransaction.class
         );
 
         return request.flowable().toObservable().blockingFirst().getTransactions();
