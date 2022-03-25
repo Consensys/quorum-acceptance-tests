@@ -66,7 +66,7 @@ public class UtilService extends AbstractService {
             Thread.sleep(Duration.ofSeconds(1).toMillis());
             return true;
         }).blockingSubscribe();
-        logger.info("All nodes can be reached");
+        logger.debug("All nodes can be reached");
     }
 
     public Observable<EthBlockNumber> getCurrentBlockNumberFrom(QuorumNode node) {
