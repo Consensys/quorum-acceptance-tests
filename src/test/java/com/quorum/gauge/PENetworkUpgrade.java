@@ -200,8 +200,7 @@ public class PENetworkUpgrade extends AbstractSpecImplementation {
         try {
             return utilService.getCurrentBlockNumberFrom(networkProperty.getNode(node)).blockingFirst().getBlockNumber();
         } catch (Exception ignored) {
-            // if the node is currently down just wait for a few blocks
-            return BigInteger.TEN;
+            return networkProperty.getConsensusBlockHeight();
         }
     }
 

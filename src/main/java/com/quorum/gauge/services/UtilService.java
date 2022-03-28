@@ -58,7 +58,7 @@ public class UtilService extends AbstractService {
     public void waitForNodesToReach(final BigInteger targetBlockHeight, final Node... nodes) {
         Observable.fromArray(nodes).flatMap(nodeName -> {
             var currentBlockHeight = getCurrentBlockNumberFrom(nodeName).blockingFirst().getBlockNumber();
-            logger.debug(nodeName.getName() + " currentBlockHeight is " + currentBlockHeight + " target height is " + targetBlockHeight + " (" + (currentBlockHeight.compareTo(targetBlockHeight) > 0) + ")");
+            logger.debug(nodeName.getName() + " currentBlockHeight is " + currentBlockHeight + " target height is " + targetBlockHeight + " (" + (currentBlockHeight.compareTo(targetBlockHeight) >= 0) + ")");
             return Observable.just(currentBlockHeight.compareTo(targetBlockHeight) >= 0);
         }).doOnNext(ok -> {
             assertThat(ok).as("Node must start successfully").isTrue();
