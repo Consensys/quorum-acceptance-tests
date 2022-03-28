@@ -59,7 +59,7 @@ public class UtilService extends AbstractService {
         Observable.fromArray(nodes).flatMap(nodeName -> {
             var currentBlockHeight = getCurrentBlockNumberFrom(nodeName).blockingFirst().getBlockNumber();
             logger.debug(nodeName.getName() + " currentBlockHeight is " + currentBlockHeight + " target height is " + targetBlockHeight + " (" + (currentBlockHeight.compareTo(targetBlockHeight) > 0) + ")");
-            return Observable.just(currentBlockHeight.compareTo(targetBlockHeight) > 0);
+            return Observable.just(currentBlockHeight.compareTo(targetBlockHeight) >= 0);
         }).doOnNext(ok -> {
             assertThat(ok).as("Node must start successfully").isTrue();
         }).observeOn(Schedulers.io()).retry(60, (x) -> {
