@@ -48,6 +48,7 @@ data "null_data_source" "meta" {
     idx             = count.index
     tmKeys          = join(",", [for k in local.tm_named_keys_alloc[count.index] : element(local.key_data, index(local.tm_named_keys_all, k))])
     nodeUrl         = format("http://%s:%d", var.geth_networking[count.index].ip.public, var.geth_networking[count.index].port.http.external)
+    # TODO(cjh) tm_networking for the qlight nodes, may be a problem and may need to nullify the tm_networking elements for the qlight nodes
     tmThirdpartyUrl = format("http://%s:%d", var.tm_networking[count.index].ip.public, var.tm_networking[count.index].port.thirdparty.external)
     graphqlUrl      = var.geth_networking[count.index].graphql ? format("http://%s:%d/graphql", var.geth_networking[count.index].ip.public, var.geth_networking[count.index].port.http.external) : ""
   }

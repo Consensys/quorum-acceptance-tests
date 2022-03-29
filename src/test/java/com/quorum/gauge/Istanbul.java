@@ -19,6 +19,9 @@
 
 package com.quorum.gauge;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
@@ -32,9 +35,11 @@ import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -51,8 +56,20 @@ public class Istanbul extends AbstractSpecImplementation {
     @Autowired
     private QLightService qLightService;
 
+    @Autowired
+    private Environment environment;
+
+
     @Step({"The consensus should work at the beginning", "The consensus should work after resuming", "The consensus should work after stopping F validators"})
     public void verifyConsensus() {
+        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+        try {
+            Gauge.writeMessage(ow.writeValueAsString(networkProperty));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        Arrays.stream(environment.getActiveProfiles()).forEach(Gauge::writeMessage);
+
         int diff = 3;
         // wait for blockheight increases by 3 from the current one
         waitForBlockHeight(currentBlockNumber().intValue(), currentBlockNumber().intValue() + diff);
@@ -93,6 +110,9 @@ public class Istanbul extends AbstractSpecImplementation {
         // in qlight networks we cannot use a qlight client for network API requests as their only peer is the corresponding server
         // so, make sure to get a full node for these requests
         QuorumNode fullNode = configuredNodes.stream().filter(n -> !qLightService.isQLightClient(n)).findFirst().get();
+
+        Gauge.writeMessage("CHRISSY using %s as full node for RPC queries", fullNode.name());
+
         int totalNodesLive = utilService.getNumberOfNodes(fullNode) + 1;
         List<String> validatorAddresses = istanbulService.getValidators(fullNode).blockingFirst().get();
 

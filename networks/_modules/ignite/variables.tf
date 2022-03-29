@@ -176,6 +176,8 @@ variable "hybrid_key_data" {
   description = "tessera key data for hybrid network"
 }
 
+
+# TODO(cjh) maybe delete if qlight_clients replaces it
 variable "qlight_client_indices" {
   type = list(number)
 }

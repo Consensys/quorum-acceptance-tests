@@ -1,7 +1,6 @@
 package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNetworkProperty;
-import com.quorum.gauge.ext.BoolResponse;
 import com.quorum.gauge.ext.IstanbulNodeAddress;
 import com.quorum.gauge.ext.IstanbulPropose;
 import com.quorum.gauge.ext.ListIstanbulNodeAddress;

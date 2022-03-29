@@ -19,13 +19,12 @@
 
 package com.quorum.gauge.services;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
-import com.quorum.gauge.ext.*;
-import com.thoughtworks.gauge.Gauge;
+import com.quorum.gauge.ext.IstanbulNodeAddress;
+import com.quorum.gauge.ext.IstanbulPropose;
+import com.quorum.gauge.ext.ListIstanbulNodeAddress;
+import com.quorum.gauge.ext.MinerStartStop;
 import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
