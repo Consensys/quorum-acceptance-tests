@@ -19,11 +19,13 @@
 
 package com.quorum.gauge.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
-import com.quorum.gauge.ext.IstanbulNodeAddress;
-import com.quorum.gauge.ext.IstanbulPropose;
-import com.quorum.gauge.ext.MinerStartStop;
+import com.quorum.gauge.ext.*;
+import com.thoughtworks.gauge.Gauge;
 import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,6 +82,24 @@ public class IstanbulService extends AbstractService {
             Arrays.asList(proposedValidatorAddress, vote),
             connectionFactory().getWeb3jService(node),
             IstanbulPropose.class
+        ).flowable().toObservable();
+    }
+
+    public Observable<ListIstanbulNodeAddress> getValidators(final QuorumNode n) {
+        QuorumNetworkProperty.Node node = networkProperty().getNode(n.name());
+
+        logger.debug("Request node {} to get validators", node);
+
+        // Check if the node is a besu node, if yes call besu specific API
+        if(isBesuNode(node)) {
+            return besuService.getValidators(node);
+        }
+
+        return new Request<>(
+            "istanbul_getValidators",
+            Arrays.asList(),
+            connectionFactory().getWeb3jService(node),
+            ListIstanbulNodeAddress.class
         ).flowable().toObservable();
     }
 

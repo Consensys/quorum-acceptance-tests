@@ -81,3 +81,11 @@ output "debug_accounts" {
 output "debug_named_accounts_alloc" {
   value = local.named_accounts_alloc
 }
+
+output "debug_tm_named_keys_alloc" {
+  value = local.tm_named_keys_alloc
+}
+
+output "debug_qlight_clients" {
+  value = var.qlight_clients
+}

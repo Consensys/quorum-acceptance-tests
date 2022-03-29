@@ -208,6 +208,7 @@ public class QuorumNetworkProperty {
     public static class Node {
         // this value is not expected from YML
         private String name;
+        private boolean isQLightClient;
         private String privacyAddress;
         private Map<String, String> privacyAddressAliases = new LinkedHashMap<>();
         private Map<String, String> accountAliases = new LinkedHashMap<>();
@@ -302,6 +303,14 @@ public class QuorumNetworkProperty {
 
         public void setPsi(String psi) {
             this.psi = psi;
+        }
+
+        public boolean getIsQLightClient() {
+            return isQLightClient;
+        }
+
+        public void setIsQLightClient(boolean isQLightClient) {
+            this.isQLightClient = isQLightClient;
         }
     }
 

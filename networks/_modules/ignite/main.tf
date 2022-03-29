@@ -77,7 +77,6 @@ resource "local_file" "configuration" {
 quorum:
   nodes:
 %{for i in data.null_data_source.meta[*].inputs.idx~}
-
 %{for a, b in local.vnodes[i].vnodes~}
     ${format("%s:", b.name)}
 %{if var.consensus == "istanbul"~}
@@ -90,7 +89,13 @@ quorum:
       url: ${data.null_data_source.meta[i].inputs.nodeUrl}
 %{endif~}
       enode-url: ${local.enode_urls[i]}
+%{if lookup(var.qlight_clients, i, null) != null~}
+      is-qlight-client: true
+      third-party-url: ${data.null_data_source.meta[var.qlight_clients[i].ql_server_idx].inputs.tmThirdpartyUrl}
+%{else~}
+      is-qlight-client: false
       third-party-url: ${data.null_data_source.meta[i].inputs.tmThirdpartyUrl}
+%{endif~}
 %{if local.vnodes[i].mpsEnabled~}
       graphql-url: ${data.null_data_source.meta[i].inputs.graphqlUrl}/?PSI=${b.name}
 %{endif~}
@@ -104,7 +109,7 @@ quorum:
       account-aliases:
 %{for k, name in b.ethKeys~}
 %{if lookup(var.qlight_clients, i, null) != null~}
-        ${name}: "${element(quorum_bootstrap_keystore.accountkeys-generator[index(local.non_qlight_client_node_indices, var.qlight_clients[i].ql_server_idx)].account.*.address, index(local.named_accounts_alloc[index(local.non_qlight_client_node_indices, var.qlight_clients[i].ql_server_idx)], name))}"
+        ${name}: "${element(quorum_bootstrap_keystore.accountkeys-generator[index(local.non_qlight_client_node_indices, var.qlight_clients[i].ql_server_idx)].account.*.address, index(local.named_accounts_alloc[var.qlight_clients[i].ql_server_idx], name))}"
 %{else~}
         ${name}: "${element(quorum_bootstrap_keystore.accountkeys-generator[index(local.non_qlight_client_node_indices, parseint(i, 10))].account.*.address, index(local.named_accounts_alloc[i], name))}"
 %{endif~}

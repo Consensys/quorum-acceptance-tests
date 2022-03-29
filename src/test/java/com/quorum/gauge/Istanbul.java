@@ -19,9 +19,11 @@
 
 package com.quorum.gauge;
 
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.services.IstanbulService;
+import com.quorum.gauge.services.QLightService;
 import com.thoughtworks.gauge.ContinueOnFailure;
 import com.thoughtworks.gauge.Gauge;
 import com.thoughtworks.gauge.Step;
@@ -44,7 +46,10 @@ public class Istanbul extends AbstractSpecImplementation {
     private static final Logger logger = LoggerFactory.getLogger(Istanbul.class);
 
     @Autowired
-    IstanbulService istanbulService;
+    private IstanbulService istanbulService;
+
+    @Autowired
+    private QLightService qLightService;
 
     @Step({"The consensus should work at the beginning", "The consensus should work after resuming", "The consensus should work after stopping F validators"})
     public void verifyConsensus() {
@@ -55,44 +60,12 @@ public class Istanbul extends AbstractSpecImplementation {
 
     @Step("Among all validators, stop F validators")
     public void stopFValidators() {
-        int totalNodesLive = utilService.getNumberOfNodes(QuorumNode.Node1) + 1;
-        int totalNodesConfigured = numberOfQuorumNodes();
-        int numOfValidatorsToStop = Math.round((totalNodesLive -1) / 3.0f);
-
-        // we only can stop validators that are configured
-        assertThat(numOfValidatorsToStop).describedAs("Not enough configured validators to perform STOP operation").isLessThanOrEqualTo(totalNodesConfigured);
-
-        Gauge.writeMessage(String.format("Stopping %d validators from total of %d validators", numOfValidatorsToStop, totalNodesLive));
-
-        List<QuorumNode> nodes = Observable.fromArray(QuorumNode.values()).take(totalNodesConfigured).toList().blockingGet();
-        Collections.shuffle(nodes);
-        List<QuorumNode> stoppedNodes = nodes.subList(0, numOfValidatorsToStop);
-        Observable.fromIterable(stoppedNodes)
-            .flatMap(istanbulService::stopMining)
-            .blockingSubscribe();
-
-        DataStoreFactory.getScenarioDataStore().put("stoppedNodes", stoppedNodes);
+        stopValidators(false);
     }
 
     @Step("Among all validators, stop F+1 validators")
     public void stopMoreThanFValidators() {
-        int totalNodesLive = utilService.getNumberOfNodes(QuorumNode.Node1) + 1;
-        int totalNodesConfigured = numberOfQuorumNodes();
-        int numOfValidatorsToStop = Math.round((totalNodesLive -1) / 3.0f) + 1;
-
-        // we only can stop validators that are configured
-        assertThat(numOfValidatorsToStop).describedAs("Not enough configured validators to perform STOP operation").isLessThanOrEqualTo(totalNodesConfigured);
-
-        Gauge.writeMessage(String.format("Stopping %d validators from total of %d validators", numOfValidatorsToStop, totalNodesLive));
-
-        List<QuorumNode> nodes = Observable.fromArray(QuorumNode.values()).take(totalNodesConfigured).toList().blockingGet();
-        Collections.shuffle(nodes);
-        List<QuorumNode> stoppedNodes = nodes.subList(0, numOfValidatorsToStop);
-        Observable.fromIterable(stoppedNodes)
-            .flatMap(istanbulService::stopMining)
-            .blockingSubscribe();
-
-        DataStoreFactory.getScenarioDataStore().put("stoppedNodes", stoppedNodes);
+        stopValidators(true);
     }
 
     @ContinueOnFailure
@@ -111,5 +84,42 @@ public class Istanbul extends AbstractSpecImplementation {
         Observable.fromIterable(nodes)
                 .flatMap(istanbulService::startMining)
                 .blockingSubscribe();
+    }
+
+    private void stopValidators(boolean stopMoreThanF) {
+        int totalNodesConfigured = numberOfQuorumNodes();
+        List<QuorumNode> configuredNodes = Observable.fromArray(QuorumNode.values()).take(totalNodesConfigured).toList().blockingGet();
+
+        // in qlight networks we cannot use a qlight client for network API requests as their only peer is the corresponding server
+        // so, make sure to get a full node for these requests
+        QuorumNode fullNode = configuredNodes.stream().filter(n -> !qLightService.isQLightClient(n)).findFirst().get();
+        int totalNodesLive = utilService.getNumberOfNodes(fullNode) + 1;
+        List<String> validatorAddresses = istanbulService.getValidators(fullNode).blockingFirst().get();
+
+        int numOfValidatorsToStop = Math.round((validatorAddresses.size() - 1) / 3.0f);
+        if(stopMoreThanF) {
+            numOfValidatorsToStop++;
+        }
+
+        // we only can stop validators that are configured
+        assertThat(numOfValidatorsToStop).describedAs("Not enough configured validators to perform STOP operation").isLessThanOrEqualTo(totalNodesConfigured);
+        Gauge.writeMessage(String.format("Stopping %d validators from total of %d validators", numOfValidatorsToStop, totalNodesLive));
+
+        List<QuorumNode> validatorNodes = Observable.fromArray(QuorumNode.values())
+            .take(totalNodesConfigured)
+            .filter(n -> {
+                QuorumNetworkProperty.Node nn = networkProperty.getNode(n.name());
+                return validatorAddresses.contains(nn.getIstanbulValidatorId());
+            })
+            .toList()
+            .blockingGet();
+
+        Collections.shuffle(validatorNodes);
+        List<QuorumNode> stoppedNodes = validatorNodes.subList(0, numOfValidatorsToStop);
+        Observable.fromIterable(stoppedNodes)
+            .flatMap(istanbulService::stopMining)
+            .blockingSubscribe();
+
+        DataStoreFactory.getScenarioDataStore().put("stoppedNodes", stoppedNodes);
     }
 }
