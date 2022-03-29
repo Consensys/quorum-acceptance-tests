@@ -68,6 +68,18 @@ public class IstanbulService extends AbstractService {
         ).flowable().toObservable();
     }
 
+    public Observable<ListIstanbulNodeAddress> getValidators(final QuorumNode n) {
+        QuorumNetworkProperty.Node node = networkProperty().getNode(n.name());
+        logger.debug("Request node {} to get validators", node);
+
+        return new Request<>(
+            "istanbul_getValidators",
+            Arrays.asList(),
+            connectionFactory().getWeb3jService(node),
+            ListIstanbulNodeAddress.class
+        ).flowable().toObservable();
+    }
+
     public Observable<IstanbulPropose> propose(final QuorumNetworkProperty.Node node, final String proposedValidatorAddress, boolean vote) {
         logger.debug("Node {} proposing {}", node, proposedValidatorAddress);
 
@@ -81,18 +93,6 @@ public class IstanbulService extends AbstractService {
             Arrays.asList(proposedValidatorAddress, vote),
             connectionFactory().getWeb3jService(node),
             IstanbulPropose.class
-        ).flowable().toObservable();
-    }
-
-    public Observable<ListIstanbulNodeAddress> getValidators(final QuorumNode n) {
-        QuorumNetworkProperty.Node node = networkProperty().getNode(n.name());
-        logger.debug("Request node {} to get validators", node);
-
-        return new Request<>(
-            "istanbul_getValidators",
-            Arrays.asList(),
-            connectionFactory().getWeb3jService(node),
-            ListIstanbulNodeAddress.class
         ).flowable().toObservable();
     }
 
