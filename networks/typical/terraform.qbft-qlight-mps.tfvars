@@ -1,11 +1,11 @@
 #
 #  This network sets up a 6 node qlight network where the atests will execute against ql server nodes
-#  node 1 ql server
+#  node 1 ql server mps node (PSIs=[Node1, Node7])
 #  node 2 standard node
 #  node 3 standard node
-#  node 4 ql server
-#  node 5 ql client (server = node 1)
-#  node 6 ql client (server = node 4)
+#  node 4 ql server standard node
+#  node 5 ql client (server = node 1, psi Node1)
+#  node 6 ql client (server = node 1, psi Node7)
 #
 
 number_of_nodes     = 6
@@ -15,7 +15,7 @@ quorum_docker_image = { name = "quorumengineering/quorum:qlight", local = true }
 
 qlight_clients = {
     4 = { ql_server_idx = 0, psi = "Node1" },
-    5 = { ql_server_idx = 3, psi = "" }
+    5 = { ql_server_idx = 0, psi = "Node7" }
 }
 
 qlight_server_indices = [0, 3]
@@ -27,8 +27,7 @@ override_tm_named_key_allocation = {
     2 = ["TmKey2"]
     3 = ["TmKey3"]
     4 = ["TmKey0"]
-    5 = ["TmKey3"]
-
+    5 = ["TmKey6"]
 }
 # this is to setup the Ethereum Accounts allocation per acceptance tests requirement
 override_named_account_allocation = {
@@ -37,7 +36,7 @@ override_named_account_allocation = {
     2 = ["EthKey2"]
     3 = ["EthKey3"]
     4 = ["EthKey0"]
-    5 = ["EthKey3"]
+    5 = ["EthKey6"]
 }
 
 override_vnodes = {
@@ -101,8 +100,8 @@ override_vnodes = {
         vnodes = {
             "id" = {
                 name = "Node6"
-                ethKeys = ["EthKey3"]
-                "tmKeys" = ["TmKey3"]
+                ethKeys = ["EthKey6"]
+                "tmKeys" = ["TmKey6"]
             }
         }
     }

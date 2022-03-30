@@ -4,8 +4,8 @@
 #  node 2 standard node
 #  node 3 standard node
 #  node 4 ql client (server = node 6)
-#  node 5 ql server
-#  node 6 ql server
+#  node 5 ql server standard node
+#  node 6 ql server standard node
 #
 
 number_of_nodes     = 6
@@ -14,8 +14,8 @@ qbftBlock           = { block = 0, enabled = true }
 quorum_docker_image = { name = "quorumengineering/quorum:qlight", local = true }
 
 qlight_clients = {
-    0 = { ql_server_idx = 4 },
-    3 = { ql_server_idx = 5 }
+    0 = { ql_server_idx = 4, psi = "" },
+    3 = { ql_server_idx = 5, psi = "" }
 }
 
 qlight_server_indices = [4, 5]
