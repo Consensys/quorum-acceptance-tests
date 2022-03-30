@@ -145,8 +145,8 @@ variable "accounts_count" {
 }
 
 variable "qlight_clients" {
-  type = map(object({ ql_server_idx = number }))
-  description = "Map of which nodes are qlight clients (by 0-based index) and additional config including the index of their corresponding server node"
+  type = map(object({ ql_server_idx = number, psi = string }))
+  description = "Keys are nodes to configure as qlight clients (by 0-based index).  Values are additional config. ql_server_idx: 0-based index of the qlclient's server node, psi: the psi to connect to if qlclient's server node is using mps (use empty string if mps is disabled)"
 }
 
 variable "qlight_server_indices" {

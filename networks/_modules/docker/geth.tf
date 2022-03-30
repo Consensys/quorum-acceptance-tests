@@ -182,11 +182,14 @@ QLIGHT_ARGS="--qlight.server \
   --qlight.server.p2p.port ${var.geth_networking[count.index].port.qlight}"
 %{endif}
 
-%{if contains(local.qlight_client_indices, count.index)~}
+%{if lookup(var.qlight_clients, tostring(count.index), null) != null~}
 echo "CHRISSY qlight client"
 QLIGHT_ARGS="--qlight.client \
-  --qlight.client.serverNode ${var.qlight_p2p_urls[var.qlight_clients[format("%d", count.index)].ql_server_idx]} \
-  --qlight.client.serverNodeRPC ${local.internal_node_rpc_urls[var.qlight_clients[format("%d", count.index)].ql_server_idx]}"
+%{if var.qlight_clients[tostring(count.index)].psi != ""}
+  --qlight.client.psi ${var.qlight_clients[tostring(count.index)].psi}
+%{endif}
+  --qlight.client.serverNode ${var.qlight_p2p_urls[var.qlight_clients[tostring(count.index)].ql_server_idx]} \
+  --qlight.client.serverNodeRPC ${local.internal_node_rpc_urls[var.qlight_clients[tostring(count.index)].ql_server_idx]}"
 %{endif}
 echo "CHRISSY QLIGHT_ARGS=$QLIGHT_ARGS"
 
