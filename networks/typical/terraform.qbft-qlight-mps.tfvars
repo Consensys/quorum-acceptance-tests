@@ -11,6 +11,7 @@
 number_of_nodes     = 6
 consensus           = "istanbul"
 qbftBlock           = { block = 0, enabled = true }
+privacy_enhancements = { block = 0, enabled = true }
 quorum_docker_image = { name = "quorumengineering/quorum:qlight", local = true }
 
 qlight_clients = {
