@@ -30,6 +30,7 @@ import com.thoughtworks.gauge.Table;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -175,5 +177,31 @@ public class NetworkMigration extends AbstractSpecImplementation {
 
         assertThat(status & InfrastructureService.STATUS_RUNNING).as("Network must be running").isEqualTo(InfrastructureService.STATUS_RUNNING);
         assertThat(status & InfrastructureService.STATUS_HEALTHY).as("Network must be healthy").isEqualTo(InfrastructureService.STATUS_HEALTHY);
+    }
+
+    @Step("Verify nodes <nodes> are using <consensusAlgorithm> consensus")
+    public void checkAllNodesAreUsingConsensus(List<QuorumNetworkProperty.Node> nodes, String consensusAlgorithm) {
+        NetworkResources networkResources = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "networkResources", NetworkResources.class);
+
+        final String grepString = getGrepString(consensusAlgorithm);
+        var waitForLog = Observable.fromIterable(nodes)
+            .flatMap(n -> {
+                var resourceId = networkResources.getResourceId(n.getName()).stream().filter(i -> infraService.isGeth(i).blockingFirst()).findFirst().get();
+                return infraService.grepLog(resourceId, grepString, 30, TimeUnit.SECONDS);
+            }).blockingIterable();
+
+        assertThat(waitForLog).allMatch(found -> found);
+    }
+
+    @NotNull
+    private String getGrepString(final String consensusAlgorithm) {
+        if(consensusAlgorithm.compareToIgnoreCase("ibft") == 0) {
+            return "Start new ibft round";
+        } else if(consensusAlgorithm.compareToIgnoreCase("qbft") == 0) {
+            return "QBFT: start new round";
+        } else {
+            assertThat(true).isEqualTo(false).as("Do not know how to grep for " + consensusAlgorithm);
+            throw new RuntimeException("Do not know how to grep for " + consensusAlgorithm);
+        }
     }
 }

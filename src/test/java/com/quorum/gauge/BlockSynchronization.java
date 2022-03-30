@@ -208,6 +208,11 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         verifyBlockHeight(node, latestBlockHeightName, ">=");
     }
 
+    @Step("Verify nodes <nodes> have a block height less than or equal to <latestBlockHeightName>")
+    public void verifyNodesBlockHeightLessThanOrEqualTo(List<Node> nodes, String latestBlockHeightName) {
+        nodes.forEach(node -> verifyBlockHeight(node, latestBlockHeightName, "<="));
+    }
+
     @Step("Verify node <node> has the block height less than or equal to <latestBlockHeightName>")
     public void verifyBlockHeightLessThanOrEqualTo(Node node, String latestBlockHeightName) {
         verifyBlockHeight(node, latestBlockHeightName, "<=");
