@@ -243,9 +243,9 @@
 * Deploy a "StateValidation" storage master contract in "Node7"'s default account and it's private for "Node3", named this contract as "smPrivate2"
 
 * Transaction Hash is returned for "smPrivate2"
-* Transaction Receipt is present in "Node6" for "smPrivate2" from "Node2"'s default account
-* Transaction Receipt is present in "Node7" for "smPrivate2" from "Node2"'s default account
-* Transaction Receipt is present in "Node3" for "smPrivate2" from "Node2"'s default account
+* Transaction Receipt is present in "Node6" for "smPrivate2" from "Node7"'s default account
+* Transaction Receipt is present in "Node7" for "smPrivate2" from "Node7"'s default account
+* Transaction Receipt is present in "Node3" for "smPrivate2" from "Node7"'s default account
 * Deploy a "StateValidation" simple storage C2C3 with value "5" from master storage contract "smPrivate2" in "Node7"'s default account and it's private for "Node3"
 * "smPrivate2"'s `getC2C3Value()` function execution in "Node1" returns "0"
 * "smPrivate2"'s `getC2C3Value()` function execution in "Node2" returns "0"

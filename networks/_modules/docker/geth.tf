@@ -221,8 +221,9 @@ ARGS="--identity Node${count.index + 1} \
   --unlock ${join(",", range(var.accounts_count[count.index]))} \
 %{endif}
   --password ${local.container_geth_datadir}/${var.password_file_name} \
+  --syncmode full \
 %{if contains(local.full_node_indices, count.index)~}
-  ${(var.consensus == "istanbul" || var.consensus == "qbft") ? "--istanbul.blockperiod 1 --syncmode full --mine --miner.threads 1" : format("--raft --raftport %d", var.geth_networking[count.index].port.raft)} \
+  ${(var.consensus == "istanbul" || var.consensus == "qbft") ? "--istanbul.blockperiod 1 --mine --miner.threads 1" : format("--raft --raftport %d", var.geth_networking[count.index].port.raft)} \
 %{endif~}
   $QLIGHT_ARGS \
   $ADDITIONAL_GETH_ARGS"
