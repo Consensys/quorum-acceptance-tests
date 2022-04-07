@@ -1,5 +1,4 @@
-consensus    = "istanbul"
-qbftBlock    = { block = 0, enabled = true }
+consensus    = "qbft"
 network_name = "account-plugin-hashicorp-vault-istanbul"
 plugins = {
   account = {

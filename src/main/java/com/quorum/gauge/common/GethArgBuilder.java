@@ -81,7 +81,7 @@ public class GethArgBuilder {
 
     /**
      * Add/remove {@code --gcmode}
-     * @param mode black means remove
+     * @param mode blank means remove
      * @return
      */
     public GethArgBuilder gcmode(String mode) {

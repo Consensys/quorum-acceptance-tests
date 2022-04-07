@@ -9,6 +9,8 @@ import com.quorum.gauge.services.ExtensionService;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStore;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
@@ -25,6 +27,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @Service
 public class ContractExtension extends AbstractSpecImplementation {
+
+    private static final Logger logger = LoggerFactory.getLogger(ContractExtension.class);
 
     private final ExtensionService extensionService;
 
@@ -150,6 +154,10 @@ public class ContractExtension extends AbstractSpecImplementation {
         final QuorumVoteOnContract result = this.extensionService
             .acceptExtension(newNode, true, contractAddress, allNodes, privacyFlag)
             .blockingFirst();
+
+        if(result.getError() != null) {
+            logger.error(result.getError().toString());
+        }
 
         assertThat(result.getError()).isNull();
 

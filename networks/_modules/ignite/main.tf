@@ -15,7 +15,8 @@ locals {
   node_dir_prefix           = "quorum-"
   tm_dir_prefix             = "tm-"
   password_file             = "password.txt"
-  genesis_file              = "genesis.json"
+  latest_genesis_file       = "latest-genesis.json"
+  legacy_genesis_file       = "legacy-genesis.json"
   number_of_nodes           = length(var.geth_networking)
   node_indices              = range(local.number_of_nodes) // 0-based node index
   hybrid_network            = var.hybrid_network

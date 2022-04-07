@@ -3,6 +3,5 @@
 
 number_of_nodes       = 4
 exclude_initial_nodes = [3]
-consensus             = "istanbul"
+consensus             = "qbft"
 addtional_geth_args   = "--allow-insecure-unlock"
-qbftBlock             = { block = 0, enabled = true }

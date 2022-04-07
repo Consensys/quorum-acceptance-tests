@@ -2,8 +2,7 @@
 # This represents a typical network upgrade scenario where a node (Node0) is setup to
 # enable MPS
 
-consensus = "istanbul"
-qbftBlock = { block = 0, enabled = true }
+consensus = "qbft"
 
 #Enable MPS but configure only 1 private state
 

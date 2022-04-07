@@ -126,7 +126,7 @@ EOT
 variable "qbftBlock" {
   type        = object({ block = number, enabled = bool })
   default     = { block = 0, enabled = false }
-  description = "qbft fork block (enabled/disabled) and the block height at which it is enabled"
+  description = "qbft transition/fork block (enabled/disabled) and the block height at which it is enabled"
 }
 
 variable "hybrid_extradata" {
