@@ -22,6 +22,8 @@ locals {
 
   node_indices = range(var.number_of_nodes)
 
+  qlight_client_indices = [for k in keys(var.qlight_clients) : parseint(k, 10)] # map keys are string type, so convert to int
+
   providers = { for k, v in var.plugins : k => { name = v.name, version = v.version, config = format("file://%s/plugins/%s-config.json", module.docker.container_geth_datadir, k) } }
 
   with_hashicorp_plugin = contains(values(var.plugins)[*].name, "quorum-account-plugin-hashicorp-vault")
@@ -39,7 +41,7 @@ module "helper" {
   geth = {
     container = {
       image   = var.quorum_docker_image
-      port    = { raft = 50400, p2p = 21000, http = 8545, ws = -1 }
+      port    = { raft = 50400, p2p = 21000, qlight = 30305, http = 8545, ws = -1 }
       graphql = true
     }
     host = {
@@ -73,6 +75,9 @@ module "network" {
   override_named_account_allocation = var.override_named_account_allocation
   additional_tessera_config         = var.additional_tessera_config
   additional_genesis_config         = var.additional_genesis_config
+
+  qlight_client_indices = local.qlight_client_indices
+  qlight_clients = var.qlight_clients
 }
 
 module "docker" {
@@ -105,6 +110,11 @@ module "docker" {
   additional_tessera_container_vol = var.additional_tessera_container_vol
   tessera_app_container_path       = var.tessera_app_container_path
   accounts_count                   = module.network.accounts_count
+
+  qlight_clients = var.qlight_clients
+  qlight_server_indices = var.qlight_server_indices
+  qlight_p2p_urls = module.network.qlight_p2p_urls
+  node_rpc_urls = module.network.node_rpc_urls
 }
 
 # we randomize the plugin central configuration so some nodes use the proxy

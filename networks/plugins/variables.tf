@@ -174,3 +174,15 @@ variable "qbftBlock" {
   default     = { block = 0, enabled = false }
   description = "qbft fork block (enabled/disabled) and the block height at which it is enabled"
 }
+
+variable "qlight_clients" {
+  type = map(object({ ql_server_idx = number, psi = string }))
+  default = {}
+  description = "Map of which nodes are qlight clients (by 0-based index) and additional config including the index of their corresponding server node"
+}
+
+variable "qlight_server_indices" {
+  type = list(number)
+  default = []
+  description = "List of which nodes are qlight servers (by 0-based index)"
+}
