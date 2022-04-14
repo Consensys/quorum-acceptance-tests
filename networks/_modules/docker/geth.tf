@@ -139,7 +139,7 @@ fi
 
 VERSION=$(geth version | grep Quorum | cut -d ':' -f2 | xargs echo -n)
 
-if [ $VERSION == '2.5.0' ] || [ $VERSION == '21.10.0' ] || [ $VERSION == '21.4.0' ]; then
+if [ $VERSION == '2.5.0' ] || [ $VERSION == '21.10.0' ] || [ $VERSION == '21.4.0' ] || [ $VERSION == '22.1.1' ]; then
   echo "Initializing geth with legacy genesis"
   cat ${local.container_geth_datadir}/legacy-genesis.json
   geth --datadir ${local.container_geth_datadir} init ${local.container_geth_datadir}/legacy-genesis.json
@@ -170,7 +170,7 @@ else
   export ADDITIONAL_GETH_ARGS="${lookup(var.additional_geth_args, count.index, "")} $ADDITIONAL_GETH_ARGS"
 fi
 
-if [ $VERSION == '2.5.0' ] || [ $VERSION == '21.10.0' ]; then
+if [ $VERSION == '2.5.0' ] || [ $VERSION == '21.10.0' ] || [ $VERSION == '22.1.1' ]; then
   export ADDITIONAL_GETH_ARGS="${(var.consensus == "istanbul" || var.consensus == "qbft") ? "--istanbul.blockperiod 1 " : ""} $ADDITIONAL_GETH_ARGS"
 fi
 
