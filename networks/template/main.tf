@@ -83,7 +83,8 @@ module "docker" {
   password_file_name               = module.network.password_file_name
   geth_datadirs                    = var.remote_docker_config == null ? module.network.data_dirs : split(",", join("", null_resource.scp[*].triggers.data_dirs))
   tessera_datadirs                 = var.remote_docker_config == null ? module.network.tm_dirs : split(",", join("", null_resource.scp[*].triggers.tm_dirs))
-  privacy_marker_transactions = var.privacy_marker_transactions
+  privacy_marker_transactions      = var.privacy_marker_transactions
+  private_trie_cache               = var.private_trie_cache
   exclude_initial_nodes            = module.network.exclude_initial_nodes
   start_quorum                     = false
   start_tessera                    = false

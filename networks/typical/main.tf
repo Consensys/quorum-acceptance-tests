@@ -100,6 +100,7 @@ module "docker" {
   geth_datadirs      = var.remote_docker_config == null ? module.network.data_dirs : split(",", join("", null_resource.scp[*].triggers.data_dirs))
   tessera_datadirs   = var.remote_docker_config == null ? module.network.tm_dirs : split(",", join("", null_resource.scp[*].triggers.tm_dirs))
   privacy_marker_transactions = var.privacy_marker_transactions
+  private_trie_cache = var.private_trie_cache
 
   additional_geth_args             = { for idx in local.node_indices : idx => local.more_args }
   additional_geth_container_vol    = var.additional_quorum_container_vol

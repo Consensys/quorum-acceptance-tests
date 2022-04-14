@@ -96,6 +96,11 @@ variable "privacy_marker_transactions" {
   description = "Enable privacy marker transactions on the node"
 }
 
+variable "private_trie_cache" {
+  type        = bool
+  description = "Enable private trie cache"
+}
+
 variable "ethstats_secret" {}
 
 variable "ethstats_ip" {}

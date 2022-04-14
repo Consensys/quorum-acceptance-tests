@@ -184,6 +184,9 @@ ARGS="--identity Node${count.index + 1} \
 %{if var.privacy_marker_transactions~}
   --privacymarker.enable \
 %{endif~}
+%{if var.private_trie_cache~}
+  --privatetriecache.enable \
+%{endif~}
 %{if var.geth_networking[count.index].port.ws != null~}
   --ws \
   --wsaddr 0.0.0.0 \
