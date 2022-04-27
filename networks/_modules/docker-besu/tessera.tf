@@ -38,7 +38,7 @@ resource "docker_container" "tessera" {
   }
   env = local.tm_env
   healthcheck {
-    test         = ["CMD", "nc", "-vz", "localhost", var.tm_networking[local.tessera_node_indices[count.index]].port.thirdparty.internal]
+    test         = ["CMD", "curl", "--silent", "--output", "/dev/null" , format("localhost:%s/upcheck", var.tm_networking[local.tessera_node_indices[count.index]].port.thirdparty.internal)]
     interval     = "5s"
     retries      = 60
     timeout      = "5s"
