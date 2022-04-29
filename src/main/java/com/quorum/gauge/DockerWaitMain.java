@@ -133,8 +133,8 @@ public class DockerWaitMain implements CommandLineRunner {
                 all.add(dockerService.getState(prop.getEthSignerContainerId().get()));
             }
         }
-        // check containers
-        int attemptCount = 60;
+        // check containers wait for 5 minutes for things to start
+        int attemptCount = 10;
         int allUp = 1;
         for (int i = 0; i < attemptCount; i++) {
             AtomicReference<DockerInfrastructureService.BasicContainerState> deathState = new AtomicReference<>();
@@ -167,8 +167,8 @@ public class DockerWaitMain implements CommandLineRunner {
                 break;
             }
 
-            logger.info("Waiting 3s ... as containers are still starting up");
-            Thread.sleep(3000);
+            logger.info("Waiting 30s ... as containers are still starting up");
+            Thread.sleep(30000);
             allUp++;
         }
         // grace period to allow network to start up
