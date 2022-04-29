@@ -458,6 +458,13 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         assertThat(lastBlockHeight1).isGreaterThan(lastBlockHeight2);
     }
 
+    @Step("Verify block height <bhName1> is greater than or equal to <bhName2>")
+    public void compareBlockHeightsGreaterThanOrEqualTo(String bhName1, String bhName2) {
+        BigInteger lastBlockHeight1 = mustHaveValue(DataStoreFactory.getScenarioDataStore(), bhName1, BigInteger.class);
+        BigInteger lastBlockHeight2 = mustHaveValue(DataStoreFactory.getScenarioDataStore(), bhName2, BigInteger.class);
+        assertThat(lastBlockHeight1).isGreaterThanOrEqualTo(lastBlockHeight2);
+    }
+
     @Step("Verify block height <bhName1> is equal to <bhName2>")
     public void compareBlockHeightsEqualTo(String bhName1, String bhName2) {
         BigInteger lastBlockHeight1 = mustHaveValue(DataStoreFactory.getScenarioDataStore(), bhName1, BigInteger.class);
