@@ -477,15 +477,13 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         GethArgBuilder additionalGethArgs = GethArgBuilder.newBuilder();
         NetworkResources networkResources = new NetworkResources();
         try {
-            Observable.fromIterable(nodes).flatMap(node -> {
-                    return infraService.startNode(NodeAttributes.forNode(node.getName())
-                            .withAdditionalGethArgs(additionalGethArgs),
-                        resourceId -> networkResources.add(node.getName(), resourceId)
+            Observable.fromIterable(nodes)
+                .flatMap(node ->
+                    infraService.startNode(NodeAttributes.forNode(node.getName()).withAdditionalGethArgs(additionalGethArgs), resourceId -> networkResources.add(node.getName(), resourceId)
+                    ).doOnNext(ok ->
+                        assertThat(ok).as("Node must start successfully {}", node.getName()).isTrue()
                     )
-                        .doOnNext(ok ->
-                            assertThat(ok).as("Node must start successfully {}", node.getName()).isTrue()
-                        );
-                })
+                )
                 .blockingSubscribe();
 
             utilService.waitForNodesToReach(networkProperty.getConsensusBlockHeight(), nodes.toArray(Node[]::new));
