@@ -458,6 +458,13 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         assertThat(lastBlockHeight1).isGreaterThan(lastBlockHeight2);
     }
 
+    @Step("Verify block height <bhName1> is greater than or equal to <bhName2>")
+    public void compareBlockHeightsGreaterThanOrEqualTo(String bhName1, String bhName2) {
+        BigInteger lastBlockHeight1 = mustHaveValue(DataStoreFactory.getScenarioDataStore(), bhName1, BigInteger.class);
+        BigInteger lastBlockHeight2 = mustHaveValue(DataStoreFactory.getScenarioDataStore(), bhName2, BigInteger.class);
+        assertThat(lastBlockHeight1).isGreaterThanOrEqualTo(lastBlockHeight2);
+    }
+
     @Step("Verify block height <bhName1> is equal to <bhName2>")
     public void compareBlockHeightsEqualTo(String bhName1, String bhName2) {
         BigInteger lastBlockHeight1 = mustHaveValue(DataStoreFactory.getScenarioDataStore(), bhName1, BigInteger.class);
@@ -470,9 +477,14 @@ public class BlockSynchronization extends AbstractSpecImplementation {
         GethArgBuilder additionalGethArgs = GethArgBuilder.newBuilder();
         NetworkResources networkResources = new NetworkResources();
         try {
-            Observable.fromIterable(nodes).flatMap(n -> infraService.startNode(NodeAttributes.forNode(n.getName()).withAdditionalGethArgs(additionalGethArgs), resourceId -> networkResources.add(n.getName(), resourceId))).doOnNext(ok -> {
-                assertThat(ok).as("Node must start successfully").isTrue();
-            }).blockingSubscribe();
+            Observable.fromIterable(nodes)
+                .flatMap(node ->
+                    infraService.startNode(NodeAttributes.forNode(node.getName()).withAdditionalGethArgs(additionalGethArgs), resourceId -> networkResources.add(node.getName(), resourceId)
+                    ).doOnNext(ok ->
+                        assertThat(ok).as("Node must start successfully {}", node.getName()).isTrue()
+                    )
+                )
+                .blockingSubscribe();
 
             utilService.waitForNodesToReach(networkProperty.getConsensusBlockHeight(), nodes.toArray(Node[]::new));
 
