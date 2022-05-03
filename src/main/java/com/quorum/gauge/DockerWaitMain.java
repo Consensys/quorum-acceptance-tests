@@ -133,7 +133,7 @@ public class DockerWaitMain implements CommandLineRunner {
                 all.add(dockerService.getState(prop.getEthSignerContainerId().get()));
             }
         }
-        // check containers wait for 5 minutes for things to start
+        // check containers wait for 10 minutes for things to start
         int attemptCount = 10;
         int allUp = 1;
         for (int i = 0; i < attemptCount; i++) {
@@ -151,6 +151,12 @@ public class DockerWaitMain implements CommandLineRunner {
                     if (state.isOnGoing()) {
                         isRunning = true;
                     }
+                    if (state.getHealthStatus().equalsIgnoreCase("unhealthy")) {
+                        OutputStreamWriter writer = new OutputStreamWriter(System.err);
+                        dockerService.streamLogs(state.getContainerId(), writer);
+                        writer.flush();
+                        logger.error("Container not healthy: " + state.getContainerName());
+                    }
                 }
                 if (isRunning) {
                     return 1;
@@ -167,8 +173,8 @@ public class DockerWaitMain implements CommandLineRunner {
                 break;
             }
 
-            logger.info("Waiting 30s ... as containers are still starting up");
-            Thread.sleep(30000);
+            logger.info("Waiting 60s ... as containers are still starting up");
+            Thread.sleep(60000);
             allUp++;
         }
         // grace period to allow network to start up
