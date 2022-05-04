@@ -23,7 +23,8 @@ quorum:
     admin-endpoint: https://localhost:${local.oauth2_server_admin_port.external}
   nodes:
 %{for id, n in local.application_yml.quorum.nodes~}
-%{if lookup(local.support_security, id, false)~} // TODO(cjh) use this pattern instead of default of null
+# TODO(cjh) use this pattern instead of default of null
+%{if lookup(local.support_security, id, false)~}
     ${id}:
       url: ${replace(replace(lookup(n, "url"), "http://", "https://"), "ws://", "wss://")}
       graphql-url: ${replace(replace(lookup(n, "graphql-url"), "http://", "https://"), "ws://", "wss://")}

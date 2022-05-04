@@ -1,5 +1,5 @@
 #
-#  This network sets up an alternate 6 node qlight network where the atests will execute against ql client nodes
+#  This network sets up an alternate 6 node qlight network where the atests will execute against ql *client* nodes
 #  node 1 ql client (server = node 5)
 #  node 2 standard node
 #  node 3 standard node
