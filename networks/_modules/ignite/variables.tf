@@ -183,6 +183,6 @@ variable "qlight_client_indices" {
 }
 
 variable "qlight_clients" {
-  type = map(object({ ql_server_idx = number, psi = string }))
+  type = map(object({ server_idx = number, psi = string }))
   description = "Map of which nodes are qlight clients (by 0-based index) and additional config including the index of their corresponding server node"
 }

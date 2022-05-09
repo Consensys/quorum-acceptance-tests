@@ -14,8 +14,8 @@ qbftBlock            = { block = 0, enabled = true }
 privacy_enhancements = { block = 0, enabled = true }
 
 qlight_clients = {
-  4 = { ql_server_idx = 0, psi = "Node1" },
-  5 = { ql_server_idx = 0, psi = "Node7" }
+  4 = { server_idx = 0, psi = "Node1" },
+  5 = { server_idx = 0, psi = "Node7" }
 }
 
 qlight_server_indices = [0, 3]

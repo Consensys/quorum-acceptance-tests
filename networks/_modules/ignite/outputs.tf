@@ -89,3 +89,7 @@ output "debug_tm_named_keys_alloc" {
 output "debug_qlight_clients" {
   value = var.qlight_clients
 }
+
+output "debug_keystore_dirs" {
+  value = local.debug_keystore_dirs
+}

@@ -39,11 +39,11 @@ override_additional_geth_args = {
   1 = "--allow-insecure-unlock",
   2 = "--allow-insecure-unlock",
   3 = "--allow-insecure-unlock",
-  4 = "--allow-insecure-unlock",
+  4 = "--allow-insecure-unlock --qlight.client.rpc.tls --qlight.client.rpc.tls.insecureskipverify",
 }
 
 qlight_clients = {
-  4 = { ql_server_idx = 0, psi = "JPM" },
+  4 = { server_idx = 0, server_tls_enabled = true, psi = "JPM" },
 }
 
 qlight_server_indices = [0]

@@ -14,8 +14,8 @@ qbftBlock           = { block = 0, enabled = true }
 quorum_docker_image = { name = "chounsom/qrm:develop", local = false }
 
 qlight_clients = {
-    4 = { ql_server_idx = 0, psi = "" },
-    5 = { ql_server_idx = 3, psi = "" }
+    4 = { server_idx = 0, psi = "" },
+    5 = { server_idx = 3, psi = "" }
 }
 
 qlight_server_indices = [0, 3]

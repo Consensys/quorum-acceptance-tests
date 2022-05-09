@@ -145,8 +145,8 @@ variable "accounts_count" {
 }
 
 variable "qlight_clients" {
-  type = map(object({ ql_server_idx = number, psi = string }))
-  description = "Keys are nodes to configure as qlight clients (by 0-based index).  Values are additional config. ql_server_idx: 0-based index of the qlclient's server node, psi: the psi to connect to if qlclient's server node is using mps (use empty string if mps is disabled)"
+  type = map(object({ server_idx = number, server_tls_enabled = bool, psi = string, scope = string }))
+  description = "Keys are nodes to configure as qlight clients (by 0-based index).  Values are additional config. server_idx: 0-based index of the qlclient's server node, psi: the psi to connect to if qlclient's server node is using mps (use empty string if mps is disabled)"
 }
 
 variable "qlight_server_indices" {
@@ -162,4 +162,20 @@ variable "qlight_p2p_urls" {
 variable "node_rpc_urls" {
   type = list(string)
   description = "List of RPC urls"
+}
+
+variable "oauth2_server" {
+  type = object({
+    start = bool
+    name = string
+    serve_port = object({ internal = number, external = number })
+    admin_port = object({ internal = number, external = number })
+  })
+  default = {
+    start = false
+    name = "default-oauth2-server"
+    serve_port = { internal = 4444, external = 4444 }
+    admin_port = { internal = 4445, external = 4445 }
+  }
+  description = "Whether to start a hydra oauth2 server (e.g. when using the RPC API security plugin"
 }

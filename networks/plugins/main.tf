@@ -35,7 +35,6 @@ locals {
 
 module "helper" {
   source = "../_modules/docker-helper"
-
   consensus       = var.consensus
   number_of_nodes = var.number_of_nodes
   geth = {
@@ -115,6 +114,13 @@ module "docker" {
   qlight_server_indices = var.qlight_server_indices
   qlight_p2p_urls = module.network.qlight_p2p_urls
   node_rpc_urls = module.network.node_rpc_urls
+
+  oauth2_server = {
+    start = local.include_security
+    name = local.oauth2_server
+    serve_port = local.oauth2_server_serve_port
+    admin_port = local.oauth2_server_admin_port
+  }
 }
 
 # we randomize the plugin central configuration so some nodes use the proxy

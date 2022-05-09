@@ -36,14 +36,19 @@ override_plugins = {
 enable_multitenancy = true
 # only want mt on node 5
 override_additional_geth_args = {
-  0 = "--allow-insecure-unlock",
+  0 = "--allow-insecure-unlock --qlight.client.rpc.tls --qlight.client.rpc.tls.insecureskipverify",
   1 = "--allow-insecure-unlock",
   2 = "--allow-insecure-unlock",
   3 = "--allow-insecure-unlock",
 }
 
 qlight_clients = {
-  0 = { ql_server_idx = 4, psi = "JPM" },
+  0 = {
+    server_idx = 4,
+    server_tls_enabled = true,
+    psi = "JPM",
+    scope = "p2p://qlight rpc://eth_* rpc://admin_* rpc://personal_* rpc://quorumExtension_* rpc://rpc_modules psi://$OAUTH_PSI?self.eoa=0x0"
+  },
 }
 
 qlight_server_indices = [4]
@@ -52,6 +57,7 @@ qlight_server_indices = [4]
 override_tm_named_key_allocation = {
   4 = ["JPM_K1", "JPM_K2", "GS_K1", "GS_K2"]
   1 = ["DB_K1"]
+  0 = ["JPM_K1", "JPM_K2"]
 }
 # this is to setup the Ethereum Accounts allocation per acceptance tests requirement
 override_named_account_allocation = {

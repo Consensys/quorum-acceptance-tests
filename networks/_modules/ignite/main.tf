@@ -92,9 +92,9 @@ quorum:
 %{if lookup(var.qlight_clients, i, null) != null~}
       qlight:
         is-client: true
-        server-id: ${format("Node%s", var.qlight_clients[i].ql_server_idx + 1)}
+        server-id: ${format("Node%s", var.qlight_clients[i].server_idx + 1)}
         psi: ${var.qlight_clients[i].psi}
-      third-party-url: ${data.null_data_source.meta[var.qlight_clients[i].ql_server_idx].inputs.tmThirdpartyUrl}
+      third-party-url: ${data.null_data_source.meta[var.qlight_clients[i].server_idx].inputs.tmThirdpartyUrl}
 %{else~}
       qlight:
         is-client: false
@@ -113,7 +113,7 @@ quorum:
       account-aliases:
 %{for k, name in b.ethKeys~}
 %{if lookup(var.qlight_clients, i, null) != null~}
-        ${name}: "${element(quorum_bootstrap_keystore.accountkeys-generator[index(local.non_qlight_client_node_indices, var.qlight_clients[i].ql_server_idx)].account.*.address, index(local.named_accounts_alloc[var.qlight_clients[i].ql_server_idx], name))}"
+        ${name}: "${element(quorum_bootstrap_keystore.accountkeys-generator[index(local.non_qlight_client_node_indices, var.qlight_clients[i].server_idx)].account.*.address, index(local.named_accounts_alloc[var.qlight_clients[i].server_idx], name))}"
 %{else~}
         ${name}: "${element(quorum_bootstrap_keystore.accountkeys-generator[index(local.non_qlight_client_node_indices, parseint(i, 10))].account.*.address, index(local.named_accounts_alloc[i], name))}"
 %{endif~}
