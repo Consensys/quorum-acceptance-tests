@@ -7,9 +7,9 @@
 #  node 5 ql client (server = node 1, psi JPM)
 #
 
-number_of_nodes     = 5
-consensus           = "istanbul"
-qbftBlock           = { block = 0, enabled = true }
+number_of_nodes      = 5
+consensus            = "istanbul"
+qbftBlock            = { block = 0, enabled = true }
 privacy_enhancements = { block = 0, enabled = true }
 
 // TODO(cjh) delete
@@ -33,7 +33,7 @@ override_plugins = {
 
 # globally set --multitenancy for all nodes
 # this can be overriden by override_additional_geth_args
-enable_multitenancy = true
+enable_multitenancy           = true
 # only want mt on node 1
 override_additional_geth_args = {
   1 = "--allow-insecure-unlock",
@@ -70,23 +70,23 @@ additional_genesis_config = {
 # this is config will be merged to the default Tessera JSON config per node
 additional_tessera_config = {
   0 = {
-    "features": {
-        "enablePrivacyEnhancements":"true",
-        "enableRemoteKeyValidation":"true",
-        "enableMultiplePrivateStates" : "true"
+    "features" : {
+      "enablePrivacyEnhancements" : "true",
+      "enableRemoteKeyValidation" : "true",
+      "enableMultiplePrivateStates" : "true"
     },
     residentGroups = [
       {
-        name = "JPM"
+        name        = "JPM"
         description = "JPM group"
-        members = [
+        members     = [
           "$${JPM_K1}", "$${JPM_K2}"
         ]
       },
       {
-        name = "GS"
+        name        = "GS"
         description = "GS group"
-        members = [
+        members     = [
           "$${GS_K1}", "$${GS_K2}"
         ]
       },

@@ -90,10 +90,14 @@ quorum:
 %{endif~}
       enode-url: ${local.enode_urls[i]}
 %{if lookup(var.qlight_clients, i, null) != null~}
-      is-qlight-client: true
+      qlight:
+        is-client: true
+        server-id: ${format("Node%s", var.qlight_clients[i].ql_server_idx + 1)}
+        psi: ${var.qlight_clients[i].psi}
       third-party-url: ${data.null_data_source.meta[var.qlight_clients[i].ql_server_idx].inputs.tmThirdpartyUrl}
 %{else~}
-      is-qlight-client: false
+      qlight:
+        is-client: false
       third-party-url: ${data.null_data_source.meta[i].inputs.tmThirdpartyUrl}
 %{endif~}
 %{if local.vnodes[i].mpsEnabled~}

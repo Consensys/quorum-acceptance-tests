@@ -208,7 +208,7 @@ public class QuorumNetworkProperty {
     public static class Node {
         // this value is not expected from YML
         private String name;
-        private boolean isQLightClient;
+        private Qlight qlight;
         private String privacyAddress;
         private Map<String, String> privacyAddressAliases = new LinkedHashMap<>();
         private Map<String, String> accountAliases = new LinkedHashMap<>();
@@ -305,12 +305,48 @@ public class QuorumNetworkProperty {
             this.psi = psi;
         }
 
-        public boolean getIsQLightClient() {
-            return isQLightClient;
+        public Qlight getQlight() {
+            return qlight;
         }
 
-        public void setIsQLightClient(boolean isQLightClient) {
-            this.isQLightClient = isQLightClient;
+        public void setQlight(Qlight qlight) {
+            this.qlight = qlight;
+        }
+    }
+
+    public static class Qlight {
+        private boolean isClient;
+        private String serverId;
+        private String psi;
+
+        public Qlight() {
+            this.isClient = false;
+            this.serverId = "";
+            this.psi = "";
+        }
+
+        public boolean getIsClient() {
+            return isClient;
+        }
+
+        public void setIsClient(boolean isClient) {
+            this.isClient = isClient;
+        }
+
+        public String getServerId() {
+            return serverId;
+        }
+
+        public void setServerId(String serverId) {
+            this.serverId = serverId;
+        }
+
+        public String getPsi() {
+            return psi;
+        }
+
+        public void setPsi(String psi) {
+            this.psi = psi;
         }
     }
 

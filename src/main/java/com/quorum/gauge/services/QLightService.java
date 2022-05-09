@@ -6,6 +6,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class QLightService extends AbstractService {
     public boolean isQLightClient(QuorumNode node) {
-        return networkProperty().getNode(node.name()).getIsQLightClient();
+        return networkProperty().getNode(node.name()).getQlight().getIsClient();
     }
 }

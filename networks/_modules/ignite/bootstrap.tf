@@ -70,7 +70,7 @@ resource "quorum_bootstrap_keystore" "accountkeys-generator" {
   use_light_weight_kdf = true
 
   dynamic "account" {
-    for_each = lookup(local.named_accounts_alloc, count.index)
+    for_each = lookup(local.named_accounts_alloc, local.non_qlight_client_node_indices[count.index])
     content {
       passphrase = ""
       balance    = "1000000000000000000000000000"
