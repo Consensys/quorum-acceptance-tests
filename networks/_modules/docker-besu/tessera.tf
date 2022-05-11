@@ -48,7 +48,7 @@ resource "docker_container" "tessera" {
     "/bin/sh",
     "-c",
     <<EOF
-echo "Tessera${local.tessera_node_indices[count.index] + 1}"
+echo "Tessera Besu ${local.tessera_node_indices[count.index] + 1}"
 
 JAVA_OPTS="-Xms128M -Xmx128M"
 RUN_COMMAND="/tessera/bin/tessera"
