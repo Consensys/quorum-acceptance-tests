@@ -96,10 +96,14 @@ jobs:
       matrix:
         # list of tag expression being executed in parallel
         tag:
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-qlight'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-qlight-alt'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-qlight-mps'
+          - 'multitenancy && networks/plugins::qbft-qlight-multitenancy'
+          - 'multitenancy-qlight-client && networks/plugins::qbft-qlight-multitenancy-alt'
           - 'basic || basic-raft || (advanced && raft) || networks/typical::raft'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft'
-          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-qlight'
           - 'gcmode && block-sync && networks/template::raft-3plus1'
           - 'gcmode && block-sync && networks/template::istanbul-3plus1'
           - 'gcmode && block-sync && networks/template::qbft-3plus1'
