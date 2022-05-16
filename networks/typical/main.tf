@@ -115,5 +115,4 @@ module "docker" {
   qlight_clients = var.qlight_clients
   qlight_server_indices = var.qlight_server_indices
   qlight_p2p_urls = module.network.qlight_p2p_urls
-  node_rpc_urls = module.network.node_rpc_urls
 }

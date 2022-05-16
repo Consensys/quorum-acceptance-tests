@@ -176,7 +176,7 @@ variable "qbftBlock" {
 }
 
 variable "qlight_clients" {
-  type = map(object({ server_idx = number, server_tls_enabled = bool, psi = string, scope = string }))
+  type = map(object({ server_idx = number, mps_psi = string, mt_is_server_tls_enabled = bool, mt_scope = string }))
   default = {}
   description = "Map of which nodes are qlight clients (by 0-based index) and additional config including the index of their corresponding server node"
 }

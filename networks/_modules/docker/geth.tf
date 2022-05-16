@@ -211,11 +211,11 @@ QLIGHT_ARGS="--qlight.server \
 %{if lookup(var.qlight_clients, tostring(count.index), null) != null~}
 echo "qlight client"
 QLIGHT_ARGS="--qlight.client \
-%{if var.qlight_clients[tostring(count.index)].psi != ""~}
-  --qlight.client.psi ${var.qlight_clients[tostring(count.index)].psi} \
+%{if var.qlight_clients[tostring(count.index)].mps_psi != ""~}
+  --qlight.client.psi ${var.qlight_clients[tostring(count.index)].mps_psi} \
 %{endif~}
   --qlight.client.serverNode ${var.qlight_p2p_urls[var.qlight_clients[tostring(count.index)].server_idx]} \
-%{if var.qlight_clients[tostring(count.index)].server_tls_enabled~}
+%{if var.qlight_clients[tostring(count.index)].mt_is_server_tls_enabled~}
   --qlight.client.serverNodeRPC ${replace(local.internal_node_rpc_urls[var.qlight_clients[tostring(count.index)].server_idx], "http", "https")}"
 %{else~}
   --qlight.client.serverNodeRPC ${local.internal_node_rpc_urls[var.qlight_clients[tostring(count.index)].server_idx]}"
@@ -223,9 +223,9 @@ QLIGHT_ARGS="--qlight.client \
 
 # we know this node is a qlight client - if its qlight server is a multitenant node, then get the required oauth2 token and add the corresponding CLI flags
 %{if length(regexall("^.*--multitenancy.*$", lookup(var.additional_geth_args, var.qlight_clients[tostring(count.index)].server_idx, ""))) > 0}
-OAUTH_PSI="${var.qlight_clients[tostring(count.index)].psi}"
+OAUTH_PSI="${var.qlight_clients[tostring(count.index)].mps_psi}"
 OAUTH_AUDIENCE="Node${var.qlight_clients[tostring(count.index)].server_idx + 1}"
-OAUTH_SCOPE="${var.qlight_clients[tostring(count.index)].scope}"
+OAUTH_SCOPE="${var.qlight_clients[tostring(count.index)].mt_scope}"
 echo "getting oauth2 token $OAUTH_PSI $OAUTH_AUDIENCE $OAUTH_SCOPE"
 
 echo "waiting for oauth2 server"

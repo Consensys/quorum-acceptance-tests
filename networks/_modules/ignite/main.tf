@@ -93,7 +93,7 @@ quorum:
       qlight:
         is-client: true
         server-id: ${format("Node%s", var.qlight_clients[i].server_idx + 1)}
-        psi: ${var.qlight_clients[i].psi}
+        psi: ${var.qlight_clients[i].mps_psi}
       third-party-url: ${data.null_data_source.meta[var.qlight_clients[i].server_idx].inputs.tmThirdpartyUrl}
 %{else~}
       qlight:

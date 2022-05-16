@@ -13,7 +13,7 @@ qbftBlock            = { block = 0, enabled = true }
 privacy_enhancements = { block = 0, enabled = true }
 
 // TODO(cjh) delete
-quorum_docker_image = { name = "quorumengineering/quorum:develop-quiet-qbft", local = true }
+#quorum_docker_image = { name = "quorumengineering/quorum:develop-quiet-qbft", local = true }
 
 plugins = {
   security = {
@@ -43,7 +43,12 @@ override_additional_geth_args = {
 }
 
 qlight_clients = {
-  4 = { server_idx = 0, server_tls_enabled = true, psi = "JPM" },
+  4 = {
+    server_idx = 0,
+    mps_psi = "JPM",
+    mt_is_server_tls_enabled = true,
+    mt_scope = "p2p://qlight rpc://eth_* rpc://admin_* rpc://personal_* rpc://quorumExtension_* rpc://rpc_modules psi://JPM?self.eoa=0x0"
+  },
 }
 
 qlight_server_indices = [0]

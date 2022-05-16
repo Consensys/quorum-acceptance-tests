@@ -11,11 +11,11 @@
 number_of_nodes     = 6
 consensus           = "istanbul"
 qbftBlock           = { block = 0, enabled = true }
-quorum_docker_image = { name = "quorumengineering/quorum:qlight", local = true }
+#quorum_docker_image = { name = "quorumengineering/quorum:qlight", local = true }
 
 qlight_clients = {
-    0 = { server_idx = 4, psi = "" },
-    3 = { server_idx = 5, psi = "" }
+    0 = { server_idx = 4, mps_psi = "", mt_is_server_tls_enabled = false,  mt_scope = "" },
+    3 = { server_idx = 5, mps_psi = "", mt_is_server_tls_enabled = false,  mt_scope = "" }
 }
 
 qlight_server_indices = [4, 5]

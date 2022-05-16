@@ -11,11 +11,11 @@
 number_of_nodes     = 6
 consensus           = "istanbul"
 qbftBlock           = { block = 0, enabled = true }
-quorum_docker_image = { name = "chounsom/qrm:develop", local = false }
+#quorum_docker_image = { name = "chounsom/qrm:develop", local = false }
 
 qlight_clients = {
-    4 = { server_idx = 0, psi = "" },
-    5 = { server_idx = 3, psi = "" }
+    4 = { server_idx = 0, mps_psi = "", mt_is_server_tls_enabled = false,  mt_scope = "" },
+    5 = { server_idx = 3, mps_psi = "", mt_is_server_tls_enabled = false,  mt_scope = "" }
 }
 
 qlight_server_indices = [0, 3]
@@ -28,7 +28,6 @@ override_tm_named_key_allocation = {
     3 = ["TmKey3"]
     4 = ["TmKey0"]
     5 = ["TmKey3"]
-
 }
 # this is to setup the Ethereum Accounts allocation per acceptance tests requirement
 override_named_account_allocation = {

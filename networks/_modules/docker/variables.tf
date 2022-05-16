@@ -145,23 +145,21 @@ variable "accounts_count" {
 }
 
 variable "qlight_clients" {
-  type = map(object({ server_idx = number, server_tls_enabled = bool, psi = string, scope = string }))
+  type = map(object({ server_idx = number, mps_psi = string, mt_is_server_tls_enabled = bool, mt_scope = string }))
   description = "Keys are nodes to configure as qlight clients (by 0-based index).  Values are additional config. server_idx: 0-based index of the qlclient's server node, psi: the psi to connect to if qlclient's server node is using mps (use empty string if mps is disabled)"
+  default = {}
 }
 
 variable "qlight_server_indices" {
   type = list(number)
   description = "List of which nodes are qlight servers (by 0-based index)"
+  default = []
 }
 
 variable "qlight_p2p_urls" {
   type = list(string)
   description = "List of qlight p2p node urls"
-}
-
-variable "node_rpc_urls" {
-  type = list(string)
-  description = "List of RPC urls"
+  default = []
 }
 
 variable "oauth2_server" {

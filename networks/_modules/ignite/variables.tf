@@ -176,13 +176,14 @@ variable "hybrid_key_data" {
   description = "tessera key data for hybrid network"
 }
 
-
 # TODO(cjh) maybe delete if qlight_clients replaces it
 variable "qlight_client_indices" {
   type = list(number)
+  default = []
 }
 
 variable "qlight_clients" {
-  type = map(object({ server_idx = number, psi = string }))
+  type = map(object({ server_idx = number, mps_psi = string, mt_is_server_tls_enabled = bool, mt_scope = string }))
   description = "Map of which nodes are qlight clients (by 0-based index) and additional config including the index of their corresponding server node"
+  default = {}
 }
