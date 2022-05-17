@@ -98,7 +98,7 @@ jobs:
         tag:
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-qlight'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-qlight-alt'
-          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-qlight-mps'
+          - '(basic && !privacy-enhancements-disabled) || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-qlight-mps'
           - 'multitenancy && networks/plugins::qbft-qlight-multitenancy'
           - 'multitenancy-qlight-client && networks/plugins::qbft-qlight-multitenancy-alt'
           - 'basic || basic-raft || (advanced && raft) || networks/typical::raft'
@@ -282,8 +282,8 @@ jobs:
             cat ${{ steps.setup.outputs.outputDir}}/summary.txt;
           fi
       - name: 'Upload test report'
-        if: always()
-        uses: actions/upload-artifact@v2
+        if: failure()
+        uses: actions/upload-artifact@v3
         with:
           name: testreport-${{ steps.setup.outputs.tag }}
           path: ${{ steps.setup.outputs.outputDir }}/*.* # only files not directory
