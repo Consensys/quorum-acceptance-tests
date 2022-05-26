@@ -8,17 +8,16 @@
 #  node 6 ql client (server = node 1, psi Node7)
 #
 
-number_of_nodes      = 6
+number_of_nodes      = 5
 consensus            = "istanbul"
 qbftBlock            = { block = 0, enabled = true }
 privacy_enhancements = { block = 0, enabled = true }
 
 qlight_clients = {
   4 = { server_idx = 0, mps_psi = "Node1", mt_is_server_tls_enabled = false,  mt_scope = "" },
-  5 = { server_idx = 0, mps_psi = "Node7", mt_is_server_tls_enabled = false,  mt_scope = "" }
 }
 
-qlight_server_indices = [0, 3]
+qlight_server_indices = [0]
 
 # this is to setup the TM keys allocation per acceptance tests requirement
 override_tm_named_key_allocation = {
@@ -27,7 +26,6 @@ override_tm_named_key_allocation = {
   2 = ["TmKey2"]
   3 = ["TmKey3"]
   4 = ["TmKey0"]
-  5 = ["TmKey6"]
 }
 # this is to setup the Ethereum Accounts allocation per acceptance tests requirement
 override_named_account_allocation = {
@@ -36,7 +34,6 @@ override_named_account_allocation = {
   2 = ["EthKey2"]
   3 = ["EthKey3"]
   4 = ["EthKey0"]
-  5 = ["EthKey6"]
 }
 
 override_vnodes = {
@@ -49,7 +46,7 @@ override_vnodes = {
         "tmKeys" = ["TmKey0"]
       },
       "PS2" = {
-        name     = "Node7"
+        name     = "Node6"
         ethKeys  = ["EthKey6"]
         "tmKeys" = ["TmKey6"]
       }
@@ -92,16 +89,6 @@ override_vnodes = {
         name     = "Node5"
         ethKeys  = ["EthKey0"]
         "tmKeys" = ["TmKey0"]
-      }
-    }
-  },
-  "5" = {
-    mpsEnabled = false
-    vnodes     = {
-      "id" = {
-        name     = "Node6"
-        ethKeys  = ["EthKey6"]
-        "tmKeys" = ["TmKey6"]
       }
     }
   }
