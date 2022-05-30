@@ -270,7 +270,7 @@ echo "QLIGHT_ARGS=$QLIGHT_ARGS"
 ARGS="--identity Node${count.index + 1} \
   --datadir ${local.container_geth_datadir} \
   --nodiscover \
-  --verbosity 3 \
+  --verbosity 5 \
   --networkid ${var.network_id} \
   --nodekeyhex ${var.node_keys_hex[count.index]} \
   $HTTP_ARGS \
