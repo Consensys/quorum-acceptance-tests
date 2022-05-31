@@ -24,7 +24,7 @@ locals {
 
 data "docker_registry_image" "vault" {
   // TODO(cjh) not using 1.4.x due to TLS issue with spring-cloud-vault https://github.com/hashicorp/vault/issues/8750. Revisit
-  name = "vault:1.3.5"
+  name = "vault:latest"
 }
 
 resource "docker_image" "vault" {

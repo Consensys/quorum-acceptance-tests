@@ -1,6 +1,6 @@
 # QLight client connected to an mps QLight server node
 
- Tags: networks/typical::qbft-qlight-mps, networks/typical::qbft-qlight-mps-alt
+ Tags: networks/typical::qbft-qlight-mps
 
 These tests are tailored for the configuration of networks/typical::qbft-qlight-mps:
 
@@ -14,8 +14,8 @@ For this network we would expect Node1 and Node5 vnodes to be in lockstep e.g. p
 available on Node1 and vice versa.  Private txs sent to Node6 (the other PSI on the server node) should not be available
 on Node1 or Node5 vnodes.
 
-* "Node1" is a qlight server or qlight client
-* "Node5" is a qlight server or qlight client
+* "Node1" is a qlight server
+* "Node5" is a qlight client
 
 ## Public transactions sent to qlight server and qlight client are available on all nodes
 

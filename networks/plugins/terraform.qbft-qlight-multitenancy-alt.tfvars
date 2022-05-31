@@ -12,9 +12,6 @@ consensus           = "istanbul"
 qbftBlock           = { block = 0, enabled = true }
 privacy_enhancements = { block = 0, enabled = true }
 
-// TODO(cjh) delete
-#quorum_docker_image = { name = "quorumengineering/quorum:develop-quiet-qbft", local = true }
-
 plugins = {
   security = {
     name       = "quorum-security-plugin-enterprise"

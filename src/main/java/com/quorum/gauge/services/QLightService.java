@@ -17,18 +17,8 @@ public class QLightService extends AbstractService {
     @Autowired
     AdminService adminService;
 
-    // TODO(cjh) can we remove this and isQlightClient flag from yml?
     public boolean isQLightClient(QuorumNode node) {
         return networkProperty().getNode(node.name()).getQlight().getIsClient();
-    }
-
-    public boolean isQLightClient(Node node) {
-        JsonNode nodeInfo = adminService.nodeInfo(node).blockingFirst().getResult();
-
-        return Optional.ofNullable(nodeInfo.get("protocols"))
-            .filter(p -> 1 == p.size())
-            .filter(p -> p.has("qlight"))
-            .isPresent();
     }
 
     public boolean isQLightServer(Node node) {
