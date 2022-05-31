@@ -18,7 +18,8 @@ locals {
   genesis_file              = "genesis.json"
   number_of_nodes           = length(var.geth_networking)
   node_indices              = range(local.number_of_nodes) // 0-based node index
-  non_qlight_client_node_indices    = [for idx in local.node_indices : idx if !contains(var.qlight_client_indices, idx)] // nodes in the consensus (e.g. not a qlight client node)
+  qlight_client_indices = [for k in keys(var.qlight_clients) : parseint(k, 10)] # map keys are string type, so convert to int
+  non_qlight_client_node_indices    = [for idx in local.node_indices : idx if !contains(local.qlight_client_indices, idx)] // nodes in the consensus (e.g. not a qlight client node)
   hybrid_network            = var.hybrid_network
   // by default we allocate one named key per TM: K0, K1 ... Kn
   // this can be overrriden by the variable
@@ -41,7 +42,7 @@ locals {
     { for id in local.node_indices : id => "true" }, // default to true for all
     { for id in var.exclude_initial_nodes : id => "false" },
     { for id in var.non_validator_nodes : id => "false" },
-    { for id in var.qlight_client_indices : id => "false" }
+    { for id in local.qlight_client_indices : id => "false" }
   )
 
   vnodes = merge(

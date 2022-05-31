@@ -19,8 +19,6 @@ locals {
     "--allow-insecure-unlock",
     "--revertreason"
   ])
-
-  qlight_client_indices = [for k in keys(var.qlight_clients) : parseint(k, 10)] # map keys are string type, so convert to int
 }
 
 module "helper" {
@@ -84,7 +82,6 @@ module "network" {
   additional_tessera_config = var.additional_tessera_config
   additional_genesis_config = var.additional_genesis_config
 
-  qlight_client_indices = local.qlight_client_indices
   qlight_clients = var.qlight_clients
 }
 

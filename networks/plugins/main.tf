@@ -22,8 +22,6 @@ locals {
 
   node_indices = range(var.number_of_nodes)
 
-  qlight_client_indices = [for k in keys(var.qlight_clients) : parseint(k, 10)] # map keys are string type, so convert to int
-
   providers = { for k, v in var.plugins : k => { name = v.name, version = v.version, config = format("file://%s/plugins/%s-config.json", module.docker.container_geth_datadir, k) } }
 
   with_hashicorp_plugin = contains(values(var.plugins)[*].name, "quorum-account-plugin-hashicorp-vault")
@@ -75,7 +73,6 @@ module "network" {
   additional_tessera_config         = var.additional_tessera_config
   additional_genesis_config         = var.additional_genesis_config
 
-  qlight_client_indices = local.qlight_client_indices
   qlight_clients = var.qlight_clients
 }
 
