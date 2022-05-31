@@ -1,6 +1,7 @@
 package com.quorum.gauge;
 
 import com.quorum.gauge.common.QuorumNetworkProperty.Node;
+import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.services.QLightService;
 import com.thoughtworks.gauge.Step;
@@ -22,7 +23,8 @@ public class QLight extends AbstractSpecImplementation {
     
     @Step("<node> is a qlight client")
     public void isQLightClient(Node node) {
-        assertThat(qLightService.isQLightClient(networkProperty.getQuorumNode(node))).isTrue();
+        QuorumNode n = networkProperty.getQuorumNode(node);
+        assertThat(qLightService.isQLightClient(n)).isTrue();
     }
 
 }

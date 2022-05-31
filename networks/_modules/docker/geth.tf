@@ -94,14 +94,7 @@ echo "Deleting any files in ${local.container_plugin_acctdir}"
 rm ${local.container_plugin_acctdir}/*
 echo "ls ${local.container_plugin_acctdir}"
 ls ${local.container_plugin_acctdir}
-
-if ${contains(local.full_node_indices, count.index)}; then
-  echo "waiting for tessera"
-  ${local.container_geth_datadir_mounted}/wait-for-tessera.sh
-else
-  echo "not waiting for tessera"
-fi
-
+${local.container_geth_datadir_mounted}/wait-for-tessera.sh
 exec ${local.container_geth_datadir_mounted}/start-geth.sh
 RUN
   ]
@@ -111,7 +104,7 @@ RUN
     content    = <<EOF
 #!/bin/sh
 
-if ${contains(local.full_node_indices, count.index)}; then
+if ${contains(local.non_qlight_client_node_indices, count.index)}; then
   echo "waiting for tessera"
   URL="${var.tm_networking[count.index].ip.private}:${var.tm_networking[count.index].port.p2p}/upcheck"
 
@@ -211,10 +204,10 @@ QLIGHT_ARGS="--qlight.server \
 %{if lookup(var.qlight_clients, tostring(count.index), null) != null~}
 echo "qlight client"
 QLIGHT_ARGS="--qlight.client \
+  --qlight.client.serverNode ${var.qlight_p2p_urls[var.qlight_clients[tostring(count.index)].server_idx]} \
 %{if var.qlight_clients[tostring(count.index)].mps_psi != ""~}
   --qlight.client.psi ${var.qlight_clients[tostring(count.index)].mps_psi} \
 %{endif~}
-  --qlight.client.serverNode ${var.qlight_p2p_urls[var.qlight_clients[tostring(count.index)].server_idx]} \
 %{if var.qlight_clients[tostring(count.index)].mt_is_server_tls_enabled~}
   --qlight.client.serverNodeRPC ${replace(local.internal_node_rpc_urls[var.qlight_clients[tostring(count.index)].server_idx], "http", "https")}"
 %{else~}
@@ -251,15 +244,15 @@ post_resp=$(curl -k -s -X POST \
 
 access_token="$(echo $post_resp | jq '.access_token' -r)"
 
-# the --qlight.client.token.value flag is defined below, where the geth cmd is actually executed.  This was required to
+# the --qlight.client.token.value flag is applied later and not as part of QLIGHT_ARGS.  This was required to
 # handle the behaviour/limitations of the POSIX /bin/sh.  The flag value is of the form "bearer mytoken".  The space
 # causes problems when passed to exec as part of the string ARGS (i.e. exec geth $ARGS).  The POSIX shell splits the
-# ARGS string on all spaces, ignoring the surrounding quotes, resulting in the value being interpreted for the token
-# flag as being incorrect and erroring the exec.  exec geth "$ARGS" causes geth to parse the entire ARGS as a single
+# ARGS string on all spaces, ignoring the surrounding quotes, resulting in the incorrect interpretation of the token
+# flag value and erroring the exec.  exec geth "$ARGS" causes geth to parse the entire ARGS as a single
 # arg which is obviously also incorrect.  No combination of quoting/escaping could be found to resolve this.  One
 # possible solution would be to use an array for ARGS instead of a string but arrays are not supported in the POSIX
-# shell.  So, the only solution found so far has been to add the --qlight.client.token.value flag directly to the cmd and
-# not as part of a string variable.
+# shell.  So, the only solution found so far has been to add the --qlight.client.token.value flag directly to the cmd
+# and not as part of the QLIGHT_ARGS string variable.
 QLIGHT_ARGS="$QLIGHT_ARGS \
   --qlight.client.token.enabled \
   --qlight.client.token.management none"
@@ -295,7 +288,7 @@ ARGS="--identity Node${count.index + 1} \
 %{endif}
   --password ${local.container_geth_datadir}/${var.password_file_name} \
   --syncmode full \
-%{if contains(local.full_node_indices, count.index)~}
+%{if contains(local.non_qlight_client_node_indices, count.index)~}
   ${(var.consensus == "istanbul" || var.consensus == "qbft") ? "--istanbul.blockperiod 1 --mine --miner.threads 1" : format("--raft --raftport %d", var.geth_networking[count.index].port.raft)} \
 %{endif~}
   $ADDITIONAL_GETH_ARGS \

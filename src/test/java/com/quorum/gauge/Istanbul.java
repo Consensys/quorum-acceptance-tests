@@ -19,9 +19,6 @@
 
 package com.quorum.gauge;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
@@ -35,11 +32,9 @@ import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -56,20 +51,9 @@ public class Istanbul extends AbstractSpecImplementation {
     @Autowired
     private QLightService qLightService;
 
-    @Autowired
-    private Environment environment;
-
 
     @Step({"The consensus should work at the beginning", "The consensus should work after resuming", "The consensus should work after stopping F validators"})
     public void verifyConsensus() {
-        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
-        try {
-            Gauge.writeMessage(ow.writeValueAsString(networkProperty));
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-        Arrays.stream(environment.getActiveProfiles()).forEach(Gauge::writeMessage);
-
         int diff = 3;
         // wait for blockheight increases by 3 from the current one
         waitForBlockHeight(currentBlockNumber().intValue(), currentBlockNumber().intValue() + diff);
@@ -77,12 +61,12 @@ public class Istanbul extends AbstractSpecImplementation {
 
     @Step("Among all validators, stop F validators")
     public void stopFValidators() {
-        stopValidators(false);
+        stopValidators(StopMode.STOP_F_VALIDATORS);
     }
 
     @Step("Among all validators, stop F+1 validators")
     public void stopMoreThanFValidators() {
-        stopValidators(true);
+        stopValidators(StopMode.STOP_MORE_THAN_F_VALIDATORS);
     }
 
     @ContinueOnFailure
@@ -103,21 +87,19 @@ public class Istanbul extends AbstractSpecImplementation {
                 .blockingSubscribe();
     }
 
-    private void stopValidators(boolean stopMoreThanF) {
+    private void stopValidators(StopMode mode) {
         int totalNodesConfigured = numberOfQuorumNodes();
         List<QuorumNode> configuredNodes = Observable.fromArray(QuorumNode.values()).take(totalNodesConfigured).toList().blockingGet();
 
-        // in qlight networks we cannot use a qlight client for network API requests as their only peer is the corresponding server
-        // so, make sure to get a full node for these requests
+        // in qlight networks we have to make sure we're not using a qlight client to check the network status as their only peer is their corresponding server
+        // so, make sure to get a non-qlclient node for these checks
         QuorumNode fullNode = configuredNodes.stream().filter(n -> !qLightService.isQLightClient(n)).findFirst().get();
-
-        Gauge.writeMessage("CHRISSY using %s as full node for RPC queries", fullNode.name());
 
         int totalNodesLive = utilService.getNumberOfNodes(fullNode) + 1;
         List<String> validatorAddresses = istanbulService.getValidators(fullNode).blockingFirst().get();
 
         int numOfValidatorsToStop = Math.round((validatorAddresses.size() - 1) / 3.0f);
-        if(stopMoreThanF) {
+        if(StopMode.STOP_MORE_THAN_F_VALIDATORS.equals(mode)) {
             numOfValidatorsToStop++;
         }
 
@@ -141,5 +123,10 @@ public class Istanbul extends AbstractSpecImplementation {
             .blockingSubscribe();
 
         DataStoreFactory.getScenarioDataStore().put("stoppedNodes", stoppedNodes);
+    }
+
+    private enum StopMode {
+        STOP_F_VALIDATORS,
+        STOP_MORE_THAN_F_VALIDATORS
     }
 }
