@@ -1,11 +1,10 @@
 #
-#  This network sets up a 6 node qlight network where the atests will execute against ql server nodes
-#  node 1 ql server mps node (PSIs=[Node1, Node7])
+#  This network sets up a 5 node qlight network where the atests will execute against the ql server
+#  node 1 ql server mps node (PSIs=[Node1, Node6])
 #  node 2 standard node
 #  node 3 standard node
 #  node 4 ql server standard node
 #  node 5 ql client (server = node 1, psi Node1)
-#  node 6 ql client (server = node 1, psi Node7)
 #
 
 number_of_nodes      = 5

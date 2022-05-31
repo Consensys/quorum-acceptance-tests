@@ -10,15 +10,7 @@ These tests are tailored for the configuration of networks/typical::qbft-qlight-
     node 4 standard node
     node 5 ql client (server = node 1, psi = Node1)
 
-or networks/typical::qbft-qlight-mps-alt:
-
-    node 1 ql client (server = node 5, psi = Node1)
-    node 2 standard node
-    node 3 standard node
-    node 4 standard node
-    node 5 ql server (PSIs=[Node1, Node6])
-
-For both networks we would expect Node1 and Node5 vnodes to be in lockstep e.g. private txs sent to Node5 should be
+For this network we would expect Node1 and Node5 vnodes to be in lockstep e.g. private txs sent to Node5 should be
 available on Node1 and vice versa.  Private txs sent to Node6 (the other PSI on the server node) should not be available
 on Node1 or Node5 vnodes.
 
