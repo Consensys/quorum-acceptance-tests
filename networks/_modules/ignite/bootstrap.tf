@@ -40,8 +40,6 @@ locals {
         }
       ]
     }, local.qip714Block_config, local.privacyEnhancementsBlock_config, local.privacyPrecompileBlock_config, local.qbft_istanbul_config, lookup(var.additional_genesis_config, idx, {}))]
-
-  debug_keystore_dirs = [for idx in local.non_qlight_client_node_indices : format("%s/%s%s/keystore", quorum_bootstrap_network.this.network_dir_abs, local.node_dir_prefix, idx)]
 }
 
 data "null_data_source" "meta" {

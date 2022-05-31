@@ -114,9 +114,29 @@ quorum:
       account-aliases:
 %{for k, name in b.ethKeys~}
 %{if lookup(var.qlight_clients, i, null) != null~}
-        ${name}: "${element(quorum_bootstrap_keystore.accountkeys-generator[index(local.non_qlight_client_node_indices, var.qlight_clients[i].server_idx)].account.*.address, index(local.named_accounts_alloc[var.qlight_clients[i].server_idx], name))}"
+%{if false~}
+#       (This is a comment for the below terraform logic and should not be included in the file contents)
+#       If the node is a qlight client, its available accounts should be those of its qlight server, e.g. see
+#       terraform.qbft-qlight.tfvars (the qlight client vnode 'Node5' is configured with ethKeys '[EthKey0]').
+#       What we are doing below is getting the value of 'EthKey0' (for example) from the generated accountkeys of the
+#       qlight client's corresponding qlight server node.
+#
+%{endif~}
+        ${name}: "${element(
+            quorum_bootstrap_keystore.accountkeys-generator[index(local.non_qlight_client_node_indices, var.qlight_clients[i].server_idx)].account.*.address,
+            index(local.named_accounts_alloc[var.qlight_clients[i].server_idx], name)
+        )}"
 %{else~}
-        ${name}: "${element(quorum_bootstrap_keystore.accountkeys-generator[index(local.non_qlight_client_node_indices, parseint(i, 10))].account.*.address, index(local.named_accounts_alloc[i], name))}"
+%{if false~}
+#       (This is a comment for the below terraform logic and should not be included in the file contents)
+#       If the node is not a qlight client (i.e. a qlight server or a normal quorum node), we can simply use the
+#       generated accountkeys for that node.
+#
+%{endif~}
+        ${name}: "${element(
+            quorum_bootstrap_keystore.accountkeys-generator[index(local.non_qlight_client_node_indices, parseint(i, 10))].account.*.address,
+            index(local.named_accounts_alloc[i], name)
+        )}"
 %{endif~}
 %{endfor~}
 %{endfor~}
