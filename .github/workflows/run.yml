@@ -15,7 +15,6 @@ on:
     branches:
       - 'master'
       - 'dev-*'
-      - 'chris-*'
 jobs:
   condition:
     name: Evaluate workflow run conditions
