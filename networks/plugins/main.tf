@@ -12,7 +12,7 @@ provider "docker" {
 }
 
 locals {
-  standard_apis = "admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,quorumExtension,${var.consensus}"
+  standard_apis = "admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,quorumExtension,${(var.consensus == "istanbul" || var.consensus == "qbft") ? "istanbul" : var.consensus}"
   plugin_apis   = [for k, v in var.plugins : "plugin@${k}" if v.expose_api]
   apis          = "${local.standard_apis},${join(",", local.plugin_apis)}"
   more_args = join(" ", [

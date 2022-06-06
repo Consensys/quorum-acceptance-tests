@@ -306,7 +306,7 @@ ARGS="--identity Node${count.index + 1} \
 %{if var.consensus == "raft"~}
   ${format("--raft --raftport %d", var.geth_networking[count.index].port.raft)} \
 %{else~}
-  --syncmode full --mine --miner.threads 1 \
+  --mine --miner.threads 1 \
 %{endif~}
 %{endif~}
   $ADDITIONAL_GETH_ARGS \

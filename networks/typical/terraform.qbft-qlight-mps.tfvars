@@ -8,8 +8,7 @@
 #
 
 number_of_nodes      = 5
-consensus            = "istanbul"
-qbftBlock            = { block = 0, enabled = true }
+consensus            = "qbft"
 privacy_enhancements = { block = 0, enabled = true }
 
 qlight_clients = {

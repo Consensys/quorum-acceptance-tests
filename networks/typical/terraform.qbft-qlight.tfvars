@@ -9,9 +9,7 @@
 #
 
 number_of_nodes     = 6
-consensus           = "istanbul"
-qbftBlock           = { block = 0, enabled = true }
-#quorum_docker_image = { name = "chounsom/qrm:develop", local = false }
+consensus           = "qbft"
 
 qlight_clients = {
     4 = { server_idx = 0, mps_psi = "", mt_is_server_tls_enabled = false,  mt_scope = "" },

@@ -81,7 +81,7 @@ quorum:
 %{for i in data.null_data_source.meta[*].inputs.idx~}
 %{for a, b in local.vnodes[i].vnodes~}
     ${format("%s:", b.name)}
-%{if var.consensus == "istanbul"~}
+%{if var.consensus == "istanbul" || var.consensus == "qbft"~}
       istanbul-validator-id: "${quorum_bootstrap_node_key.nodekeys-generator[i].istanbul_address}"
 %{endif~}
 %{if local.vnodes[i].mpsEnabled~}
