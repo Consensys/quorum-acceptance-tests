@@ -8,7 +8,7 @@
 * Stop node <peerNode> in the network <networkName>
 * Deploy a simple smart contract from "Node1", verify it does not get mined
 * Record the current block number, named it as "blockHeightAfterTxn"
-* Verify block height "blockHeightAfterTxn" is equal to "BlockHeight2"
+* Verify block height "blockHeightAfterTxn" is greater than or equal to "BlockHeight2"
 * Verify node "Node2" has the block height less than or equal to "blockHeightAfterTxn"
 * Start node <peerNode> in the network <networkName>
 * Start node <promotedNode> in the network <networkName>

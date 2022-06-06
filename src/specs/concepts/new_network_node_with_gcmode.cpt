@@ -2,4 +2,5 @@
 
 * Send some transactions to create blocks in network <networkName> and capture the latest block height as "latestBlockHeight"
 * Add new node with <gcmode> `gcmode`, named it <nodeName>, and join the network <networkName> as <nodeType>
+* Wait for node <nodeName> to catch up to "latestBlockHeight"
 * Verify node <nodeName> has the block height greater or equal to "latestBlockHeight"

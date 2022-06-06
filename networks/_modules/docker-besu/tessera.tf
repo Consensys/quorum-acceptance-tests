@@ -38,7 +38,7 @@ resource "docker_container" "tessera" {
   }
   env = local.tm_env
   healthcheck {
-    test         = ["CMD", "nc", "-vz", "localhost", var.tm_networking[local.tessera_node_indices[count.index]].port.thirdparty.internal]
+    test         = ["CMD", "wget", "-nv" , format("localhost:%s/upcheck", var.tm_networking[local.tessera_node_indices[count.index]].port.thirdparty.internal)]
     interval     = "5s"
     retries      = 60
     timeout      = "5s"
@@ -48,7 +48,7 @@ resource "docker_container" "tessera" {
     "/bin/sh",
     "-c",
     <<EOF
-echo "Tessera${local.tessera_node_indices[count.index] + 1}"
+echo "Tessera Besu ${local.tessera_node_indices[count.index] + 1}"
 
 JAVA_OPTS="-Xms128M -Xmx128M"
 RUN_COMMAND="/tessera/bin/tessera"

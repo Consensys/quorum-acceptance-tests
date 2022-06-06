@@ -5,4 +5,4 @@
 number_of_nodes     = 4
 consensus           = "istanbul"
 addtional_geth_args = "--allow-insecure-unlock"
-qbftBlock           = { block = 50, enabled = true }
+qbftBlock           = { block = 100, enabled = true }

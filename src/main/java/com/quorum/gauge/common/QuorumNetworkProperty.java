@@ -23,6 +23,7 @@ import com.quorum.gauge.common.config.WalletData;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.math.BigInteger;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -113,6 +114,17 @@ public class QuorumNetworkProperty {
                 break;
         }
         return duration;
+    }
+
+    public BigInteger getConsensusBlockHeight() {
+        switch (Optional.ofNullable(getConsensus()).orElse("")) {
+            case "raft":
+                return BigInteger.ZERO;
+            case "istanbul":
+            case "qbft":
+                return BigInteger.ONE;
+        }
+        throw new RuntimeException("Consensus not recognised");
     }
 
     public OAuth2ServerProperty getOauth2Server() {

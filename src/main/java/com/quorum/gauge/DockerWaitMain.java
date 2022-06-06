@@ -133,8 +133,8 @@ public class DockerWaitMain implements CommandLineRunner {
                 all.add(dockerService.getState(prop.getEthSignerContainerId().get()));
             }
         }
-        // check containers
-        int attemptCount = 60;
+        // check containers wait for 10 minutes for things to start
+        int attemptCount = 10;
         int allUp = 1;
         for (int i = 0; i < attemptCount; i++) {
             AtomicReference<DockerInfrastructureService.BasicContainerState> deathState = new AtomicReference<>();
@@ -142,13 +142,20 @@ public class DockerWaitMain implements CommandLineRunner {
                 boolean isRunning = false;
                 for (Object o : objects) {
                     DockerInfrastructureService.BasicContainerState state = (DockerInfrastructureService.BasicContainerState) o;
-                    logger.info("{}({}): status = {}, health = {}", state.getContainerName(), StringUtils.substring(state.getContainerId(), 0, 12), state.getStatus(), state.getHealthStatus());
+                    logger.info("{}({}): status = {}, health = {}, dead = {}, ongoing = {}", state.getContainerName(), StringUtils.substring(state.getContainerId(), 0, 12), state.getStatus(), state.getHealthStatus(), state.isDead(), state.isOnGoing());
                     if (state.isDead()) {
                         deathState.set(state);
+                        logger.info("{}({}) IS DEAD: status = {}, health = {}, dead = {}, ongoing = {}", state.getContainerName(), StringUtils.substring(state.getContainerId(), 0, 12), state.getStatus(), state.getHealthStatus(), state.isDead(), state.isOnGoing());
                         return -1;
                     }
                     if (state.isOnGoing()) {
                         isRunning = true;
+                    }
+                    if (state.getHealthStatus().equalsIgnoreCase("unhealthy")) {
+                        OutputStreamWriter writer = new OutputStreamWriter(System.err);
+                        dockerService.streamLogs(state.getContainerId(), writer);
+                        writer.flush();
+                        logger.error("Container not healthy: " + state.getContainerName());
                     }
                 }
                 if (isRunning) {
@@ -165,8 +172,9 @@ public class DockerWaitMain implements CommandLineRunner {
             if (status == 0) {
                 break;
             }
-            logger.info("Waiting 3s ... as containers are still starting up");
-            Thread.sleep(3000);
+
+            logger.info("Waiting 60s ... as containers are still starting up");
+            Thread.sleep(60000);
             allUp++;
         }
         // grace period to allow network to start up

@@ -5,4 +5,3 @@
 number_of_quorum_nodes = 2
 number_of_besu_nodes   = 2
 consensus              = "qbft"
-qbftBlock              = { block = 0, enabled = true }

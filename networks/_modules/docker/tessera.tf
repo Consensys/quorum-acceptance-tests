@@ -51,7 +51,7 @@ resource "docker_container" "tessera" {
     "/bin/sh",
     "-c",
     <<EOF
-#Tessera${local.non_qlight_client_node_indices[count.index] + 1}
+echo "Tessera GoQuorum ${local.non_qlight_client_node_indices[count.index] + 1}"
 
 JAVA_OPTS="-Xms128M -Xmx128M"
 RUN_COMMAND="/tessera/bin/tessera"
