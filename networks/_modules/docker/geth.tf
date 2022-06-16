@@ -230,15 +230,15 @@ QLIGHT_ARGS="--qlight.client \
 
 # we know this node is a qlight client - if its qlight server is a multitenant node, then get the required oauth2 token and add the corresponding CLI flags
 %{if length(regexall("^.*--multitenancy.*$", lookup(var.additional_geth_args, var.qlight_clients[tostring(count.index)].server_idx, ""))) > 0}
+apk add jq
+
 OAUTH_PSI="${var.qlight_clients[tostring(count.index)].mps_psi}"
 OAUTH_AUDIENCE="Node${var.qlight_clients[tostring(count.index)].server_idx + 1}"
 OAUTH_SCOPE="${var.qlight_clients[tostring(count.index)].mt_scope}"
-echo "getting oauth2 token $OAUTH_PSI $OAUTH_AUDIENCE $OAUTH_SCOPE"
 
+echo "getting oauth2 token $OAUTH_PSI $OAUTH_AUDIENCE $OAUTH_SCOPE"
 echo "waiting for oauth2 server"
 ${local.container_geth_datadir_mounted}/wait-for-oauth2-server.sh
-
-apk add jq
 
 curl -k -q -X DELETE \
     https://${local.hydra_ip}:${var.oauth2_server.admin_port.internal}/clients/$OAUTH_PSI
@@ -299,8 +299,8 @@ ARGS="--identity Node${count.index + 1} \
 %{endif~}
 %{if !contains(local.qlight_client_indices, count.index)~}
   --unlock ${join(",", range(var.accounts_count[count.index]))} \
-%{endif}
   --password ${local.container_geth_datadir}/${var.password_file_name} \
+%{endif}
   --syncmode full \
 %{if contains(local.non_qlight_client_node_indices, count.index)~}
 %{if var.consensus == "raft"~}

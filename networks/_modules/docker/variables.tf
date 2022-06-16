@@ -146,7 +146,7 @@ variable "accounts_count" {
 
 variable "qlight_clients" {
   type = map(object({ server_idx = number, mps_psi = string, mt_is_server_tls_enabled = bool, mt_scope = string }))
-  description = "Keys are nodes to configure as qlight clients (by 0-based index).  Values are additional config. server_idx: 0-based index of the qlclient's server node, mps_psi: the psi to connect to if qlclient's server node is using mps (use empty string if mps is disabled), mt_is_server_tls_enabled: whether the qlclient's server node has RPC security enabled (use false if mt is disabled), mt_scope: the oauth2 scope to use when fetching a token for the qlclient (use empty string if mt is disabled)"
+  description = "Map keys are the 0-based indexes of the nodes to be configured as qlight clients.  Map values contain additional config for the qlight client. server_idx: 0-based index of the qlclient's server node, mps_psi: the psi to connect to if qlclient's server node is using mps (use empty string if mps is disabled), mt_is_server_tls_enabled: whether the qlclient's server node has RPC security enabled (use false if mt is disabled), mt_scope: the oauth2 scope to use when fetching a token for the qlclient (use empty string if mt is disabled)"
   default = {}
 }
 

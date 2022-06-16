@@ -95,11 +95,6 @@ jobs:
       matrix:
         # list of tag expression being executed in parallel
         tag:
-          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-qlight'
-          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-qlight-alt'
-          - '(basic && !privacy-enhancements-disabled) || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-qlight-mps'
-          - 'multitenancy && networks/plugins::qbft-qlight-multitenancy'
-          - 'multitenancy-qlight-client && networks/plugins::qbft-qlight-multitenancy-alt'
           - 'basic || basic-raft || (advanced && raft) || networks/typical::raft'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft'
@@ -142,6 +137,11 @@ jobs:
           - 'mps-mixed-network-psr-check || networks/template::istanbul-4nodes-mps-mixed'
           - 'mps-pmt-mixed-network-psr-check || networks/template::raft-4nodes-mps-pmt'
           - 'mps-pmt-mixed-network-psr-check || networks/template::istanbul-4nodes-mps-pmt'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-qlight'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-qlight-alt'
+          - '(basic && !privacy-enhancements-disabled) || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-qlight-mps'
+          - 'multitenancy && networks/plugins::qbft-qlight-multitenancy'
+          - 'multitenancy-qlight-client && networks/plugins::qbft-qlight-multitenancy-alt'
           - '(basic && !nosupport && !mps && !(spam && !raw) && !eth-api-signed && !privacy-enhancements-disabled && !graphql && !async && !extension && !storage-root && !personal-api-signed) || networks/typical-besu::ibft2'
           - '(basic && !nosupport && !mps && !(spam && !raw) && !eth-api-signed && !privacy-enhancements-disabled && !graphql && !async && !extension && !storage-root && !personal-api-signed) || networks/typical-hybrid::hybrid'
     runs-on: ubuntu-18.04
@@ -176,7 +176,7 @@ jobs:
           gitref_path=${gitref_path/refs\/heads\//} # for refs/heads/my-branch
           if [[ $gitref_path == dev-* ]]; then
             echo "${{ github.token }}" | docker login https://docker.pkg.github.com -u ${{ github.repository_owner }} --password-stdin
-            quorum_docker_image="chounsom/qrm:develop"
+            quorum_docker_image=$(echo "docker.pkg.github.com/${{ github.repository }}/quorum-$gitref_path:develop" | tr '[:upper:]' '[:lower:]' )
             tessera_docker_image=$(echo "docker.pkg.github.com/${{ github.repository }}/tessera-$gitref_path:develop" | tr '[:upper:]' '[:lower:]')
             has_quorum_docker_image=$(docker pull $quorum_docker_image >/dev/null 2>&1; echo $?)
             has_tessera_docker_image=$(docker pull $tessera_docker_image >/dev/null 2>&1; echo $?)
