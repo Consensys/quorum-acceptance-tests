@@ -13,6 +13,7 @@ locals {
   qip714Block_config              = var.permission_qip714Block.enabled ? { qip714Block = var.permission_qip714Block.block } : {}
   privacyEnhancementsBlock_config = var.privacy_enhancements.enabled ? { privacyEnhancementsBlock = var.privacy_enhancements.block } : {}
   privacyPrecompileBlock_config = var.privacy_precompile.enabled ? { privacyPrecompileBlock = var.privacy_precompile.block } : {}
+  enableGasPriceBlock_config = var.enable_gas_price.enabled ? { enableGasPriceBlock = var.enable_gas_price.block } : {}
 
 
   legacy_istanbul_config       = var.consensus == "istanbul" || var.consensus == "qbft" ? { istanbul = { epoch = 30000, policy = 0, ceil2Nby3Block = 0 } } : {}
@@ -50,6 +51,7 @@ locals {
     local.qip714Block_config,
     local.privacyEnhancementsBlock_config,
     local.privacyPrecompileBlock_config,
+    local.enableGasPriceBlock_config,
     local.qbft_ibft_config,
     lookup(var.additional_genesis_config, idx, {}),
     local.transition_config
@@ -79,6 +81,7 @@ locals {
   local.qip714Block_config,
   local.privacyEnhancementsBlock_config,
   local.privacyPrecompileBlock_config,
+  local.enableGasPriceBlock_config,
   local.legacy_config,
   lookup(var.additional_genesis_config, idx, {}),
   local.transition_config

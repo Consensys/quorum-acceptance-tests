@@ -20,6 +20,12 @@ variable "privacy_marker_transactions" {
   description = "Enable privacy marker transactions on the node"
 }
 
+variable "enable_gas_price" {
+  type        = object({ block = number, enabled = bool })
+  default     = { block = 0, enabled = false }
+  description = "enable/disable gas price and set the block height at which it is enabled"
+}
+
 variable "network_name" {
   default = "typical-hybrid"
 }
