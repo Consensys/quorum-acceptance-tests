@@ -24,7 +24,7 @@ locals {
 
   qbft_ibft_config = merge(local.ibft_config, local.qbft_config)
 
-  transition_config = var.qbftBlock.block > 0 ? { transitions: [{ "block": var.qbftBlock.block, "algorithm": "qbft" }] }: {}
+  transition_config = var.qbftBlock.block > 0 ? { transitions: [{ "block": var.qbftBlock.block, "algorithm": "qbft" }, { "block": 50, "emptyblockperiodseconds": 5 }, { "block": 60, "emptyblockperiodseconds": 1 }] }: {}
 
   chain_configs = [for idx in local.node_indices : merge(
     {
