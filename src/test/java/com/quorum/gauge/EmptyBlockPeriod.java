@@ -35,37 +35,44 @@ public class EmptyBlockPeriod extends AbstractSpecImplementation {
 
     private static final Logger logger = LoggerFactory.getLogger(EmptyBlockPeriod.class);
 
-    @Step("Until block <blocknumber>, produced empty blocks should have block periods to be at least <emptyblockperiod>")
-    public void waitForEmptyBlockAndCheckTimeSpent(int blocknumber, int emptyblockperiod) {
-        while (utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber().intValue() < blocknumber) {
-            logger.info("sleep a bit, current block #"+utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber().intValue()+" expected is #"+blocknumber);
+    @Step("From block <fromblocknumber> to <toblocknumber>, produced empty blocks should have block periods to be at least <emptyblockperiod>")
+    public void waitForEmptyBlockAndCheckTimeSpent(int fromblocknumber, int toblocknumber, int emptyblockperiod) {
+        assert(fromblocknumber > toblocknumber);
+        while (utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber().intValue() < toblocknumber) {
+            logger.info("sleep a bit, current block #"+utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber().intValue()+" expected is #"+toblocknumber);
             try {
                 Thread.sleep(100);
             } catch(InterruptedException e) {}
         }
         QuorumNode node = QuorumNode.Node1;
-        int number = blocknumber;
+
+        // Find the first empty block
+        int number = toblocknumber;
         EthBlock.Block block = utilService.getBlockByNumber(node, number).blockingFirst().getBlock();
-        while (number > 0 && (block == null || !block.getTransactions().isEmpty())) {
+        while (number > fromblocknumber && (block == null || !block.getTransactions().isEmpty())) {
             number--;
             block = utilService.getBlockByNumber(node, number).blockingFirst().getBlock();
         }
         EthBlock.Block firstEmptyBlock = block;
+
+        // Count continuous number of empty blocks
         int nbEmptyBlock = 0;
-        while (number > 0 && block.getTransactions().isEmpty()) {
+        while (number > fromblocknumber && block.getTransactions().isEmpty()) {
             nbEmptyBlock++;
             number--;
             block = utilService.getBlockByNumber(node, number).blockingFirst().getBlock();
         }
+
+        // Delta timestamps between two blocks
         BigInteger delta = firstEmptyBlock.getTimestamp().subtract(block.getTimestamp());
         if (nbEmptyBlock > 0) {
             int emptyBlockPeriodSeconds = delta.divide(BigInteger.valueOf(nbEmptyBlock)).intValue();
             if (emptyBlockPeriodSeconds < emptyblockperiod) {
-               logger.error("fail to check empty block period %d > %d (%d empty block from #%d)\n", emptyBlockPeriodSeconds, emptyblockperiod, nbEmptyBlock, blocknumber);
+               logger.error("fail to check empty block period "+emptyBlockPeriodSeconds+" > "+emptyblockperiod+" for ("+nbEmptyBlock+" empty blocks from #"+fromblocknumber+" to #"+toblocknumber+")\n");
             }
             assert(emptyBlockPeriodSeconds >= emptyblockperiod);
         } else {
-            logger.warn("not able to check empty block period %d (%d empty block from #%d)\n", emptyblockperiod, nbEmptyBlock, blocknumber);
+            logger.warn("not able to check empty block period "+emptyblockperiod+" ("+nbEmptyBlock+" empty block from #"+fromblocknumber+" to #"+toblocknumber+")\n");
             assert(false);
         }
     }
