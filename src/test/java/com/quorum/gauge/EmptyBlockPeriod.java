@@ -30,6 +30,8 @@ import com.thoughtworks.gauge.Step;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.EthBlock;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
 @Service
 public class EmptyBlockPeriod extends AbstractSpecImplementation {
 
@@ -37,7 +39,7 @@ public class EmptyBlockPeriod extends AbstractSpecImplementation {
 
     @Step("From block <fromblocknumber> to <toblocknumber>, produced empty blocks should have block periods to be at least <emptyblockperiod>")
     public void waitForEmptyBlockAndCheckTimeSpent(int fromblocknumber, int toblocknumber, int emptyblockperiod) {
-        assert(fromblocknumber > toblocknumber);
+        assertThat(fromblocknumber).isLessThan(toblocknumber);
         while (utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber().intValue() < toblocknumber) {
             logger.info("sleep a bit, current block #"+utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber().intValue()+" expected is #"+toblocknumber);
             try {
@@ -68,12 +70,12 @@ public class EmptyBlockPeriod extends AbstractSpecImplementation {
         if (nbEmptyBlock > 0) {
             int emptyBlockPeriodSeconds = delta.divide(BigInteger.valueOf(nbEmptyBlock)).intValue();
             if (emptyBlockPeriodSeconds < emptyblockperiod) {
-               logger.error("fail to check empty block period "+emptyBlockPeriodSeconds+" > "+emptyblockperiod+" for ("+nbEmptyBlock+" empty blocks from #"+fromblocknumber+" to #"+toblocknumber+")\n");
+               logger.error("fail to check empty block period "+emptyBlockPeriodSeconds+" >= "+emptyblockperiod+" for ("+nbEmptyBlock+" empty blocks from #"+fromblocknumber+" to #"+toblocknumber+")\n");
             }
-            assert(emptyBlockPeriodSeconds >= emptyblockperiod);
+            assertThat(emptyBlockPeriodSeconds).isGreaterThanOrEqualTo(emptyblockperiod);
         } else {
             logger.warn("not able to check empty block period "+emptyblockperiod+" ("+nbEmptyBlock+" empty block from #"+fromblocknumber+" to #"+toblocknumber+")\n");
-            assert(false);
+            assertThat(false);
         }
     }
 }
