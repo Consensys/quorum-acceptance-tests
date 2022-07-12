@@ -9,6 +9,7 @@ variable "geth_networking" {
       http = object({ internal = number, external = number })
       ws   = object({ internal = number, external = number })
       p2p  = number
+      qlight = number
       raft = number
     })
     graphql = bool
@@ -173,4 +174,10 @@ variable "hybrid_public_key_b64" {
 variable "hybrid_key_data" {
   default = []
   description = "tessera key data for hybrid network"
+}
+
+variable "qlight_clients" {
+  type = map(object({ server_idx = number, mps_psi = string, mt_is_server_tls_enabled = bool, mt_scope = string }))
+  description = "Map of which nodes are qlight clients (by 0-based index) and additional config including the index of their corresponding server node"
+  default = {}
 }

@@ -1,0 +1,197 @@
+Helpers for the qlight_mps.spec tests, improving readability by making it clearer that the same results are expected
+regardless of if a tx is sent to the qlight server or the qlight client.
+
+# Verify state updates for public accumulator contract are the same on all nodes: contract=<contract>, sender=<sender>, accumulator.inc-tx-id=<accIncTxId>  
+
+* Transaction Hash is returned for <contract>
+* Transaction Receipt is present in "Node1" for <contract> from <sender>'s default account
+* Transaction Receipt is present in "Node2" for <contract> from <sender>'s default account
+* Transaction Receipt is present in "Node3" for <contract> from <sender>'s default account
+* Transaction Receipt is present in "Node4" for <contract> from <sender>'s default account
+* Transaction Receipt is present in "Node5" for <contract> from <sender>'s default account
+* Transaction Receipt is present in "Node6" for <contract> from <sender>'s default account
+* Subscribe to accumulator contract <contract> IncEvent on "Node1,Node2,Node3,Node4,Node5,Node6"
+* Accumulator <contract>'s `get()` function execution in "Node1" returns "1"
+* Accumulator <contract>'s `get()` function execution in "Node2" returns "1"
+* Accumulator <contract>'s `get()` function execution in "Node3" returns "1"
+* Accumulator <contract>'s `get()` function execution in "Node4" returns "1"
+* Accumulator <contract>'s `get()` function execution in "Node5" returns "1"
+* Accumulator <contract>'s `get()` function execution in "Node6" returns "1"
+* Invoke accumulator.inc with value "1" in contract <contract> in <sender>'s default account, file transaction hash as <accIncTxId>
+* Transaction Receipt is present in "Node1" for <accIncTxId>
+* Transaction Receipt is present in "Node2" for <accIncTxId>
+* Transaction Receipt is present in "Node3" for <accIncTxId>
+* Transaction Receipt is present in "Node4" for <accIncTxId>
+* Transaction Receipt is present in "Node5" for <accIncTxId>
+* Transaction Receipt is present in "Node6" for <accIncTxId>
+* Accumulator <contract>'s `get()` function execution in "Node1" returns "2"
+* Accumulator <contract>'s `get()` function execution in "Node2" returns "2"
+* Accumulator <contract>'s `get()` function execution in "Node3" returns "2"
+* Accumulator <contract>'s `get()` function execution in "Node4" returns "2"
+* Accumulator <contract>'s `get()` function execution in "Node5" returns "2"
+* Accumulator <contract>'s `get()` function execution in "Node6" returns "2"
+* Wait for events poll
+* Check IncEvent "0" for accumulator contract <contract> on "Node1" has value "2"
+* Check IncEvent "0" for accumulator contract <contract> on "Node2" has value "2"
+* Check IncEvent "0" for accumulator contract <contract> on "Node3" has value "2"
+* Check IncEvent "0" for accumulator contract <contract> on "Node4" has value "2"
+* Check IncEvent "0" for accumulator contract <contract> on "Node5" has value "2"
+* Check IncEvent "0" for accumulator contract <contract> on "Node6" has value "2"
+* Unsubscribe to accumulator contract <contract> IncEvent on "Node1,Node2,Node3,Node4,Node5,Node6"
+
+# Verify state updates for StandardPrivate accumulator contract are the same on Node1,Node4,Node5 and are not present on Node2,Node3,Node6: contract=<contract>, sender=<sender>, accumulator.inc-tx-id=<accIncTxId>
+
+* Transaction Hash is returned for <contract>
+* Transaction Receipt is present in "Node1" for <contract> from <sender>'s default account
+* Transaction Receipt is present in "Node2" for <contract> from <sender>'s default account
+* Transaction Receipt is present in "Node3" for <contract> from <sender>'s default account
+* Transaction Receipt is present in "Node4" for <contract> from <sender>'s default account
+* Transaction Receipt is present in "Node5" for <contract> from <sender>'s default account
+* Transaction Receipt is present in "Node6" for <contract> from <sender>'s default account
+* Accumulator <contract>'s `get()` function execution in "Node1" returns "1"
+* Accumulator <contract>'s `get()` function execution in "Node4" returns "1"
+* Accumulator <contract>'s `get()` function execution in "Node5" returns "1"
+* Accumulator <contract>'s `get()` function execution in "Node2" returns "0"
+* Accumulator <contract>'s `get()` function execution in "Node3" returns "0"
+* Accumulator <contract>'s `get()` function execution in "Node6" returns "0"
+* Subscribe to accumulator contract <contract> IncEvent on "Node1,Node2,Node3,Node4,Node5,Node6"
+* Invoke a "StandardPrivate" accumulator.inc with value "1" in contract <contract> in <sender>'s default account and it's private for "Node1,Node2,Node3", file transaction hash as <accIncTxId>
+* Transaction Receipt is present in "Node1" for <accIncTxId>
+* Transaction Receipt is present in "Node2" for <accIncTxId>
+* Transaction Receipt is present in "Node3" for <accIncTxId>
+* Transaction Receipt is present in "Node4" for <accIncTxId>
+* Transaction Receipt is present in "Node5" for <accIncTxId>
+* Transaction Receipt is present in "Node6" for <accIncTxId>
+* Transaction Receipt in "Node1" for <accIncTxId> has one IncEvent log with value "2"
+* Transaction Receipt in "Node4" for <accIncTxId> has one IncEvent log with value "2"
+* Transaction Receipt in "Node5" for <accIncTxId> has one IncEvent log with value "2"
+* Transaction Receipt in "Node2" for <accIncTxId> has no logs
+* Transaction Receipt in "Node3" for <accIncTxId> has no logs
+* Transaction Receipt in "Node6" for <accIncTxId> has no logs
+* Accumulator <contract>'s `get()` function execution in "Node1" returns "2"
+* Accumulator <contract>'s `get()` function execution in "Node4" returns "2"
+* Accumulator <contract>'s `get()` function execution in "Node5" returns "2"
+* Accumulator <contract>'s `get()` function execution in "Node2" returns "0"
+* Accumulator <contract>'s `get()` function execution in "Node3" returns "0"
+* Accumulator <contract>'s `get()` function execution in "Node6" returns "0"
+* Wait for events poll
+* Check IncEvent list size for accumulator contract <contract> on "Node1" is "1"
+* Check IncEvent list size for accumulator contract <contract> on "Node4" is "1"
+* Check IncEvent list size for accumulator contract <contract> on "Node5" is "1"
+* Check IncEvent list size for accumulator contract <contract> on "Node2" is "0"
+* Check IncEvent list size for accumulator contract <contract> on "Node3" is "0"
+* Check IncEvent list size for accumulator contract <contract> on "Node6" is "0"
+* Check IncEvent "0" for accumulator contract <contract> on "Node1" has value "2"
+* Check IncEvent "0" for accumulator contract <contract> on "Node4" has value "2"
+* Check IncEvent "0" for accumulator contract <contract> on "Node5" has value "2"
+* Unsubscribe to accumulator contract <contract> IncEvent on "Node1,Node2,Node3,Node4,Node5,Node6"
+
+# Verify state updates for StandardPrivate accumulator contract are the same on Node4,Node6 and are not present on Node1,Node2,Node3,Node5: contract=<contract>, sender=<sender>, accumulator.inc-tx-id=<accIncTxId>
+
+* Transaction Hash is returned for <contract>
+* Transaction Receipt is present in "Node1" for <contract> from <sender>'s default account
+* Transaction Receipt is present in "Node2" for <contract> from <sender>'s default account
+* Transaction Receipt is present in "Node3" for <contract> from <sender>'s default account
+* Transaction Receipt is present in "Node4" for <contract> from <sender>'s default account
+* Transaction Receipt is present in "Node5" for <contract> from <sender>'s default account
+* Transaction Receipt is present in "Node6" for <contract> from <sender>'s default account
+* Accumulator <contract>'s `get()` function execution in "Node4" returns "1"
+* Accumulator <contract>'s `get()` function execution in "Node6" returns "1"
+* Accumulator <contract>'s `get()` function execution in "Node1" returns "0"
+* Accumulator <contract>'s `get()` function execution in "Node2" returns "0"
+* Accumulator <contract>'s `get()` function execution in "Node3" returns "0"
+* Accumulator <contract>'s `get()` function execution in "Node5" returns "0"
+* Subscribe to accumulator contract <contract> IncEvent on "Node1,Node2,Node3,Node4,Node5,Node6"
+* Invoke a "StandardPrivate" accumulator.inc with value "1" in contract <contract> in <sender>'s default account and it's private for "Node2,Node3,Node6", file transaction hash as <accIncTxId>
+* Transaction Receipt is present in "Node1" for <accIncTxId>
+* Transaction Receipt is present in "Node2" for <accIncTxId>
+* Transaction Receipt is present in "Node3" for <accIncTxId>
+* Transaction Receipt is present in "Node4" for <accIncTxId>
+* Transaction Receipt is present in "Node5" for <accIncTxId>
+* Transaction Receipt is present in "Node6" for <accIncTxId>
+* Transaction Receipt in "Node4" for <accIncTxId> has one IncEvent log with value "2"
+* Transaction Receipt in "Node6" for <accIncTxId> has one IncEvent log with value "2"
+* Transaction Receipt in "Node1" for <accIncTxId> has no logs
+* Transaction Receipt in "Node2" for <accIncTxId> has no logs
+* Transaction Receipt in "Node3" for <accIncTxId> has no logs
+* Transaction Receipt in "Node5" for <accIncTxId> has no logs
+* Accumulator <contract>'s `get()` function execution in "Node4" returns "2"
+* Accumulator <contract>'s `get()` function execution in "Node6" returns "2"
+* Accumulator <contract>'s `get()` function execution in "Node1" returns "0"
+* Accumulator <contract>'s `get()` function execution in "Node2" returns "0"
+* Accumulator <contract>'s `get()` function execution in "Node3" returns "0"
+* Accumulator <contract>'s `get()` function execution in "Node5" returns "0"
+* Wait for events poll
+* Check IncEvent list size for accumulator contract <contract> on "Node4" is "1"
+* Check IncEvent list size for accumulator contract <contract> on "Node6" is "1"
+* Check IncEvent list size for accumulator contract <contract> on "Node1" is "0"
+* Check IncEvent list size for accumulator contract <contract> on "Node2" is "0"
+* Check IncEvent list size for accumulator contract <contract> on "Node3" is "0"
+* Check IncEvent list size for accumulator contract <contract> on "Node5" is "0"
+* Check IncEvent "0" for accumulator contract <contract> on "Node4" has value "2"
+* Check IncEvent "0" for accumulator contract <contract> on "Node6" has value "2"
+* Unsubscribe to accumulator contract <contract> IncEvent on "Node1,Node2,Node3,Node4,Node5,Node6"
+
+# Verify state updates and PartyProtection rules for PartyProtection accumulator contract are the same on Node1,Node3,Node5 and are not present on Node2,Node4,Node6: contract=<contract>, sender=<sender>, accumulator.inc-txt-id=<accIncTxId1>,<accIncTxId2>
+
+* Transaction Hash is returned for <contract>
+* Transaction Receipt is present in "Node1" for <contract> from <sender>'s default account
+* Transaction Receipt is present in "Node2" for <contract> from <sender>'s default account
+* Transaction Receipt is present in "Node3" for <contract> from <sender>'s default account
+* Transaction Receipt is present in "Node4" for <contract> from <sender>'s default account
+* Transaction Receipt is present in "Node5" for <contract> from <sender>'s default account
+* Transaction Receipt is present in "Node6" for <contract> from <sender>'s default account
+* Accumulator <contract>'s `get()` function execution in "Node1" returns "2"
+* Accumulator <contract>'s `get()` function execution in "Node3" returns "2"
+* Accumulator <contract>'s `get()` function execution in "Node5" returns "2"
+* Accumulator <contract>'s `get()` function execution in "Node2" returns "0"
+* Accumulator <contract>'s `get()` function execution in "Node4" returns "0"
+* Accumulator <contract>'s `get()` function execution in "Node6" returns "0"
+* Subscribe to accumulator contract <contract> IncEvent on "Node1,Node2,Node3,Node4,Node5,Node6"
+* Invoke a "PartyProtection" accumulator.inc with value "5" in contract <contract> in <sender>'s default account and it's private for "Node1", file transaction hash as <accIncTxId1>
+* Transaction Receipt is present in "Node1" for <accIncTxId1>
+* Transaction Receipt is present in "Node2" for <accIncTxId1>
+* Transaction Receipt is present in "Node3" for <accIncTxId1>
+* Transaction Receipt is present in "Node4" for <accIncTxId1>
+* Transaction Receipt is present in "Node5" for <accIncTxId1>
+* Transaction Receipt is present in "Node6" for <accIncTxId1>
+* Transaction Receipt in "Node1" for <accIncTxId1> has one IncEvent log with value "7"
+* Transaction Receipt in "Node3" for <accIncTxId1> has one IncEvent log with value "7"
+* Transaction Receipt in "Node5" for <accIncTxId1> has one IncEvent log with value "7"
+* Transaction Receipt in "Node2" for <accIncTxId1> has no logs
+* Transaction Receipt in "Node4" for <accIncTxId1> has no logs
+* Transaction Receipt in "Node6" for <accIncTxId1> has no logs
+* Accumulator <contract>'s `get()` function execution in "Node1" returns "7"
+* Accumulator <contract>'s `get()` function execution in "Node3" returns "7"
+* Accumulator <contract>'s `get()` function execution in "Node5" returns "7"
+* Accumulator <contract>'s `get()` function execution in "Node2" returns "0"
+* Accumulator <contract>'s `get()` function execution in "Node4" returns "0"
+* Accumulator <contract>'s `get()` function execution in "Node6" returns "0"
+
+* Wait for events poll
+* Check IncEvent list size for accumulator contract <contract> on "Node1" is "1"
+* Check IncEvent list size for accumulator contract <contract> on "Node3" is "1"
+* Check IncEvent list size for accumulator contract <contract> on "Node5" is "1"
+* Check IncEvent list size for accumulator contract <contract> on "Node2" is "0"
+* Check IncEvent list size for accumulator contract <contract> on "Node4" is "0"
+* Check IncEvent list size for accumulator contract <contract> on "Node6" is "0"
+* Check IncEvent "0" for accumulator contract <contract> on "Node1" has value "7"
+* Check IncEvent "0" for accumulator contract <contract> on "Node3" has value "7"
+* Check IncEvent "0" for accumulator contract <contract> on "Node5" has value "7"
+
+* Unsubscribe to accumulator contract <contract> IncEvent on "Node1,Node2,Node3,Node4,Node5,Node6"
+
+// trying to invoke as PartyProtection from non party (fails on Node2 private state - as Node2 is not party to accPrivatePP1)
+* Invoking a "PartyProtection" accumulator.inc with value "6" in contract <contract> in "Node2"'s default account and it's private for "Node1" fails with error "contract not found. cannot transact"
+// trying to invoke as PSV (fails on Node1 private state and the privacy flag is different from the accPrivatePP1 contract privacy flag - PartyProtection)
+* Invoking a "StateValidation" accumulator.inc with value "6" in contract <contract> in "Node1"'s default account and it's private for "Node3" fails with error "sent privacy flag doesn't match all affected contract flags"
+// trying to invoke from non party as standard private from Node1 private state
+* Invoke a "StandardPrivate" accumulator.inc with value "6" in contract <contract> in "Node2"'s default account and it's private for "Node1", file transaction hash as <accIncTxId2>
+* Transaction Receipt in "Node2" for <accIncTxId2> has status "0x1"
+* Transaction Receipt in "Node1" for <accIncTxId2> has status "0x0"
+* Accumulator <contract>'s `get()` function execution in "Node1" returns "7"
+* Accumulator <contract>'s `get()` function execution in "Node3" returns "7"
+* Accumulator <contract>'s `get()` function execution in "Node5" returns "7"
+* Accumulator <contract>'s `get()` function execution in "Node2" returns "0"
+* Accumulator <contract>'s `get()` function execution in "Node4" returns "0"
+* Accumulator <contract>'s `get()` function execution in "Node6" returns "0" 

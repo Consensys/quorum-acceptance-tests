@@ -137,6 +137,11 @@ jobs:
           - 'mps-mixed-network-psr-check || networks/template::istanbul-4nodes-mps-mixed'
           - 'mps-pmt-mixed-network-psr-check || networks/template::raft-4nodes-mps-pmt'
           - 'mps-pmt-mixed-network-psr-check || networks/template::istanbul-4nodes-mps-pmt'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-qlight'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-qlight-alt'
+          - '(basic && !privacy-enhancements-disabled) || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-qlight-mps'
+          - 'multitenancy && networks/plugins::qbft-qlight-multitenancy'
+          - 'multitenancy-qlight-client && networks/plugins::qbft-qlight-multitenancy-alt'
           - '(basic && !nosupport && !mps && !(spam && !raw) && !eth-api-signed && !privacy-enhancements-disabled && !graphql && !async && !extension && !storage-root && !personal-api-signed) || networks/typical-besu::ibft2'
           - '(basic && !nosupport && !mps && !(spam && !raw) && !eth-api-signed && !privacy-enhancements-disabled && !graphql && !async && !extension && !storage-root && !personal-api-signed) || networks/typical-hybrid::hybrid'
     runs-on: ubuntu-18.04
@@ -276,8 +281,8 @@ jobs:
             cat ${{ steps.setup.outputs.outputDir}}/summary.txt;
           fi
       - name: 'Upload test report'
-        if: always()
-        uses: actions/upload-artifact@v2
+        if: failure()
+        uses: actions/upload-artifact@v3
         with:
           name: testreport-${{ steps.setup.outputs.tag }}
           path: ${{ steps.setup.outputs.outputDir }}/*.* # only files not directory

@@ -16,6 +16,7 @@ locals {
         ws   = var.geth.container.port.ws == -1 ? null : { internal = var.geth.container.port.ws, external = var.geth.host.port.ws_start + idx }
         p2p  = var.geth.container.port.p2p
         raft = var.geth.container.port.raft
+        qlight = var.geth.container.port.qlight
       }
       graphql = var.geth.container.graphql
       ip = {

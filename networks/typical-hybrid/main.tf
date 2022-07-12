@@ -64,6 +64,7 @@ locals {
         ws   = var.geth.container.port.ws == -1 ? null : { internal = var.geth.container.port.ws, external = var.geth.host.port.ws_start + idx }
         p2p  = var.geth.container.port.p2p
         raft = var.geth.container.port.raft
+        qlight = 30305
       }
       graphql = var.geth.container.graphql
       ip = {
@@ -123,7 +124,7 @@ module "helper" {
   geth = {
     container = {
       image   = var.geth.container.image
-      port    = { raft = 50400, p2p = 21000, http = 8545, ws = -1 }
+      port    = { raft = 50400, p2p = 21000, qlight = 30305, http = 8545, ws = -1 }
       graphql = true
     }
     host = {

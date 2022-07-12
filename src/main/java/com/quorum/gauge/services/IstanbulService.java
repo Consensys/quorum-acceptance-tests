@@ -23,6 +23,7 @@ import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.ext.IstanbulNodeAddress;
 import com.quorum.gauge.ext.IstanbulPropose;
+import com.quorum.gauge.ext.ListIstanbulNodeAddress;
 import com.quorum.gauge.ext.MinerStartStop;
 import io.reactivex.Observable;
 import org.slf4j.Logger;
@@ -64,6 +65,18 @@ public class IstanbulService extends AbstractService {
             Collections.emptyList(),
             connectionFactory().getWeb3jService(node),
             MinerStartStop.class
+        ).flowable().toObservable();
+    }
+
+    public Observable<ListIstanbulNodeAddress> getValidators(final QuorumNode n) {
+        QuorumNetworkProperty.Node node = networkProperty().getNode(n.name());
+        logger.debug("Request node {} to get validators", node);
+
+        return new Request<>(
+            "istanbul_getValidators",
+            Arrays.asList(),
+            connectionFactory().getWeb3jService(node),
+            ListIstanbulNodeAddress.class
         ).flowable().toObservable();
     }
 

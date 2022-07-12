@@ -1,6 +1,6 @@
 # Multi-tenancy in a Quorum Network
 
- Tags: multitenancy, networks/plugins::raft-multitenancy, networks/plugins::istanbul-multitenancy, pre-condition/no-record-blocknumber
+ Tags: multitenancy, networks/plugins::raft-multitenancy, networks/plugins::istanbul-multitenancy, networks/plugins::qbft-qlight-multitenancy, pre-condition/no-record-blocknumber
 
 
 1. chainConfig.isMPS=true, New Tessera with no resident config

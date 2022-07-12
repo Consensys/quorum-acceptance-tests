@@ -32,38 +32,6 @@ quorum:
 YML
 }
 
-resource "docker_container" "hydra" {
-  count    = local.include_security ? 1 : 0
-  image    = "oryd/hydra:v1.3.2-alpine"
-  name     = local.oauth2_server
-  hostname = local.oauth2_server
-  networks_advanced {
-    name         = module.docker.docker_network_name
-    ipv4_address = cidrhost(lookup(local.network_config, "subnet"), 200)
-  }
-  env = [
-    "URLS_SELF_ISSUER=https://goquorum.com/oauth/",
-    "DSN=memory",
-    "STRATEGIES_ACCESS_TOKEN=jwt"
-  ]
-  restart = "unless-stopped"
-  ports {
-    internal = local.oauth2_server_serve_port.internal
-    external = local.oauth2_server_serve_port.external
-  }
-  ports {
-    internal = local.oauth2_server_admin_port.internal
-    external = local.oauth2_server_admin_port.external
-  }
-  healthcheck {
-    test         = ["CMD", "nc", "-vz", "localhost", local.oauth2_server_serve_port.internal]
-    interval     = "3s"
-    retries      = 10
-    timeout      = "3s"
-    start_period = "5s"
-  }
-}
-
 resource "local_file" "security-config" {
   count = local.include_security ? var.number_of_nodes : 0
   # file name convention is <plugin_interface_name>-config.json
