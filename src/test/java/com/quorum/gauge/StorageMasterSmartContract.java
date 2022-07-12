@@ -63,59 +63,59 @@ public class StorageMasterSmartContract extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(contractName, ssChild);
     }
 
-    @Step("Deploy a <privacyFlags> storage master contract in <source>'s default account and it's private for <target>, named this contract as <contractName>")
-    public void setupStorageMasterContract(String privacyFlags, QuorumNode source, QuorumNode target, String contractName) {
+    @Step("Deploy a <privacyFlag> storage master contract in <source>'s default account and it's private for <target>, named this contract as <contractName>")
+    public void setupStorageMasterContract(String privacyFlag, QuorumNode source, QuorumNode target, String contractName) {
         saveCurrentBlockNumber();
         logger.debug("Setting up storage master from {} to {}", source, target);
         Contract contract = storageMasterService.createStorageMasterContract(
             source,
             Collections.singletonList(target),
             AbstractService.DEFAULT_GAS_LIMIT,
-            privacyService.parsePrivacyFlag(privacyFlags)
+            privacyService.parsePrivacyFlag(privacyFlag)
         ).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
     }
 
-    @Step("Deploy a <privacyFlags> simple storage from master storage contract <storageMaster> in <source>'s default account and it's private for <target>, named this contract as <contractName>")
-    public void setupSimpleStorageFromStorageMasterContract(String privacyFlags, String storageMaster, QuorumNode source, QuorumNode target, String contractName) {
+    @Step("Deploy a <privacyFlag> simple storage from master storage contract <storageMaster> in <source>'s default account and it's private for <target>, named this contract as <contractName>")
+    public void setupSimpleStorageFromStorageMasterContract(String privacyFlag, String storageMaster, QuorumNode source, QuorumNode target, String contractName) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), storageMaster, Contract.class);
         saveCurrentBlockNumber();
         logger.debug("Setting up simple storage from storage master contract from {}", source);
         Contract ssChild = storageMasterService.createSimpleStorageFromStorageMaster(
             source, Collections.singletonList(target), c.getContractAddress(), AbstractService.DEFAULT_GAS_LIMIT,
             10,
-            privacyService.parsePrivacyFlag(privacyFlags)
+            privacyService.parsePrivacyFlag(privacyFlag)
         ).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, ssChild);
         DataStoreFactory.getScenarioDataStore().put(contractName, ssChild);
     }
 
-    @Step("Deploy a <privacyFlags> simple storage C2C3 with value <value> from master storage contract <storageMaster> in <source>'s default account and it's private for <target>")
-    public void setupSimpleStorageC2C3FromStorageMasterContract(String privacyFlags, int value, String storageMaster, QuorumNode source, QuorumNode target) {
+    @Step("Deploy a <privacyFlag> simple storage C2C3 with value <value> from master storage contract <storageMaster> in <source>'s default account and it's private for <target>")
+    public void setupSimpleStorageC2C3FromStorageMasterContract(String privacyFlag, int value, String storageMaster, QuorumNode source, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), storageMaster, Contract.class);
         saveCurrentBlockNumber();
         logger.debug("Setting up simple storage C2C3 from storage master contract from {}", source);
         TransactionReceipt receipt = storageMasterService.createSimpleStorageC2C3FromStorageMaster(
             source, Collections.singletonList(target), c.getContractAddress(), AbstractService.DEFAULT_GAS_LIMIT,
             value,
-            privacyService.parsePrivacyFlag(privacyFlags)
+            privacyService.parsePrivacyFlag(privacyFlag)
         ).blockingFirst();
 
         assertThat(receipt.isStatusOK()).isTrue();
     }
 
-    @Step("Invoke a <privacyFlags> setC2C3Value with value <value> in master storage contract <storageMaster> in <source>'s default account and it's private for <target>")
-    public void setC2C3FromStorageMasterPublicContract(String privacyFlags, int value, String storageMaster, QuorumNode source, QuorumNode target) {
+    @Step("Invoke a <privacyFlag> setC2C3Value with value <value> in master storage contract <storageMaster> in <source>'s default account and it's private for <target>")
+    public void setC2C3FromStorageMasterPublicContract(String privacyFlag, int value, String storageMaster, QuorumNode source, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), storageMaster, Contract.class);
         saveCurrentBlockNumber();
         logger.debug("Invoking setC2V3Value in storage master contract from {}", source);
         TransactionReceipt receipt = storageMasterService.setC2C3ValueFromStorageMaster(
             source, Collections.singletonList(target), c.getContractAddress(), AbstractService.DEFAULT_GAS_LIMIT,
             value,
-            privacyService.parsePrivacyFlag(privacyFlags)
+            privacyService.parsePrivacyFlag(privacyFlag)
         ).blockingFirst();
     }
 

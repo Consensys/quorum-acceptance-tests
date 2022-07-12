@@ -68,8 +68,8 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         setupContract("STANDARD_PRIVATE", initialValue, source, target, contractName);
     }
 
-    @Step("Deploy a <privacyFlags> simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target>, named this contract as <contractName>")
-    public void setupContract(String privacyFlags, int initialValue, QuorumNode source, QuorumNode target, String contractName) {
+    @Step("Deploy a <privacyFlag> simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target>, named this contract as <contractName>")
+    public void setupContract(String privacyFlag, int initialValue, QuorumNode source, QuorumNode target, String contractName) {
         saveCurrentBlockNumber();
         logger.debug("Setting up contract from {} to {}", source, target);
         Contract contract = contractService.createSimpleContract(
@@ -77,7 +77,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
             source,
             null, Arrays.asList(target),
             AbstractService.DEFAULT_GAS_LIMIT,
-            privacyService.parsePrivacyFlag(privacyFlags)
+            privacyService.parsePrivacyFlag(privacyFlag)
         ).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
@@ -85,10 +85,10 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put("transactionHash", contract.getTransactionReceipt().get().getTransactionHash());
     }
 
-    @Step("Deploying a <privacyFlags> simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target> fails with message <failureMessage>")
-    public void setupContractFailsWithMessage(String privacyFlags, int initialValue, QuorumNode source, QuorumNode target, String failureMessage) {
+    @Step("Deploying a <privacyFlag> simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target> fails with message <failureMessage>")
+    public void setupContractFailsWithMessage(String privacyFlag, int initialValue, QuorumNode source, QuorumNode target, String failureMessage) {
         saveCurrentBlockNumber();
-        var flags = privacyService.parsePrivacyFlag(privacyFlags);
+        var flags = privacyService.parsePrivacyFlag(privacyFlag);
         logger.debug("Setting up contract from {} to {} with {}", source, target, flags);
         try {
             contractService.createSimpleContract(
