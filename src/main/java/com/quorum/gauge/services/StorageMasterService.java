@@ -19,11 +19,9 @@
 
 package com.quorum.gauge.services;
 
-import com.quorum.gauge.common.PrivacyFlag;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.ext.EthChainId;
-import com.quorum.gauge.ext.PrivateClientTransactionManager;
 import com.quorum.gauge.sol.SimpleStorage;
 import com.quorum.gauge.sol.StorageMaster;
 import io.reactivex.Observable;
@@ -32,7 +30,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.quorum.PrivacyFlag;
 import org.web3j.quorum.Quorum;
+import org.web3j.quorum.tx.ClientTransactionManager;
 import org.web3j.tx.Contract;
 import org.web3j.tx.ReadonlyTransactionManager;
 import org.web3j.tx.TransactionManager;
@@ -56,7 +56,7 @@ public class StorageMasterService extends AbstractService {
     @Autowired
     AccountService accountService;
 
-    public Observable<? extends Contract> createStorageMasterContract(QuorumNode source, List<QuorumNode> targets, BigInteger gas, List<PrivacyFlag> flags) {
+    public Observable<? extends Contract> createStorageMasterContract(QuorumNode source, List<QuorumNode> targets, BigInteger gas, PrivacyFlag flag) {
         Quorum client = connectionFactory().getConnection(source);
         final List<String> privateFor;
         if (null != targets) {
@@ -66,8 +66,8 @@ public class StorageMasterService extends AbstractService {
         }
 
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
-            PrivateClientTransactionManager clientTransactionManager
-                = new PrivateClientTransactionManager(client, address, null, privateFor, flags);
+            ClientTransactionManager clientTransactionManager
+                = new ClientTransactionManager(client, address, null, privateFor, flag);
             return StorageMaster.deploy(client,
                 clientTransactionManager,
                 BigInteger.valueOf(0),
@@ -80,13 +80,13 @@ public class StorageMasterService extends AbstractService {
                                                                                final String contractAddress,
                                                                                final BigInteger gasLimit,
                                                                                final int newValue,
-                                                                               final List<PrivacyFlag> flags) {
+                                                                               final PrivacyFlag flag) {
         final Quorum client = connectionFactory().getConnection(source);
         final List<String> privateFor = target.stream().map(q -> privacyService.id(q)).collect(Collectors.toList());
 
         return accountService.getDefaultAccountAddress(source).flatMap(acctAddress -> {
-            PrivateClientTransactionManager txManager
-                = new PrivateClientTransactionManager(client, acctAddress, null, privateFor, flags);
+            ClientTransactionManager txManager
+                = new ClientTransactionManager(client, acctAddress, null, privateFor, flag);
             return createSSFromSM(txManager, client, contractAddress, gasLimit, newValue);
         });
     }
@@ -122,14 +122,14 @@ public class StorageMasterService extends AbstractService {
                                                                                    final String contractAddress,
                                                                                    final BigInteger gasLimit,
                                                                                    final int newValue,
-                                                                                   final List<PrivacyFlag> flags) {
+                                                                                   final PrivacyFlag flag) {
         final Quorum client = connectionFactory().getConnection(source);
         final BigInteger value = BigInteger.valueOf(newValue);
         final List<String> privateFor = target.stream().map(q -> privacyService.id(q)).collect(Collectors.toList());
 
         return accountService.getDefaultAccountAddress(source).flatMap(acctAdress -> {
-            PrivateClientTransactionManager txManager
-                = new PrivateClientTransactionManager(client, acctAdress, null, privateFor, flags);
+            ClientTransactionManager txManager
+                = new ClientTransactionManager(client, acctAdress, null, privateFor, flag);
             StorageMaster storageMaster = StorageMaster.load(contractAddress, client, txManager, BigInteger.ZERO, gasLimit);
             return storageMaster.createSimpleStorageC2C3(value).flowable().toObservable();
         });
@@ -140,14 +140,14 @@ public class StorageMasterService extends AbstractService {
                                                                         final String contractAddress,
                                                                         final BigInteger gasLimit,
                                                                         final int newValue,
-                                                                        final List<PrivacyFlag> flags) {
+                                                                        final PrivacyFlag flag) {
         final Quorum client = connectionFactory().getConnection(source);
         final BigInteger value = BigInteger.valueOf(newValue);
         final List<String> privateFor = target.stream().map(q -> privacyService.id(q)).collect(Collectors.toList());
 
         return accountService.getDefaultAccountAddress(source).flatMap(acctAddress -> {
-            PrivateClientTransactionManager txManager
-                = new PrivateClientTransactionManager(client, acctAddress, null, privateFor, flags);
+            ClientTransactionManager txManager
+                = new ClientTransactionManager(client, acctAddress, null, privateFor, flag);
             StorageMaster storageMaster = StorageMaster.load(
                 contractAddress, client, txManager, BigInteger.ZERO, gasLimit);
             return storageMaster.setC2C3Value(value).flowable().toObservable();

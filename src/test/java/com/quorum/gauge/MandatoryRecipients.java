@@ -18,7 +18,6 @@
  */
 package com.quorum.gauge;
 
-import com.quorum.gauge.common.PrivacyFlag;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.core.AbstractSpecImplementation;
@@ -27,6 +26,7 @@ import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.quorum.PrivacyFlag;
 import org.web3j.tx.Contract;
 
 import java.util.Arrays;
@@ -47,7 +47,7 @@ public class MandatoryRecipients extends AbstractSpecImplementation {
                 .map(s -> QuorumNode.valueOf(s))
                 .collect(Collectors.toList()),
             AbstractService.DEFAULT_GAS_LIMIT,
-            Arrays.asList(flag),
+            flag,
             Arrays.stream(mandatoryFor.split(","))
                 .map(QuorumNode::valueOf)
                 .collect(Collectors.toList())
@@ -62,11 +62,12 @@ public class MandatoryRecipients extends AbstractSpecImplementation {
         assertThatThrownBy(() -> contractService.createSimpleContract(
             initialValue,
             source,
-            null, Arrays.stream(privateFor.split(","))
+            null,
+            Arrays.stream(privateFor.split(","))
                 .map(s -> QuorumNode.valueOf(s))
                 .collect(Collectors.toList()),
             AbstractService.DEFAULT_GAS_LIMIT,
-            Arrays.asList(flag),
+            flag,
             Arrays.stream(mandatoryFor.split(","))
                 .map(QuorumNode::valueOf)
                 .collect(Collectors.toList())
@@ -85,7 +86,8 @@ public class MandatoryRecipients extends AbstractSpecImplementation {
                 .map(s -> QuorumNode.valueOf(s))
                 .collect(Collectors.toList()),
             AbstractService.DEFAULT_GAS_LIMIT,
-            Arrays.asList(PrivacyFlag.MandatoryRecipients)
+            PrivacyFlag.MANDATORY_FOR,
+            Arrays.asList()
         ).blockingFirst())
             .as("Expected exception thrown")
             .hasMessageContaining(failureMessage);
@@ -102,7 +104,7 @@ public class MandatoryRecipients extends AbstractSpecImplementation {
                 Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
                 c.getContractAddress(),
                 arbitraryValue,
-                Arrays.asList(flag),
+                flag,
                 Arrays.stream(mandatoryFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()))
                 .blockingFirst()
         ).as("Expected exception thrown")
@@ -120,7 +122,7 @@ public class MandatoryRecipients extends AbstractSpecImplementation {
                 Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
                 c.getContractAddress(),
                 arbitraryValue,
-                Arrays.asList(flag))
+                flag)
                 .blockingFirst()
         ).as("Expected exception thrown")
             .hasMessageContaining(error);
@@ -136,7 +138,7 @@ public class MandatoryRecipients extends AbstractSpecImplementation {
             Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
             c.getContractAddress(),
             intValue,
-            Arrays.asList(flag),
+            flag,
             Arrays.stream(mandatoryFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()))
             .blockingFirst();
         if (receipt != null) {
@@ -176,7 +178,7 @@ public class MandatoryRecipients extends AbstractSpecImplementation {
             Arrays.stream(mandatoryFor.split(","))
                 .map(s -> QuorumNode.valueOf(s))
                 .collect(Collectors.toList()),
-            Arrays.asList(PrivacyFlag.MandatoryRecipients)
+            PrivacyFlag.MANDATORY_FOR
         ).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
@@ -195,7 +197,7 @@ public class MandatoryRecipients extends AbstractSpecImplementation {
             Arrays.stream(mandatoryFor.split(","))
                 .map(s -> QuorumNode.valueOf(s))
                 .collect(Collectors.toList()),
-            Arrays.asList(PrivacyFlag.MandatoryRecipients)
+            PrivacyFlag.MANDATORY_FOR
         ).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);

@@ -21,7 +21,11 @@ package com.quorum.gauge;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.quorum.gauge.common.*;
+
+import com.quorum.gauge.common.GethArgBuilder;
+import com.quorum.gauge.common.NodeType;
+import com.quorum.gauge.common.PermissionsConfig;
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.services.InfrastructureService;
 import com.quorum.gauge.services.RaftService;
@@ -44,6 +48,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.web3j.quorum.PrivacyFlag.*;
 
 @Service
 public class Permissions extends AbstractSpecImplementation {
@@ -675,7 +680,7 @@ public class Permissions extends AbstractSpecImplementation {
     public void setupStorecAsPublicDependentContractUntilBlockHeightReached(String contractName, int initialValue, QuorumNetworkProperty.Node node, int qip714block) {
         int curBlockHeight = utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber().intValue();
         while (curBlockHeight < qip714block) {
-            Contract c = contractService.createGenericStoreContract(node, contractName, initialValue, null, false, null, PrivacyFlag.StandardPrivate).blockingFirst();
+            Contract c = contractService.createGenericStoreContract(node, contractName, initialValue, null, false, null, STANDARD_PRIVATE).blockingFirst();
             assertThat(c).isNotNull();
             curBlockHeight = utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber().intValue();
             logger.debug("curBlockHeight:{} height:{}", curBlockHeight, qip714block);

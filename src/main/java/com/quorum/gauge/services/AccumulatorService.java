@@ -19,9 +19,7 @@
 
 package com.quorum.gauge.services;
 
-import com.quorum.gauge.common.PrivacyFlag;
 import com.quorum.gauge.common.QuorumNetworkProperty;
-import com.quorum.gauge.ext.PrivateClientTransactionManager;
 import com.quorum.gauge.sol.Accumulator;
 import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
@@ -31,7 +29,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.quorum.PrivacyFlag;
 import org.web3j.quorum.Quorum;
+import org.web3j.quorum.tx.ClientTransactionManager;
 import org.web3j.tx.ReadonlyTransactionManager;
 import org.web3j.tx.exceptions.ContractCallException;
 
@@ -68,7 +68,7 @@ public class AccumulatorService extends AbstractService {
         });
     }
 
-    public Observable<? extends Accumulator> createAccumulatorPrivateContract(QuorumNetworkProperty.Node source, List<QuorumNetworkProperty.Node> targets, BigInteger gas, int initVal, List<PrivacyFlag> flags) {
+    public Observable<? extends Accumulator> createAccumulatorPrivateContract(QuorumNetworkProperty.Node source, List<QuorumNetworkProperty.Node> targets, BigInteger gas, int initVal, PrivacyFlag flag) {
         Quorum client = connectionFactory().getConnection(source);
         final List<String> privateFor;
         if (null != targets) {
@@ -78,12 +78,12 @@ public class AccumulatorService extends AbstractService {
         }
 
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
-            PrivateClientTransactionManager clientTransactionManager = new PrivateClientTransactionManager(
+            ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
                 client,
                 address,
                 null,
                 privateFor,
-                flags,
+                flag,
                 DEFAULT_MAX_RETRY,
                 DEFAULT_SLEEP_DURATION_IN_MILLIS);
             return Accumulator.deploy(client,
@@ -98,14 +98,14 @@ public class AccumulatorService extends AbstractService {
                                                                 final String contractAddress,
                                                                 final BigInteger gasLimit,
                                                                 final int increment,
-                                                                final List<PrivacyFlag> flags) {
+                                                                final PrivacyFlag flag) {
         final Quorum client = connectionFactory().getConnection(source);
         final BigInteger value = BigInteger.valueOf(increment);
         final List<String> privateFor = target.stream().map(q -> privacyService.id(q)).collect(Collectors.toList());
 
         return accountService.getDefaultAccountAddress(source).flatMap(acctAddress -> {
-            PrivateClientTransactionManager txManager = new PrivateClientTransactionManager(
-                client, acctAddress, null, privateFor, flags, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
+            ClientTransactionManager txManager = new ClientTransactionManager(
+                client, acctAddress, null, privateFor, flag, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
             );
             Accumulator accumulator = Accumulator.load(
                 contractAddress, client, txManager, BigInteger.ZERO, gasLimit);

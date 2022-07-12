@@ -18,7 +18,6 @@
  */
 package com.quorum.gauge;
 
-import com.quorum.gauge.common.PrivacyFlag;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.services.AbstractService;
@@ -29,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.quorum.PrivacyFlag;
 import org.web3j.tx.Contract;
 
 import java.util.Arrays;
@@ -53,7 +53,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
                 .map(s -> QuorumNode.valueOf(s))
                 .collect(Collectors.toList()),
             AbstractService.DEFAULT_GAS_LIMIT,
-            Arrays.asList(flag)
+            flag
         ).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
@@ -79,7 +79,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
             Arrays.stream(privateFor.split(","))
                 .map(s -> QuorumNode.valueOf(s))
                 .collect(Collectors.toList()),
-            Arrays.asList(flag)
+            flag
         ).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
@@ -95,7 +95,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
             Arrays.stream(privateFor.split(","))
                 .map(s -> QuorumNode.valueOf(s))
                 .collect(Collectors.toList()),
-            Arrays.asList(flag)
+            flag
         ).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
@@ -147,7 +147,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
             () -> nestedContractService.restoreFromC1(node,
                 Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
                 c.getContractAddress(),
-                Arrays.asList(flag)).blockingFirst()
+                flag).blockingFirst()
         ).as("Expected exception thrown")
             .isNotNull();
     }
@@ -158,7 +158,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
         TransactionReceipt receipt = nestedContractService.restoreFromC1(
             source,
             Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
-            c.getContractAddress(), Arrays.asList(flag)).blockingFirst();
+            c.getContractAddress(), flag).blockingFirst();
 
         assertThat(receipt.getTransactionHash()).isNotBlank();
         assertThat(receipt.getBlockNumber()).isNotEqualTo(currentBlockNumber());
@@ -175,7 +175,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
                 Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
                 c.getContractAddress(),
                 arbitraryValue,
-                Arrays.asList(flag)).blockingFirst()
+                flag).blockingFirst()
         ).as("Expected exception thrown")
             .hasMessageContaining(error);
     }
@@ -191,7 +191,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
                 Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
                 c.getContractAddress(),
                 arbitraryValue,
-                Arrays.asList(flag)).blockingFirst()
+                flag).blockingFirst()
         ).as("Expected exception thrown")
             .hasMessageContaining(error);
     }
@@ -206,7 +206,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
             Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
             c.getContractAddress(),
             arbitraryValue,
-            Arrays.asList(flag)).onExceptionResumeNext(Observable.empty()).blockingFirst();
+            flag).onExceptionResumeNext(Observable.empty()).blockingFirst();
         if (receipt != null) {
             String txHashKey = contractName + "_transactionHash";
             DataStoreFactory.getSpecDataStore().put(txHashKey, receipt.getTransactionHash());
@@ -216,7 +216,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
 
     @Step("Fire and forget execution of simple contract(<contractName>)'s `set()` function with new arbitrary value in <node> and it's private for <privateFor>")
     public void fireAndForgetSimpleContractNoFlag(String contractName, QuorumNode node, String privateFor) {
-        fireAndForgetSimpleContractArbitraryValue(PrivacyFlag.StandardPrivate, contractName, node, privateFor);
+        fireAndForgetSimpleContractArbitraryValue(PrivacyFlag.STANDARD_PRIVATE, contractName, node, privateFor);
     }
 
     @Step("Fire and forget execution of <flag> simple contract(<contractName>)'s `set()` function with new arbitrary value in <node> and it's private for <privateFor>")
@@ -235,7 +235,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
             Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
             c.getContractAddress(),
             intValue,
-            Arrays.asList(flag)).onExceptionResumeNext(Observable.empty()).blockingFirst();
+            flag).onExceptionResumeNext(Observable.empty()).blockingFirst();
         if (receipt != null) {
             String txHashKey = contractName + "_transactionHash";
             DataStoreFactory.getSpecDataStore().put(txHashKey, receipt.getTransactionHash());
@@ -249,7 +249,7 @@ public class PrivateStateValidation extends AbstractSpecImplementation {
         TransactionReceipt receipt = nestedContractService.updateC2Contract(
             source,
             Arrays.stream(privateFor.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
-            c.getContractAddress(), newValue, Arrays.asList(PrivacyFlag.StandardPrivate)).blockingFirst();
+            c.getContractAddress(), newValue, PrivacyFlag.STANDARD_PRIVATE).blockingFirst();
 
         assertThat(receipt.getTransactionHash()).isNotBlank();
         assertThat(receipt.getBlockNumber()).isNotEqualTo(currentBlockNumber());
