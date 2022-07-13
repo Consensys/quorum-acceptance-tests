@@ -180,6 +180,12 @@ variable "qbftBlock" {
   description = "qbft fork block (enabled/disabled) and the block height at which it is enabled"
 }
 
+variable "qbft_empty_block_period" {
+  type        = number
+  default     = 10
+  description = "qbft empty block period in seconds"
+}
+
 variable "override_tm_named_key_allocation" {
   default     = {}
   description = <<-EOT

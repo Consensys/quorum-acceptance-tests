@@ -177,3 +177,9 @@ variable "qbftBlock" {
   default     = { block = 0, enabled = false }
   description = "qbft fork block (enabled/disabled) and the block height at which it is enabled"
 }
+
+variable "qbft_empty_block_period" {
+  type        = number
+  default     = 10
+  description = "qbft empty block period in seconds"
+}

@@ -23,9 +23,15 @@ locals {
   qbft_config  = var.consensus == "qbft" ? { qbft = { "blockperiodseconds" : 1, "epochlength" : 30000 } } : {}
 
   qbft_ibft_config = merge(local.ibft_config, local.qbft_config)
-
-
-  transition_config = { transitions: [{ "block": var.qbftBlock.block, "algorithm": "qbft" }, { "block": 0, "emptyblockperiodseconds": 1 }, { "block": 10, "emptyblockperiodseconds": 10 }, { "block": 90, "emptyblockperiodseconds": 1 }] }
+  transition_config = { transitions: [{ "block": var.qbftBlock.block, "algorithm": "qbft" }, { "block": 110, "emptyblockperiodseconds": var.qbft_empty_block_period }, { "block": 150, "emptyblockperiodseconds": 1 }] }
+#  transition_config = <<JSON
+#{ transitions: [
+#%{if var.qbftBlock.block > 0~}
+#  { "block": ${var.qbftBlock.block}, "algorithm": "qbft" },
+#%{endif~} 
+#  { "block": 110, "emptyblockperiodseconds": ${var.qbft_empty_block_period} }, { "block": 150, "emptyblockperiodseconds": 1 }
+#]}
+#  JSON
 
   chain_configs = [for idx in local.node_indices : merge(
     {

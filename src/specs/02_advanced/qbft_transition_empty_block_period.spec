@@ -10,6 +10,6 @@ This specification describes the behavior of empty block period
 
   Tags: empty-block-period
 
-* From block "1" to "10", produced empty blocks should have block periods to be at least "1"
-* From block "10" to "90", produced empty blocks should have block periods to be at least "10"
-* From block "90" to "100", produced empty blocks should have block periods to be at least "1"
+* From block "1" to "109", produced empty blocks should have block periods to be at least "1"
+* From block "110" to "149", produced empty blocks should have block periods to be at least "10"
+* From block "150" to "170", produced empty blocks should have block periods to be at least "1"

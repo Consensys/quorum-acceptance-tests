@@ -129,6 +129,12 @@ variable "qbftBlock" {
   description = "qbft transition/fork block (enabled/disabled) and the block height at which it is enabled"
 }
 
+variable "qbft_empty_block_period" {
+  type        = number
+  default     = 10
+  description = "qbft empty block period (number in seconds)"
+}
+
 variable "hybrid_extradata" {
   default     = []
   description = "Extradata for hybrid network"
