@@ -80,6 +80,10 @@ public class PrivacyService extends AbstractService {
     }
 
     public String id(QuorumNode node, String name) {
+        // if this is a qlight client we don't want its privacy addresses, we want its server's
+        if (getQuorumNodeConfig(node).getQlight().getIsClient()) {
+            node = QuorumNode.valueOf(getQuorumNodeConfig(node).getQlight().getServerId());
+        }
         return getQuorumNodeConfig(node).getPrivacyAddressAliases().get(name);
     }
 

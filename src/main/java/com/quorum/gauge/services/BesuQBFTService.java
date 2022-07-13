@@ -3,6 +3,7 @@ package com.quorum.gauge.services;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.ext.IstanbulNodeAddress;
 import com.quorum.gauge.ext.IstanbulPropose;
+import com.quorum.gauge.ext.ListIstanbulNodeAddress;
 import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +46,16 @@ public class BesuQBFTService extends AbstractService {
             Arrays.asList(),
             connectionFactory().getWeb3jService(node),
             IstanbulNodeAddress.class
+        ).flowable().toObservable();
+    }
+
+    public Observable<ListIstanbulNodeAddress> getValidators(QuorumNetworkProperty.Node node) {
+        logger.debug("qbft validators from node {}", node);
+        return new Request<>(
+            "qbft_getValidatorsByBlockNumber",
+            Arrays.asList("latest"),
+            connectionFactory().getWeb3jService(node),
+            ListIstanbulNodeAddress.class
         ).flowable().toObservable();
     }
 }

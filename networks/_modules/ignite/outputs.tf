@@ -37,3 +37,7 @@ output "exclude_initial_nodes" {
 output "accounts_count" {
   value = { for id in local.node_indices : id => length(local.named_accounts_alloc[id]) }
 }
+
+output "qlight_p2p_urls" {
+  value = local.qlight_p2p_urls
+}

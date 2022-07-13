@@ -1,34 +1,34 @@
 resource "docker_container" "tessera" {
-  count             = local.number_of_nodes
-  name              = format("%s-tm%d", var.network_name, count.index)
+  count             = length(local.non_qlight_client_node_indices)
+  name              = format("%s-tm%d", var.network_name, local.non_qlight_client_node_indices[count.index])
   depends_on        = [docker_image.local, docker_image.registry]
-  image             = var.tm_networking[count.index].image.name
-  hostname          = format("tm%d", count.index)
+  image             = var.tm_networking[local.non_qlight_client_node_indices[count.index]].image.name
+  hostname          = format("tm%d", local.non_qlight_client_node_indices[count.index])
   restart           = "no"
   publish_all_ports = false
   must_run          = var.start_tessera
   start             = var.start_tessera
   labels {
     label = "TesseraContainer"
-    value = count.index
+    value = local.non_qlight_client_node_indices[count.index]
   }
   ports {
-    internal = var.tm_networking[count.index].port.p2p
+    internal = var.tm_networking[local.non_qlight_client_node_indices[count.index]].port.p2p
   }
   ports {
-    internal = var.tm_networking[count.index].port.thirdparty.internal
-    external = var.tm_networking[count.index].port.thirdparty.external
+    internal = var.tm_networking[local.non_qlight_client_node_indices[count.index]].port.thirdparty.internal
+    external = var.tm_networking[local.non_qlight_client_node_indices[count.index]].port.thirdparty.external
   }
   volumes {
     container_path = "/data"
-    volume_name    = docker_volume.shared_volume[count.index].name
+    volume_name    = docker_volume.shared_volume[local.non_qlight_client_node_indices[count.index]].name
   }
   volumes {
     container_path = local.container_tm_datadir_mounted
-    host_path      = var.tessera_datadirs[count.index]
+    host_path      = var.tessera_datadirs[local.non_qlight_client_node_indices[count.index]]
   }
   dynamic "volumes" {
-    for_each = lookup(var.additional_tessera_container_vol, count.index, [])
+    for_each = lookup(var.additional_tessera_container_vol, local.non_qlight_client_node_indices[count.index], [])
     content {
       container_path = volumes.value["container_path"]
       host_path      = volumes.value["host_path"]
@@ -36,8 +36,8 @@ resource "docker_container" "tessera" {
   }
   networks_advanced {
     name         = docker_network.quorum.name
-    ipv4_address = var.tm_networking[count.index].ip.private
-    aliases      = [format("tm%d", count.index)]
+    ipv4_address = var.tm_networking[local.non_qlight_client_node_indices[count.index]].ip.private
+    aliases      = [format("tm%d", local.non_qlight_client_node_indices[count.index])]
   }
   env = local.tm_env
   healthcheck {
@@ -51,13 +51,13 @@ resource "docker_container" "tessera" {
     "/bin/sh",
     "-c",
     <<EOF
-echo "Tessera GoQuorum ${count.index + 1}"
+echo "Tessera GoQuorum ${local.non_qlight_client_node_indices[count.index] + 1}"
 
 JAVA_OPTS="-Xms128M -Xmx128M"
 RUN_COMMAND="/tessera/bin/tessera"
 
 // TODO: remove following block when Jigsaw dist is default
-JAR_FILE="${lookup(var.tessera_app_container_path, count.index, "/tessera/tessera-app.jar")}"
+JAR_FILE="${lookup(var.tessera_app_container_path, local.non_qlight_client_node_indices[count.index], "/tessera/tessera-app.jar")}"
 
 if [[ -f "$${JAR_FILE}" ]];
 then

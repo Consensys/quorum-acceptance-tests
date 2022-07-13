@@ -14,10 +14,14 @@ locals {
   )
   must_start = [for idx in local.node_indices : tobool(lookup(local.quorum_initial_paticipants, idx, "false")) && tobool(var.start_quorum)]
 
+  qlight_client_indices = [for k in keys(var.qlight_clients) : parseint(k, 10)] # map keys are string type, so convert to int
+  non_qlight_client_node_indices    = [for idx in local.node_indices : idx if !contains(local.qlight_client_indices, idx)] // nodes in the consensus (e.g. not a qlight client node)
+
   unchangeable_geth_env = {
     PRIVATE_CONFIG = local.container_tm_ipc_file
   }
   geth_env = [for k, v in merge(var.additional_geth_env, local.unchangeable_geth_env) : "${k}=${v}"]
+  qlight_client_env = [for k, v in var.additional_geth_env : "${k}=${v}"]
   tm_env   = [for k, v in var.tm_env : "${k}=${v}"]
 }
 

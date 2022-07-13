@@ -12,7 +12,7 @@ provider "docker" {
 }
 
 locals {
-  standard_apis = "admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,quorumExtension,${var.consensus}"
+  standard_apis = "admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,quorumExtension,${(var.consensus == "istanbul" || var.consensus == "qbft") ? "istanbul" : var.consensus}"
   plugin_apis   = [for k, v in var.plugins : "plugin@${k}" if v.expose_api]
   apis          = "${local.standard_apis},${join(",", local.plugin_apis)}"
   more_args = join(" ", [
@@ -33,13 +33,12 @@ locals {
 
 module "helper" {
   source = "../_modules/docker-helper"
-
   consensus       = var.consensus
   number_of_nodes = var.number_of_nodes
   geth = {
     container = {
       image   = var.quorum_docker_image
-      port    = { raft = 50400, p2p = 21000, http = 8545, ws = -1 }
+      port    = { raft = 50400, p2p = 21000, qlight = 30305, http = 8545, ws = -1 }
       graphql = true
     }
     host = {
@@ -75,6 +74,8 @@ module "network" {
   override_named_account_allocation = var.override_named_account_allocation
   additional_tessera_config         = var.additional_tessera_config
   additional_genesis_config         = var.additional_genesis_config
+
+  qlight_clients = var.qlight_clients
 }
 
 module "docker" {
@@ -107,6 +108,17 @@ module "docker" {
   additional_tessera_container_vol = var.additional_tessera_container_vol
   tessera_app_container_path       = var.tessera_app_container_path
   accounts_count                   = module.network.accounts_count
+
+  qlight_clients = var.qlight_clients
+  qlight_server_indices = var.qlight_server_indices
+  qlight_p2p_urls = module.network.qlight_p2p_urls
+
+  oauth2_server = {
+    start = local.include_security
+    name = local.oauth2_server
+    serve_port = local.oauth2_server_serve_port
+    admin_port = local.oauth2_server_admin_port
+  }
 }
 
 # we randomize the plugin central configuration so some nodes use the proxy

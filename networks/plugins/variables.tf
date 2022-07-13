@@ -180,3 +180,15 @@ variable "qbft_empty_block_period" {
   default     = 10
   description = "qbft empty block period in seconds"
 }
+
+variable "qlight_clients" {
+  type = map(object({ server_idx = number, mps_psi = string, mt_is_server_tls_enabled = bool, mt_scope = string }))
+  default = {}
+  description = "Map of which nodes are qlight clients (by 0-based index) and additional config including the index of their corresponding server node"
+}
+
+variable "qlight_server_indices" {
+  type = list(number)
+  default = []
+  description = "List of which nodes are qlight servers (by 0-based index)"
+}
