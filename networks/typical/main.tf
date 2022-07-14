@@ -76,6 +76,7 @@ module "network" {
   qbftBlock            = var.qbftBlock
 
   qbft_empty_block_period = var.qbft_empty_block_period
+  transition_config       = var.transition_config
 
   override_tm_named_key_allocation  = var.override_tm_named_key_allocation
   override_named_account_allocation = var.override_named_account_allocation

@@ -179,9 +179,14 @@ variable "qbftBlock" {
 }
 
 variable "qbft_empty_block_period" {
-  type        = number
-  default     = 10
-  description = "qbft empty block period in seconds"
+  type        = object({ block = number, emptyblockperiod = number })
+  default     = { block = 120, emptyblockperiod = 10 }
+  description = "qbft empty block period (number in seconds)"
+}
+
+variable "transition_config" {
+  type    = object({ transitions = list(object({ block = number, algorithm = optional(string), emptyblockperiodseconds = optional(number)}))})
+  default = { transitions = [{ "block": 120, "emptyblockperiodseconds": 20}, { "block": 180, "emptyblockperiodseconds": 1}] }
 }
 
 variable "qlight_clients" {
@@ -195,4 +200,3 @@ variable "qlight_server_indices" {
   default = []
   description = "List of which nodes are qlight servers (by 0-based index)"
 }
-
