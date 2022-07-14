@@ -77,18 +77,25 @@ public class EmptyBlockPeriod extends AbstractSpecImplementation {
                 block = utilService.getBlockByNumber(node, number).blockingFirst().getBlock();
             }
             EthBlock.Block firstEmptyBlock = block;
-
+            
+            number--; // skip last empty block because it period might be between block period and empty block period
+            
             // Count continuous number of empty blocks
             int nbEmptyBlock = 0;
             while (number > fromblocknumber && block.getTransactions().isEmpty()) {
                 nbEmptyBlock++;
                 number--;
+                //EthBlock.Block previous = block;
                 block = utilService.getBlockByNumber(node, number).blockingFirst().getBlock();
+                //BigInteger delta = previous.getTimestamp().subtract(block.getTimestamp());
+                //logger.error("delta between #"+block.getNumberRaw()+" and #"+previous.getNumberRaw()+" is "+delta+" and mean is"+firstEmptyBlock.getTimestamp().subtract(block.getTimestamp()).divide(BigInteger.valueOf(nbEmptyBlock)).intValue());
             }
 
             // Delta timestamps between two blocks
-            BigInteger delta = firstEmptyBlock.getTimestamp().subtract(block.getTimestamp());
-            if (nbEmptyBlock > 1) { // have at least 2 consecutive empty block to make a mean
+            if (nbEmptyBlock > 0) { // have at least 2 consecutive empty block to make a mean
+                //nbEmptyBlock--;
+                //block = utilService.getBlockByNumber(node, number+1).blockingFirst().getBlock();
+                BigInteger delta = firstEmptyBlock.getTimestamp().subtract(block.getTimestamp());
                 int emptyBlockPeriodSeconds = delta.divide(BigInteger.valueOf(nbEmptyBlock)).intValue();
                 if (emptyBlockPeriodSeconds+1 < emptyblockperiod) { // +1 makes upper round
                     logger.error("fail to check empty block period "+emptyBlockPeriodSeconds+" >= "+emptyblockperiod+" for ("+nbEmptyBlock+" empty blocks from #"+fromblocknumber+" to #"+toblocknumber+")\n");
@@ -99,7 +106,7 @@ public class EmptyBlockPeriod extends AbstractSpecImplementation {
         }
         if (parts.isEmpty()) {
             logger.warn("not able to check empty block period "+emptyblockperiod+" (no empty block from #"+fromblocknumber+" to #"+toblocknumber+")\n");
-            assertThat(false);
+            assertThat(false).isTrue(); // force fail
         } else {
             logger.debug(parts.toString());
         }
