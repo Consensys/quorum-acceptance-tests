@@ -186,7 +186,7 @@ variable "qbft_empty_block_period" {
 
 variable "transition_config" {
   type    = object({ transitions = list(object({ block = number, algorithm = optional(string), emptyblockperiodseconds = optional(number)}))})
-  default = { transitions = [{ "block": 120, "emptyblockperiodseconds": 20}, { "block": 250, "emptyblockperiodseconds": 1}] }
+  default = { transitions = [{ "block": 120, "emptyblockperiodseconds": 20}, { "block": 250, "emptyblockperiodseconds": 1 }] }
 }
 
 variable "qlight_clients" {

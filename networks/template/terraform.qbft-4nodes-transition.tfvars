@@ -7,4 +7,4 @@ consensus               = "istanbul"
 addtional_geth_args     = "--allow-insecure-unlock"
 qbftBlock               = { block = 100, enabled = true }
 qbft_empty_block_period = { block = 120, emptyblockperiod = 5 }
-transition_config = { transitions: [{ "block": tonumber(var.qbftBlock.block), "algorithm": "qbft" }, { "block": tonumber(var.qbft_empty_block_period.block), "emptyblockperiodseconds": tonumber(var.qbft_empty_block_period.emptyblockperiod) }, { "block": tonumber(250), "emptyblockperiodseconds": tonumber(1) }] }
+transition_config = { transitions: [{ "block": 100, "algorithm": "qbft" }, { "block": 120, "emptyblockperiodseconds": 5 }, { "block": 250, "emptyblockperiodseconds": 1 }] }
