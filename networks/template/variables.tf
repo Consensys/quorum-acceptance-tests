@@ -192,12 +192,6 @@ variable "qbftBlock" {
   description = "qbft fork block (enabled/disabled) and the block height at which it is enabled"
 }
 
-variable "qbft_empty_block_period" {
-  type        = object({ block = number, emptyblockperiod = number })
-  default     = { block = 110, emptyblockperiod = 10 }
-  description = "qbft empty block period (number in seconds)"
-}
-
 variable "transition_config" {
   type    = object({ transitions = list(object({ block = number, algorithm = optional(string), emptyblockperiodseconds = optional(number)}))})
   default = { transitions = [] }
