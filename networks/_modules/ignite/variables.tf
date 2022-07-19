@@ -132,7 +132,7 @@ variable "qbftBlock" {
 
 variable "qbft_empty_block_period" {
   type        = object({ block = number, emptyblockperiod = number })
-  default     = { block = 110, emptyblockperiod = 10 }
+  default     = { block = 120, emptyblockperiod = 2 }
   description = "qbft empty block period (number in seconds)"
 }
 

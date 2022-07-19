@@ -6,6 +6,6 @@ exclude_initial_nodes = [3]
 consensus             = "qbft"
 addtional_geth_args   = "--allow-insecure-unlock"
 
-qbft_empty_block_period = { block = 110, emptyblockperiod = 1 }
+qbft_empty_block_period = { block = 120, emptyblockperiod = 1 }
 transition_config = { transitions: [] }
 
