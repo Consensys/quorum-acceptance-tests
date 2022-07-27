@@ -24,7 +24,6 @@ import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.common.RawDeployedContractTarget;
 import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.common.config.WalletData;
-import com.quorum.gauge.ext.PrivateClientTransactionManager;
 import com.quorum.gauge.ext.filltx.FillTransactionResponse;
 import com.quorum.gauge.ext.filltx.PrivateFillTransaction;
 import com.quorum.gauge.sol.ClientReceipt;
@@ -61,6 +60,7 @@ import org.web3j.quorum.enclave.SendResponse;
 import org.web3j.quorum.enclave.Tessera;
 import org.web3j.quorum.enclave.protocol.EnclaveService;
 import org.web3j.quorum.methods.request.PrivateTransaction;
+import org.web3j.quorum.tx.ClientTransactionManager;
 import org.web3j.rlp.RlpDecoder;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpList;
@@ -514,7 +514,7 @@ public class RawContractService extends AbstractService {
 
         return Observable.fromCallable(() -> wallet)
             .flatMap(walletData -> Observable.fromCallable(() -> WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath())))
-            .flatMap(cred -> Observable.just(new PrivateClientTransactionManager(client,
+            .flatMap(cred -> Observable.just(new ClientTransactionManager(client,
                 cred.getAddress(),
                 privacyService.id(source, sourceNamedKey),
                 targetNamedKeys.stream().map(privacyService::id).collect(Collectors.toList())

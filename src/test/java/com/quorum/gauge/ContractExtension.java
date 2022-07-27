@@ -1,7 +1,7 @@
 package com.quorum.gauge;
 
 import com.quorum.gauge.common.Context;
-import com.quorum.gauge.common.PrivacyFlag;
+
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.ext.contractextension.*;
@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.quorum.PrivacyFlag;
 import org.web3j.tx.Contract;
 
 import java.util.Map;
@@ -42,7 +43,8 @@ public class ContractExtension extends AbstractSpecImplementation {
                                                       final QuorumNetworkProperty.Node creator,
                                                       final String contractName) throws InterruptedException {
 
-        PrivacyFlag privacyFlag = PrivacyFlag.StandardPrivate;
+
+        PrivacyFlag privacyFlag = PrivacyFlag.STANDARD_PRIVATE;
 
         DataStoreFactory.getScenarioDataStore().put("privacyFlag", privacyFlag);
 
@@ -80,7 +82,7 @@ public class ContractExtension extends AbstractSpecImplementation {
                                                   final QuorumNetworkProperty.Node fromNode,
                                                   final QuorumNetworkProperty.Node newNode,
                                                   final String errMsg) throws InterruptedException {
-        PrivacyFlag privacyFlag = PrivacyFlag.StandardPrivate;
+        PrivacyFlag privacyFlag = PrivacyFlag.STANDARD_PRIVATE;
 
         DataStoreFactory.getScenarioDataStore().put("privacyFlag", privacyFlag);
 
@@ -104,7 +106,7 @@ public class ContractExtension extends AbstractSpecImplementation {
                                                          final String contractName,
                                                          final String errMsg) throws InterruptedException {
 
-        PrivacyFlag privacyFlag = PrivacyFlag.StandardPrivate;
+        PrivacyFlag privacyFlag = PrivacyFlag.STANDARD_PRIVATE;
 
         DataStoreFactory.getScenarioDataStore().put("privacyFlag", privacyFlag);
 
@@ -128,7 +130,7 @@ public class ContractExtension extends AbstractSpecImplementation {
                                                final QuorumNetworkProperty.Node newNode,
                                                final QuorumNetworkProperty.Node creator,
                                                final String expErrMsg) {
-        PrivacyFlag privacyFlag = PrivacyFlag.StandardPrivate;
+        PrivacyFlag privacyFlag = PrivacyFlag.STANDARD_PRIVATE;
         DataStoreFactory.getScenarioDataStore().put("privacyFlag", privacyFlag);
         final Set<QuorumNetworkProperty.Node> allNodes = Stream.of(newNode, creator)
             .collect(Collectors.toSet());

@@ -2,7 +2,7 @@ package com.quorum.gauge;
 
 import com.google.common.primitives.Ints;
 import com.quorum.gauge.common.Context;
-import com.quorum.gauge.common.PrivacyFlag;
+
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNetworkProperty.Node;
 import com.quorum.gauge.common.QuorumNode;
@@ -25,6 +25,7 @@ import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.core.Response;
 import org.web3j.protocol.core.methods.response.*;
 import org.web3j.protocol.exceptions.TransactionException;
+import org.web3j.quorum.PrivacyFlag;
 import org.web3j.tx.Contract;
 
 import java.math.BigInteger;
@@ -125,7 +126,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
         Optional<String> accessToken = haveValue(DataStoreFactory.getScenarioDataStore(), "access_token", String.class);
         accessToken.ifPresent(Context::storeAccessToken);
 
-        Contract contract = contractService.createSimpleContract(42, node, ethAccount, privateFrom, privateForList, List.of(privacyFlag))
+        Contract contract = contractService.createSimpleContract(42, node, ethAccount, privateFrom, privateForList, privacyFlag)
             .doOnTerminate(Context::removeAccessToken)
             .blockingFirst();
 

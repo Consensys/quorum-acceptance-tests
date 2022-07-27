@@ -19,7 +19,7 @@
 
 package com.quorum.gauge;
 
-import com.quorum.gauge.common.PrivacyFlag;
+
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.core.AbstractSpecImplementation;
@@ -61,8 +61,8 @@ public class AccumulatorSmartContract extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
     }
 
-    @Step("Deploy a <privacyFlags> accumulator contract in <source>'s default account with initial value <initVal> and it's private for <privateFor>, name this contract as <contractName>")
-    public void setupAccumulatorContract(String privacyFlags, String source, int initVal, String privateFor, String contractName) {
+    @Step("Deploy a <privacyFlag> accumulator contract in <source>'s default account with initial value <initVal> and it's private for <privateFor>, name this contract as <contractName>")
+    public void setupAccumulatorContract(String privacyFlag, String source, int initVal, String privateFor, String contractName) {
         saveCurrentBlockNumber();
         logger.debug("Setting up storage master from {} to {}", source, privateFor);
 
@@ -75,7 +75,7 @@ public class AccumulatorSmartContract extends AbstractSpecImplementation {
             networkProperty.getNode(source),
             privateForList,
             AbstractService.DEFAULT_GAS_LIMIT, initVal,
-            Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())
+            privacyService.parsePrivacyFlag(privacyFlag)
         ).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
@@ -151,8 +151,8 @@ public class AccumulatorSmartContract extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(txReference, receipt.getTransactionHash());
     }
 
-    @Step("Invoke a <privacyFlags> accumulator.inc with value <value> in contract <contract> in <source>'s default account and it's private for <privateFor>, file transaction hash as <txReference>")
-    public void incAccumulatorPrivateContract(String privacyFlags, int value, String contract, String source, String privateFor, String txReference) {
+    @Step("Invoke a <privacyFlag> accumulator.inc with value <value> in contract <contract> in <source>'s default account and it's private for <privateFor>, file transaction hash as <txReference>")
+    public void incAccumulatorPrivateContract(String privacyFlag, int value, String contract, String source, String privateFor, String txReference) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contract, Contract.class);
         saveCurrentBlockNumber();
         List<QuorumNetworkProperty.Node> privateForList = Arrays.stream(privateFor.split(","))
@@ -162,14 +162,14 @@ public class AccumulatorSmartContract extends AbstractSpecImplementation {
         TransactionReceipt receipt = accumulatorService.incAccumulatorPrivate(
             networkProperty.getNode(source), privateForList, c.getContractAddress(), AbstractService.DEFAULT_GAS_LIMIT,
             value,
-            Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())
+            privacyService.parsePrivacyFlag(privacyFlag)
         ).blockingFirst();
         DataStoreFactory.getSpecDataStore().put(txReference, receipt.getTransactionHash());
         DataStoreFactory.getScenarioDataStore().put(txReference, receipt.getTransactionHash());
     }
 
-    @Step("Invoking a <privacyFlags> accumulator.inc with value <value> in contract <contract> in <source>'s default account and it's private for <privateFor> fails with error <error>")
-    public void incAccumulatorPrivateContractFailsWithError(String privacyFlags, int value, String contract, String source, String privateFor, String error) {
+    @Step("Invoking a <privacyFlag> accumulator.inc with value <value> in contract <contract> in <source>'s default account and it's private for <privateFor> fails with error <error>")
+    public void incAccumulatorPrivateContractFailsWithError(String privacyFlag, int value, String contract, String source, String privateFor, String error) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contract, Contract.class);
         saveCurrentBlockNumber();
         List<QuorumNetworkProperty.Node> privateForList = Arrays.stream(privateFor.split(","))
@@ -180,7 +180,7 @@ public class AccumulatorSmartContract extends AbstractSpecImplementation {
             () -> accumulatorService.incAccumulatorPrivate(
             networkProperty.getNode(source), privateForList, c.getContractAddress(), AbstractService.DEFAULT_GAS_LIMIT,
             value,
-            Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList()))
+            privacyService.parsePrivacyFlag(privacyFlag))
                 .blockingFirst()
         ).as("Expected exception thrown")
             .hasMessageContaining(error);
