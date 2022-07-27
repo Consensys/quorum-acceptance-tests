@@ -160,7 +160,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
         oAuth2Service.requestAccessToken(clientName, Collections.singletonList(node.getName()), assignedScopes.get(clientName))
             .doOnNext(s -> {
                 switch (contractId) {
-                    case "STANDARD_PRIVATE":
+                    case "SimpleStorage":
                         assertThat(contractService.readSimpleContractValue(node, c.getContractAddress()).blockingFirst()).isNotZero();
                         break;
                     default:
@@ -177,7 +177,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
         Contract c = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
         assertThatThrownBy(() -> requestAccessToken(clientName)
             .doOnNext(s -> {
-                if ("STANDARD_PRIVATE".equals(contractId)) {
+                if ("SimpleStorage".equals(contractId)) {
                     contractService.readSimpleContractValue(node, c.getContractAddress()).blockingSubscribe();
                 } else {
                     throw new RuntimeException("unknown contract " + contractId + " with name " + contractName);
@@ -551,7 +551,7 @@ public class MultiTenancy extends AbstractSpecImplementation {
 
                 Node source = networkProperty.getNode(node.name());
                 switch (realContractId) {
-                    case "STANDARD_PRIVATE":
+                    case "SimpleStorage":
                         if (wallet == null) {
                             return contractService.createSimpleContract(42, source, ethAccount, privateFrom, privateForList, null);
                         } else {
