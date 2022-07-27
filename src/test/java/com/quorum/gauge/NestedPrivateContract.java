@@ -19,7 +19,7 @@
 
 package com.quorum.gauge;
 
-import com.quorum.gauge.common.PrivacyFlag;
+
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.thoughtworks.gauge.Gauge;
@@ -50,15 +50,15 @@ public class NestedPrivateContract extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
     }
 
-    @Step("Deploy a <privacyFlags> C1 contract with initial value <initialValue> in <source>'s default account and it's private for <target>, named this contract as <contractName>")
-    public void setupC1Contract(String privacyFlags, int initialValue, QuorumNode source, QuorumNode target, String contractName) {
+    @Step("Deploy a <privacyFlag> C1 contract with initial value <initialValue> in <source>'s default account and it's private for <target>, named this contract as <contractName>")
+    public void setupC1Contract(String privacyFlag, int initialValue, QuorumNode source, QuorumNode target, String contractName) {
         logger.debug("Setting up contract from {} to {}", source, target);
         saveCurrentBlockNumber();
         Contract contract = nestedContractService.createC1Contract(
             initialValue,
             source,
             Arrays.asList(target),
-            Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())
+            privacyService.parsePrivacyFlag(privacyFlag)
         ).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
@@ -75,23 +75,23 @@ public class NestedPrivateContract extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
     }
 
-    @Step("Deploy a <privacyFlags> C2 contract with initial value <c1Address> in <source>'s default account and it's private for <target>, named this contract as <contractName>")
-    public void setupC2Contract(String privacyFlags, String c1Address, QuorumNode source, QuorumNode target, String contractName) {
+    @Step("Deploy a <privacyFlag> C2 contract with initial value <c1Address> in <source>'s default account and it's private for <target>, named this contract as <contractName>")
+    public void setupC2Contract(String privacyFlag, String c1Address, QuorumNode source, QuorumNode target, String contractName) {
         logger.debug("Setting up contract from {} to {}", source, target);
         Contract c1 = (Contract) DataStoreFactory.getSpecDataStore().get(c1Address);
         Contract contract = nestedContractService.createC2Contract(
             c1.getContractAddress(),
             source,
             Arrays.asList(target),
-            Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())
+            privacyService.parsePrivacyFlag(privacyFlag)
         ).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
     }
 
-    @Step("Execute <privacyFlags> <contractName>'s `newContractC2()` function with new value <newValue> in <source> and it's private for <target>")
-    public void callNewContractC2(String privacyFlags, String contractName, int newValue, QuorumNode source, String target) {
+    @Step("Execute <privacyFlag> <contractName>'s `newContractC2()` function with new value <newValue> in <source> and it's private for <target>")
+    public void callNewContractC2(String privacyFlag, String contractName, int newValue, QuorumNode source, String target) {
         Contract c1 = mustHaveValue(contractName, Contract.class);
 
         TransactionReceipt receipt = nestedContractService.newContractC2(
@@ -99,7 +99,7 @@ public class NestedPrivateContract extends AbstractSpecImplementation {
             Arrays.stream(target.split(",")).map(s -> QuorumNode.valueOf(s)).collect(Collectors.toList()),
             c1.getContractAddress(),
             BigInteger.valueOf(newValue),
-            Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())).blockingFirst();
+            privacyService.parsePrivacyFlag(privacyFlag)).blockingFirst();
         Gauge.writeMessage("Transaction Hash %s", receipt.getTransactionHash());
         DataStoreFactory.getScenarioDataStore().put("transactionHash", receipt.getTransactionHash());
     }

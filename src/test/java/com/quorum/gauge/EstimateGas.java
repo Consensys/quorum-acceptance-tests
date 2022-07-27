@@ -18,7 +18,7 @@
  */
 package com.quorum.gauge;
 
-import com.quorum.gauge.common.PrivacyFlag;
+
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
@@ -32,6 +32,7 @@ import org.web3j.abi.FunctionEncoder;
 import org.web3j.exceptions.MessageDecodingException;
 import org.web3j.protocol.core.methods.response.EthEstimateGas;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.quorum.PrivacyFlag;
 import org.web3j.tx.Contract;
 
 import java.math.BigInteger;
@@ -143,7 +144,7 @@ public class EstimateGas extends AbstractSpecImplementation {
 
         final TransactionReceipt receipt = contractService
             .updateSimpleContractWithGasLimit(from, Arrays.asList(privateFor), contractAddress, estimatedGasLimit, value,
-                Arrays.asList(PrivacyFlag.StandardPrivate))
+                PrivacyFlag.STANDARD_PRIVATE)
             .blockingFirst();
 
         assertThat(receipt.isStatusOK()).isTrue();

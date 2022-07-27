@@ -43,8 +43,8 @@
         <env>run-local</env> <!-- Gauge environment being used -->
 
         <!-- dependencies -->
-        <web3j-quorum.version>4.8.4</web3j-quorum.version>
-        <web3j.version>4.8.7</web3j.version>
+        <web3j-quorum.version>4.9.0</web3j-quorum.version>
+        <web3j.version>4.9.4</web3j.version>
         <commons-lang.version>2.6</commons-lang.version>
         <docker-java.version>3.2.2</docker-java.version>
         <apache-sshd.version>2.4.0</apache-sshd.version>
@@ -55,7 +55,7 @@
 
         <!-- plugins -->
         <gauge-maven-plugin.version>1.5.0</gauge-maven-plugin.version>
-        <web3j-maven-plugin.version>4.8.2</web3j-maven-plugin.version>
+        <web3j-maven-plugin.version>4.8.7</web3j-maven-plugin.version>
         <builder-maven-plugin.version>3.0.0</builder-maven-plugin.version>
         <maven-site-plugin.version>3.7.1</maven-site-plugin.version>
         <maven-project-info-reports-plugin.version>3.0.0</maven-project-info-reports-plugin.version>
@@ -707,6 +707,11 @@
                             </execution>
                         </executions>
                         <dependencies>
+                            <dependency>
+                                <groupId>org.web3j</groupId>
+                                <artifactId>core</artifactId>
+                                <version>${web3j.version}</version>
+                            </dependency>
                             <dependency>
                                 <groupId>org.web3j</groupId>
                                 <artifactId>codegen</artifactId>

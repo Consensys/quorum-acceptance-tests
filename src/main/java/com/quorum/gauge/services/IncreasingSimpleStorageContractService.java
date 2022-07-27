@@ -20,13 +20,13 @@
 package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNode;
-import com.quorum.gauge.ext.PrivateClientTransactionManager;
 import com.quorum.gauge.sol.IncreasingSimpleStorage;
 import io.reactivex.Observable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.quorum.Quorum;
+import org.web3j.quorum.tx.ClientTransactionManager;
 import org.web3j.tx.Contract;
 
 import java.math.BigInteger;
@@ -49,12 +49,11 @@ public class IncreasingSimpleStorageContractService extends AbstractService {
     public Observable<? extends Contract> createIncreasingSimpleStorageContract(int initialValue, String source, List<String> privateForNodes) {
         Quorum client = connectionFactory().getConnection(networkProperty().getNode(source));
         return accountService.getAccountAddress(networkProperty().getNode(source), null).flatMap(address -> {
-            PrivateClientTransactionManager clientTransactionManager = new PrivateClientTransactionManager(
+            ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
                 client,
                 address,
                 null,
-                privateForNodes != null ? privateForNodes.stream().map(QuorumNode::valueOf).map(privacyService::id).collect(Collectors.toList()) : null,
-                emptyList());
+                privateForNodes != null ? privateForNodes.stream().map(QuorumNode::valueOf).map(privacyService::id).collect(Collectors.toList()) : null);
             return IncreasingSimpleStorage.deploy(client,
                 clientTransactionManager,
                 BigInteger.valueOf(0),
@@ -66,7 +65,7 @@ public class IncreasingSimpleStorageContractService extends AbstractService {
     public Observable<TransactionReceipt> setValue(String contractAddress, int value, String source, List<String> privateForNodes) {
         final Quorum client = connectionFactory().getConnection(QuorumNode.valueOf(source));
         return accountService.getDefaultAccountAddress(networkProperty().getNode(source))
-            .map(address -> new PrivateClientTransactionManager(client, address, null, privateForNodes != null ? privateForNodes.stream().map(QuorumNode::valueOf).map(privacyService::id).collect(Collectors.toList()) : null, Collections.emptyList()))
+            .map(address -> new ClientTransactionManager(client, address, null, privateForNodes != null ? privateForNodes.stream().map(QuorumNode::valueOf).map(privacyService::id).collect(Collectors.toList()) : null))
             .flatMap(txManager -> Observable.fromFuture(IncreasingSimpleStorage.load(
                 contractAddress, client, txManager, BigInteger.ZERO, DEFAULT_GAS_LIMIT).set(BigInteger.valueOf(value)).sendAsync())
             );
@@ -75,7 +74,7 @@ public class IncreasingSimpleStorageContractService extends AbstractService {
     public Observable<BigInteger> getValue(String contractAddress, String source) {
         final Quorum client = connectionFactory().getConnection(QuorumNode.valueOf(source));
         return accountService.getDefaultAccountAddress(networkProperty().getNode(source))
-            .map(address -> new PrivateClientTransactionManager(client, address, null, null, Collections.emptyList()))
+            .map(address -> new ClientTransactionManager(client, address, null, null))
             .flatMap(txManager -> IncreasingSimpleStorage.load(
                 contractAddress, client, txManager, BigInteger.ZERO, DEFAULT_GAS_LIMIT).get().flowable().toObservable()
             );

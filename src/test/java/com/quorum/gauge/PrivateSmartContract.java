@@ -21,7 +21,7 @@ package com.quorum.gauge;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.quorum.gauge.common.PrivacyFlag;
+
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.common.RawDeployedContractTarget;
 import com.quorum.gauge.common.RetryWithDelay;
@@ -47,6 +47,7 @@ import org.springframework.util.StringUtils;
 import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
 import org.web3j.protocol.core.methods.response.EthLog;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.quorum.PrivacyFlag;
 import org.web3j.tx.Contract;
 
 import java.io.IOException;
@@ -54,7 +55,6 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -65,11 +65,11 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
 
     @Step("Deploy a simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target>, named this contract as <contractName>")
     public void setupContract(int initialValue, QuorumNode source, QuorumNode target, String contractName) {
-        setupContract("StandardPrivate", initialValue, source, target, contractName);
+        setupContract("STANDARD_PRIVATE", initialValue, source, target, contractName);
     }
 
-    @Step("Deploy a <privacyFlags> simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target>, named this contract as <contractName>")
-    public void setupContract(String privacyFlags, int initialValue, QuorumNode source, QuorumNode target, String contractName) {
+    @Step("Deploy a <privacyFlag> simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target>, named this contract as <contractName>")
+    public void setupContract(String privacyFlag, int initialValue, QuorumNode source, QuorumNode target, String contractName) {
         saveCurrentBlockNumber();
         logger.debug("Setting up contract from {} to {}", source, target);
         Contract contract = contractService.createSimpleContract(
@@ -77,7 +77,7 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
             source,
             null, Arrays.asList(target),
             AbstractService.DEFAULT_GAS_LIMIT,
-            Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())
+            privacyService.parsePrivacyFlag(privacyFlag)
         ).blockingFirst();
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
@@ -85,20 +85,21 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         DataStoreFactory.getScenarioDataStore().put("transactionHash", contract.getTransactionReceipt().get().getTransactionHash());
     }
 
-    @Step("Deploying a <privacyFlags> simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target> fails with message <failureMessage>")
-    public void setupContractFailsWithMessage(String privacyFlags, int initialValue, QuorumNode source, QuorumNode target, String failureMessage) {
+    @Step("Deploying a <privacyFlag> simple smart contract with initial value <initialValue> in <source>'s default account and it's private for <target> fails with message <failureMessage>")
+    public void setupContractFailsWithMessage(String privacyFlag, int initialValue, QuorumNode source, QuorumNode target, String failureMessage) {
         saveCurrentBlockNumber();
-        logger.debug("Setting up contract from {} to {}", source, target);
+        var flags = privacyService.parsePrivacyFlag(privacyFlag);
+        logger.debug("Setting up contract from {} to {} with {}", source, target, flags);
         try {
             contractService.createSimpleContract(
                 initialValue,
                 source,
                 null, Arrays.asList(target),
                 AbstractService.DEFAULT_GAS_LIMIT,
-                Arrays.stream(privacyFlags.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())
+               flags
             ).blockingFirst();
             assertThat(false).as("An exception should have been raised during contract creation.").isTrue();
-        } catch (Exception txe){
+        } catch (Exception txe) {
             assertThat(txe).hasMessageContaining(failureMessage);
         }
     }
@@ -117,14 +118,14 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     public void verifyTransactionReceipt(QuorumNode node, String contractName, QuorumNode source) {
         String transactionHash = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "_transactionHash", String.class);
         Optional<TransactionReceipt> receipt = transactionService.getTransactionReceipt(node, transactionHash)
-                .map(ethGetTransactionReceipt -> {
-                    if (ethGetTransactionReceipt.getTransactionReceipt().isPresent()) {
-                        return ethGetTransactionReceipt;
-                    } else {
-                        throw new RuntimeException("retry");
-                    }
-                }).retryWhen(new RetryWithDelay(20, 3000))
-                .blockingFirst().getTransactionReceipt();
+            .map(ethGetTransactionReceipt -> {
+                if (ethGetTransactionReceipt.getTransactionReceipt().isPresent()) {
+                    return ethGetTransactionReceipt;
+                } else {
+                    throw new RuntimeException("retry");
+                }
+            }).retryWhen(new RetryWithDelay(20, 3000))
+            .blockingFirst().getTransactionReceipt();
 
         assertThat(receipt.isPresent()).isTrue();
         assertThat(receipt.get().getBlockNumber()).isNotEqualTo(currentBlockNumber());
@@ -175,14 +176,14 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
         // check transaction receipt to make sure the state is ready
         assertThat(c.getTransactionReceipt().isPresent()).isTrue();
         transactionService.getTransactionReceipt(node, c.getTransactionReceipt().get().getTransactionHash())
-                .map(ethGetTransactionReceipt -> {
-                    if (ethGetTransactionReceipt.getTransactionReceipt().isPresent()) {
-                        return ethGetTransactionReceipt;
-                    } else {
-                        throw new RuntimeException("retry");
-                    }
-                }).retryWhen(new RetryWithDelay(5, 1000))
-                .blockingSubscribe();
+            .map(ethGetTransactionReceipt -> {
+                if (ethGetTransactionReceipt.getTransactionReceipt().isPresent()) {
+                    return ethGetTransactionReceipt;
+                } else {
+                    throw new RuntimeException("retry");
+                }
+            }).retryWhen(new RetryWithDelay(5, 1000))
+            .blockingSubscribe();
         int actualValue = contractService.readSimpleContractValue(node, c.getContractAddress());
 
         assertThat(actualValue).isEqualTo(expectedValue);
@@ -191,7 +192,12 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
     @Step("Execute <contractName>'s `set()` function with privacy type <flag> to set new value to <newValue> in <source> and it's private for <target>")
     public TransactionReceipt updateNewValue(String contractName, String flag, int newValue, QuorumNode source, QuorumNode target) {
         Contract c = mustHaveValue(DataStoreFactory.getSpecDataStore(), contractName, Contract.class);
-        TransactionReceipt receipt = contractService.updateSimpleContract(source, target, c.getContractAddress(), newValue, Arrays.stream(flag.split(",")).map(PrivacyFlag::valueOf).collect(Collectors.toList())).blockingFirst();
+        TransactionReceipt receipt = contractService.updateSimpleContract(source,
+            target,
+            c.getContractAddress(),
+            newValue,
+            privacyService.parsePrivacyFlag(flag)
+        ).blockingFirst();
 
         assertThat(receipt.getTransactionHash()).isNotBlank();
         assertThat(receipt.getBlockNumber()).isNotEqualTo(currentBlockNumber());
@@ -201,12 +207,12 @@ public class PrivateSmartContract extends AbstractSpecImplementation {
 
     @Step("Execute <contractName>'s `set()` function with new value <newValue> in <source> and it's private for <target>")
     public void updateNewValue(String contractName, int newValue, QuorumNode source, QuorumNode target) {
-        updateNewValue(contractName, PrivacyFlag.StandardPrivate.name(), newValue, source, target);
+        updateNewValue(contractName, PrivacyFlag.STANDARD_PRIVATE.name(), newValue, source, target);
     }
 
     @Step("Execute <contractName>'s `set()` function with new value <newValue> in <source> and it's private for <target>, store transaction hash as <txRef>")
     public void updateNewValue(String contractName, int newValue, QuorumNode source, QuorumNode target, String txRef) {
-        TransactionReceipt r = updateNewValue(contractName, PrivacyFlag.StandardPrivate.name(), newValue, source, target);
+        TransactionReceipt r = updateNewValue(contractName, PrivacyFlag.STANDARD_PRIVATE.name(), newValue, source, target);
         DataStoreFactory.getScenarioDataStore().put(txRef, r.getTransactionHash());
     }
 
