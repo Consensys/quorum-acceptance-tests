@@ -184,6 +184,17 @@ jobs:
             privacy-precompile: true
             privacy-marker-transactions: false # do not enable pmts as the test will do this on the necessary nodes
             enable-gas-price: false
+          # tests for enabled gas-price
+          - tag: 'gas-price-enabled || networks/typical::raft'
+            privacy-enhancements: false
+            privacy-precompile: false
+            privacy-marker-transactions: false
+            enable-gas-price: true
+          - tag: 'gas-price-enabled || networks/typical::raft'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: true
+            enable-gas-price: true
     runs-on: ubuntu-18.04
     steps:
       - name: 'Download docker image'
