@@ -19,9 +19,9 @@ Clients:
 
 We run the scenarios with each of the following privacy flag
     | privacyFlag |
-    | StandardPrivate |
-    | PartyProtection |
-    | StateValidation |
+    | STANDARD_PRIVATE |
+    | PARTY_PROTECTION |
+    | PRIVATE_STATE_VALIDATION |
 
 * Configure `"JPM Investment"` in authorization server to access `"Node1"` with:
     | scope                    |
