@@ -57,6 +57,9 @@ public abstract class AbstractSpecImplementation {
     protected AccumulatorService accumulatorService;
 
     @Autowired
+    protected AdminService adminService;
+
+    @Autowired
     protected DebugService debugService;
 
     @Autowired
