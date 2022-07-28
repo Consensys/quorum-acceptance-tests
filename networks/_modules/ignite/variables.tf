@@ -136,6 +136,11 @@ variable "qbftBlock" {
   description = "qbft transition/fork block (enabled/disabled) and the block height at which it is enabled"
 }
 
+variable "transition_config" {
+  type    = object({ transitions = list(object({ block = number, algorithm = optional(string), emptyblockperiodseconds = optional(number)}))})
+  default = { transitions = [] }
+}
+
 variable "hybrid_extradata" {
   default     = []
   description = "Extradata for hybrid network"

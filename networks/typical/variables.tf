@@ -184,6 +184,11 @@ variable "qbftBlock" {
   description = "qbft fork block (enabled/disabled) and the block height at which it is enabled"
 }
 
+variable "transition_config" {
+  type    = object({ transitions = list(object({ block = number, algorithm = optional(string), emptyblockperiodseconds = optional(number)}))})
+  default = { transitions = [{ "block": 120, "emptyblockperiodseconds": 2}, { "block": 250, "emptyblockperiodseconds": 1 }] }
+}
+
 variable "qlight_clients" {
   type = map(object({ server_idx = number, mps_psi = string, mt_is_server_tls_enabled = bool, mt_scope = string }))
   default = {}

@@ -27,8 +27,6 @@ locals {
 
   qbft_ibft_config = merge(local.ibft_config, local.qbft_config)
 
-  transition_config = var.qbftBlock.block > 0 ? { transitions: [{ "block": var.qbftBlock.block, "algorithm": "qbft" }] }: {}
-
   chain_configs = [for idx in local.node_indices : merge(
     {
       homesteadBlock      = 0
@@ -56,7 +54,7 @@ locals {
     local.enableGasPriceBlock_config,
     local.qbft_ibft_config,
     lookup(var.additional_genesis_config, idx, {}),
-    local.transition_config
+    var.transition_config
   )]
 
   legacy_chain_configs = [for idx in local.node_indices : merge(
@@ -86,7 +84,7 @@ locals {
   local.enableGasPriceBlock_config,
   local.legacy_config,
   lookup(var.additional_genesis_config, idx, {}),
-  local.transition_config
+  var.transition_config
   )]
 
 }

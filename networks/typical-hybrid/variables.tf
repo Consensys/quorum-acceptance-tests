@@ -186,6 +186,12 @@ variable "qbftBlock" {
   description = "qbft fork block (enabled/disabled) and the block height at which it is enabled"
 }
 
+
+variable "transition_config" {
+  type    = object({ transitions = list(object({ block = number, algorithm = optional(string), emptyblockperiodseconds = optional(number)}))})
+  default = { transitions = [] }
+}
+
 variable "override_tm_named_key_allocation" {
   default     = {}
   description = <<-EOT

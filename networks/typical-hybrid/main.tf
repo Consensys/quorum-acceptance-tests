@@ -172,6 +172,7 @@ module "network" {
   tm_networking                 = local.tm_networking
   output_dir                    = var.output_dir
   qbftBlock                     = var.qbftBlock
+  transition_config             = var.transition_config
   hybrid_extradata              = quorum_bootstrap_istanbul_extradata.hybrid.extradata
   hybrid_network                = local.hybrid_network
   hybrid_enodeurls              = local.enode_urls
