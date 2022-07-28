@@ -10,6 +10,7 @@ docker_images   = []
 privacy_enhancements = { block = 0, enabled = true }
 privacy_precompile={ block = 0, enabled = true}
 privacy_marker_transactions=true
+enable_gas_price={ block = 0, enabled = false}
 
 # this is to setup the TM keys allocation per acceptance tests requirement
 override_tm_named_key_allocation = {

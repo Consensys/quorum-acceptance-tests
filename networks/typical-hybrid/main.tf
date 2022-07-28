@@ -166,6 +166,7 @@ module "network" {
   consensus                     = module.helper.consensus
   privacy_enhancements          = var.privacy_enhancements
   privacy_precompile            = var.privacy_precompile
+  enable_gas_price              = var.enable_gas_price
   network_name                  = var.network_name
   geth_networking               = local.geth_networking
   tm_networking                 = local.tm_networking

@@ -80,6 +80,43 @@ public class RaftGasUsage extends AbstractSpecImplementation {
         createContract(gas, source, target, contractName);
     }
 
+    @Step("Public transaction from non-minter where gas value is <gas>, name this contract as <contractName>")
+    public void sendPublicTransactionFromNonMinter(int gas, String contractName) {
+        QuorumNode source = QuorumNode.Node1;
+        QuorumNode minter = raftService.getLeader(QuorumNode.Node1);
+        if (source.equals(minter)) {
+            source = QuorumNode.Node2;
+        }
+        DataStoreFactory.getScenarioDataStore().put("source_node", source);
+
+        // Save account balances on source node & minter, prior to transaction
+        BigInteger sourceBalance = accountService.getDefaultAccountBalance(source).blockingFirst().getBalance();
+        BigInteger minterBalance = accountService.getDefaultAccountBalance(minter).blockingFirst().getBalance();
+        DataStoreFactory.getScenarioDataStore().put("source_balance", sourceBalance);
+        DataStoreFactory.getScenarioDataStore().put("minter_balance", minterBalance);
+
+        createContract(gas, source, null, contractName);
+    }
+
+    @Step("Private transaction from non-minter where gas value is <gas>, name this contract as <contractName>")
+    public void sendPrivateTransactionFromNonMinter(int gas, String contractName) {
+        QuorumNode source = QuorumNode.Node1;
+        QuorumNode minter = raftService.getLeader(QuorumNode.Node1);
+        if (source.equals(minter)) {
+            source = QuorumNode.Node2;
+        }
+        QuorumNode target = QuorumNode.Node3;
+        DataStoreFactory.getScenarioDataStore().put("source_node", source);
+
+        // Save account balances on source node & minter, prior to transaction
+        BigInteger sourceBalance = accountService.getDefaultAccountBalance(source).blockingFirst().getBalance();
+        BigInteger minterBalance = accountService.getDefaultAccountBalance(minter).blockingFirst().getBalance();
+        DataStoreFactory.getScenarioDataStore().put("source_balance", sourceBalance);
+        DataStoreFactory.getScenarioDataStore().put("minter_balance", minterBalance);
+
+        createContract(gas, source, target, contractName);
+    }
+
     @Step("Contract <contractName> had exception with message <expectedMessage>")
     public void checkContractForException(String contractName, String expectedMessage) {
         CreationResult result = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, CreationResult.class);
@@ -111,6 +148,26 @@ public class RaftGasUsage extends AbstractSpecImplementation {
         List<Transaction> transactions= utilService.getPendingTransactions(result.getNode());
         transactions.forEach(t -> logger.info("=== GOT HASH: {}", t.getHash()));
         transactions.forEach(t -> assertThat(t.getHash()).isNotEqualTo(transactionHash));
+    }
+
+    @Step("On source node, the default account's balance is now less than its previous balance")
+    public void checkDefaultAccountBalanceDecreasedOnSender() {
+        BigInteger prevBalance = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "source_balance", BigInteger.class);
+
+        QuorumNode source = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "source_node", QuorumNode.class);
+        BigInteger currentBalance = accountService.getDefaultAccountBalance(source).blockingFirst().getBalance();
+
+        assertThat(currentBalance).isLessThan(prevBalance);
+    }
+
+    @Step("On minter, the default account's balance is now greater than its previous balance")
+    public void checkDefaultAccountBalanceIncreasedOnMinter() {
+        BigInteger prevBalance = mustHaveValue(DataStoreFactory.getScenarioDataStore(), "minter_balance", BigInteger.class);
+
+        QuorumNode minter = raftService.getLeader(QuorumNode.Node1);
+        BigInteger currentBalance = accountService.getDefaultAccountBalance(minter).blockingFirst().getBalance();
+
+        assertThat(currentBalance).isGreaterThan(prevBalance);
     }
 
     /**

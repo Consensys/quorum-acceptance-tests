@@ -86,7 +86,7 @@ jobs:
     # This workflow uses tag expression and its sha256 hash to aggregate test results
     # from each execution. It is important that the job name has tag expression in the
     # suffix and encapsulated within parathensis
-    name: Test (${{ matrix.tag }}) (privacy-enhancements=${{matrix.privacy-enhancements}}, privacy-precompile=${{matrix.privacy-precompile}}, privacy-marker-transactions=${{matrix.privacy-marker-transactions}})
+    name: Test (${{ matrix.tag }}) (privacy-enhancements=${{matrix.privacy-enhancements}}, privacy-precompile=${{matrix.privacy-precompile}}, privacy-marker-transactions=${{matrix.privacy-marker-transactions}}, enable-gas-price=${{matrix.enable-gas-price}})
     if: needs.condition.outputs.should_run == 'true'
     needs:
       - condition
@@ -101,72 +101,100 @@ jobs:
             privacy-enhancements: true
             privacy-precompile: false
             privacy-marker-transactions: false
+            enable-gas-price: false
           - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || mandatory-recipients || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
             privacy-enhancements: true
             privacy-precompile: false
             privacy-marker-transactions: false
+            enable-gas-price: false
           # privacy precompile/privacy marker transaction tests
           - tag: 'basic || basic-raft || (advanced && raft) || networks/typical::raft'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: false
+            enable-gas-price: false
           - tag: 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: false
+            enable-gas-price: false
           - tag: 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: false
+            enable-gas-price: false
           - tag: '(multitenancy || privacy-precompile-enabled) && networks/plugins::raft-multitenancy'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: true
+            enable-gas-price: false
           - tag: '(basic && !privacy-precompile-disabled) || basic-raft || (advanced && raft) || networks/typical::raft-simple-mps'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: true
+            enable-gas-price: false
           - tag: '(basic && !privacy-precompile-disabled) || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul-simple-mps'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: true
+            enable-gas-price: false
           - tag: '(basic && !privacy-precompile-disabled) || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-simple-mps'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: true
+            enable-gas-price: false
           - tag: '(basic && !privacy-precompile-disabled) || networks/typical::raftmps'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: true
+            enable-gas-price: false
           - tag: '(basic && !privacy-precompile-disabled) || networks/typical::istanbulmps'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: true
+            enable-gas-price: false
           - tag: '(basic && !privacy-precompile-disabled) || networks/typical::qbftmps'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: true
+            enable-gas-price: false
           # privacy enhancements + privacy precompile/privacy marker transaction tests
           - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || mandatory-recipients || privacy-precompile-enabled || basic-raft || (advanced && raft) || networks/typical::raft'
             privacy-enhancements: true
             privacy-precompile: true
             privacy-marker-transactions: true
+            enable-gas-price: false
           - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || mandatory-recipients || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
             privacy-enhancements: true
             privacy-precompile: true
             privacy-marker-transactions: true
+            enable-gas-price: false
           - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || mandatory-recipients || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/typical::qbft'
             privacy-enhancements: true
             privacy-precompile: true
             privacy-marker-transactions: true
+            enable-gas-price: false
           - tag: 'privacy-precompile-compatibility && networks/template::raft-4nodes'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: false # do not enable pmts as the test will do this on the necessary nodes
+            enable-gas-price: false
           - tag: 'privacy-precompile-compatibility && networks/template::istanbul-4nodes'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: false # do not enable pmts as the test will do this on the necessary nodes
+            enable-gas-price: false
+          # tests for enabled gas-price
+          - tag: 'gas-price-enabled || networks/typical::raft'
+            privacy-enhancements: false
+            privacy-precompile: false
+            privacy-marker-transactions: false
+            enable-gas-price: true
+          - tag: 'gas-price-enabled || networks/typical::raft'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: true
+            enable-gas-price: true
     runs-on: ubuntu-18.04
     steps:
       - name: 'Download docker image'
@@ -223,6 +251,7 @@ jobs:
           echo "TF_VAR_privacy_enhancements={block=0, enabled=${{ matrix.privacy-enhancements}}}" >> $dockerEnvFile
           echo "TF_VAR_privacy_precompile={block=0, enabled=${{ matrix.privacy-precompile}}}" >> $dockerEnvFile
           echo "TF_VAR_privacy_marker_transactions=${{ matrix.privacy-marker-transactions}}" >> $dockerEnvFile
+          echo "TF_VAR_enable_gas_price={block=0, enabled=${{ matrix.enable-gas-price}}}" >> $dockerEnvFile
           echo "::set-output name=tag::$tagKey"
           echo "::set-output name=mvnArg::$mvnArg"
           echo "::set-output name=dockerEnv::$dockerEnv"
