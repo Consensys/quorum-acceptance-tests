@@ -26,8 +26,8 @@ for a particular contract
 * Execute "contract12_2"'s `get()` function in "Node1" returns "19"
 * Execute "contract12_2"'s `get()` function in "Node2" returns "10"
 * Deploy a "MandatoryRecipients" contract `SimpleStorage` with initial value "30" in "Node2"'s default account and it's private for "Node3,Node4" and mandatory for "Node2", named this contract as "contract234_2"
-* Fail to execute "MandatoryRecipients" simple contract("contract234_2")'s `set()` function with new arbitrary value in "Node3" and it's private for "Node4" and no mandatory recipients with error "Error processing transaction request"
-* Fail to execute "MandatoryRecipients" simple contract("contract234_2")'s `set()` function with new arbitrary value in "Node4" and it's private for "Node3" and no mandatory recipients with error "Error processing transaction request"
+* Fail to execute "MandatoryRecipients" simple contract("contract234_2")'s `set()` function with new arbitrary value in "Node3" and it's private for "Node4" and no mandatory recipients with error "missing mandatory recipients data. if no mandatory recipients required consider using PrivacyFlag=1(PartyProtection)"
+* Fail to execute "MandatoryRecipients" simple contract("contract234_2")'s `set()` function with new arbitrary value in "Node4" and it's private for "Node3" and no mandatory recipients with error "missing mandatory recipients data. if no mandatory recipients required consider using PrivacyFlag=1(PartyProtection)"
 * Fail to execute "MandatoryRecipients" simple contract("contract234_2")'s `set()` function with new arbitrary value in "Node3" and it's private for "Node4" and mandatory for "Node3" with error "Privacy metadata mismatched"
 * Fail to execute "MandatoryRecipients" simple contract("contract234_2")'s `set()` function with new arbitrary value in "Node4" and it's private for "Node3" and mandatory for "Node4" with error "Privacy metadata mismatched"
 * Fire and forget execution of "MandatoryRecipients" simple contract("contract234_2")'s `set()` function with new value "10" in "Node2" and it's private for "Node2" and mandatory for "Node2"
@@ -42,7 +42,7 @@ for a particular contract
 * Deploy a MR contract `C2` with initial value "contract12_2" in "Node2"'s default account and it's private for "Node3" mandatory for "Node3", named this contract as "contract23_3"
 * "contract23_3" is deployed "successfully" in "Node2,Node3"
 The next step should fail as part of Party Protection check - Node3 was not a participant of contract C1 - which the transaction was going to affect
-* Fail to execute "MandatoryRecipients" simple contract("contract23_3")'s `set()` function with new arbitrary value in "Node3" and it's private for "Node2" and mandatory for "Node3" with error "Error processing transaction request"
+* Fail to execute "MandatoryRecipients" simple contract("contract23_3")'s `set()` function with new arbitrary value in "Node3" and it's private for "Node2" and mandatory for "Node3" with error "JsonRpcError thrown with code -32000. Message: execution reverted"
 This step should fail the mandatory validations
 * Fail to execute "MandatoryRecipients" simple contract("contract23_3")'s `set()` function with new arbitrary value in "Node2" and it's private for "Node3" and mandatory for "Node3" with error "Privacy metadata mismatched"
 * Fire and forget execution of "MandatoryRecipients" simple contract("contract23_3")'s `set()` function with new value "10" in "Node2" and it's private for "Node3" and mandatory for "Node2,Node3"
