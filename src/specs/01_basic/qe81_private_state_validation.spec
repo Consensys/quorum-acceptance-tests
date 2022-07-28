@@ -253,4 +253,4 @@ C1 is a public contract and C2 is PSV. Transactions to C2 that impacts C1 are no
 * "contractC1_14" is deployed "successfully" in "Node1,Node2,Node3,Node4"
 * Deploy a "StateValidation" contract `C2` with initial value "contractC1_14" in "Node1"'s default account and it's private for "Node4", named this contract as "contractC2_14"
 * "contractC2_14" is deployed "successfully" in "Node1,Node4"
-* Fail to execute "StateValidation" contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node4" with error "Error processing transaction request: execution reverted"
+* Fail to execute "StateValidation" contract `C2`("contractC2_14")'s `set()` function with new arbitrary value in "Node1" and it's private for "Node4" with error "JsonRpcError thrown with code -32000. Message: execution reverted"
