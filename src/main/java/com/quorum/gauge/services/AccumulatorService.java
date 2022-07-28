@@ -21,6 +21,8 @@ package com.quorum.gauge.services;
 
 
 import com.quorum.gauge.common.QuorumNetworkProperty;
+import com.quorum.gauge.ext.EthChainId;
+import com.quorum.gauge.ext.PublicClientTransactionManager;
 import com.quorum.gauge.sol.Accumulator;
 import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
@@ -37,6 +39,7 @@ import org.web3j.tx.ReadonlyTransactionManager;
 import org.web3j.tx.exceptions.ContractCallException;
 
 import java.math.BigInteger;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -48,25 +51,28 @@ public class AccumulatorService extends AbstractService {
     private static final int POLLING_INTERVAL = 500;
 
     @Autowired
+    protected RPCService rpcService;
+    @Autowired
     PrivacyService privacyService;
 
     @Autowired
     AccountService accountService;
 
     public Observable<? extends Accumulator> createAccumulatorPublicContract(QuorumNetworkProperty.Node source, BigInteger gas, int initVal) {
-        Quorum client = connectionFactory().getConnection( source);
+        Quorum client = connectionFactory().getConnection(source);
+        long chainId = rpcService.call(source, "eth_chainId", Collections.emptyList(), EthChainId.class).blockingFirst().getChainId();
 
-        return accountService.getDefaultAccountAddress(source).flatMap(address -> {
-            org.web3j.tx.ClientTransactionManager clientTransactionManager = new org.web3j.tx.ClientTransactionManager(
-                client,
-                address,
-                DEFAULT_MAX_RETRY,
-                DEFAULT_SLEEP_DURATION_IN_MILLIS);
-            return Accumulator.deploy(client,
-                clientTransactionManager,
-                BigInteger.valueOf(0),
-                gas, BigInteger.valueOf(initVal)).flowable().toObservable();
-        });
+        String address = accountService.getDefaultAccountAddress(source).blockingFirst();
+
+        PublicClientTransactionManager clientTransactionManager = new PublicClientTransactionManager(
+            client,
+            address,
+            chainId);
+
+        return Accumulator.deploy(client,
+            clientTransactionManager,
+            BigInteger.valueOf(0),
+            gas, BigInteger.valueOf(initVal)).flowable().toObservable();
     }
 
     public Observable<? extends Accumulator> createAccumulatorPrivateContract(QuorumNetworkProperty.Node source, List<QuorumNetworkProperty.Node> targets, BigInteger gas, int initVal, PrivacyFlag flags) {
