@@ -48,7 +48,7 @@ locals {
 
 resource "random_string" "network-name" {
   length    = 8
-  number    = false
+  numeric   = false
   special   = false
   min_lower = 8
 }
