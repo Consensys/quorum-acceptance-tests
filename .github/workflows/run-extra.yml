@@ -19,7 +19,7 @@ on:
 jobs:
   condition:
     name: Evaluate workflow run conditions
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     outputs:
       should_run: '${{ steps.check.outputs.val }}'
       use_aws: '${{ steps.check.outputs.useAws }}'
@@ -50,7 +50,7 @@ jobs:
     if: needs.condition.outputs.should_run == 'true'
     needs:
       - condition
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     outputs:
       output_dir: '${{ steps.prepare.outputs.output_dir }}'
       output_file: '${{ steps.prepare.outputs.output_file }}'
@@ -195,7 +195,7 @@ jobs:
             privacy-precompile: true
             privacy-marker-transactions: true
             enable-gas-price: true
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - name: 'Download docker image'
         uses: actions/cache@v2
@@ -359,7 +359,7 @@ jobs:
       - condition
       - docker-build
       - run
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - name: 'Setup metadata'
         id: setup
