@@ -445,7 +445,8 @@ public class DockerInfrastructureService
                 logger.debug("Started container {}", StringUtils.substring(newContainerId, 0, 12));
                 return newContainerId;
             })
-            .map(id -> this.wait(id).blockingFirst());
+            .map(id -> this.wait(id).blockingFirst())
+            .retry(5);
     }
 
     public Observable<BasicContainerState> getState(String containerId) {
