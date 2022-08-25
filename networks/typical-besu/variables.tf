@@ -39,7 +39,7 @@ variable "besu_docker_image" {
 
 variable "tessera_docker_image" {
   type        = object({ name = string, local = bool })
-  default     = { name = "quorumengineering/tessera:22.1.5", local = false }
+  default     = { name = "quorumengineering/tessera:22.1.6", local = false }
   description = "Local=true indicates that the image is already available locally and don't need to pull from registry"
 }
 
