@@ -24,6 +24,7 @@ locals {
 
 resource "docker_network" "besu" {
   count = var.hybrid_network ? 0 : 1
+  check_duplicate = true
   name  = format("%s-net", var.network_name)
   ipam_config {
     subnet = var.network_cidr

@@ -27,6 +27,7 @@ locals {
 
 resource "docker_network" "quorum" {
   name = format("%s-net", var.network_name)
+  check_duplicate = true
   ipam_config {
     subnet = var.network_cidr
   }
