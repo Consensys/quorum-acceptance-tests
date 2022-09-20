@@ -95,3 +95,67 @@ additional_tessera_config = {
     ]
   }
 }
+
+
+override_vnodes = {
+    "0" = {
+        mpsEnabled = false
+        vnodes = {
+            "id" = {
+                name = "Node1"
+                ethKeys = ["EthKey0"]
+                "tmKeys" = ["TmKey0"]
+            }
+        }
+    },
+    "1" = {
+        mpsEnabled = false
+        vnodes = {
+            "id" = {
+                name = "Node2"
+                ethKeys = ["EthKey1"]
+                "tmKeys" = ["TmKey1"]
+            }
+        }
+    },
+    "2" = {
+        mpsEnabled = false
+        vnodes = {
+            "id" = {
+                name = "Node3"
+                ethKeys = ["EthKey2"]
+                "tmKeys" = ["TmKey2"]
+            }
+        }
+    },
+    "3" = {
+        mpsEnabled = false
+        vnodes = {
+            "id" = {
+                name = "Node4"
+                ethKeys = ["EthKey3"]
+                "tmKeys" = ["TmKey3"]
+            }
+        }
+    },
+    "4" = {
+        mpsEnabled = true
+        vnodes = {
+            "id" = {
+                name = "Node5"
+                ethKeys = ["EthKey4"]
+                "tmKeys" = ["TmKey4"]
+            }
+        }
+    },
+    "5" = {
+        mpsEnabled = false
+        vnodes = {
+            "id" = {
+                name = "Node6"
+                ethKeys = ["EthKey5"]
+                "tmKeys" = ["TmKey5"]
+            }
+        }
+    }
+}
