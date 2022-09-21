@@ -19,12 +19,15 @@
 
 package com.quorum.gauge;
 
+import com.quorum.gauge.common.Context;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
+import com.quorum.gauge.services.QuorumNodeConnectionFactory;
 import com.thoughtworks.gauge.Step;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthBlock;
 
 import java.math.BigInteger;
@@ -50,7 +53,7 @@ public class BlockReward extends AbstractSpecImplementation {
             this.delta = delta;
         }
         public String toString() {
-            return "["+from.getNumber().intValue()+"("+from.getTransactions().isEmpty()+") to "+to.getNumber().intValue()+"("+to.getTransactions().isEmpty()+")] have "+nbEmptyBlocks+" with period of "+delta+"s so "+delta/(to.getNumber().intValue()-from.getNumber().intValue())+"s/block";
+            return "["+from.getNumber().intValue()+"("+from.getTransactions().isEmpty()+") to "+to.getNumber().intValue()+"("+to.getTransactions().isEmpty()+")] "+blockReward+" "+delta;
         }
     }
 
@@ -70,15 +73,11 @@ public class BlockReward extends AbstractSpecImplementation {
         // Find the first empty block
         int number = toblocknumber;
         while (number > fromblocknumber) {
-            EthBlock.Block block = utilService.getBlockByNumber(node, number).blockingFirst().getBlock();
-            while (number > fromblocknumber && (block == null || !block.getTransactions().isEmpty())) {
-                number--;
-                block = utilService.getBlockByNumber(node, number).blockingFirst().getBlock();
-            }
+            // EthBlock.Block block = utilService.getBlockByNumber(node, number).blockingFirst().getBlock();
             // get balance at some block
+            logger.info("seek block #"+number);
         }
     }
-
 
     @Step("From block <fromblocknumber> to <toblocknumber>, <nodeId> account should see increase of <blockReward>")
     public void waitForBlockAndCheckRewardForNode(int fromblocknumber, int toblocknumber, String nodeId, int blockReward) {
@@ -89,9 +88,6 @@ public class BlockReward extends AbstractSpecImplementation {
                 Thread.sleep(100);
             } catch(InterruptedException e) {}
         }
-        QuorumNode node = QuorumNode.valueOf(nodeId);
-        String accountAddress = "Oxtodo"; // TODO find a way to get the node's account address
-
-        waitForBlockAndCheckRewardForAccount(fromblocknumber, toblocknumber, accountAddress, blockReward);
+        accountService.getDefaultAccountAddress(QuorumNode.valueOf(nodeId)).forEach(e -> waitForBlockAndCheckRewardForAccount(fromblocknumber, toblocknumber, e, blockReward));
     }
 }
