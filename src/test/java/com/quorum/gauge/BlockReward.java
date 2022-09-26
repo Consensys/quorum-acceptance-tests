@@ -24,11 +24,16 @@ import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.services.QuorumNodeConnectionFactory;
 import com.thoughtworks.gauge.Step;
+
+import io.reactivex.Observable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthBlock;
+import org.web3j.protocol.core.methods.response.EthGetBalance;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -57,7 +62,7 @@ public class BlockReward extends AbstractSpecImplementation {
         }
     }
 
-    @Step("From block <fromblocknumber> to <toblocknumber>, account <accountAddress> should see increase of <blockReward>")
+    @Step("From block <fromblocknumber> to <toblocknumber>, account <accountAddress> should see increase of <blockReward> per block")
     public void waitForBlockAndCheckRewardForAccount(int fromblocknumber, int toblocknumber, String accountAddress, int blockReward) {
         assertThat(fromblocknumber).isLessThan(toblocknumber);
         while (utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber().intValue() < toblocknumber) {
@@ -76,10 +81,27 @@ public class BlockReward extends AbstractSpecImplementation {
             // EthBlock.Block block = utilService.getBlockByNumber(node, number).blockingFirst().getBlock();
             // get balance at some block
             logger.info("seek block #"+number);
+            Observable<EthGetBalance> bNm1 = Context.getConnectionFactory()
+                .getConnection(node)
+                .ethGetBalance(accountAddress, DefaultBlockParameter.valueOf(BigInteger.valueOf(number-1)))
+                .flowable()
+                .toObservable();
+            Observable<EthGetBalance> bN = Context.getConnectionFactory()
+                .getConnection(node)
+                .ethGetBalance(accountAddress, DefaultBlockParameter.valueOf(BigInteger.valueOf(number-1)))
+                .flowable()
+                .toObservable();
+            EthGetBalance bNm1V = bNm1.blockingFirst();
+            EthGetBalance bNV = bN.blockingFirst();
+            BigInteger delta = bNV.getBalance().subtract(bNm1V.getBalance());
+            if (delta.longValue() != blockReward) {
+                logger.info("delta "+delta+"is not correct for block #"+number+" should be "+blockReward);
+            }
+            number++;
         }
     }
 
-    @Step("From block <fromblocknumber> to <toblocknumber>, <nodeId> account should see increase of <blockReward>")
+    @Step("From block <fromblocknumber> to <toblocknumber>, <nodeId> account should see increase of <blockReward> per block")
     public void waitForBlockAndCheckRewardForNode(int fromblocknumber, int toblocknumber, String nodeId, int blockReward) {
         assertThat(fromblocknumber).isLessThan(toblocknumber);
         while (utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber().intValue() < toblocknumber) {
@@ -88,6 +110,7 @@ public class BlockReward extends AbstractSpecImplementation {
                 Thread.sleep(100);
             } catch(InterruptedException e) {}
         }
-        accountService.getDefaultAccountAddress(QuorumNode.valueOf(nodeId)).forEach(e -> waitForBlockAndCheckRewardForAccount(fromblocknumber, toblocknumber, e, blockReward));
+        String accountAddress = accountService.getDefaultAccountAddress(QuorumNode.valueOf(nodeId)).blockingFirst();
+        waitForBlockAndCheckRewardForAccount(fromblocknumber, toblocknumber, accountAddress, blockReward);
     }
 }
