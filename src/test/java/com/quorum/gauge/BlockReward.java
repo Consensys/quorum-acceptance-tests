@@ -102,7 +102,7 @@ public class BlockReward extends AbstractSpecImplementation {
             }
             BigInteger delta = bNV.getBalance().subtract(bNm1V.getBalance());
             if (delta.longValue() != blockReward) {
-                logger.info("delta "+delta+"is not correct for block #"+number+" should be "+blockReward);
+                logger.info("reward of "+delta+" is not correct for block #"+number+" should be "+blockReward);
             }
             assertThat(delta).isEqualTo(BigInteger.valueOf(blockReward));
             number--;

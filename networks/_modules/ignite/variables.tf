@@ -137,7 +137,7 @@ variable "qbftBlock" {
 }
 
 variable "transition_config" {
-  type    = object({ transitions = list(object({ block = number, algorithm = optional(string), emptyblockperiodseconds = optional(number)}))})
+  type    = object({ transitions = list(object({ block = number, algorithm = optional(string), emptyblockperiodseconds = optional(number), blockReward = optional(string), miningBeneficiary = optional(string), beneficiaryList = optional(list(string)), beneficiaryMode = optional(string)}))})
   default = { transitions = [] }
 }
 

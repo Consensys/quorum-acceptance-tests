@@ -185,8 +185,8 @@ variable "qbftBlock" {
 }
 
 variable "transition_config" {
-  type    = object({ transitions = list(object({ block = number, algorithm = optional(string), emptyblockperiodseconds = optional(number)}))})
-  default = { transitions = [{ "block": 120, "emptyblockperiodseconds": 2}, { "block": 250, "emptyblockperiodseconds": 1 }] }
+  type    = object({ transitions = list(object({ block = number, algorithm = optional(string), emptyblockperiodseconds = optional(number), blockReward = optional(string), miningBeneficiary = optional(string), beneficiaryList = optional(list(string)), beneficiaryMode = optional(string)}))})
+  default = { transitions = [{ "block": 110, "miningBeneficiary": "0x0638e1574728b6d862dd5d3a3e0942c3be47d996", "blockReward": "20"}, { "block": 115, "beneficiaryMode": "besu"}, { "block": 120, "emptyblockperiodseconds": 2, "beneficiaryMode": "list", "beneficiaryList": ["0x0638e1574728b6d862dd5d3a3e0942c3be47d996", "0x9186eb3d20cbd1f5f992a950d808c4495153abd5"], "blockReward": "0xa"}, { "block": 250, "emptyblockperiodseconds": 1 }, { "block": 251, "beneficiaryMode": "validators" }] }
 }
 
 variable "qlight_clients" {
