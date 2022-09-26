@@ -19,7 +19,6 @@
 
 package com.quorum.gauge;
 
-import com.quorum.gauge.common.Context;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.services.QuorumNodeConnectionFactory;
@@ -29,11 +28,13 @@ import io.reactivex.Observable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.DefaultBlockParameter;
-import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.Response.Error;
 import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
+import org.web3j.quorum.Quorum;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -45,6 +46,9 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 public class BlockReward extends AbstractSpecImplementation {
 
     private static final Logger logger = LoggerFactory.getLogger(BlockReward.class);
+
+    @Autowired
+    private QuorumNodeConnectionFactory connectionFactory;
 
     class Tuple {
         int blockReward;
@@ -73,43 +77,40 @@ public class BlockReward extends AbstractSpecImplementation {
         }
         QuorumNode node = QuorumNode.Node1;
 
-        List<Tuple> parts = new ArrayList<Tuple>();
-
-        // Find the first empty block
         int number = toblocknumber;
         while (number > fromblocknumber) {
-            // EthBlock.Block block = utilService.getBlockByNumber(node, number).blockingFirst().getBlock();
             // get balance at some block
-            logger.info("seek block #"+number);
-            Observable<EthGetBalance> bNm1 = Context.getConnectionFactory()
-                .getConnection(node)
+            accountService.getDefaultAccountBalance(node);
+            Quorum connection = connectionFactory.getConnection(node);
+            Observable<EthGetBalance> bNm1 = connection
                 .ethGetBalance(accountAddress, DefaultBlockParameter.valueOf(BigInteger.valueOf(number-1)))
                 .flowable()
                 .toObservable();
-            Observable<EthGetBalance> bN = Context.getConnectionFactory()
-                .getConnection(node)
-                .ethGetBalance(accountAddress, DefaultBlockParameter.valueOf(BigInteger.valueOf(number-1)))
+            Observable<EthGetBalance> bN = connection
+                .ethGetBalance(accountAddress, DefaultBlockParameter.valueOf(BigInteger.valueOf(number)))
                 .flowable()
                 .toObservable();
             EthGetBalance bNm1V = bNm1.blockingFirst();
             EthGetBalance bNV = bN.blockingFirst();
+            Error errNm1V = bNm1V.getError();
+            if (errNm1V != null) {
+                logger.error("balance-1: "+errNm1V.getCode() + ": " +errNm1V.getData() + ": " + errNm1V.getMessage());
+            }
+            Error errNV = bNV.getError();
+            if (errNV != null) {
+                logger.error("balance: "+errNV.getCode() + ": " +errNV.getData() + ": " + errNV.getMessage());
+            }
             BigInteger delta = bNV.getBalance().subtract(bNm1V.getBalance());
             if (delta.longValue() != blockReward) {
                 logger.info("delta "+delta+"is not correct for block #"+number+" should be "+blockReward);
             }
-            number++;
+            assertThat(delta).isEqualTo(BigInteger.valueOf(blockReward));
+            number--;
         }
     }
 
     @Step("From block <fromblocknumber> to <toblocknumber>, <nodeId> account should see increase of <blockReward> per block")
     public void waitForBlockAndCheckRewardForNode(int fromblocknumber, int toblocknumber, String nodeId, int blockReward) {
-        assertThat(fromblocknumber).isLessThan(toblocknumber);
-        while (utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber().intValue() < toblocknumber) {
-            logger.info("sleep a bit, current block #"+utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber().intValue()+" expected is #"+toblocknumber);
-            try {
-                Thread.sleep(100);
-            } catch(InterruptedException e) {}
-        }
         String accountAddress = accountService.getDefaultAccountAddress(QuorumNode.valueOf(nodeId)).blockingFirst();
         waitForBlockAndCheckRewardForAccount(fromblocknumber, toblocknumber, accountAddress, blockReward);
     }
