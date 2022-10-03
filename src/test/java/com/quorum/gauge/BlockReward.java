@@ -36,6 +36,7 @@ import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
 import org.web3j.quorum.Quorum;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,68 +51,42 @@ public class BlockReward extends AbstractSpecImplementation {
     @Autowired
     private QuorumNodeConnectionFactory connectionFactory;
 
-    class Tuple {
-        int blockReward;
-        EthBlock.Block from;
-        EthBlock.Block to;
-        int delta;
-        Tuple(int blockReward, EthBlock.Block from, EthBlock.Block to, int delta) {
-            this.blockReward = blockReward;
-            this.from = from;
-            this.to = to;
-            this.delta = delta;
-        }
-        public String toString() {
-            return "["+from.getNumber().intValue()+"("+from.getTransactions().isEmpty()+") to "+to.getNumber().intValue()+"("+to.getTransactions().isEmpty()+")] "+blockReward+" "+delta;
-        }
-    }
 
-    @Step("From block <fromblocknumber> to <toblocknumber>, account <accountAddress> should see increase of <blockReward> per block")
-    public void waitForBlockAndCheckRewardForAccount(int fromblocknumber, int toblocknumber, String accountAddress, int blockReward) {
-        assertThat(fromblocknumber).isLessThan(toblocknumber);
-        while (utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber().intValue() < toblocknumber) {
-            logger.info("sleep a bit, current block #"+utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber().intValue()+" expected is #"+toblocknumber);
-            try {
-                Thread.sleep(100);
-            } catch(InterruptedException e) {}
-        }
+    @Step("From block <fromBlockNumber> to <toBlockNumber>, account <accountAddress> should see increase of <blockReward> per block")
+    public void waitForBlockAndCheckRewardForAccount(int fromBlockNumber, int toBlockNumber, String accountAddress, int blockReward) throws IOException {
+        assertThat(fromBlockNumber).isLessThan(toBlockNumber);
+        var currentBlockHeight = utilService.getCurrentBlockNumber().blockingFirst().getBlockNumber().intValue();
+        waitForBlockHeight(currentBlockHeight, toBlockNumber);
+
         QuorumNode node = QuorumNode.Node1;
 
-        int number = toblocknumber;
-        while (number > fromblocknumber) {
+        int blockNumber = toBlockNumber;
+        while (blockNumber > fromBlockNumber) {
             // get balance at some block
-            accountService.getDefaultAccountBalance(node);
             Quorum connection = connectionFactory.getConnection(node);
-            Observable<EthGetBalance> bNm1 = connection
-                .ethGetBalance(accountAddress, DefaultBlockParameter.valueOf(BigInteger.valueOf(number-1)))
-                .flowable()
-                .toObservable();
-            Observable<EthGetBalance> bN = connection
-                .ethGetBalance(accountAddress, DefaultBlockParameter.valueOf(BigInteger.valueOf(number)))
-                .flowable()
-                .toObservable();
-            EthGetBalance bNm1V = bNm1.blockingFirst();
-            EthGetBalance bNV = bN.blockingFirst();
-            Error errNm1V = bNm1V.getError();
-            if (errNm1V != null) {
-                logger.error("balance-1: "+errNm1V.getCode() + ": " +errNm1V.getData() + ": " + errNm1V.getMessage());
+            EthGetBalance previousBalance = connection
+                .ethGetBalance(accountAddress, DefaultBlockParameter.valueOf(BigInteger.valueOf(blockNumber-1)))
+                .send();
+
+            EthGetBalance currentBalance = connection
+                .ethGetBalance(accountAddress, DefaultBlockParameter.valueOf(BigInteger.valueOf(blockNumber)))
+                .send();
+
+            Error currentBalanceError = currentBalance.getError();
+            if (currentBalanceError != null) {
+                logger.error("balance-1: "+currentBalanceError.getCode() + ": " +currentBalanceError.getData() + ": " + currentBalanceError.getMessage());
             }
-            Error errNV = bNV.getError();
-            if (errNV != null) {
-                logger.error("balance: "+errNV.getCode() + ": " +errNV.getData() + ": " + errNV.getMessage());
+            Error previousBalanceError = previousBalance.getError();
+            if (previousBalanceError != null) {
+                logger.error("balance: "+previousBalanceError.getCode() + ": " +previousBalanceError.getData() + ": " + previousBalanceError.getMessage());
             }
-            BigInteger delta = bNV.getBalance().subtract(bNm1V.getBalance());
+
+            BigInteger delta = currentBalance.getBalance().subtract(previousBalance.getBalance());
             if (delta.longValue() != blockReward) {
-                logger.info("reward of "+delta+" is not correct for block #"+number+" should be "+blockReward);
+                logger.info("reward of "+delta+" is not correct for block #"+blockNumber+" should be "+blockReward);
             }
             assertThat(delta).isEqualTo(BigInteger.valueOf(blockReward));
-            number--;
+            blockNumber--;
         }
-    }
-
-    @Step("From block <fromblocknumber> to <toblocknumber>, <nodeId> account should see increase of <blockReward> per block")
-    public void waitForBlockAndCheckRewardForNode(int fromblocknumber, int toblocknumber, String nodeId, int blockReward) {
-        String accountAddress = accountService.getDefaultAccountAddress(QuorumNode.valueOf(nodeId)).blockingFirst();
-        waitForBlockAndCheckRewardForAccount(fromblocknumber, toblocknumber, accountAddress, blockReward);
     }
 }
