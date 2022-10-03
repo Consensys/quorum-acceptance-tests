@@ -128,7 +128,7 @@ public class AccountService extends AbstractService {
                 for (AccountService.Accounts a : getAccounts()) {
                     if (address.equals(a.getAddress())) {
                         return true;
-                    };
+                    }
                 }
             }
             return false;

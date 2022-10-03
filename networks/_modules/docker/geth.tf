@@ -302,6 +302,9 @@ ARGS="--identity Node${count.index + 1} \
   --password ${local.container_geth_datadir}/${var.password_file_name} \
 %{endif}
   --syncmode full \
+%{if count.index==0~}
+  --gcmode archive \
+%{endif~}
 %{if contains(local.non_qlight_client_node_indices, count.index)~}
 %{if var.consensus == "raft"~}
   ${format("--raft --raftport %d", var.geth_networking[count.index].port.raft)} \
