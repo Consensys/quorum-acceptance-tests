@@ -52,12 +52,12 @@ ls ${local.container_besu_datadir}
 
 if [ "$ALWAYS_REFRESH" == "true" ]; then
   echo "Deleting ${local.container_besu_datadir} to refresh with original datadir"
-  rm -rf ${local.container_besu_datadir}
+  rm -rf ${local.container_besu_datadir} || true
 fi
 
 if [ ! -f "${local.container_besu_datadir}/genesis.json" ]; then
   echo "Genesis file missing. Copying mounted datadir to ${local.container_besu_datadir}"
-  rm -r ${local.container_besu_datadir}
+  rm -r ${local.container_besu_datadir} || true
   cp -r ${local.container_besu_datadir_mounted} ${local.container_besu_datadir}
 fi
 echo "Current files in datadir (ls ${local.container_besu_datadir})"
