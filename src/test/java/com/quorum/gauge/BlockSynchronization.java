@@ -205,29 +205,32 @@ public class BlockSynchronization extends AbstractSpecImplementation {
 
     @Step("Verify node <node> has the block height greater or equal to <latestBlockHeightName>")
     public void verifyBlockHeightGreaterThanOrEqualTo(Node node, String latestBlockHeightName) {
-        verifyBlockHeight(node, latestBlockHeightName, ">=");
+        BigInteger lastBlockHeight = mustHaveValue(DataStoreFactory.getScenarioDataStore(), latestBlockHeightName, BigInteger.class);
+        verifyBlockHeight(node, lastBlockHeight, ">=");
     }
 
     @Step("Verify nodes <nodes> have a block height less than or equal to <latestBlockHeightName>")
     public void verifyNodesBlockHeightLessThanOrEqualTo(List<Node> nodes, String latestBlockHeightName) {
-        nodes.forEach(node -> verifyBlockHeight(node, latestBlockHeightName, "<="));
+        BigInteger lastBlockHeight = mustHaveValue(DataStoreFactory.getScenarioDataStore(), latestBlockHeightName, BigInteger.class);
+        nodes.forEach(node -> verifyBlockHeight(node, lastBlockHeight, "<="));
     }
 
     @Step("Verify node <node> has the block height less than or equal to <latestBlockHeightName>")
     public void verifyBlockHeightLessThanOrEqualTo(Node node, String latestBlockHeightName) {
-        verifyBlockHeight(node, latestBlockHeightName, "<=");
+        BigInteger lastBlockHeight = mustHaveValue(DataStoreFactory.getScenarioDataStore(), latestBlockHeightName, BigInteger.class);
+        verifyBlockHeight(node, lastBlockHeight, "<=");
     }
 
-    public void verifyBlockHeight(Node node, String latestBlockHeightName, String comparison) {
-        BigInteger lastBlockHeight = mustHaveValue(DataStoreFactory.getScenarioDataStore(), latestBlockHeightName, BigInteger.class);
+    @Step("Verify nodes <Node1,Node2,Node3> have some blocks")
+    public void verifyNodesHaveSomeBlocks(List<Node> nodes) {
+        nodes.forEach(node -> verifyBlockHeight(node, BigInteger.TWO, ">="));
+    }
+
+    public void verifyBlockHeight(Node node, BigInteger lastBlockHeight, String comparison) {
         BigInteger currentBlockHeight = utilService.getCurrentBlockNumberFrom(node).blockingFirst().getBlockNumber();
         switch (comparison) {
-            case ">=":
-                assertThat(currentBlockHeight).isGreaterThanOrEqualTo(lastBlockHeight);
-                break;
-            case "<=":
-                assertThat(currentBlockHeight).isLessThanOrEqualTo(lastBlockHeight);
-                break;
+            case ">=" -> assertThat(currentBlockHeight).isGreaterThanOrEqualTo(lastBlockHeight);
+            case "<=" -> assertThat(currentBlockHeight).isLessThanOrEqualTo(lastBlockHeight);
         }
     }
 
