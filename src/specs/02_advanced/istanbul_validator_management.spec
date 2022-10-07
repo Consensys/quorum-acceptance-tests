@@ -7,6 +7,7 @@ This specification describes how validator and non-validator nodes behave in ist
  - non-validator node is not authorized to seal new blocks but can sync up
 
 * Start a Quorum Network, named it "mynetwork", consisting of "Node1,Node2,Node3"
+* Verify nodes "Node1,Node2,Node3" have some blocks
 * Send some transactions to create blocks in network "mynetwork" and capture the latest block height as "latestBlockHeight"
 * Add "Node4" and join the network "mynetwork" as "nonvalidator"
 
