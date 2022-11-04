@@ -22,6 +22,7 @@ package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.ext.EthChainId;
+import com.quorum.gauge.ext.PrivateClientTransactionManager;
 import com.quorum.gauge.ext.PublicClientTransactionManager;
 import com.quorum.gauge.sol.Accumulator;
 import io.reactivex.Observable;
@@ -43,6 +44,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static com.quorum.gauge.ext.PrivateClientTransactionManager.DEFAULT_MAX_RETRY;
+import static com.quorum.gauge.ext.PrivateClientTransactionManager.DEFAULT_SLEEP_DURATION_IN_MILLIS;
 
 @Service
 public class AccumulatorService extends AbstractService {
@@ -85,14 +89,12 @@ public class AccumulatorService extends AbstractService {
         }
 
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
-            ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
+            ClientTransactionManager clientTransactionManager = new PrivateClientTransactionManager(
                 client,
                 address,
                 null,
                 privateFor,
-                flags,
-                DEFAULT_MAX_RETRY,
-                DEFAULT_SLEEP_DURATION_IN_MILLIS);
+                flags);
             return Accumulator.deploy(client,
                 clientTransactionManager,
                 BigInteger.valueOf(0),
@@ -111,8 +113,8 @@ public class AccumulatorService extends AbstractService {
         final List<String> privateFor = target.stream().map(q -> privacyService.id(q)).collect(Collectors.toList());
 
         return accountService.getDefaultAccountAddress(source).flatMap(acctAddress -> {
-            ClientTransactionManager txManager = new ClientTransactionManager(
-                client, acctAddress, null, privateFor, flags, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS
+            ClientTransactionManager txManager = new PrivateClientTransactionManager(
+                client, acctAddress, null, privateFor, flags
             );
             Accumulator accumulator = Accumulator.load(
                 contractAddress, client, txManager, BigInteger.ZERO, gasLimit);

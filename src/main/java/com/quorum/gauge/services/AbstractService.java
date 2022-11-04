@@ -21,6 +21,7 @@ package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.Context;
 import com.quorum.gauge.common.QuorumNetworkProperty;
+import com.quorum.gauge.ext.PrivateClientTransactionManager;
 import com.quorum.gauge.ext.PublicClientTransactionManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.web3j.crypto.Credentials;
@@ -37,12 +38,13 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 
+import static com.quorum.gauge.ext.PrivateClientTransactionManager.*;
+import static com.quorum.gauge.ext.PrivateClientTransactionManager.DEFAULT_MAX_RETRY;
+
 public abstract class AbstractService {
 
     public static final BigInteger DEFAULT_GAS_LIMIT = new BigInteger("47b760", 16);
     BigInteger DEFAULT_PERMISSIONS_GAS_LIMIT = new BigInteger("8C6180", 16);
-    public static int DEFAULT_SLEEP_DURATION_IN_MILLIS = 2000;
-    public static int DEFAULT_MAX_RETRY = 30;
 
     private ContractGasProvider permContractGasProvider = new PermissionContractGasProvider();
     private ContractGasProvider permContractDepGasProvider = new PermissionContractDeployGasProvider();
@@ -89,7 +91,7 @@ public abstract class AbstractService {
     }
 
     public ClientTransactionManager clientTransactionManager(Web3j web3j, String fromAddress, String privateFrom, List<String> privateFor) {
-        return new ClientTransactionManager((Quorum) web3j, fromAddress, privateFrom, privateFor);
+        return new PrivateClientTransactionManager((Quorum) web3j, fromAddress, privateFrom, privateFor);
     }
 
     public org.web3j.tx.ClientTransactionManager vanillaClientTransactionManager(Web3j web3j, String fromAddress, long chainId) {

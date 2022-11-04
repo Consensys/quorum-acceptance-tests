@@ -23,6 +23,7 @@ package com.quorum.gauge.services;
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.ext.EthChainId;
+import com.quorum.gauge.ext.PrivateClientTransactionManager;
 import com.quorum.gauge.sol.SimpleStorage;
 import com.quorum.gauge.sol.StorageMaster;
 import io.reactivex.Observable;
@@ -68,7 +69,7 @@ public class StorageMasterService extends AbstractService {
 
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
             ClientTransactionManager clientTransactionManager
-                = new ClientTransactionManager(client, address, null, privateFor, flags);
+                = new PrivateClientTransactionManager(client, address, null, privateFor, flags);
             return StorageMaster.deploy(client,
                 clientTransactionManager,
                 BigInteger.valueOf(0),
@@ -87,7 +88,7 @@ public class StorageMasterService extends AbstractService {
 
         return accountService.getDefaultAccountAddress(source).flatMap(acctAddress -> {
             ClientTransactionManager txManager
-                = new ClientTransactionManager(client, acctAddress, null, privateFor, flags);
+                = new PrivateClientTransactionManager(client, acctAddress, null, privateFor, flags);
             return createSSFromSM(txManager, client, contractAddress, gasLimit, newValue);
         });
     }
@@ -130,7 +131,7 @@ public class StorageMasterService extends AbstractService {
 
         return accountService.getDefaultAccountAddress(source).flatMap(acctAdress -> {
             ClientTransactionManager txManager
-                = new ClientTransactionManager(client, acctAdress, null, privateFor, flags);
+                = new PrivateClientTransactionManager(client, acctAdress, null, privateFor, flags);
             StorageMaster storageMaster = StorageMaster.load(contractAddress, client, txManager, BigInteger.ZERO, gasLimit);
             return storageMaster.createSimpleStorageC2C3(value).flowable().toObservable();
         });
@@ -148,7 +149,7 @@ public class StorageMasterService extends AbstractService {
 
         return accountService.getDefaultAccountAddress(source).flatMap(acctAddress -> {
             ClientTransactionManager txManager
-                = new ClientTransactionManager(client, acctAddress, null, privateFor, flags);
+                = new PrivateClientTransactionManager(client, acctAddress, null, privateFor, flags);
             StorageMaster storageMaster = StorageMaster.load(
                 contractAddress, client, txManager, BigInteger.ZERO, gasLimit);
             return storageMaster.setC2C3Value(value).flowable().toObservable();

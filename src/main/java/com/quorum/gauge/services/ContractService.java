@@ -26,6 +26,7 @@ import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.ext.EthChainId;
 import com.quorum.gauge.ext.EthSendTransactionAsync;
 import com.quorum.gauge.ext.EthStorageRoot;
+import com.quorum.gauge.ext.PrivateClientTransactionManager;
 import com.quorum.gauge.ext.PrivateTransactionAsync;
 import com.quorum.gauge.sol.*;
 import io.reactivex.Observable;
@@ -102,14 +103,12 @@ public class ContractService extends AbstractService {
     public Observable<? extends Contract> createSimpleContract(int initialValue, Node source, String ethAccount, String privateFromAliases, List<String> privateForAliases, PrivacyFlag privacyFlag, BigInteger gas) {
         Quorum client = connectionFactory().getConnection(source);
         return accountService.getAccountAddress(source, ethAccount).flatMap(address -> {
-            ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
+            ClientTransactionManager clientTransactionManager = new PrivateClientTransactionManager(
                 client,
                 address,
                 privacyService.id(privateFromAliases),
                 privateForAliases.stream().map(privacyService::id).collect(Collectors.toList()),
-                privacyFlag,
-                20,
-                1000
+                privacyFlag
                 );
             return SimpleStorage.deploy(client,
                 clientTransactionManager,
@@ -142,7 +141,7 @@ public class ContractService extends AbstractService {
         }
 
         return accountService.getAccountAddress(networkProperty().getNode(source.name()), ethAccount).flatMap(address -> {
-            ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
+            ClientTransactionManager clientTransactionManager = new PrivateClientTransactionManager(
                 client,
                 address,
                 null,
@@ -168,7 +167,7 @@ public class ContractService extends AbstractService {
         final List<String> mandatoryRecipients = mandatoryFor.stream().map(privacyService::id).collect(Collectors.toList());
 
         return accountService.getAccountAddress(networkProperty().getNode(source.name()), ethAccount).flatMap(address -> {
-            ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
+            ClientTransactionManager clientTransactionManager = new PrivateClientTransactionManager(
                 client,
                 address,
                 null,
@@ -283,7 +282,7 @@ public class ContractService extends AbstractService {
 
         if (Objects.isNull(mandatoryFor)) {
             return accountService.getDefaultAccountAddress(source)
-                .map(address -> new ClientTransactionManager(client, address, null, privateFor, flags))
+                .map(address -> new PrivateClientTransactionManager(client, address, null, privateFor, flags))
                 .flatMap(txManager -> SimpleStorage.load(
                     contractAddress, client, txManager, BigInteger.ZERO, gasLimit).set(value).flowable().toObservable()
                 );
@@ -292,7 +291,7 @@ public class ContractService extends AbstractService {
         final List<String> mandatoryRecipients = mandatoryFor.stream().map(q -> privacyService.id(q)).collect(Collectors.toList());
 
         return accountService.getDefaultAccountAddress(source)
-            .map(address -> new ClientTransactionManager(client, address, null, privateFor, flags, mandatoryRecipients))
+            .map(address -> new PrivateClientTransactionManager(client, address, null, privateFor, flags, mandatoryRecipients))
             .flatMap(txManager -> SimpleStorage.load(
                 contractAddress, client, txManager, BigInteger.ZERO, gasLimit).set(value).flowable().toObservable()
             );
@@ -305,7 +304,7 @@ public class ContractService extends AbstractService {
         final BigInteger value = BigInteger.valueOf(newValue);
 
         return accountService.getAccountAddress(source, ethAccount)
-            .map(address -> new ClientTransactionManager(
+            .map(address -> new PrivateClientTransactionManager(
                 client,
                 address,
                 privacyService.id(privateFromAlias),
@@ -323,7 +322,7 @@ public class ContractService extends AbstractService {
         final BigInteger value = BigInteger.valueOf(newValue);
 
         return accountService.getAccountAddress(source, ethAccount)
-            .map(address -> new ClientTransactionManager(
+            .map(address -> new PrivateClientTransactionManager(
                 client,
                 address,
                 null,
@@ -339,7 +338,7 @@ public class ContractService extends AbstractService {
         final BigInteger value = BigInteger.valueOf(newValue);
 
         return accountService.getAccountAddress(source, ethAccount)
-            .map(address -> new ClientTransactionManager(
+            .map(address -> new PrivateClientTransactionManager(
                 client,
                 address,
                 privacyService.id(privateFromAlias),
@@ -438,14 +437,14 @@ public class ContractService extends AbstractService {
         String fromAddress = accountService.getDefaultAccountAddress(node).blockingFirst();
         TransactionManager txManager;
         if (isPrivate) {
-            txManager = new ClientTransactionManager(
+            txManager = new PrivateClientTransactionManager(
                 client,
                 fromAddress,
                 null,
                 Arrays.asList(privacyService.id(target)),
                 privacyType);
         } else {
-            txManager = new ClientTransactionManager(
+            txManager = new PrivateClientTransactionManager(
                 client,
                 fromAddress,
                 null,
@@ -511,14 +510,14 @@ public class ContractService extends AbstractService {
 
         ClientTransactionManager transactionManager;
         if (isPrivate) {
-            transactionManager = new ClientTransactionManager(
+            transactionManager = new PrivateClientTransactionManager(
                 client,
                 fromAddress,
                 null,
                 Arrays.asList(privacyService.id(target)),
                 privacyTypes);
         } else {
-            transactionManager = new ClientTransactionManager(
+            transactionManager = new PrivateClientTransactionManager(
                 client,
                 fromAddress,
                 null,

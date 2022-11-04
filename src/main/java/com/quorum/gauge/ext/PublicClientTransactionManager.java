@@ -15,7 +15,7 @@ public class PublicClientTransactionManager extends ClientTransactionManager {
     private long chainId;
 
     public PublicClientTransactionManager(final Web3j web3j, final String fromAddress, final long chainId) {
-        super(web3j,fromAddress);
+        super(web3j,fromAddress, 60, 1000);
         this.web3j = web3j;
         this.chainId = chainId;
     }

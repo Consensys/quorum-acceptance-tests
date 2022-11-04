@@ -24,6 +24,7 @@ import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.common.RawDeployedContractTarget;
 import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.common.config.WalletData;
+import com.quorum.gauge.ext.PrivateClientTransactionManager;
 import com.quorum.gauge.ext.filltx.FillTransactionResponse;
 import com.quorum.gauge.ext.filltx.PrivateFillTransaction;
 import com.quorum.gauge.sol.ClientReceipt;
@@ -514,7 +515,7 @@ public class RawContractService extends AbstractService {
 
         return Observable.fromCallable(() -> wallet)
             .flatMap(walletData -> Observable.fromCallable(() -> WalletUtils.loadCredentials(walletData.getWalletPass(), walletData.getWalletPath())))
-            .flatMap(cred -> Observable.just(new ClientTransactionManager(client,
+            .flatMap(cred -> Observable.just(new PrivateClientTransactionManager(client,
                 cred.getAddress(),
                 privacyService.id(source, sourceNamedKey),
                 targetNamedKeys.stream().map(privacyService::id).collect(Collectors.toList())

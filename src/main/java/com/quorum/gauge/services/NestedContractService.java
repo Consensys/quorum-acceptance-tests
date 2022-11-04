@@ -22,6 +22,7 @@ package com.quorum.gauge.services;
 
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.ext.EthStorageRoot;
+import com.quorum.gauge.ext.PrivateClientTransactionManager;
 import com.quorum.gauge.sol.C1;
 import com.quorum.gauge.sol.C2;
 import io.reactivex.Observable;
@@ -60,7 +61,7 @@ public class NestedContractService extends AbstractService {
     public Observable<? extends Contract> createC1Contract(int initialValue, QuorumNode source, List<QuorumNode> target, PrivacyFlag flags) {
         Quorum client = connectionFactory().getConnection(source);
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
-            ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
+            ClientTransactionManager clientTransactionManager = new PrivateClientTransactionManager(
                 client,
                 address,
                 null,
@@ -77,7 +78,7 @@ public class NestedContractService extends AbstractService {
     public Observable<? extends Contract> createC1ContractWithMandatoryRecipients(int initialValue, QuorumNode source, List<QuorumNode> target, List<QuorumNode> mandatoryFor, PrivacyFlag flags) {
         Quorum client = connectionFactory().getConnection(source);
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
-            ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
+            ClientTransactionManager clientTransactionManager = new PrivateClientTransactionManager(
                 client,
                 address,
                 null,
@@ -115,7 +116,7 @@ public class NestedContractService extends AbstractService {
     public Observable<? extends Contract> createC2Contract(String c1Address, QuorumNode source, List<QuorumNode> target, PrivacyFlag flags) {
         Quorum client = connectionFactory().getConnection(source);
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
-            ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
+            ClientTransactionManager clientTransactionManager = new PrivateClientTransactionManager(
                 client,
                 address,
                 null,
@@ -132,7 +133,7 @@ public class NestedContractService extends AbstractService {
     public Observable<? extends Contract> createC2ContractWithMandatoryRecipients(String c1Address, QuorumNode source, List<QuorumNode> target, List<QuorumNode> mandatoryFor, PrivacyFlag flags) {
         Quorum client = connectionFactory().getConnection(source);
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
-            ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
+            ClientTransactionManager clientTransactionManager = new PrivateClientTransactionManager(
                 client,
                 address,
                 null,
@@ -195,7 +196,7 @@ public class NestedContractService extends AbstractService {
     public Observable<TransactionReceipt> restoreFromC1(QuorumNode node, List<QuorumNode> target, String contractAddress, PrivacyFlag flags) {
         Quorum client = connectionFactory().getConnection(node);
         return accountService.getDefaultAccountAddress(node).flatMap(address -> {
-            ClientTransactionManager txManager = new ClientTransactionManager(
+            ClientTransactionManager txManager = new PrivateClientTransactionManager(
                 client,
                 address,
                 null,
@@ -224,7 +225,7 @@ public class NestedContractService extends AbstractService {
     public Observable<TransactionReceipt> updateC2Contract(QuorumNode source, List<QuorumNode> target, String contractAddress, int newValue, PrivacyFlag flags) {
         Quorum client = connectionFactory().getConnection(source);
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
-            ClientTransactionManager txManager = new ClientTransactionManager(
+            ClientTransactionManager txManager = new PrivateClientTransactionManager(
                 client,
                 address,
                 null,
@@ -248,7 +249,7 @@ public class NestedContractService extends AbstractService {
     public Observable<TransactionReceipt> newContractC2(QuorumNode source, List<QuorumNode> target, String contractAddress, BigInteger newValue, PrivacyFlag flags) {
         Quorum client = connectionFactory().getConnection(source);
         return accountService.getDefaultAccountAddress(source).flatMap(address -> {
-            ClientTransactionManager txManager = new ClientTransactionManager(
+            ClientTransactionManager txManager = new PrivateClientTransactionManager(
                 client,
                 address,
                 null,
