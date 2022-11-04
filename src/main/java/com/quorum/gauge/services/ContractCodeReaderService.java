@@ -21,6 +21,7 @@ package com.quorum.gauge.services;
 
 
 import com.quorum.gauge.common.QuorumNetworkProperty;
+import com.quorum.gauge.ext.PrivateClientTransactionManager;
 import com.quorum.gauge.sol.ContractCodeReader;
 import io.reactivex.Observable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,7 +69,7 @@ public class ContractCodeReaderService extends AbstractService {
         Quorum client = connectionFactory().getConnection(source);
 
         return accountService.getAccountAddress(source, ethAccountAlias).flatMap(eoa -> {
-            ClientTransactionManager clientTransactionManager = new ClientTransactionManager(
+            ClientTransactionManager clientTransactionManager = new PrivateClientTransactionManager(
                 client,
                 eoa,
                 privacyService.id(privateFromAlias),
@@ -83,7 +84,7 @@ public class ContractCodeReaderService extends AbstractService {
         Quorum client = connectionFactory().getConnection(source);
 
         return accountService.getAccountAddress(source, ethAccountAlias)
-            .map(eoa -> new ClientTransactionManager(
+            .map(eoa -> new PrivateClientTransactionManager(
                 client,
                 eoa,
                 privacyService.id(privateFromAlias),
