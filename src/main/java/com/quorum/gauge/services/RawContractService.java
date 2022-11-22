@@ -582,7 +582,8 @@ public class RawContractService extends AbstractService {
                 allObservableContracts.add(Observable.fromArray(rawPrivateContracts)
                     .flatMap(raw -> sendRawPrivateTransaction(source, raw.rawTransaction, targetNode)
                         .map(b -> transactionService.waitForTransactionReceipt(targetNode, b.getTransactionHash()))
-                        .map(receipt -> new RawDeployedContractTarget(raw.value, raw.node, receipt)).subscribeOn(Schedulers.io())));
+                        .map(receipt -> new RawDeployedContractTarget(raw.value, raw.node, receipt))
+                        .subscribeOn(Schedulers.single())));
             }
             return allObservableContracts;
         } catch (IOException e) {
