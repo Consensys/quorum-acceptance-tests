@@ -89,7 +89,7 @@ exec /opt/besu/bin/besu \
         --privacy-url="${local.container_tm_q2t_urls[count.index]}" \
         --privacy-public-key-file=${local.container_besu_datadir}/tmkey.pub \
         --privacy-onchain-groups-enabled=false \
-        --tx-pool-limit-by-account-percentage=5 \
+        --tx-pool-limit-by-account-percentage=0.5 \
 %{if var.hybrid_network~}
         --rpc-http-api=ADMIN,EEA,WEB3,ETH,MINER,NET,PRIV,PERM,GOQUORUM,QBFT \
         --rpc-ws-api=ADMIN,EEA,WEB3,ETH,MINER,NET,PRIV,PERM,GOQUORUM,QBFT ;
