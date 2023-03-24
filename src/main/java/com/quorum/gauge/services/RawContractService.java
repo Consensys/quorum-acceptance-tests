@@ -28,6 +28,7 @@ import com.quorum.gauge.ext.PrivateClientTransactionManager;
 import com.quorum.gauge.ext.filltx.FillTransactionResponse;
 import com.quorum.gauge.ext.filltx.PrivateFillTransaction;
 import com.quorum.gauge.sol.ClientReceipt;
+import com.quorum.gauge.sol.ContractExtender;
 import com.quorum.gauge.sol.SimpleStorage;
 import com.quorum.gauge.sol.SimpleStorageDelegate;
 import com.quorum.gauge.sol.SneakyWrapper;
@@ -206,6 +207,33 @@ public class RawContractService extends AbstractService {
         } catch (CipherException e) {
             logger.error("RawTransaction - private - bad credentials", e);
             return Observable.error(e);
+        }
+    }
+
+    public Observable<TransactionReceipt> doVoteManagementContract(Boolean vote, String nextUuid, String contractAddress, WalletData wallet, QuorumNetworkProperty.Node source, QuorumNetworkProperty.Node target) {
+        Quorum client = connectionFactory().getConnection(source);
+        Enclave enclave = buildEnclave(QuorumNode.valueOf(source.getName()), client);
+
+        try {
+            Credentials credentials = WalletUtils.loadCredentials(wallet.getWalletPass(), wallet.getWalletPath());
+
+            TransactionManager qrtxm = quorumTransactionManager(client,
+                credentials,
+                privacyService.id(source),
+                List.of(privacyService.id(target)),
+                enclave);
+
+            return ContractExtender.load(contractAddress, client,
+                qrtxm,
+                BigInteger.valueOf(0),
+                DEFAULT_GAS_LIMIT).doVote(vote, nextUuid).flowable().toObservable();
+
+        } catch (IOException e) {
+                logger.error("RawTransaction - private", e);
+                return Observable.error(e);
+            } catch (CipherException e) {
+                logger.error("RawTransaction - private - bad credentials", e);
+                return Observable.error(e);
         }
     }
 

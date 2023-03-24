@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 
 @Service
 public class ExtensionService extends AbstractService {
@@ -37,6 +36,26 @@ public class ExtensionService extends AbstractService {
         return Observable.zip(accountService.getAccountAddress(targetNode, targetEthAccount), accountService.getAccountAddress(sourceNode, sourceEthAccount), (recipientAccount, senderAccount) -> {
             String newPartyPrivacyAddress = privacyService.id(targetParty);
             String sourcePartyPrivacyAddress = privacyService.id(sourceParty);
+            PrivateTransaction transactionArgs = new PrivateTransaction(
+                senderAccount, null, null, null, BigInteger.ZERO, null,
+                sourcePartyPrivacyAddress, List.of(newPartyPrivacyAddress), privacyFlag
+            );
+            return Stream.of(addressToExtend, newPartyPrivacyAddress, recipientAccount, transactionArgs).collect(Collectors.toList());
+        }).flatMap(arg -> {
+            Request<?, QuorumExtendContract> request = new Request<>(
+                "quorumExtension_extendContract",
+                arg,
+                connectionFactory().getWeb3jService(sourceNode),
+                QuorumExtendContract.class
+            );
+            return request.flowable().toObservable();
+        });
+    }
+
+    public Observable<QuorumExtendContract> initiateContractExtension(QuorumNetworkProperty.Node sourceNode, String addressToExtend, QuorumNetworkProperty.Node targetNode, String targetAddress, PrivacyFlag privacyFlag) {
+        return Observable.zip(Observable.just(targetAddress), accountService.getDefaultAccountAddress(sourceNode), (recipientAccount, senderAccount) -> {
+            String newPartyPrivacyAddress = privacyService.id(targetNode);
+            String sourcePartyPrivacyAddress = privacyService.id(sourceNode);
             PrivateTransaction transactionArgs = new PrivateTransaction(
                 senderAccount, null, null, null, BigInteger.ZERO, null,
                 sourcePartyPrivacyAddress, List.of(newPartyPrivacyAddress), privacyFlag
@@ -84,7 +103,7 @@ public class ExtensionService extends AbstractService {
 
         return request.flowable().toObservable();
     }
-
+    
     public Observable<QuorumVoteOnContract> acceptExtension(QuorumNetworkProperty.Node node, boolean vote, String ethAccount, String privateFromKey, String address, List<String> privateForKeys, PrivacyFlag privacyFlag) {
         final PrivateTransaction transactionArgs = new PrivateTransaction(
             accountService.getAccountAddress(node, ethAccount).blockingFirst(),
@@ -189,6 +208,23 @@ public class ExtensionService extends AbstractService {
         );
         return extensionInfo.flowable().toObservable().blockingFirst().getResult();
 
+    }
+
+    public Observable<QuorumGenerateExtensionApprovalUuid> generateExtensionApprovalUuid(final QuorumNetworkProperty.Node node, 
+                                                                                         final String approverAddress,
+                                                                                         final String address, 
+                                                                                         final PrivacyFlag privacyFlag) {
+
+        final PrivateTransaction transactionArgs = new PrivateTransaction(
+            accountService.getDefaultAccountAddress(node).blockingFirst(),
+            null, BigInteger.valueOf(4700000), null, BigInteger.ZERO, null, privacyService.id(node), List.of(privacyService.id(node)), privacyFlag);
+
+        return new Request<>(
+            "quorumExtension_generateExtensionApprovalUuid",
+            Stream.of(address, approverAddress, transactionArgs).collect(Collectors.toList()),
+            connectionFactory().getWeb3jService(node),
+            QuorumGenerateExtensionApprovalUuid.class
+        ).flowable().toObservable();
 
     }
 

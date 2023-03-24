@@ -3,20 +3,26 @@ package com.quorum.gauge;
 import com.quorum.gauge.common.Context;
 
 import com.quorum.gauge.common.QuorumNetworkProperty;
+import com.quorum.gauge.common.config.WalletData;
 import com.quorum.gauge.core.AbstractSpecImplementation;
 import com.quorum.gauge.ext.contractextension.*;
 import com.quorum.gauge.services.ExtensionService;
 import com.thoughtworks.gauge.Step;
 import com.thoughtworks.gauge.datastore.DataStore;
 import com.thoughtworks.gauge.datastore.DataStoreFactory;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.web3j.crypto.CipherException;
+import org.web3j.crypto.Credentials;
+import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.quorum.PrivacyFlag;
 import org.web3j.tx.Contract;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -60,6 +66,46 @@ public class ContractExtension extends AbstractSpecImplementation {
             .blockingFirst();
 
 //        System.err.println(result.getError().getMessage());
+        assertThat(result.getError()).isNull();
+
+        final String transactionHash = result.getResult();
+
+        final Optional<TransactionReceipt> transactionReceipt = transactionService.pollTransactionReceipt(creator, transactionHash);
+
+        assertThat(transactionReceipt.isPresent()).isTrue();
+        assertThat(transactionReceipt.get().getStatus()).isEqualTo("0x1");
+
+        final String contractAddress = transactionReceipt.get().getContractAddress();
+
+        DataStoreFactory.getScenarioDataStore().put(contractName + "extensionAddress", contractAddress);
+
+        Thread.sleep(1000);
+
+    }
+
+    @Step("Initiate contract extension to <newNode> with recipient using an external wallet <wallet> from <creator> for contract <contractName>")
+    public void createNewContractExtensionPropositionCustomRecipient(final QuorumNetworkProperty.Node newNode,
+                                                                     final WalletData wallet,
+                                                                     final QuorumNetworkProperty.Node creator,
+                                                                     final String contractName) throws InterruptedException, IOException, CipherException {
+
+
+        PrivacyFlag privacyFlag = PrivacyFlag.STANDARD_PRIVATE;
+
+        DataStoreFactory.getScenarioDataStore().put("privacyFlag", privacyFlag);
+        
+        final Credentials credentials = WalletUtils.loadCredentials(wallet.getWalletPass(), wallet.getWalletPath());
+
+        final Set<QuorumNetworkProperty.Node> allNodes = Stream.of(newNode, creator)
+            .collect(Collectors.toSet());
+        DataStoreFactory.getScenarioDataStore().put("extensionAllNodes", allNodes);
+
+        final Contract existingContract = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName, Contract.class);
+
+        final QuorumExtendContract result = extensionService
+            .initiateContractExtension(creator, existingContract.getContractAddress(), newNode, credentials.getAddress(), privacyFlag)
+            .blockingFirst();
+
         assertThat(result.getError()).isNull();
 
         final String transactionHash = result.getResult();
@@ -143,6 +189,41 @@ public class ContractExtension extends AbstractSpecImplementation {
             .blockingFirst();
 
         assertThat(result.getError().getMessage()).isEqualTo(expErrMsg);
+    }
+
+    @Step("<newNode> using an external wallet <wallet> generates uuid of hashed management contract for the contract <contractName>")
+    public void generateExtensionApprovalUuid(final QuorumNetworkProperty.Node newNode, final WalletData wallet, final String contractName) throws IOException, CipherException {
+        
+        final DataStore store = DataStoreFactory.getScenarioDataStore();
+        final PrivacyFlag privacyFlag = mustHaveValue(store, "privacyFlag", PrivacyFlag.class);
+        final String contractAddress = mustHaveValue(store, contractName + "extensionAddress", String.class);
+        final Credentials credentials = WalletUtils.loadCredentials(wallet.getWalletPass(), wallet.getWalletPath());
+        
+        final QuorumGenerateExtensionApprovalUuid result = this.extensionService.generateExtensionApprovalUuid(newNode, credentials.getAddress(), contractAddress, privacyFlag).blockingFirst();
+
+        if(result.getError() != null) {
+            logger.error(result.getError().getMessage());
+        }
+
+        assertThat(result.getError()).isNull();
+
+        final String uuid = result.getResult();
+
+        assertThat(uuid.length() > 0);
+
+        DataStoreFactory.getScenarioDataStore().put("extensionApprovalUuid", uuid);
+    }
+
+    @Step("<newNode> accepts the offer to extend the contract <contractName> signed by external wallet <wallet> with it's private for <target>")
+    public void acceptExtensionExternally(final QuorumNetworkProperty.Node newNode, final String contractName, final WalletData wallet, final QuorumNetworkProperty.Node target) {
+
+        final DataStore store = DataStoreFactory.getScenarioDataStore();
+        final String contractAddress = mustHaveValue(store, contractName + "extensionAddress", String.class);
+        final String uuid = mustHaveValue(store, "extensionApprovalUuid", String.class);
+
+        final TransactionReceipt transactionReceipt = this.rawContractService.doVoteManagementContract(true, uuid, contractAddress, wallet, newNode, target).blockingFirst();
+
+        assertThat(transactionReceipt.getStatus()).isEqualTo("0x1");
     }
 
     @Step("<newNode> accepts the offer to extend the contract <contractName>")
