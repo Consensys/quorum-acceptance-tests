@@ -19,6 +19,7 @@
 
 package com.quorum.gauge;
 
+import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.common.QuorumNode;
 import com.quorum.gauge.common.RetryWithDelay;
 import com.quorum.gauge.common.config.WalletData;
@@ -51,6 +52,15 @@ public class PrivateRawSmartContract extends AbstractSpecImplementation {
 
         DataStoreFactory.getSpecDataStore().put(contractName, contract);
         DataStoreFactory.getScenarioDataStore().put(contractName, contract);
+    }
+
+    @Step("Execute management contract of <contractName>'s `doVote()` function with vote <voteStatus> and unique tessera id <nextUuid> signed by external wallet <wallet> in <source> and it's private for <target>")
+    public void doVote(String contractName, Boolean voteStatus, String nextUuid, WalletData wallet, QuorumNetworkProperty.Node source, QuorumNetworkProperty.Node target) {
+        final String contractAddress = mustHaveValue(DataStoreFactory.getScenarioDataStore(), contractName + "extensionAddress", String.class);
+        TransactionReceipt receipt = rawContractService.doVoteManagementContract(voteStatus, nextUuid, contractAddress, wallet, source, target).blockingFirst();
+
+        AssertionsForClassTypes.assertThat(receipt.getTransactionHash()).isNotBlank();
+        AssertionsForClassTypes.assertThat(receipt.getBlockNumber()).isNotEqualTo(currentBlockNumber());
     }
 
     @Step("Execute <contractName>'s `set()` function with new value <newValue> signed by external wallet <wallet> in <source> and it's private for <target>")

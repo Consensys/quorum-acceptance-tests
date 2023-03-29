@@ -96,6 +96,10 @@ contract C2 {
 * Deploy <privacyType> type `SimpleStorage` contract with initial value "42" between "Node2" and "Node4". Name this contract as "contract1Extension". Ensure that its not visible from "Node1"
 * Initiate "contract1Extension" extension from "Node2" to "Node1". Contract extension accepted in receiving node. Check that state value in receiving node is "42"
 
+## Extend a contract to a new party, new party generates a uuid and accepts the extension via a raw private transaction
+* Deploy <privacyType> type `SimpleStorage` contract with initial value "42" between "Node2" and "Node4". Name this contract as "contract5Extension". Ensure that its not visible from "Node1"
+* Initiate "contract5Extension" extension from "Node2" to "Node1". Contract extension accepted in receiving node signed by external wallet "Wallet1". Check that state value in receiving node is "42"
+
 ## Extend contract to a new party, new party rejects the extension
 * Deploy <privacyType> type `SimpleStorage` contract with initial value "42" between "Node2" and "Node4". Name this contract as "contract2Extension". Ensure that its not visible from "Node1"
 * Initiate "contract2Extension" extension from "Node2" to "Node1". Contract extension is rejected by receiving node. Check that state value in receiving node is "0"

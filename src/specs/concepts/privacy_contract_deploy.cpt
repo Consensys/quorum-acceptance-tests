@@ -13,6 +13,13 @@
 * Wait for <contractName> to disappear from active extension in <toNode>
 * <contractName>'s `get()` function execution in <toNode> returns <value>
 
+# Initiate <contractName> extension from <fromNode> to <toNode>. Contract extension accepted in receiving node signed by external wallet <wallet>. Check that state value in receiving node is <value>
+* Initiate contract extension to <toNode> with recipient using an external wallet <wallet> from <fromNode> for contract <contractName>
+* <toNode> using an external wallet <wallet> generates uuid of hashed management contract for the contract <contractName>
+* <toNode> accepts the offer to extend the contract <contractName> signed by external wallet <wallet> with it's private for <fromNode>
+* Wait for <contractName> to disappear from active extension in <toNode>
+* <contractName>'s `get()` function execution in <toNode> returns <value>
+
 # Initiate <contractName> extension from <fromNode> to <toNode>. Contract extension is rejected by receiving node. Check that state value in receiving node is <value>
 * Initiate contract extension to <toNode> with its default account as recipient from <fromNode> for contract <contractName>
 * <toNode> has <contractName> listed in all active extensions
