@@ -560,21 +560,21 @@
                                     <workingDirectory>${infra.folder}</workingDirectory>
                                 </configuration>
                             </execution>
-                            <execution>
-                                <id>extract-test-summary</id>
-                                <goals>
-                                    <goal>java</goal>
-                                </goals>
-                                <phase>test</phase>
-                                <configuration>
-                                    <skip>${skipTests}</skip>
-                                    <mainClass>com.quorum.gauge.TestSummaryMain</mainClass>
-                                    <!-- This will produce failures.txt and summary.txt in the output folder -->
-                                    <commandlineArgs>${auto.jobid}
-                                        ${project.build.directory}/gauge/reports/xml-report/result.xml ${auto.outputDir}
-                                    </commandlineArgs>
-                                </configuration>
-                            </execution>
+<!--                            <execution>-->
+<!--                                <id>extract-test-summary</id>-->
+<!--                                <goals>-->
+<!--                                    <goal>java</goal>-->
+<!--                                </goals>-->
+<!--                                <phase>test</phase>-->
+<!--                                <configuration>-->
+<!--                                    <skip>${skipTests}</skip>-->
+<!--                                    <mainClass>com.quorum.gauge.TestSummaryMain</mainClass>-->
+<!--                                    &lt;!&ndash; This will produce failures.txt and summary.txt in the output folder &ndash;&gt;-->
+<!--                                    <commandlineArgs>${auto.jobid}-->
+<!--                                        ${project.build.directory}/gauge/reports/xml-report/result.xml ${auto.outputDir}-->
+<!--                                    </commandlineArgs>-->
+<!--                                </configuration>-->
+<!--                            </execution>-->
                         </executions>
                         <configuration>
                             <executable>terraform</executable>
