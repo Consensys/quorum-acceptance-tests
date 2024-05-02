@@ -265,11 +265,11 @@ jobs:
               -v ${{ steps.setup.outputs.outputDir }}:${{ steps.setup.outputs.outputDir }} \
               --env-file ${{ steps.setup.outputs.dockerEnvFile }} \
               ${{ needs.docker-build.outputs.image_name }} test \
-                -PgaugeFailSafe \
                 -Pauto \
                 -Dtags="${{ matrix.tag }}" ${{ steps.setup.outputs.mvnArg }} \
                 -Dauto.outputDir=${{ steps.setup.outputs.outputDir }} \
                 -Dauto.jobid=${{ steps.setup.outputs.tag }}
+          #      -PgaugeFailSafe \
       - name: 'Failure info'
         if: ${{ failure() }}
         run: |
