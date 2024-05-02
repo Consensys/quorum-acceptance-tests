@@ -71,7 +71,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ steps.prepare.outputs.output_dir }}
-          key: ${{ github.sha }}
+          key: ${{ github.sha }}-extra
       - name: 'Check out project files'
         if: steps.cache-image.outputs.cache-hit != 'true'
         uses: actions/checkout@v2
@@ -201,7 +201,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ needs.docker-build.outputs.output_dir }}
-          key: ${{ github.sha }}
+          key: ${{ github.sha }}-extra
       - name: 'Prepare environment'
         id: setup
         run: |
