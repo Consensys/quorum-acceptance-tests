@@ -71,7 +71,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ steps.prepare.outputs.output_dir }}
-          key: ${{ github.sha }}
+          key: ${{ github.sha }}-extra
       - name: 'Check out project files'
         if: steps.cache-image.outputs.cache-hit != 'true'
         uses: actions/checkout@v2
@@ -201,7 +201,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ needs.docker-build.outputs.output_dir }}
-          key: ${{ github.sha }}
+          key: ${{ github.sha }}-extra
       - name: 'Prepare environment'
         id: setup
         run: |
@@ -265,11 +265,11 @@ jobs:
               -v ${{ steps.setup.outputs.outputDir }}:${{ steps.setup.outputs.outputDir }} \
               --env-file ${{ steps.setup.outputs.dockerEnvFile }} \
               ${{ needs.docker-build.outputs.image_name }} test \
-                -PgaugeFailSafe \
                 -Pauto \
                 -Dtags="${{ matrix.tag }}" ${{ steps.setup.outputs.mvnArg }} \
                 -Dauto.outputDir=${{ steps.setup.outputs.outputDir }} \
                 -Dauto.jobid=${{ steps.setup.outputs.tag }}
+          #      -PgaugeFailSafe \
       - name: 'Failure info'
         if: ${{ failure() }}
         run: |
