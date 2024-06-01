@@ -28,7 +28,7 @@ import com.quorum.gauge.ext.PrivateClientTransactionManager;
 import com.quorum.gauge.ext.filltx.FillTransactionResponse;
 import com.quorum.gauge.ext.filltx.PrivateFillTransaction;
 import com.quorum.gauge.sol.ClientReceipt;
-import com.quorum.gauge.sol.ContractExtender;
+import com.quorum.gauge.sol.ContractExtenderVoting;
 import com.quorum.gauge.sol.SimpleStorage;
 import com.quorum.gauge.sol.SimpleStorageDelegate;
 import com.quorum.gauge.sol.SneakyWrapper;
@@ -223,7 +223,7 @@ public class RawContractService extends AbstractService {
                 List.of(privacyService.id(target)),
                 enclave);
 
-            return ContractExtender.load(contractAddress, client,
+            return ContractExtenderVoting.load(contractAddress, client,
                 qrtxm,
                 BigInteger.valueOf(0),
                 DEFAULT_GAS_LIMIT).doVote(vote, nextUuid).flowable().toObservable();
