@@ -16,7 +16,7 @@
 Development environment requires the following:
 
 - JDK 14+
-- [Gauge](https://gauge.org/get_started)
+- [Gauge](https://gauge.org/)
 - Run `./mvnw compile` to initiate the project with generated Java sources from Solidity source
 
 With built-in provisioning feature:
